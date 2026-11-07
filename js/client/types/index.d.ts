@@ -66,6 +66,7 @@ export interface StagedEngineLike {
   journal(): string;
   exportCheckpoint(revision?: bigint): string;
   backup(destination: CommitLog, revision?: bigint): bigint;
+  backupIncremental(destination: CommitLog): bigint;
   compactJournal(): boolean;
   fork(options: string, journal: string): StagedBranchLike;
   forkWithLog(options: string, log: CommitLog): StagedBranchLike;
@@ -117,6 +118,7 @@ export class WasmEngine {
   /** Copy a consistent cut to an empty log and verify it. Commits continue during
    * the copy. Returns the revision it ends at. Discard the destination on failure. */
   backup(destination: CommitLog, options?: { revision?: AddressInput }): bigint;
+  backupIncremental(destination: CommitLog): bigint;
   /** Publish under the commit lock. Unknown outcomes require reopening. */
   compactJournal(): boolean;
   close(): void;

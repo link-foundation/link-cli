@@ -81,4 +81,5 @@ A running engine can now be copied to an empty log, for the current or any retai
 revision, with commits continuing during the copy. [Guarantees, costs and
 limits](../../ENGINE-BACKUP.md) are compared with the SQLite, RocksDB and PostgreSQL
 pages. The logic is in the Rust core, so WebAssembly shares it and JavaScript is a thin
-wrapper. Incremental copies and archived-WAL replay are not implemented.
+wrapper. An [incremental call](../../ENGINE-BACKUP.md#incremental-backup) appends only
+the revisions an earlier copy lacks. Replay of an archived WAL is not implemented.

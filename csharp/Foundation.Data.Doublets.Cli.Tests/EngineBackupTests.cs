@@ -102,10 +102,10 @@ public class EngineBackupTests
         public int? FailAppendAt, FailReadAt;
         public bool FailFlush;
         public int Flushes;
-        private int _reads;
+        public int Reads;
         public bool SupportsDurableFlush => false;
         public IReadOnlyList<string> Read() =>
-            ++_reads == FailReadAt ? throw new IOException("read failed") : Inner.Read();
+            ++Reads == FailReadAt ? throw new IOException("read failed") : Inner.Read();
         public void Append(string record)
         {
             DuringAppend?.Invoke();
@@ -243,5 +243,224 @@ public class EngineBackupTests
             Assert.Equal("雪 3", restored.Snapshot().Rows[1].Name);
         }
         finally { directory.Delete(true); }
+    }
+
+    // A later commit that names link 1 and optionally deletes another link.
+    private static void Commit(LinksEngine<uint> source, string text, uint? delete = null)
+    {
+        using var tx = source.Begin();
+        tx.SetName(1, text);
+        if (delete is { } index) tx.DeleteLink(index);
+        tx.Commit();
+    }
+
+    [Fact]
+    public void AnIncrementalBackupAppendsOnlyChangedRowsAndReopensAsTheSource()
+    {
+        var source = Engine(null, 2);
+        using (var tx = source.Begin())
+        {
+            for (int i = 0; i < 50; i++) tx.CreateLink(1, 1);
+            tx.Commit();
+        }
+        var copy = new MemoryCommitLog();
+        Assert.Equal(3ul, source.Backup(copy));
+        var full = copy.Read().ToArray();
+
+        Commit(source, "four");
+        Commit(source, "five", 2);
+        Assert.Equal(5ul, source.BackupIncremental(copy));
+        Assert.Equal(full, copy.Read().Take(full.Length));
+        var added = copy.Read().Skip(full.Length).ToArray();
+        Assert.Equal(2, added.Length);
+        Assert.All(added, record => Assert.StartsWith("engine2|", record));
+        Assert.True(added[0].Length * 10 < full[^1].Length);
+
+        // Called again it adds nothing, and later commits continue the same copy.
+        Assert.Equal(5ul, source.BackupIncremental(copy));
+        Assert.Equal(full.Length + 2, copy.Read().Count);
+        Commit(source, "six");
+        Assert.Equal(6ul, source.BackupIncremental(copy));
+
+        var restored = new LinksEngine<uint>(copy, new EngineOptions { HistoryLimit = null });
+        Assert.Equal(6ul, restored.Snapshot().Revision);
+        Assert.Equal(source.Snapshot().Rows.OrderBy(row => row.Key), restored.Snapshot().Rows.OrderBy(row => row.Key));
+        Assert.Equal(source.SnapshotAt(4).Rows.OrderBy(row => row.Key), restored.SnapshotAt(4).Rows.OrderBy(row => row.Key));
+        using var mine = restored.Begin();
+        using var theirs = source.Begin();
+        Assert.Equal(theirs.CreateLink(0, 0), mine.CreateLink(0, 0));
+    }
+
+    [Fact]
+    public void AnEmptyDestinationGetsAFullCopy()
+    {
+        var source = Engine(null, 3);
+        var copy = new MemoryCommitLog();
+        Assert.Equal(3ul, source.BackupIncremental(copy));
+        Assert.Equal(source.ExportCheckpoint(), copy.Read());
+    }
+
+    [Fact]
+    public void ACopyOlderThanTheRetainedHistoryIsRefusedAndLeftAlone()
+    {
+        // A bounded history keeps a recent copy usable and refuses an old one.
+        var source = Engine(2, 3);
+        var recent = new MemoryCommitLog();
+        source.Backup(recent);
+        Commit(source, "four");
+        Assert.Equal(4ul, source.BackupIncremental(recent));
+        var before = recent.Read().ToArray();
+        foreach (var text in new[] { "five", "six", "seven" }) Commit(source, text);
+        Assert.Throws<KeyNotFoundException>(() => source.BackupIncremental(recent));
+        Assert.Equal(before, recent.Read());
+
+        // Without history only a copy of the current revision can continue.
+        source = Engine(0, 3);
+        var copy = new MemoryCommitLog();
+        source.Backup(copy);
+        Assert.Equal(3ul, source.BackupIncremental(copy));
+        Commit(source, "four");
+        Assert.Throws<KeyNotFoundException>(() => source.BackupIncremental(copy));
+    }
+
+    [Fact]
+    public void ACopyOfAnotherTimelineIsRefusedAndLeftAlone()
+    {
+        var source = Engine(null, 2);
+
+        // Different rows at a revision both have.
+        var other = Engine(null, 1);
+        Commit(other, "elsewhere");
+        var diverged = new MemoryCommitLog();
+        other.Backup(diverged);
+        var before = diverged.Read().ToArray();
+        Assert.Contains("not a copy", Assert.Throws<InvalidOperationException>(() => source.BackupIncremental(diverged)).Message);
+        Assert.Equal(before, diverged.Read());
+
+        // The same rows, but the allocator moved further.
+        var plain = new LinksEngine<uint>(new MemoryCommitLog(), new EngineOptions { HistoryLimit = null });
+        var moved = new LinksEngine<uint>(new MemoryCommitLog(), new EngineOptions { HistoryLimit = null });
+        foreach (var (engine, hole) in new[] { (plain, false), (moved, true) })
+        {
+            using var tx = engine.Begin();
+            tx.CreateLink(0, 0);
+            if (hole) { tx.EnsureCreated(7); tx.DeleteLink(7); }
+            tx.Commit();
+        }
+        var allocator = new MemoryCommitLog();
+        moved.Backup(allocator);
+        Assert.Contains("not a copy", Assert.Throws<InvalidOperationException>(() => plain.BackupIncremental(allocator)).Message);
+
+        // A copy from further along than this engine.
+        var ahead = new MemoryCommitLog();
+        Engine(null, 5).Backup(ahead);
+        Assert.Throws<KeyNotFoundException>(() => source.BackupIncremental(ahead));
+        Assert.Throws<KeyNotFoundException>(() => Engine(0, 2).BackupIncremental(ahead));
+
+        // Text that is not a journal.
+        var broken = new MemoryCommitLog();
+        broken.Append("not a record");
+        Assert.ThrowsAny<Exception>(() => source.BackupIncremental(broken));
+        Assert.Equal(["not a record"], broken.Read());
+    }
+
+    [Fact]
+    public void ALiveJournalOfThisEngineContinuesAsACopy()
+    {
+        // A journal that has no checkpoint record replays from revision zero.
+        var log = new MemoryCommitLog();
+        var source = new LinksEngine<uint>(log, new EngineOptions { HistoryLimit = null });
+        void Write(string text)
+        {
+            using var tx = source.Begin();
+            tx.EnsureCreated(1);
+            tx.SetName(1, text);
+            tx.Commit();
+        }
+        Write("one");
+        Write("two");
+        var copy = new MemoryCommitLog();
+        foreach (var record in log.Read()) copy.Append(record);
+        Write("three");
+        Assert.Equal(3ul, source.BackupIncremental(copy));
+        Assert.Equal("three", new LinksEngine<uint>(copy).Snapshot().Rows[1].Name);
+    }
+
+    [Fact]
+    public void AFailedIncrementCanBeContinuedAndDoesNotFenceTheEngine()
+    {
+        var source = Engine(null, 2);
+        var destination = new Destination();
+        source.Backup(destination);
+        Commit(source, "three");
+        Commit(source, "four");
+        var held = destination.Inner.Read().Count;
+
+        destination.FailAppendAt = held + 1;
+        Assert.Throws<IOException>(() => source.BackupIncremental(destination));
+        Assert.Equal(held + 1, destination.Inner.Read().Count);
+        destination.FailAppendAt = null;
+
+        destination.FailFlush = true;
+        Assert.Throws<IOException>(() => source.BackupIncremental(destination));
+        destination.FailFlush = false;
+
+        // The read before and the read after the copy.
+        destination.Reads = 0;
+        destination.FailReadAt = 1;
+        Assert.Throws<IOException>(() => source.BackupIncremental(destination));
+        destination.Reads = 0;
+        destination.FailReadAt = 2;
+        Assert.Throws<IOException>(() => source.BackupIncremental(destination));
+        destination.FailReadAt = null;
+
+        Assert.Equal(4ul, source.BackupIncremental(destination));
+        Commit(source, "five");
+        Assert.Equal(5ul, source.BackupIncremental(destination));
+        Assert.Equal("five", new LinksEngine<uint>(destination.Inner).Snapshot().Rows[1].Name);
+    }
+
+    [Fact]
+    public void AReadBackThatDiffersFailsAnIncrement()
+    {
+        var source = Engine(null, 2);
+        var lossy = new LossyLog();
+        lossy.Append(source.ExportCheckpoint()[0]);
+        lossy.Append(source.ExportCheckpoint()[1]);
+        lossy.Append(source.ExportCheckpoint()[2]);
+        Commit(source, "three");
+        var failure = Assert.Throws<InvalidDataException>(() => source.BackupIncremental(lossy));
+        Assert.Contains("verification failed", failure.Message);
+    }
+
+    [Fact]
+    public void CommitsContinueDuringAnIncrementAndStayOutOfIt()
+    {
+        var source = Engine(null, 2);
+        var destination = new Destination();
+        source.Backup(destination);
+        Commit(source, "three");
+        // This would never finish if the commit gate were still held.
+        destination.DuringAppend = () =>
+            Assert.True(Task.Run(() => Commit(source, "during")).Wait(TimeSpan.FromSeconds(30)), "the copy held the commit gate");
+        Assert.Equal(3ul, source.BackupIncremental(destination));
+        Assert.Equal(4ul, source.Snapshot().Revision);
+        Assert.Equal("three", new LinksEngine<uint>(destination.Inner).Snapshot().Rows[1].Name);
+    }
+
+    [Fact]
+    public void AnEngineWithAnUnknownJournalOutcomeRefusesAnIncrement()
+    {
+        var log = new FailingFlushLog();
+        var source = new LinksEngine<uint>(log);
+        var copy = new MemoryCommitLog();
+        source.Backup(copy);
+        var before = copy.Read().ToArray();
+        using var tx = source.Begin();
+        tx.CreateLink(0, 0);
+        log.Fail = true;
+        Assert.ThrowsAny<Exception>(() => tx.Commit());
+        Assert.Contains("reopen", Assert.ThrowsAny<Exception>(() => source.BackupIncremental(copy)).Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(before, copy.Read());
     }
 }

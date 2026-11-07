@@ -88,6 +88,12 @@ never silently merges duplicate pairs or cascades deletes: select an existing
 usages/uniqueness decorator if that policy is wanted. Legacy CLI backends retain
 their established merge and cascading behavior.
 
+Rollback, undo-image restore and recovery replay put back the recorded row, even
+when another row now has the same source and target. In Rust they use
+`LinksStorage::restore_link`, which skips duplicate resolution on direct stores. A
+layered `NamedLinksStorage` view keeps its own checks, so a duplicate below such a
+view still merges when it is restored.
+
 ## Commit, recovery and errors
 
 A write commit encodes the next logical revision, appends its record, flushes

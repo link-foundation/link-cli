@@ -42,6 +42,46 @@ async function savepointConformance(binding) {
   }
 }
 
+async function incrementalBackupConformance(binding) {
+  const options = { history: 2 };
+  const engine = new WasmEngine(binding, options);
+  const rename = async (name) => {
+    const tx = engine.begin();
+    if (engine.snapshot().revision === 0n) await tx.create(0n, 0n);
+    await tx.setName(1n, name);
+    await tx.commit();
+    await tx.close();
+  };
+  try {
+    await rename('first');
+    const log = new MemoryCommitLog();
+    assert.equal(engine.backupIncremental(log), 1n);
+    const full = JSON.parse(log.read());
+    await rename('second');
+    assert.equal(engine.backupIncremental(log), 2n);
+    const added = JSON.parse(log.read()).slice(full.length);
+    assert.equal(added.length, 1);
+    assert.ok(added[0].startsWith('engine2|'));
+    assert.equal(engine.backupIncremental(log), 2n);
+    const restored = new WasmEngine(binding, options, log);
+    assert.equal(restored.snapshot().revision, 2n);
+    assert.equal(restored.snapshot().rows[0].name, 'second');
+    restored.close();
+
+    for (const name of ['third', 'fourth', 'fifth']) await rename(name);
+    assert.throws(() => engine.backupIncremental(log), /not retained/);
+    assert.equal(JSON.parse(log.read()).length, full.length + 1);
+
+    const other = new WasmEngine(binding, options);
+    const elsewhere = new MemoryCommitLog();
+    other.backup(elsewhere);
+    assert.throws(() => engine.backupIncremental(elsewhere), /not retained|not a copy/);
+    other.close();
+  } finally {
+    engine.close();
+  }
+}
+
 async function backupConformance(binding) {
   const options = { history: 'all' };
   const engine = new WasmEngine(binding, options);
@@ -181,6 +221,7 @@ export async function engineConformance(binding) {
   await pessimisticConformance(binding);
   await savepointConformance(binding);
   await backupConformance(binding);
+  await incrementalBackupConformance(binding);
   await lockWaitConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();

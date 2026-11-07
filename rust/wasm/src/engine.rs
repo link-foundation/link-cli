@@ -192,6 +192,13 @@ impl StagedEngine {
             .backup_to(&mut BindingLog::External(log), revision)
             .map_err(|e| e.to_string())
     }
+    /// Append only the revisions an earlier backup lacks; an empty log gets a full copy.
+    #[wasm_bindgen(js_name = backupIncremental)]
+    pub fn backup_incremental(&self, log: JsCommitLog) -> Result<u64, String> {
+        self.inner
+            .backup_incremental_to(&mut BindingLog::External(log))
+            .map_err(|e| e.to_string())
+    }
     /// Publish a checkpoint through the optional atomic replacement capability.
     #[wasm_bindgen(js_name = compactJournal)]
     pub fn compact_journal(&self) -> Result<bool, String> {

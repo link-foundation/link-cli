@@ -419,3 +419,7 @@ same records.
 A GraphQL subject can write a value on a link it has just created. `insert_links_one` with a nested
 value used to answer `Forbidden` under a permission policy, because the check on the value's owner
 built a new permissions view that did not know what the subject had created.
+
+`LinksEngine.BackupIncremental` appends to an earlier backup only the revisions it lacks, each as
+the rows that changed. It refuses a destination whose last revision is no longer retained or that is
+not a copy of this engine, and leaves it unchanged.

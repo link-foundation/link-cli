@@ -1,5 +1,5 @@
 //! Checkpoint construction and optional publication share the commit mutex.
-use super::{error, journal, Engine, LinkReference, State};
+use super::{changes, error, journal, Engine, LinkReference, Rows, Snapshot, State};
 use crate::{LinkError, ReplaceableTransitionLogStore, TransitionLogStore};
 
 /// The records of one retained revision, for a copy that ends at that revision.
@@ -82,6 +82,84 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             ));
         }
         Ok(revision)
+    }
+    /// Bring an earlier backup of this engine up to the current revision by
+    /// appending only the revisions it lacks, each as the rows that changed, and
+    /// return the revision it now ends at. An empty destination gets a full copy.
+    ///
+    /// The destination's last revision must still be retained here and hold the
+    /// same rows, otherwise it is refused and left alone: take a full backup. The
+    /// commit mutex is held only to select the snapshots. After a failure the
+    /// destination may end at an earlier revision, and calling again continues
+    /// from there. See `docs/ENGINE-BACKUP.md`.
+    pub fn backup_incremental_to<D: TransitionLogStore>(
+        &self,
+        destination: &mut D,
+    ) -> Result<u64, LinkError> {
+        let existing = destination.read_log_entries()?;
+        if existing.is_empty() {
+            return self.backup_to(destination, None);
+        }
+        let structure = self.lock()?.options.state_structure;
+        let (mut last, mut last_next) = (
+            Snapshot {
+                revision: 0,
+                rows: std::sync::Arc::new(Rows::new(structure)),
+            },
+            1,
+        );
+        for (index, record) in existing.iter().enumerate() {
+            (last, last_next) = if index == 0 && record.starts_with("engine3|") {
+                journal::decode_checkpoint(record, structure)?
+            } else {
+                journal::decode_after(record, &last, last_next, structure)?
+            };
+        }
+        let chain: Vec<(Snapshot<T>, u128)> = {
+            let state = self.lock()?;
+            if state.history.is_empty() {
+                (last.revision == state.current.revision)
+                    .then(|| (state.current.clone(), state.committed_next))
+                    .into_iter()
+                    .collect()
+            } else {
+                state
+                    .history
+                    .range(last.revision..)
+                    .map(|(_, entry)| entry.clone())
+                    .collect()
+            }
+        };
+        let Some((same, same_next)) = chain.first().filter(|(s, _)| s.revision == last.revision)
+        else {
+            return Err(error("revision is not retained"));
+        };
+        if same.rows != last.rows || *same_next != last_next {
+            return Err(error("backup destination is not a copy of this engine"));
+        }
+        let entries: Vec<String> = chain
+            .windows(2)
+            .map(|pair| {
+                let (previous, (snapshot, next)) = (&pair[0].0, &pair[1]);
+                let ids: Vec<T> = previous
+                    .rows
+                    .keys()
+                    .chain(snapshot.rows.keys())
+                    .copied()
+                    .collect();
+                changes::encode(snapshot, *next, previous, &ids)
+            })
+            .collect();
+        for entry in &entries {
+            destination.append_log_entry(entry)?;
+        }
+        destination.flush_log()?;
+        if destination.read_log_entries()? != [existing, entries].concat() {
+            return Err(error(
+                "backup verification failed: destination differs from the copied records",
+            ));
+        }
+        Ok(chain.last().map_or(last.revision, |(s, _)| s.revision))
     }
 }
 impl<T: LinkReference, L: ReplaceableTransitionLogStore> Engine<T, L> {

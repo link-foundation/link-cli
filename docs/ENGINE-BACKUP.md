@@ -63,7 +63,8 @@ Backup is a method you call, so an engine that never calls it pays nothing.
 - **Restoring earlier starts a new timeline.** The restored allocator is that
   revision's, so addresses the original engine used later can be issued again. Nothing
   tracks this divergence, so do not merge the two timelines.
-- **Full copies only.** Every backup copies everything it selects.
+- **`backup_to` makes full copies.** It copies everything it selects. Use an
+  [incremental backup](#incremental-backup) to add to an earlier copy.
 - **One engine.** A cluster has no combined cut. Shards in etcd or a partition store
   are copied with that store's own tools.
 - **Exclusive destination.** Nothing else may write to the destination during the
@@ -77,6 +78,61 @@ yourself. The record formats are those of
 [retained-history checkpoints](ENGINE-CHECKPOINTS.md), so readers that predate
 `engine3` reject them.
 
+## Incremental backup
+
+Bring an earlier backup up to the current revision. Only the revisions it lacks are
+appended, each as the rows that changed. An empty destination gets a full copy, so the
+same call can start and continue a backup:
+
+```rust
+let revision = engine.backup_incremental_to(&mut destination)?;
+```
+
+```csharp
+ulong revision = engine.BackupIncremental(destination);
+```
+
+```js
+const revision = engine.backupIncremental(destination);
+```
+
+1. The destination is read and replayed, with no engine lock held. A record that does
+   not decode is refused.
+2. The commit mutex is taken to select the retained snapshots from the destination's
+   last revision onward, then released. Nothing is encoded under the mutex.
+3. The destination's last revision must still be retained and hold the same rows and
+   allocator position. Otherwise it is refused and left unchanged.
+4. Changed rows are encoded, appended and flushed, then the whole destination is read
+   back and compared.
+
+The reopened copy has the same rows, retained history between its revisions and
+allocator position as the source had at that revision. Commits made during the copy
+stay out of it and are picked up by the next call.
+
+| Situation | Result |
+| --- | --- |
+| Nothing new since the last call | Nothing is appended. The current revision is returned. |
+| The destination's revision was evicted, or history is `none` and commits followed | "revision is not retained". Take a full backup to an empty log. |
+| The destination is ahead of this engine | "revision is not retained". |
+| The rows or allocator position differ at that revision | "backup destination is not a copy of this engine". |
+| The destination is not a valid journal | The decoding error is returned. |
+| Append, flush or read-back fails | The error is returned and the engine is not fenced. The destination holds a valid prefix unless a record was torn or changed. Calling again continues from where it ended. |
+
+Limits:
+
+- **Reads the whole destination.** Each call reads and replays every record, twice in
+  the read-back case, so its cost grows with the backup, not only with the change.
+- **Needs retained history.** An increment can cover only what the history policy still
+  holds. With a bound of N, call it before N revisions pass, or take a new full copy.
+  History `none` can only confirm that a copy is already current.
+- **Compares only the last revision.** Earlier records of the destination must decode
+  but are not compared with this engine. A different timeline that reaches the same
+  rows and allocator position at the same revision is accepted.
+- **Grows until compacted.** Increments are appended to one log, with no merge into a
+  shorter full copy. Opening it with a smaller history bound replays all of it.
+- **Restoring a chain.** All records live in one log, so losing or corrupting one record
+  makes that log unusable from there. This is not a set of separate backup files.
+
 ## Compared with other engines
 
 Checked on 2026-11-07 against each project's documentation.
@@ -84,7 +140,7 @@ Checked on 2026-11-07 against each project's documentation.
 | Engine | Their behaviour | Here |
 | --- | --- | --- |
 | [SQLite online backup](https://www.sqlite.org/backup.html) | The copy can be incremental, so the source is locked only "for the brief periods of time when it is actually being read from". A write from another connection usually restarts the copy, and with enough writes it "may never run to completion". | `backup_to` takes one cut and never restarts. The lock is held for all the encoding at once, rather than in small steps. |
-| [RocksDB BackupEngine](https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB) | "Backups are normally incremental". It keeps several backups and purges old ones. Restore compares checksums and returns `Status::Corruption` on a mismatch. | Not incremental, and one destination holds one backup. Verification is a read-back at backup time, with no stored checksum at restore. |
+| [RocksDB BackupEngine](https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB) | "Backups are normally incremental". It keeps several backups and purges old ones. Restore compares checksums and returns `Status::Corruption` on a mismatch. | `backup_incremental_to` appends changed rows to one log, which holds one backup with its revisions. Each record has a checksum checked on reopen, and the whole log is read back at backup time. |
 | [PostgreSQL continuous archiving](https://www.postgresql.org/docs/current/continuous-archiving.html) | A base backup plus archived WAL can restore "to its state at any time since your base backup was taken". Each recovery starts a new timeline, so later history is not overwritten. | Retained revisions only, and the copy ends at the selected revision. The timeline is not tracked. |
 
 To get close to these with what exists today:

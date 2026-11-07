@@ -109,6 +109,10 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
       backups.push([destination, revision]);
       return 4n;
     }
+    backupIncremental(destination) {
+      backups.push([destination]);
+      return 5n;
+    }
     snapshot(revision) {
       assert.equal(revision, 10n);
       return '{"revision":"10","rows":[{"index":"4294967295","source":"0","target":"1","name":null}]}';
@@ -132,6 +136,8 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
     [destination, undefined],
     [destination, 3n],
   ]);
+  assert.equal(engine.backupIncremental(destination), 5n);
+  assert.deepEqual(backups[2], [destination]);
   assert.ok(engine.begin() instanceof EngineClient);
   engine.close();
   engine.close();
@@ -139,6 +145,7 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
   assert.throws(() => engine.begin(), /closed/);
   assert.throws(() => engine.exportCheckpoint(), /closed/);
   assert.throws(() => engine.backup(destination), /closed/);
+  assert.throws(() => engine.backupIncremental(destination), /closed/);
   assert.throws(() => new WasmEngine({}), /StagedEngine/);
 });
 

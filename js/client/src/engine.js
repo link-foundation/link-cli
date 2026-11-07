@@ -191,6 +191,12 @@ export class WasmEngine {
     this.#check();
     return this.#native.backup(destination, optionalAddress(revision));
   }
+  /** Appends only the revisions an earlier backup lacks, as changed rows, then
+   * returns the revision it ends at. An empty log gets a full copy. */
+  backupIncremental(destination) {
+    this.#check();
+    return this.#native.backupIncremental(destination);
+  }
   /** Atomically publish under the commit lock; an unknown outcome requires reopen. */
   compactJournal() {
     this.#check();

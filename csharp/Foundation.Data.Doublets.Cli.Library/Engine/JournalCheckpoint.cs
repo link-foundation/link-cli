@@ -53,6 +53,57 @@ public sealed partial class LinksEngine<T>
         return copied;
     }
 
+    /// <summary>Bring an earlier backup of this engine up to the current revision by
+    /// appending only the revisions it lacks, each as the rows that changed, and return
+    /// the revision it now ends at. An empty destination gets a full copy. The
+    /// destination's last revision must still be retained here and hold the same rows,
+    /// otherwise it is refused and left alone: take a full backup. The gate is held only
+    /// to select the snapshots. After a failure the destination may end at an earlier
+    /// revision, and calling again continues from there. See docs/ENGINE-BACKUP.md.</summary>
+    public ulong BackupIncremental(ICommitLog destination)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        var existing = destination.Read();
+        if (existing.Count == 0) return Backup(destination);
+        StateStructure structure;
+        lock (Gate)
+        {
+            CheckReady();
+            structure = Options.StateStructure;
+        }
+        var last = EngineSnapshot<T>.Create(0, new(structure));
+        var lastNext = BigInteger.One;
+        var first = true;
+        foreach (var record in existing)
+        {
+            (last, lastNext) = first && record.StartsWith("engine3|", StringComparison.Ordinal)
+                ? RevisionJournal<T>.DecodeCheckpoint(record, structure)
+                : RevisionJournal<T>.DecodeAfter(record, last, lastNext, structure);
+            first = false;
+        }
+        (EngineSnapshot<T> Snapshot, BigInteger Next)[] chain;
+        lock (Gate)
+        {
+            CheckReady();
+            chain = _history.Count == 0
+                ? last.Revision == Current.Revision ? [(Current, CommittedNext)] : []
+                : _history.Values.Where(item => item.Snapshot.Revision >= last.Revision).ToArray();
+        }
+        if (chain.Length == 0 || chain[0].Snapshot.Revision != last.Revision)
+            throw new KeyNotFoundException("Revision is not retained.");
+        if (chain[0].Next != lastNext
+            || !chain[0].Snapshot.Rows.OrderBy(row => row.Key).SequenceEqual(last.Rows.OrderBy(row => row.Key)))
+            throw new InvalidOperationException("Backup destination is not a copy of this engine.");
+        var records = chain.Zip(chain.Skip(1), (previous, item) => ChangeRevisionJournal<T>.Encode(
+            item.Snapshot, item.Next, previous.Snapshot,
+            previous.Snapshot.Rows.Keys.Concat(item.Snapshot.Rows.Keys))).ToArray();
+        foreach (var record in records) destination.Append(record);
+        destination.Flush();
+        if (!destination.Read().SequenceEqual(existing.Concat(records)))
+            throw new InvalidDataException("Backup verification failed: destination differs from the copied records.");
+        return chain[^1].Snapshot.Revision;
+    }
+
     private IReadOnlyList<string> RetainedLocked(ulong revision)
     {
         if (revision != Current.Revision && !_history.ContainsKey(revision))

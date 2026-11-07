@@ -330,3 +330,243 @@ fn a_backup_survives_reopening_from_a_durable_file() {
     drop(restored);
     std::fs::remove_dir_all(&directory).unwrap();
 }
+
+/// A later commit on `source` that names link 1 and deletes what `delete` holds.
+fn commit(source: &Source, text: &str, delete: Option<u32>) {
+    let mut tx = source.begin().unwrap();
+    tx.set_name(1, Some(text.into())).unwrap();
+    if let Some(index) = delete {
+        tx.delete_link(index).unwrap();
+    }
+    tx.commit().unwrap();
+}
+
+fn refused<D: TransitionLogStore>(source: &Source, log: &mut D, message: &str) {
+    let refused = source.backup_incremental_to(log).unwrap_err().to_string();
+    assert!(refused.contains(message), "{refused}");
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_incremental_backup_appends_only_changed_rows_and_reopens_as_the_source() {
+    let source = engine(HistoryPolicy::All, 2);
+    let mut tx = source.begin().unwrap();
+    for _ in 0..50 {
+        tx.create_link(1, 1).unwrap();
+    }
+    tx.commit().unwrap();
+    let mut copy = MemoryLog::default();
+    assert_eq!(source.backup_to(&mut copy, None).unwrap(), 3);
+    let full = copy.entries.clone();
+
+    commit(&source, "four", None);
+    commit(&source, "five", Some(2));
+    assert_eq!(source.backup_incremental_to(&mut copy).unwrap(), 5);
+    assert_eq!(copy.entries[..full.len()], full, "earlier records stay");
+    let added = &copy.entries[full.len()..];
+    assert_eq!(added.len(), 2);
+    assert!(added.iter().all(|record| record.starts_with("engine2|")));
+    assert!(added[0].len() * 10 < full.last().unwrap().len());
+
+    // Called again it adds nothing, and later commits continue the same copy.
+    assert_eq!(source.backup_incremental_to(&mut copy).unwrap(), 5);
+    assert_eq!(copy.entries.len(), full.len() + 2);
+    commit(&source, "six", None);
+    assert_eq!(source.backup_incremental_to(&mut copy).unwrap(), 6);
+
+    let restored = Engine::<u32, _>::open(copy, options(HistoryPolicy::All)).unwrap();
+    assert_eq!(restored.snapshot().unwrap().revision, 6);
+    assert_eq!(
+        restored.snapshot().unwrap().rows(),
+        source.snapshot().unwrap().rows()
+    );
+    assert_eq!(
+        restored.snapshot_at(4).unwrap().rows(),
+        source.snapshot_at(4).unwrap().rows()
+    );
+    let (mut mine, mut theirs) = (restored.begin().unwrap(), source.begin().unwrap());
+    assert_eq!(
+        mine.create_link(0, 0).unwrap(),
+        theirs.create_link(0, 0).unwrap(),
+        "the allocator continues at the same address"
+    );
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_empty_destination_gets_a_full_copy() {
+    let source = engine(HistoryPolicy::All, 3);
+    let mut copy = MemoryLog::default();
+    assert_eq!(source.backup_incremental_to(&mut copy).unwrap(), 3);
+    assert_eq!(copy.entries, source.export_checkpoint().unwrap());
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_copy_older_than_the_retained_history_is_refused_and_left_alone() {
+    // A bounded history keeps a recent copy usable and refuses an old one.
+    let source = engine(HistoryPolicy::Last(2), 3);
+    let mut recent = MemoryLog::default();
+    source.backup_to(&mut recent, None).unwrap();
+    commit(&source, "four", None);
+    assert_eq!(source.backup_incremental_to(&mut recent).unwrap(), 4);
+    let before = recent.entries.clone();
+    for text in ["five", "six", "seven"] {
+        commit(&source, text, None);
+    }
+    refused(&source, &mut recent, "revision is not retained");
+    assert_eq!(recent.entries, before);
+
+    // Without history only a copy of the current revision can continue.
+    let source = engine(HistoryPolicy::None, 3);
+    let mut copy = MemoryLog::default();
+    source.backup_to(&mut copy, None).unwrap();
+    assert_eq!(source.backup_incremental_to(&mut copy).unwrap(), 3);
+    commit(&source, "four", None);
+    refused(&source, &mut copy, "revision is not retained");
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_copy_of_another_timeline_is_refused_and_left_alone() {
+    let source = engine(HistoryPolicy::All, 2);
+
+    // Different rows at a revision both have.
+    let other = engine(HistoryPolicy::All, 1);
+    commit(&other, "elsewhere", None);
+    let mut diverged = MemoryLog::default();
+    other.backup_to(&mut diverged, None).unwrap();
+    let before = diverged.entries.clone();
+    refused(&source, &mut diverged, "not a copy of this engine");
+    assert_eq!(diverged.entries, before);
+
+    // The same rows, but the allocator moved further.
+    let plain = Engine::<u32, _>::open(MemoryLog::default(), options(HistoryPolicy::All)).unwrap();
+    let moved = Engine::<u32, _>::open(MemoryLog::default(), options(HistoryPolicy::All)).unwrap();
+    for (engine, hole) in [(&plain, false), (&moved, true)] {
+        let mut tx = engine.begin().unwrap();
+        tx.create_link(0, 0).unwrap();
+        if hole {
+            tx.ensure_link_created(7).unwrap();
+            tx.delete_link(7).unwrap();
+        }
+        tx.commit().unwrap();
+    }
+    let mut allocator = MemoryLog::default();
+    moved.backup_to(&mut allocator, None).unwrap();
+    refused(&plain, &mut allocator, "not a copy of this engine");
+
+    // A copy from further along than this engine.
+    let mut ahead = MemoryLog::default();
+    engine(HistoryPolicy::All, 5)
+        .backup_to(&mut ahead, None)
+        .unwrap();
+    refused(&source, &mut ahead, "revision is not retained");
+    let none = engine(HistoryPolicy::None, 2);
+    refused(&none, &mut ahead, "revision is not retained");
+
+    // Text that is not a journal.
+    let mut broken = MemoryLog::default();
+    broken.append_log_entry("not a record").unwrap();
+    assert!(source.backup_incremental_to(&mut broken).is_err());
+    assert_eq!(broken.entries, ["not a record"]);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_live_journal_of_this_engine_continues_as_a_copy() {
+    // A journal that has no checkpoint record replays from revision zero.
+    let log = FailingLog::default();
+    let source = Engine::<u32, _>::open(log.clone(), options(HistoryPolicy::All)).unwrap();
+    let write = |text: &str| {
+        let mut tx = source.begin().unwrap();
+        tx.ensure_link_created(1).unwrap();
+        tx.set_name(1, Some(text.into())).unwrap();
+        tx.commit().unwrap();
+    };
+    write("one");
+    write("two");
+    let mut copy = MemoryLog::default();
+    for record in log.records.borrow().iter() {
+        copy.append_log_entry(record).unwrap();
+    }
+    write("three");
+    assert_eq!(source.backup_incremental_to(&mut copy).unwrap(), 3);
+    let restored = Engine::<u32, _>::open(copy, options(HistoryPolicy::All)).unwrap();
+    assert_eq!(name(&restored).as_deref(), Some("three"));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_failed_increment_can_be_continued_and_does_not_fence_the_engine() {
+    let source = engine(HistoryPolicy::All, 2);
+    let mut destination = Destination::default();
+    source.backup_to(&mut destination, None).unwrap();
+    for text in ["three", "four"] {
+        commit(&source, text, None);
+    }
+    let held = destination.inner.entries.len();
+
+    destination.fail_append_at = Some(held + 1);
+    refused(&source, &mut destination, "append failed");
+    assert_eq!(destination.inner.entries.len(), held + 1);
+    destination.fail_append_at = None;
+
+    destination.fail_flush = true;
+    refused(&source, &mut destination, "flush failed");
+    destination.fail_flush = false;
+
+    // The read before and the read after the copy.
+    destination.reads = 0;
+    destination.fail_read_at = Some(1);
+    refused(&source, &mut destination, "read failed");
+    destination.reads = 0;
+    destination.fail_read_at = Some(2);
+    refused(&source, &mut destination, "read failed");
+    destination.fail_read_at = None;
+
+    assert_eq!(source.backup_incremental_to(&mut destination).unwrap(), 4);
+
+    commit(&source, "five", None);
+    destination.corrupt_after_flush = true;
+    refused(&source, &mut destination, "verification failed");
+    destination.corrupt_after_flush = false;
+
+    commit(&source, "six", None);
+    assert_eq!(source.backup_incremental_to(&mut destination).unwrap(), 6);
+    let restored = Engine::<u32, _>::open(destination.inner, options(HistoryPolicy::All)).unwrap();
+    assert_eq!(name(&restored).as_deref(), Some("six"));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn commits_continue_during_an_increment_and_stay_out_of_it() {
+    let source = Rc::new(engine(HistoryPolicy::All, 2));
+    let mut destination = Destination::default();
+    source.backup_to(&mut destination, None).unwrap();
+    commit(&source, "three", None);
+    let writer = source.clone();
+    // This would deadlock if the commit mutex were still held.
+    destination.during_append = Some(Box::new(move || commit(&writer, "during", None)));
+    assert_eq!(source.backup_incremental_to(&mut destination).unwrap(), 3);
+    assert_eq!(source.snapshot().unwrap().revision, 4);
+    let restored = Engine::<u32, _>::open(destination.inner, options(HistoryPolicy::All)).unwrap();
+    assert_eq!(name(&restored).as_deref(), Some("three"));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_engine_with_an_unknown_journal_outcome_refuses_an_increment() {
+    let log = FailingLog::default();
+    let source = Engine::<u32, _>::open(log.clone(), EngineOptions::default()).unwrap();
+    let mut copy = MemoryLog::default();
+    source.backup_to(&mut copy, None).unwrap();
+    let before = copy.entries.clone();
+    let mut tx = source.begin().unwrap();
+    tx.create_link(0, 0).unwrap();
+    log.fail.set(true);
+    assert!(tx.commit().is_err());
+    let refused = source.backup_incremental_to(&mut copy).unwrap_err();
+    assert!(refused.to_string().contains("reopen"), "{refused}");
+    assert_eq!(copy.entries, before);
+}
