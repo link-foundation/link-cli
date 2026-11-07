@@ -79,7 +79,7 @@ namespace Foundation.Data.Doublets.Cli
                 foreach (var kv in restrictionLinksById)
                 {
                     var lino = kv.Value;
-                    if (lino.Values?.Count == 2 && lino.Id != null)
+                    if (lino.Values?.Count == 2)
                     {
                         // This means we have something like (2: $var1 $var2) or (2: 1 $var)
                         // Get the actual DB link to resolve variables
@@ -92,15 +92,6 @@ namespace Foundation.Data.Doublets.Cli
                             AssignVariableFromLink(lino.Values[0].Id, actual.Source, variableAssignments, any, @null);
                             AssignVariableFromLink(lino.Values[1].Id, actual.Target, variableAssignments, any, @null);
                         }
-                    }
-                    else if (lino.Values?.Count == 2 && lino.Id?.StartsWith("$") != true)
-                    {
-                        // Similar logic for a link without explicit index but with variables
-                        var dbl = ToDoubletLink(links, lino, any);
-                        // If dbl.Index is unknown, we can't directly read from DB by index, but we can still assign known numeric parts
-                        // If source or target is numeric or '*', no assignment needed unless it's variable
-                        AssignVariableFromLink(lino.Values[0].Id, dbl.Source, variableAssignments, any, @null);
-                        AssignVariableFromLink(lino.Values[1].Id, dbl.Target, variableAssignments, any, @null);
                     }
                 }
 
@@ -116,14 +107,7 @@ namespace Foundation.Data.Doublets.Cli
 
                         if (newSourceId != lino.Values[0].Id || newTargetId != lino.Values[1].Id)
                         {
-                            if (lino.Id != null)
-                            {
-                                lino = new LinoLink(lino.Id, new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
-                            }
-                            else
-                            {
-                                lino = new LinoLink(new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
-                            }
+                            lino = new LinoLink(lino.Id, new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
                             substitutionLinksById[kv.Key] = lino;
                         }
                     }

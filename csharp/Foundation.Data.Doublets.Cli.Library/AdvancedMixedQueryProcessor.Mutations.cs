@@ -82,11 +82,6 @@ namespace Foundation.Data.Doublets.Cli
                         }
                         return options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue;
                     });
-
-                    if (newLinkIndex == T.Zero || newLinkIndex == anyConstant)
-                    {
-                        newLinkIndex = links.SearchOrDefault(linkDefinition.Source, linkDefinition.Target);
-                    }
                 }
                 else
                 {
@@ -222,11 +217,6 @@ namespace Foundation.Data.Doublets.Cli
                         }
                         return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
                     });
-
-                    if (createdIndex == T.Zero || createdIndex == anyConstant)
-                    {
-                        createdIndex = links.SearchOrDefault(link.Source, link.Target);
-                    }
                     return createdIndex;
                 }
                 else
@@ -364,40 +354,13 @@ namespace Foundation.Data.Doublets.Cli
             return false;
         }
 
-        private enum CompositeCase { Self, LeftMix, RightMix }
-
-        private static CompositeCase ClassifyCompositeCase(string name, LinoLink left, LinoLink right)
-        {
-            if (left.Id == name && right.Id == name) return CompositeCase.Self;
-            if (left.Id == name && right.Id != name) return CompositeCase.LeftMix;
-            if (left.Id != name && right.Id == name) return CompositeCase.RightMix;
-            throw new InvalidOperationException($"Invalid composite pattern for name '{name}'");
-        }
-
         private static T HandleStringComposite(string name, LinoLink left, LinoLink right, INamedTypesLinks<T> links, Options options)
         {
             var id = EnsureNamedPointLink(links, name, options);
-            var caseType = ClassifyCompositeCase(name, left, right);
-            switch (caseType)
-            {
-                case CompositeCase.Self:
-                    ApplyCompositeUpdate(links, id, id, id, options);
-                    return id;
-                case CompositeCase.LeftMix:
-                    {
-                        var otherId = EnsureNestedLinkCreatedRecursively(links, right, options);
-                        ApplyCompositeUpdate(links, id, id, otherId, options);
-                        return id;
-                    }
-                case CompositeCase.RightMix:
-                    {
-                        var otherId = EnsureNestedLinkCreatedRecursively(links, left, options);
-                        ApplyCompositeUpdate(links, id, otherId, id, options);
-                        return id;
-                    }
-                default:
-                    throw new InvalidOperationException($"Unhandled composite case {caseType}");
-            }
+            var source = left.Id == name ? id : EnsureNestedLinkCreatedRecursively(links, left, options);
+            var target = right.Id == name ? id : EnsureNestedLinkCreatedRecursively(links, right, options);
+            ApplyCompositeUpdate(links, id, source, target, options);
+            return id;
         }
 
         /// <summary>
