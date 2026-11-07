@@ -57,7 +57,16 @@ public sealed class CliServeInProcessTests : IDisposable
         Assert.Equal(0, exit);
     }
 
+    [Fact]
+    public void TheStructureOfALinkThatIsNotThereIsReportedAsAFailure()
+    {
+        var (exit, _, errors) = Run(Arguments("--structure", "999"));
+        Assert.Equal(1, exit);
+        Assert.Contains("Error formatting structure for link ID 999", errors, StringComparison.Ordinal);
+    }
+
     [Theory(Timeout = 60000)]
+    [InlineData("", "", SigInt)]
     [InlineData("--protocol", "text", SigInt)]
     [InlineData("--protocol", "binary", SigInt)]
     [InlineData("--graphql", "", SigInt)]
@@ -68,7 +77,8 @@ public sealed class CliServeInProcessTests : IDisposable
         // Windows delivers console events only to a console, not to one process.
         if (OperatingSystem.IsWindows()) return;
 
-        var arguments = Arguments("--serve", "127.0.0.1:0", option);
+        var arguments = Arguments("--serve", "127.0.0.1:0");
+        if (option.Length > 0) arguments = arguments.Append(option).ToArray();
         if (value.Length > 0) arguments = arguments.Append(value).ToArray();
         var (stdout, stderr) = (Console.Out, Console.Error);
         using var output = new StringWriter();

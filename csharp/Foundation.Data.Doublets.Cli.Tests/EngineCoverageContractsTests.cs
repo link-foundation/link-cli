@@ -127,4 +127,21 @@ public sealed class EngineCoverageContractsTests
         Assert.Contains("Unsupported stored query address", Assert.Throws<InvalidOperationException>(() =>
             preview.Update([id], [id, source, target], null)).Message);
     }
+
+    [Fact]
+    public void PreviewStopsListingWhenTheHandlerAsksItTo()
+    {
+        var rows = new[] { 1u, 2u }.Select(id => new EngineRow<uint>(new Link<uint>(id, id, id), null));
+        var constants = new LinksConstants<uint>();
+        var preview = new QueryPreview<uint>(rows, 3, [], constants);
+        var seen = 0;
+        var any = constants.Any;
+        Assert.Equal(constants.Break, preview.Each(new[] { any, any, any }, _ =>
+        {
+            seen++;
+            return constants.Break;
+        }));
+        Assert.Equal(1, seen);
+        Assert.Equal(constants.Continue, preview.Each(new[] { any, any, any }, null));
+    }
 }
