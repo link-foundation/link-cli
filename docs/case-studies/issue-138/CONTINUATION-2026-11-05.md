@@ -84,3 +84,12 @@ pages. The logic is in the Rust core, so WebAssembly shares it and JavaScript is
 wrapper. An [incremental call](../../ENGINE-BACKUP.md#incremental-backup) appends only
 the revisions an earlier copy lacks. [Restore](../../ENGINE-BACKUP.md#restore-to-a-revision)
 copies an archive to an empty log up to a chosen revision. Revisions are numbers, not times.
+
+## A store kept as a cache
+
+The disposable-cache scenario had no way to expire a link or bound a store, which
+Redis does with `EXPIRE` and `maxmemory`. `CacheLinks` now adds both as a decorator in
+all three languages, and [its semantics, costs and limits](../../ENGINE-CACHE.md) are
+compared with the Redis pages. It has no worker: every call deletes what is due. A
+deadline takes what is built on a link, while capacity evicts only links nothing else
+uses. Deadlines live in memory.

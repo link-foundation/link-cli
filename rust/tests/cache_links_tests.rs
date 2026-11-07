@@ -626,3 +626,20 @@ fn a_link_may_refer_to_an_address_nothing_holds_yet() {
     let last = cache.create(8, 8);
     assert_eq!(addresses(&mut cache), set([other, last]));
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn the_documented_example_works() -> Result<()> {
+    let options = CacheOptions {
+        max_links: Some(1000),
+        time_to_live: Some(60_000),
+    };
+    let mut cache = CacheLinks::new(LinkStorage::in_memory(false), options);
+    let link = cache.create(1, 1);
+    assert!(cache.time_to_live(link)?.is_some_and(|left| left <= 60_000));
+    assert!(cache.persist(link)?);
+    assert_eq!(cache.time_to_live(link)?, None);
+    assert!(cache.expire(link, 5_000)?);
+    assert!(cache.time_to_live(link)?.is_some());
+    Ok(())
+}

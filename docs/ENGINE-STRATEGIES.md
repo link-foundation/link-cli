@@ -13,6 +13,7 @@ transaction algorithm.
 | Scenario | Construction | Acknowledgement and cost |
 | --- | --- | --- |
 | Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
+| Cache with deadlines and a size limit | `CacheLinks` over any store | Expiry and least-recently-used eviction; adds tracking in memory and O(log n) per point operation. See [semantics and limits](ENGINE-CACHE.md). |
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
 | Undo part of a transaction | Call `savepoint` on any session | Restore staged rows and keep the session open; costs O(staged writes) only when taken. See [semantics and limits](ENGINE-SAVEPOINTS.md). |
 | Copy a running engine | Call `backup_to` / `Backup` / `backup` with an empty log | Consistent cut of the current or a retained revision, copied outside the commit mutex and verified by read-back; pays nothing unless called. See [guarantees and limits](ENGINE-BACKUP.md). |
@@ -394,6 +395,7 @@ matter for a large or frequently written database.
 | Competitor configuration | Closest available configuration | Material difference |
 | --- | --- | --- |
 | SQLite WAL with synchronous commit | Optional SQLite log + staged engine, selected isolation | Reuses SQLite page WAL/FULL and checkpointing; logical links revisions still replay the retained journal. No SQL planner or independent-engine MVCC/performance equivalence. |
+| Redis `EXPIRE` / `PERSIST` / `TTL` and `maxmemory` with `allkeys-lru` | [`CacheLinks`](ENGINE-CACHE.md) | Same commands in milliseconds and links instead of bytes; exact order of use; deadlines stay in memory; links in use are not evicted. |
 | SQLite / PostgreSQL savepoints | [Session savepoints](ENGINE-SAVEPOINTS.md) | Same stack behavior with tokens instead of names; a cluster savepoint covers one shard. |
 | SQLite online backup / RocksDB BackupEngine / PostgreSQL base backup and PITR | [Online backup](ENGINE-BACKUP.md) | One consistent cut with commits continuing, incremental chains, and restore to a revision the chain holds or, with the optional [timeline](ENGINE-BACKUP.md#restoring-to-a-time), to a time; no managed backup set. |
 | SQLite `wal_autocheckpoint` / Redis `auto-aof-rewrite` / etcd `auto-compaction` | [Automatic compaction](ENGINE-CHECKPOINTS.md#automatic-compaction) | A commit-count threshold, on a worker or timer the caller starts; no size or age trigger, and the replacement runs under the commit lock rather than beside commits. |

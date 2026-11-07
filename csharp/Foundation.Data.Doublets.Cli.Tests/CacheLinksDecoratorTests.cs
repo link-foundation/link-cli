@@ -36,6 +36,19 @@ public sealed class CacheLinksDecoratorTests
     private static List<uint> Sorted(params uint[] addresses) => addresses.OrderBy(address => address).ToList();
 
     [Fact]
+    public void TheDocumentedExampleWorks()
+    {
+        using var stores = new Stores();
+        var cache = new CacheLinksDecorator<uint>(stores.New(), new CacheOptions(MaxLinks: 1000, TimeToLive: 60_000));
+        var link = cache.CreateAndUpdate(1u, 1u);
+        Assert.True(cache.TimeToLive(link) <= 60_000);
+        Assert.True(cache.Persist(link));
+        Assert.Null(cache.TimeToLive(link));
+        Assert.True(cache.Expire(link, 5_000));
+        Assert.NotNull(cache.TimeToLive(link));
+    }
+
+    [Fact]
     public void ACacheWithNoOptionsIsTheStoreBelow()
     {
         using var harness = new Harness();

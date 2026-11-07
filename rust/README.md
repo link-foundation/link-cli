@@ -340,6 +340,7 @@ Select `ConcurrencyControl::Pessimistic` for overlapping sessions that reserve
 written addresses and immediately reject competing writes. Isolation and history
 remain independent options. See [ownership, retry rules and costs](../docs/ENGINE-PESSIMISTIC.md).
 
+Any store can be kept as a [cache with deadlines and a size limit](../docs/ENGINE-CACHE.md).
 Any session can undo part of its work with [savepoints](../docs/ENGINE-SAVEPOINTS.md).
 A running engine can be copied to an empty log with [online backup](../docs/ENGINE-BACKUP.md).
 
