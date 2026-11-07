@@ -2,8 +2,8 @@
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
     Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine, EngineOptions,
-    EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, Savepoint,
-    RevisionEncoding, SerializableValidation, StateStructure,
+    EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
+    RevisionEncoding, Savepoint, SerializableValidation, StateStructure,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
