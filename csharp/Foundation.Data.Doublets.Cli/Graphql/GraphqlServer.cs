@@ -86,13 +86,10 @@ public sealed class GraphqlServer : IDisposable
             {
                 client = _listener.AcceptTcpClient();
             }
-            catch (SocketException)
+            catch (Exception error) when (error is SocketException || _stopped)
             {
+                // Stopping can surface as any of several errors, depending on where it finds this call.
                 continue;
-            }
-            catch (ObjectDisposedException)
-            {
-                return;
             }
             var connection = ++next;
             new Thread(() => Connection(client, settings, connection)) { IsBackground = true }.Start();

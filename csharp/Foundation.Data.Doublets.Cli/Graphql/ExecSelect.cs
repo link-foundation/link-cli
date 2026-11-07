@@ -292,10 +292,6 @@ public sealed partial class Exec
     /// <summary>The rows at the far end of a relation, from the value of its local column.</summary>
     private List<Json> Related(Relation found, Json local)
     {
-        if (local.IsNull)
-        {
-            return [];
-        }
         var id = local.AsI64() ?? 0;
         if (found.Target == "links")
         {
