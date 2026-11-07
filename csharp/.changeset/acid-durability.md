@@ -423,3 +423,7 @@ built a new permissions view that did not know what the subject had created.
 `LinksEngine.BackupIncremental` appends to an earlier backup only the revisions it lacks, each as
 the rows that changed. It refuses a destination whose last revision is no longer retained or that is
 not a copy of this engine, and leaves it unchanged.
+
+`LinksEngine.RestoreBackup` copies an archived journal to an empty log up to a chosen revision, so
+an incremental chain reopens at any revision it holds and a copy can end just before damage. A
+refused restore leaves the destination unchanged.

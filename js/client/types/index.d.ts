@@ -119,6 +119,14 @@ export class WasmEngine {
    * the copy. Returns the revision it ends at. Discard the destination on failure. */
   backup(destination: CommitLog, options?: { revision?: AddressInput }): bigint;
   backupIncremental(destination: CommitLog): bigint;
+  /** Copy an archived journal to an empty log, stopping at one revision, and verify
+   * it. Opening the destination gives the engine at that revision, on a new timeline. */
+  static restoreBackup(
+    binding: object,
+    source: CommitLog,
+    destination: CommitLog,
+    options?: { revision?: AddressInput },
+  ): bigint;
   /** Publish under the commit lock. Unknown outcomes require reopening. */
   compactJournal(): boolean;
   close(): void;

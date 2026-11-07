@@ -82,4 +82,5 @@ revision, with commits continuing during the copy. [Guarantees, costs and
 limits](../../ENGINE-BACKUP.md) are compared with the SQLite, RocksDB and PostgreSQL
 pages. The logic is in the Rust core, so WebAssembly shares it and JavaScript is a thin
 wrapper. An [incremental call](../../ENGINE-BACKUP.md#incremental-backup) appends only
-the revisions an earlier copy lacks. Replay of an archived WAL is not implemented.
+the revisions an earlier copy lacks. [Restore](../../ENGINE-BACKUP.md#restore-to-a-revision)
+copies an archive to an empty log up to a chosen revision. Revisions are numbers, not times.

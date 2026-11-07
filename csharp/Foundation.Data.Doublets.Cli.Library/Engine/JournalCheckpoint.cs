@@ -104,6 +104,45 @@ public sealed partial class LinksEngine<T>
         return chain[^1].Snapshot.Revision;
     }
 
+    /// <summary>Copy an archived journal to an empty log, stopping at one revision, and
+    /// return the revision the copy ends at. Null copies the whole archive. Opening the
+    /// destination gives the engine as it was at that revision, on a new timeline.
+    /// Records are copied unchanged, so an incremental chain restores to any revision it
+    /// holds, and so does a live journal. Records after the selected revision are not
+    /// decoded, so a copy can end just before damage. Everything up to it is decoded
+    /// before the first write, so a refused restore leaves the destination unchanged.
+    /// After a later failure the destination may hold a shorter copy, so discard it.
+    /// See docs/ENGINE-BACKUP.md.</summary>
+    public static ulong RestoreBackup(ICommitLog source, ICommitLog destination, ulong? revision = null)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
+        if (destination.Read().Count != 0) throw new InvalidOperationException("Restore destination must be empty.");
+        var records = source.Read();
+        const StateStructure structure = StateStructure.Flat;
+        var last = EngineSnapshot<T>.Create(0, new(structure));
+        var lastNext = BigInteger.One;
+        // A journal without a checkpoint starts from the empty revision 0.
+        var reached = revision == 0 && !(records.Count > 0 && records[0].StartsWith("engine3|", StringComparison.Ordinal));
+        var kept = 0;
+        foreach (var record in records)
+        {
+            if (reached) break;
+            (last, lastNext) = kept == 0 && record.StartsWith("engine3|", StringComparison.Ordinal)
+                ? RevisionJournal<T>.DecodeCheckpoint(record, structure)
+                : RevisionJournal<T>.DecodeAfter(record, last, lastNext, structure);
+            kept++;
+            reached = last.Revision == revision;
+        }
+        if (revision is not null && !reached) throw new KeyNotFoundException("Revision is not in the backup.");
+        var copied = records.Take(kept).ToArray();
+        foreach (var record in copied) destination.Append(record);
+        destination.Flush();
+        if (!destination.Read().SequenceEqual(copied))
+            throw new InvalidDataException("Restore verification failed: destination differs from the copied records.");
+        return last.Revision;
+    }
+
     private IReadOnlyList<string> RetainedLocked(ulong revision)
     {
         if (revision != Current.Revision && !_history.ContainsKey(revision))

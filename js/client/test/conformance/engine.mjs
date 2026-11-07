@@ -82,6 +82,39 @@ async function incrementalBackupConformance(binding) {
   }
 }
 
+async function restoreBackupConformance(binding) {
+  const engine = new WasmEngine(binding, { history: 'all' });
+  try {
+    const archive = new MemoryCommitLog();
+    for (const name of ['first', 'second', 'third']) {
+      const tx = engine.begin();
+      if (name === 'first') await tx.create(0n, 0n);
+      await tx.setName(1n, name);
+      await tx.commit();
+      await tx.close();
+      engine.backupIncremental(archive);
+    }
+    const copy = new MemoryCommitLog();
+    assert.equal(WasmEngine.restoreBackup(binding, archive, copy, { revision: 2n }), 2n);
+    const restored = new WasmEngine(binding, {}, copy);
+    assert.equal(restored.snapshot().revision, 2n);
+    assert.equal(restored.snapshot().rows[0].name, 'second');
+    restored.close();
+    const whole = new MemoryCommitLog();
+    assert.equal(WasmEngine.restoreBackup(binding, archive, whole), 3n);
+    assert.equal(whole.read(), archive.read());
+    assert.throws(() => WasmEngine.restoreBackup(binding, archive, whole), /must be empty/);
+    const refused = new MemoryCommitLog();
+    assert.throws(
+      () => WasmEngine.restoreBackup(binding, archive, refused, { revision: 9n }),
+      /not in the backup/,
+    );
+    assert.deepEqual(JSON.parse(refused.read()), []);
+  } finally {
+    engine.close();
+  }
+}
+
 async function backupConformance(binding) {
   const options = { history: 'all' };
   const engine = new WasmEngine(binding, options);
@@ -222,6 +255,7 @@ export async function engineConformance(binding) {
   await savepointConformance(binding);
   await backupConformance(binding);
   await incrementalBackupConformance(binding);
+  await restoreBackupConformance(binding);
   await lockWaitConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();

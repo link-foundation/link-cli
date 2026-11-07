@@ -463,4 +463,165 @@ public class EngineBackupTests
         Assert.Contains("reopen", Assert.ThrowsAny<Exception>(() => source.BackupIncremental(copy)).Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(before, copy.Read());
     }
+
+    // A chain of two increments on a full copy, with revision 3 as the full copy's end.
+    private static (LinksEngine<uint> Source, MemoryCommitLog Archive) Archive()
+    {
+        var source = Engine(null, 3);
+        var archive = new MemoryCommitLog();
+        source.BackupIncremental(archive);
+        foreach (var text in new[] { "fourth", "fifth" })
+        {
+            using var tx = source.Begin();
+            tx.SetName(1, text);
+            tx.Commit();
+            source.BackupIncremental(archive);
+        }
+        return (source, archive);
+    }
+
+    private static MemoryCommitLog Restored(ICommitLog archive, ulong? revision)
+    {
+        var copy = new MemoryCommitLog();
+        LinksEngine<uint>.RestoreBackup(archive, copy, revision);
+        return copy;
+    }
+
+    [Fact]
+    public void AnArchiveRestoresEveryRevisionItHoldsAsTheSourceHadIt()
+    {
+        var (source, archive) = Archive();
+        for (ulong revision = 0; revision <= 5; revision++)
+        {
+            var copy = new MemoryCommitLog();
+            Assert.Equal(revision, LinksEngine<uint>.RestoreBackup(archive, copy, revision));
+            var restored = new LinksEngine<uint>(copy);
+            Assert.Equal(revision, restored.Snapshot().Revision);
+            Assert.Equal(source.SnapshotAt(revision).Rows.ToArray(), restored.Snapshot().Rows.ToArray());
+        }
+        Assert.Equal(archive.Read(), Restored(archive, null).Read());
+    }
+
+    [Fact]
+    public void ARestoredEngineStartsANewTimelineWithThatRevisionsAllocator()
+    {
+        var (source, archive) = Archive();
+        var early = new LinksEngine<uint>(Restored(archive, 2));
+        using (var tx = early.Begin())
+        {
+            Assert.Equal(2u, tx.CreateLink(0, 0));
+            tx.Commit();
+        }
+        Assert.Equal(3ul, early.Snapshot().Revision);
+        Assert.Equal(5ul, source.Snapshot().Revision);
+        Assert.Equal("fifth", source.Snapshot().Rows[1].Name);
+        // The hole left at revision 3 is part of the allocator that revision restores.
+        using var later = new LinksEngine<uint>(Restored(archive, 3)).Begin();
+        Assert.Equal(8u, later.CreateLink(0, 0));
+    }
+
+    [Fact]
+    public void ARestoreCanEndJustBeforeDamageAndRefusesToCrossIt()
+    {
+        var (_, archive) = Archive();
+        var records = archive.Read().ToArray();
+        Assert.Equal(6, records.Length);
+        var damaged = new MemoryCommitLog();
+        for (var index = 0; index < 5; index++) damaged.Append(records[index]);
+        var at = records[5].IndexOf('|');
+        damaged.Append(records[5].Insert(at + 1, "9"));
+        var copy = Restored(damaged, 4);
+        Assert.Equal(records.Take(5), copy.Read());
+        Assert.Equal(4ul, new LinksEngine<uint>(copy).Snapshot().Revision);
+        foreach (var revision in new ulong?[] { 5, null })
+        {
+            var refused = new MemoryCommitLog();
+            Assert.ThrowsAny<Exception>(() => LinksEngine<uint>.RestoreBackup(damaged, refused, revision));
+            Assert.Empty(refused.Read());
+        }
+    }
+
+    [Fact]
+    public void ARevisionTheArchiveDoesNotHoldIsRefusedAndWritesNothing()
+    {
+        var (_, full) = Archive();
+        var limited = new MemoryCommitLog();
+        Engine(2, 5).Backup(limited);
+        foreach (var (archive, revision) in new[] { (full, 6ul), (limited, 3ul), (limited, 0ul) })
+        {
+            var copy = new MemoryCommitLog();
+            var refused = Assert.Throws<KeyNotFoundException>(() => LinksEngine<uint>.RestoreBackup(archive, copy, revision));
+            Assert.Contains("not in the backup", refused.Message);
+            Assert.Empty(copy.Read());
+        }
+        // The oldest revision a bounded archive still holds is its checkpoint.
+        var first = Assert.Single(Restored(limited, 4).Read());
+        Assert.StartsWith("engine3|", first);
+    }
+
+    [Fact]
+    public void AnEmptyArchiveRestoresOnlyTheEmptyEngine()
+    {
+        var archive = new MemoryCommitLog();
+        Assert.Empty(Restored(archive, null).Read());
+        Assert.Empty(Restored(archive, 0).Read());
+        Assert.Throws<KeyNotFoundException>(() => Restored(archive, 1));
+    }
+
+    [Fact]
+    public void AnUntouchedEnginesCheckpointRestoresRevisionZero()
+    {
+        var archive = new MemoryCommitLog();
+        Engine(null, 0).Backup(archive);
+        Assert.Single(archive.Read());
+        Assert.Single(Restored(archive, 0).Read());
+    }
+
+    [Fact]
+    public void ANonEmptyRestoreDestinationIsRefusedAndLeftAlone()
+    {
+        var (_, archive) = Archive();
+        var copy = new MemoryCommitLog();
+        copy.Append("kept");
+        var refused = Assert.Throws<InvalidOperationException>(() => LinksEngine<uint>.RestoreBackup(archive, copy));
+        Assert.Contains("must be empty", refused.Message);
+        Assert.Equal(["kept"], copy.Read());
+    }
+
+    [Fact]
+    public void ARestoreRefusesMissingLogs()
+    {
+        var log = new MemoryCommitLog();
+        Assert.Throws<ArgumentNullException>(() => LinksEngine<uint>.RestoreBackup(null!, log));
+        Assert.Throws<ArgumentNullException>(() => LinksEngine<uint>.RestoreBackup(log, null!));
+    }
+
+    [Fact]
+    public void ARestoreReportsAFailedFlushAndADifferingReadBack()
+    {
+        var (_, archive) = Archive();
+        var failing = new FailingFlushLog { Fail = true };
+        Assert.Throws<IOException>(() => LinksEngine<uint>.RestoreBackup(archive, failing));
+        var verification = Assert.Throws<InvalidDataException>(() => LinksEngine<uint>.RestoreBackup(archive, new LossyLog()));
+        Assert.Contains("Restore verification failed", verification.Message);
+    }
+
+    [Fact]
+    public void ALiveJournalRestoresLikeAnArchive()
+    {
+        // A journal that has no checkpoint record replays from revision zero.
+        var log = new MemoryCommitLog();
+        var source = new LinksEngine<uint>(log);
+        foreach (var text in new[] { "one", "two", "three" })
+        {
+            using var tx = source.Begin();
+            tx.EnsureCreated(1);
+            tx.SetName(1, text);
+            tx.Commit();
+        }
+        var copy = Restored(log, 2);
+        Assert.Equal(log.Read().Take(2), copy.Read());
+        Assert.Equal("two", new LinksEngine<uint>(copy).Snapshot().Rows[1].Name);
+        Assert.Empty(Restored(log, 0).Read());
+    }
 }

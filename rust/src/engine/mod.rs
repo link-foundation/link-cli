@@ -67,6 +67,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 pub use branch::Branch;
+pub use checkpoint::restore_backup;
 pub use delta::DeltaLog;
 pub use group::GroupCommitOutcome;
 pub use journal::MemoryLog;

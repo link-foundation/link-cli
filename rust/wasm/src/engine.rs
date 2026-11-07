@@ -1,8 +1,8 @@
 //! JS uses the native engine through WASM, rather than reimplementing isolation.
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
-    Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine, EngineOptions,
-    EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
+    restore_backup, Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine,
+    EngineOptions, EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
     RevisionEncoding, Savepoint, SerializableValidation, StateStructure,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
@@ -198,6 +198,20 @@ impl StagedEngine {
         self.inner
             .backup_incremental_to(&mut BindingLog::External(log))
             .map_err(|e| e.to_string())
+    }
+    /// Copy an archived journal to an empty log, stopping at one revision.
+    #[wasm_bindgen(js_name = restoreBackup)]
+    pub fn restore_backup(
+        source: JsCommitLog,
+        destination: JsCommitLog,
+        revision: Option<u64>,
+    ) -> Result<u64, String> {
+        restore_backup::<u32, _, _>(
+            &mut BindingLog::External(source),
+            &mut BindingLog::External(destination),
+            revision,
+        )
+        .map_err(|e| e.to_string())
     }
     /// Publish a checkpoint through the optional atomic replacement capability.
     #[wasm_bindgen(js_name = compactJournal)]

@@ -197,6 +197,14 @@ export class WasmEngine {
     this.#check();
     return this.#native.backupIncremental(destination);
   }
+  /** Copies an archived journal to an empty log, stopping at one revision, verifies
+   * it and returns the revision it ends at. No revision copies the whole archive.
+   * Opening the destination gives the engine at that revision, on a new timeline. */
+  static restoreBackup(binding, source, destination, { revision } = {}) {
+    if (typeof binding?.StagedEngine?.restoreBackup !== 'function')
+      throw new TypeError('build clink-wasm with restoreBackup support');
+    return binding.StagedEngine.restoreBackup(source, destination, optionalAddress(revision));
+  }
   /** Atomically publish under the commit lock; an unknown outcome requires reopen. */
   compactJournal() {
     this.#check();

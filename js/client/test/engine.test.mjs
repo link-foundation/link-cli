@@ -149,6 +149,29 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
   assert.throws(() => new WasmEngine({}), /StagedEngine/);
 });
 
+test('restoring a backup passes its logs and revision to the binding', () => {
+  const calls = [];
+  class Native {
+    static restoreBackup(...call) {
+      calls.push(call);
+      return 3n;
+    }
+  }
+  const binding = { StagedEngine: Native };
+  const [source, destination] = [{}, {}];
+  assert.equal(WasmEngine.restoreBackup(binding, source, destination), 3n);
+  assert.equal(WasmEngine.restoreBackup(binding, source, destination, { revision: 2 }), 3n);
+  assert.deepEqual(calls, [
+    [source, destination, undefined],
+    [source, destination, 2n],
+  ]);
+  assert.throws(() => WasmEngine.restoreBackup({}, source, destination), /restoreBackup/);
+  assert.throws(
+    () => WasmEngine.restoreBackup({ StagedEngine: class {} }, source, destination),
+    /restoreBackup/,
+  );
+});
+
 test('custom logs pass through to the binding with explicit capabilities', async () => {
   const log = { supportsDurableFlush: true };
   class Native {

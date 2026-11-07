@@ -58,8 +58,8 @@ Backup is a method you call, so an engine that never calls it pays nothing.
   backup, and a flush that lies cannot be detected. Read-back proves the log returned
   the records, not that they would survive power loss.
 - **Point in time means retained revisions.** A revision evicted by the history policy
-  is refused with "revision is not retained". There is no replay of a separate WAL
-  archive to an arbitrary moment.
+  is refused with "revision is not retained". To reach revisions the running engine no
+  longer holds, keep an archive and [restore it to a revision](#restore-to-a-revision).
 - **Restoring earlier starts a new timeline.** The restored allocator is that
   revision's, so addresses the original engine used later can be issued again. Nothing
   tracks this divergence, so do not merge the two timelines.
@@ -133,6 +133,57 @@ Limits:
 - **Restoring a chain.** All records live in one log, so losing or corrupting one record
   makes that log unusable from there. This is not a set of separate backup files.
 
+## Restore to a revision
+
+Copy an archive to an empty log, stopping at one revision, then open the copy. The
+archive can be a backup, an incremental chain or a live journal of a stopped engine. No
+engine has to be running, and leaving the revision out copies the whole archive:
+
+```rust
+let revision = restore_backup::<u32, _, _>(&mut archive, &mut destination, Some(42))?;
+let engine = Engine::<u32, _>::open(destination, options)?;
+```
+
+```csharp
+ulong revision = LinksEngine<uint>.RestoreBackup(archive, destination, 42);
+var engine = new LinksEngine<uint>(destination, options);
+```
+
+```js
+const revision = WasmEngine.restoreBackup(binding, archive, destination, { revision: 42n });
+const engine = new WasmEngine(binding, options, destination);
+```
+
+1. The destination must be empty, otherwise it is refused and left unchanged.
+2. The archive is replayed up to the selected revision. Any record that does not decode,
+   or that breaks the revision or allocator order, refuses the restore before anything
+   is written.
+3. The records up to that revision are appended unchanged and flushed, then the
+   destination is read back and compared.
+
+| Situation | Result |
+| --- | --- |
+| The revision is in the archive | The copy reopens with that revision's rows and allocator position. The history it keeps follows the options you open it with. |
+| The revision is newer than the archive's end, or older than its first checkpoint | "revision is not in the backup", nothing is written. |
+| A record after the revision is damaged | The restore succeeds, because that record is never read. |
+| A record up to the revision is damaged | The decoding error is returned and nothing is written. |
+| Append, flush or read-back fails | The error is returned. The destination may hold a shorter copy, so discard it. |
+
+Limits:
+
+- **Revisions, not time.** Records carry no timestamp, so a restore names a revision. To
+  find one, restore a candidate and look at its rows.
+- **What the archive holds.** A bounded history starts the archive at a checkpoint, and
+  earlier revisions cannot be reached. To reach everything, start the archive with
+  history `all`.
+- **A new timeline.** The restored allocator is that revision's, so addresses the
+  original used later can be issued again. Nothing records the divergence, so do not
+  merge the timelines or continue the old archive from the restored engine.
+- **Constraints are checked on open.** The restore does not know your options. Opening
+  the destination validates each revision against the constraints you select.
+- **One log.** The archive is read into memory in full, and only one engine's journal
+  can be restored. A cluster has no combined cut.
+
 ## Compared with other engines
 
 Checked on 2026-11-07 against each project's documentation.
@@ -141,10 +192,10 @@ Checked on 2026-11-07 against each project's documentation.
 | --- | --- | --- |
 | [SQLite online backup](https://www.sqlite.org/backup.html) | The copy can be incremental, so the source is locked only "for the brief periods of time when it is actually being read from". A write from another connection usually restarts the copy, and with enough writes it "may never run to completion". | `backup_to` takes one cut and never restarts. The lock is held for all the encoding at once, rather than in small steps. |
 | [RocksDB BackupEngine](https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB) | "Backups are normally incremental". It keeps several backups and purges old ones. Restore compares checksums and returns `Status::Corruption` on a mismatch. | `backup_incremental_to` appends changed rows to one log, which holds one backup with its revisions. Each record has a checksum checked on reopen, and the whole log is read back at backup time. |
-| [PostgreSQL continuous archiving](https://www.postgresql.org/docs/current/continuous-archiving.html) | A base backup plus archived WAL can restore "to its state at any time since your base backup was taken". Each recovery starts a new timeline, so later history is not overwritten. | Retained revisions only, and the copy ends at the selected revision. The timeline is not tracked. |
+| [PostgreSQL continuous archiving](https://www.postgresql.org/docs/current/continuous-archiving.html) | A base backup plus archived WAL can restore "to its state at any time since your base backup was taken". Each recovery starts a new timeline, so later history is not overwritten. | An archive restores to any revision it holds, chosen by number rather than time, and the copy ends there. The timeline is not tracked. |
 
 To get close to these with what exists today:
 
 - **Keep several backups:** use one destination per backup and delete old ones yourself.
-- **Reach many points in time:** select history `all` or a bound, then copy any retained revision.
+- **Reach many points in time:** keep one archive with `backup_incremental_to` and [restore it to a revision](#restore-to-a-revision), or select history `all` or a bound and copy any retained revision.
 - **Continuous copy to other logs:** add a [replicated log](ENGINE-STRATEGIES.md) as well. This is replication, and it also copies mistakes.

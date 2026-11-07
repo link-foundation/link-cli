@@ -2,7 +2,7 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use link_cli::engine::{Engine, EngineOptions, HistoryPolicy, MemoryLog};
+use link_cli::engine::{restore_backup, Engine, EngineOptions, HistoryPolicy, MemoryLog};
 use link_cli::{LinkError, LinksStorage, TransitionLogStore};
 
 type Source = Engine<u32, MemoryLog>;
@@ -569,4 +569,208 @@ fn an_engine_with_an_unknown_journal_outcome_refuses_an_increment() {
     let refused = source.backup_incremental_to(&mut copy).unwrap_err();
     assert!(refused.to_string().contains("reopen"), "{refused}");
     assert_eq!(copy.entries, before);
+}
+
+/// A chain of two increments on a full copy, with revision 3 as the full copy's end.
+fn archive() -> (Source, MemoryLog) {
+    let source = engine(HistoryPolicy::All, 3);
+    let mut archive = MemoryLog::default();
+    source.backup_incremental_to(&mut archive).unwrap();
+    for text in ["fourth", "fifth"] {
+        commit(&source, text, None);
+        source.backup_incremental_to(&mut archive).unwrap();
+    }
+    (source, archive)
+}
+
+fn restore(archive: &mut MemoryLog, revision: Option<u64>) -> Result<MemoryLog, LinkError> {
+    let mut copy = MemoryLog::default();
+    restore_backup::<u32, _, _>(archive, &mut copy, revision)?;
+    Ok(copy)
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_archive_restores_every_revision_it_holds_as_the_source_had_it() {
+    let (source, mut archive) = archive();
+    for revision in 0..=5 {
+        let mut copy = MemoryLog::default();
+        assert_eq!(
+            restore_backup::<u32, _, _>(&mut archive, &mut copy, Some(revision)).unwrap(),
+            revision
+        );
+        let restored = Source::open(copy, options(HistoryPolicy::All)).unwrap();
+        assert_eq!(restored.snapshot().unwrap().revision, revision);
+        assert_eq!(
+            restored.snapshot().unwrap().rows(),
+            source.snapshot_at(revision).unwrap().rows()
+        );
+    }
+    let whole = archive.entries.clone();
+    assert_eq!(restore(&mut archive, None).unwrap().entries, whole);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_restored_engine_starts_a_new_timeline_with_that_revisions_allocator() {
+    let (source, mut archive) = archive();
+    let early = Source::open(
+        restore(&mut archive, Some(2)).unwrap(),
+        options(HistoryPolicy::All),
+    )
+    .unwrap();
+    let mut tx = early.begin().unwrap();
+    assert_eq!(tx.create_link(0, 0).unwrap(), 2);
+    tx.commit().unwrap();
+    assert_eq!(early.snapshot().unwrap().revision, 3);
+    assert_eq!(source.snapshot().unwrap().revision, 5);
+    assert_eq!(name(&source).as_deref(), Some("fifth"));
+
+    // The hole left at revision 3 is part of the allocator that revision restores.
+    let later = Source::open(
+        restore(&mut archive, Some(3)).unwrap(),
+        options(HistoryPolicy::All),
+    )
+    .unwrap();
+    let mut tx = later.begin().unwrap();
+    assert_eq!(tx.create_link(0, 0).unwrap(), 8);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_restore_can_end_just_before_damage_and_refuses_to_cross_it() {
+    let (_source, mut archive) = archive();
+    assert_eq!(archive.entries.len(), 6);
+    archive.entries[5] = archive.entries[5].replacen('|', "|9", 1);
+    let copy = restore(&mut archive, Some(4)).unwrap();
+    assert_eq!(copy.entries, archive.entries[..5]);
+    assert_eq!(
+        Source::open(copy, options(HistoryPolicy::All))
+            .unwrap()
+            .snapshot()
+            .unwrap()
+            .revision,
+        4
+    );
+    for revision in [Some(5), None] {
+        let mut copy = MemoryLog::default();
+        assert!(restore_backup::<u32, _, _>(&mut archive, &mut copy, revision).is_err());
+        assert!(copy.entries.is_empty());
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_revision_the_archive_does_not_hold_is_refused_and_writes_nothing() {
+    let (_source, mut full) = archive();
+    let evicted = engine(HistoryPolicy::Last(2), 5);
+    let mut limited = MemoryLog::default();
+    evicted.backup_to(&mut limited, None).unwrap();
+    let refused = |archive: &mut MemoryLog, revision| {
+        let mut copy = MemoryLog::default();
+        let refusal = restore_backup::<u32, _, _>(archive, &mut copy, Some(revision)).unwrap_err();
+        assert!(refusal.to_string().contains("not in the backup"));
+        assert!(copy.entries.is_empty());
+    };
+    refused(&mut full, 6);
+    refused(&mut limited, 3);
+    refused(&mut limited, 0);
+    // The oldest revision a bounded archive still holds is its checkpoint.
+    let first = restore(&mut limited, Some(4)).unwrap();
+    assert_eq!(first.entries.len(), 1);
+    assert!(first.entries[0].starts_with("engine3|"));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_empty_archive_restores_only_the_empty_engine() {
+    let mut archive = MemoryLog::default();
+    assert!(restore(&mut archive, None).unwrap().entries.is_empty());
+    assert!(restore(&mut archive, Some(0)).unwrap().entries.is_empty());
+    assert!(restore(&mut archive, Some(1)).is_err());
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_untouched_engines_checkpoint_restores_revision_zero() {
+    let source = engine(HistoryPolicy::All, 0);
+    let mut archive = MemoryLog::default();
+    source.backup_to(&mut archive, None).unwrap();
+    assert_eq!(archive.entries.len(), 1);
+    assert_eq!(restore(&mut archive, Some(0)).unwrap().entries.len(), 1);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_non_empty_restore_destination_is_refused_and_left_alone() {
+    let (_source, mut archive) = archive();
+    let mut copy = MemoryLog::default();
+    copy.append_log_entry("kept").unwrap();
+    let refused = restore_backup::<u32, _, _>(&mut archive, &mut copy, None).unwrap_err();
+    assert!(refused.to_string().contains("must be empty"));
+    assert_eq!(copy.entries, ["kept"]);
+}
+
+fn failing_destination() -> Destination {
+    Destination {
+        inner: MemoryLog::default(),
+        during_append: None,
+        fail_append_at: None,
+        fail_flush: false,
+        fail_read_at: None,
+        reads: 0,
+        flushes: 0,
+        corrupt_after_flush: false,
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn every_failure_of_a_restores_logs_is_reported() {
+    let (_source, mut archive) = archive();
+    let attempt = |archive: &mut MemoryLog, change: fn(&mut Destination)| {
+        let mut copy = failing_destination();
+        change(&mut copy);
+        let outcome = restore_backup::<u32, _, _>(archive, &mut copy, None);
+        (outcome.unwrap_err().to_string(), copy)
+    };
+    let (message, copy) = attempt(&mut archive, |copy| copy.fail_read_at = Some(1));
+    assert!(message.contains("read failed"));
+    assert!(copy.inner.entries.is_empty());
+    let (message, _) = attempt(&mut archive, |copy| copy.fail_append_at = Some(1));
+    assert!(message.contains("append failed"));
+    let (message, _) = attempt(&mut archive, |copy| copy.fail_flush = true);
+    assert!(message.contains("flush failed"));
+    let (message, _) = attempt(&mut archive, |copy| copy.fail_read_at = Some(2));
+    assert!(message.contains("read failed"));
+    let (message, _) = attempt(&mut archive, |copy| copy.corrupt_after_flush = true);
+    assert!(message.contains("restore verification failed"));
+
+    let mut unreadable = failing_destination();
+    unreadable.fail_read_at = Some(1);
+    let refused =
+        restore_backup::<u32, _, _>(&mut unreadable, &mut MemoryLog::default(), None).unwrap_err();
+    assert!(refused.to_string().contains("read failed"));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_live_journal_restores_like_an_archive() {
+    // A journal that has no checkpoint record replays from revision zero.
+    let log = FailingLog::default();
+    let source = Engine::<u32, _>::open(log.clone(), options(HistoryPolicy::All)).unwrap();
+    for text in ["one", "two", "three"] {
+        let mut tx = source.begin().unwrap();
+        tx.ensure_link_created(1).unwrap();
+        tx.set_name(1, Some(text.into())).unwrap();
+        tx.commit().unwrap();
+    }
+    let mut journal = MemoryLog {
+        entries: log.records.borrow().clone(),
+    };
+    let copy = restore(&mut journal, Some(2)).unwrap();
+    assert_eq!(copy.entries, journal.entries[..2]);
+    let restored = Engine::<u32, _>::open(copy, options(HistoryPolicy::All)).unwrap();
+    assert_eq!(name(&restored).as_deref(), Some("two"));
+    assert!(restore(&mut journal, Some(0)).unwrap().entries.is_empty());
 }

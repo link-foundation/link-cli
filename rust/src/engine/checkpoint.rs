@@ -1,5 +1,7 @@
 //! Checkpoint construction and optional publication share the commit mutex.
-use super::{changes, error, journal, Engine, LinkReference, Rows, Snapshot, State};
+use super::{
+    changes, error, journal, Engine, LinkReference, Rows, Snapshot, State, StateStructure,
+};
 use crate::{LinkError, ReplaceableTransitionLogStore, TransitionLogStore};
 
 /// The records of one retained revision, for a copy that ends at that revision.
@@ -38,6 +40,77 @@ fn records_through<T: LinkReference, L>(state: &State<T, L>, revision: u64) -> V
             )
         })
         .collect()
+}
+fn empty<T: LinkReference>(structure: StateStructure) -> Snapshot<T> {
+    Snapshot {
+        revision: 0,
+        rows: std::sync::Arc::new(Rows::new(structure)),
+    }
+}
+/// One record of a journal, after the state its predecessors left. Only a first
+/// record may be a checkpoint.
+fn replay_record<T: LinkReference>(
+    index: usize,
+    record: &str,
+    last: &Snapshot<T>,
+    last_next: u128,
+    structure: StateStructure,
+) -> Result<(Snapshot<T>, u128), LinkError> {
+    if index == 0 && record.starts_with("engine3|") {
+        journal::decode_checkpoint(record, structure)
+    } else {
+        journal::decode_after(record, last, last_next, structure)
+    }
+}
+/// Copy an archived journal to an empty log, stopping at one revision, and return
+/// the revision the copy ends at. `None` copies the whole archive. Opening the
+/// destination gives the engine as it was at that revision, on a new timeline.
+///
+/// Records are copied unchanged, so an incremental chain restores to any revision
+/// it holds, and so does a live journal. Records after the selected revision are
+/// not decoded, so a copy can end just before damage. Everything up to it is decoded
+/// before the first write, so a refused restore leaves the destination unchanged.
+/// After a later failure the destination may hold a shorter copy, so discard it.
+/// See `docs/ENGINE-BACKUP.md`.
+pub fn restore_backup<T: LinkReference, S: TransitionLogStore, D: TransitionLogStore>(
+    source: &mut S,
+    destination: &mut D,
+    revision: Option<u64>,
+) -> Result<u64, LinkError> {
+    if !destination.read_log_entries()?.is_empty() {
+        return Err(error("restore destination must be empty"));
+    }
+    let mut entries = source.read_log_entries()?;
+    let structure = StateStructure::Flat;
+    let (mut last, mut last_next) = (empty::<T>(structure), 1);
+    // A journal without a checkpoint starts from the empty revision 0.
+    let mut reached = revision == Some(0)
+        && !entries
+            .first()
+            .is_some_and(|record| record.starts_with("engine3|"));
+    let mut kept = 0;
+    for (index, record) in entries.iter().enumerate() {
+        if reached {
+            break;
+        }
+        (last, last_next) = replay_record(index, record, &last, last_next, structure)?;
+        kept = index + 1;
+        reached = Some(last.revision) == revision;
+    }
+    if revision.is_some() && !reached {
+        return Err(error("revision is not in the backup"));
+    }
+    entries.truncate(kept);
+    for entry in &entries {
+        destination.append_log_entry(entry)?;
+    }
+    destination.flush_log()?;
+    if destination.read_log_entries()? != entries {
+        return Err(error(
+            "restore verification failed: destination differs from the copied records",
+        ));
+    }
+    Ok(last.revision)
 }
 impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
     /// Export retained committed snapshots without rewriting the live log.
@@ -101,19 +174,9 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             return self.backup_to(destination, None);
         }
         let structure = self.lock()?.options.state_structure;
-        let (mut last, mut last_next) = (
-            Snapshot {
-                revision: 0,
-                rows: std::sync::Arc::new(Rows::new(structure)),
-            },
-            1,
-        );
+        let (mut last, mut last_next) = (empty::<T>(structure), 1);
         for (index, record) in existing.iter().enumerate() {
-            (last, last_next) = if index == 0 && record.starts_with("engine3|") {
-                journal::decode_checkpoint(record, structure)?
-            } else {
-                journal::decode_after(record, &last, last_next, structure)?
-            };
+            (last, last_next) = replay_record(index, record, &last, last_next, structure)?;
         }
         let chain: Vec<(Snapshot<T>, u128)> = {
             let state = self.lock()?;
