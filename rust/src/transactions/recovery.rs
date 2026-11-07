@@ -34,10 +34,7 @@ where
     /// Rejects replay while a transaction or its cleanup still owns the data.
     pub fn apply_transition(&mut self, transition: &GenericTransition<T>) -> Result<(), LinkError> {
         self.ensure_replay_allowed()?;
-        self.replaying = true;
-        let result = self.try_apply_transition(transition, false);
-        self.replaying = false;
-        result
+        self.try_apply_transition(transition)
     }
 
     /// Reverts one transition, reporting storage errors to the caller.
@@ -47,30 +44,21 @@ where
         transition: &GenericTransition<T>,
     ) -> Result<(), LinkError> {
         self.ensure_replay_allowed()?;
-        self.replaying = true;
-        let result = self.try_revert_transition(transition);
-        self.replaying = false;
-        result
+        self.try_revert_transition(transition)
     }
 
     /// Replays a complete record, including names, without logging another write.
     pub fn apply_record(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
         self.ensure_replay_allowed()?;
         self.validate_record_backend(record)?;
-        self.replaying = true;
-        let result = self.try_apply_record(record, false);
-        self.replaying = false;
-        result
+        self.try_apply_record(record, false)
     }
 
     /// Undoes a complete record, including names, without logging another write.
     pub fn revert_record(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
         self.ensure_replay_allowed()?;
         self.validate_record_backend(record)?;
-        self.replaying = true;
-        let result = self.try_revert_record(record);
-        self.replaying = false;
-        result
+        self.try_revert_record(record)
     }
 
     fn validate_record_backend(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
@@ -89,7 +77,7 @@ where
         record_applied: bool,
     ) -> Result<(), LinkError> {
         if !record.name_only {
-            self.try_apply_transition(&record.transition, false)?;
+            self.try_apply_transition(&record.transition)?;
         }
         self.replay_names(record, false)?;
         if record_applied {
@@ -119,7 +107,6 @@ where
     pub(super) fn try_apply_transition(
         &mut self,
         transition: &GenericTransition<T>,
-        record_applied: bool,
     ) -> Result<(), LinkError> {
         let zero = T::from_byte(0);
         let result: Result<(), LinkError> = match transition.kind {
@@ -129,7 +116,7 @@ where
                         .ensure_link_created(transition.after.index)
                         .and_then(|_| {
                             self.inner
-                                .update_link(
+                                .restore_link(
                                     transition.after.index,
                                     transition.after.source,
                                     transition.after.target,
@@ -144,7 +131,7 @@ where
                 if transition.after.index != zero && self.inner.link_exists(transition.after.index)
                 {
                     self.inner
-                        .update_link(
+                        .restore_link(
                             transition.after.index,
                             transition.after.source,
                             transition.after.target,
@@ -165,11 +152,6 @@ where
             }
         };
         result?;
-        if record_applied {
-            self.inner.flush()?;
-            self.mark_applied(transition)?;
-            self.log_store.flush_log()?;
-        }
         Ok(())
     }
 
@@ -192,7 +174,7 @@ where
                     && self.inner.link_exists(transition.before.index)
                 {
                     self.inner
-                        .update_link(
+                        .restore_link(
                             transition.before.index,
                             transition.before.source,
                             transition.before.target,
@@ -211,7 +193,7 @@ where
                         .ensure_link_created(transition.before.index)
                         .and_then(|_| {
                             self.inner
-                                .update_link(
+                                .restore_link(
                                     transition.before.index,
                                     transition.before.source,
                                     transition.before.target,
@@ -324,7 +306,6 @@ where
             replay_from =
                 replay_from.min(log_snapshot.partition_point(|record| record.sequence <= base));
         }
-        self.replaying = true;
         let result = (|| -> Result<Vec<u128>, LinkError> {
             let mut pending_tx_ids = Vec::new();
             let mut pending_seen = std::collections::HashSet::new();
@@ -397,7 +378,6 @@ where
             }
             Ok(pending_tx_ids)
         })();
-        self.replaying = false;
         let pending_tx_ids = result?;
         self.inner.flush()?;
         // The gap must remain a restart anchor until the complete final state
@@ -438,10 +418,7 @@ where
                 if !self.committed.contains(&head.transaction_id) {
                     break; // A pending transaction is not reclaimable.
                 }
-                self.replaying = true;
-                let result = self.try_apply_record(&head, true);
-                self.replaying = false;
-                result?;
+                self.try_apply_record(&head, true)?;
                 if !self.applied.contains(&head.sequence) {
                     break; // R7: never drop an un-applied transition.
                 }
@@ -482,10 +459,7 @@ where
                 if !self.committed.contains(&transition.transaction_id) {
                     return Ok(()); // Never apply or discard a pending chunk.
                 }
-                self.replaying = true;
-                let result = self.try_apply_record(transition, true);
-                self.replaying = false;
-                result?;
+                self.try_apply_record(transition, true)?;
                 if !self.applied.contains(&transition.sequence) {
                     return Ok(()); // never drop un-applied
                 }

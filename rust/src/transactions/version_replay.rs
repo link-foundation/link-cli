@@ -39,14 +39,11 @@ where
         undo: bool,
     ) -> Result<(), LinkError> {
         self.require_version_replay()?;
-        self.replaying = true;
-        let result = if undo {
+        if undo {
             self.try_revert_record(transition)
         } else {
             self.try_apply_record(transition, false)
-        };
-        self.replaying = false;
-        result
+        }
     }
 
     pub(crate) fn flush_version_replay(&mut self) -> Result<(), LinkError> {

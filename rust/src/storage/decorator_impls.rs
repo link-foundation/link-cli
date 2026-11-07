@@ -73,6 +73,15 @@ macro_rules! impl_in_memory_links_storage {
                 self.update(index, source, target).map_err(storage_error)
             }
 
+            fn restore_link(
+                &mut self,
+                index: u32,
+                source: u32,
+                target: u32,
+            ) -> Result<GenericLink<u32>, LinkError> {
+                self.update_raw(index, source, target).map_err(storage_error)
+            }
+
             fn delete_link(&mut self, index: u32) -> Result<GenericLink<u32>, LinkError> {
                 self.delete(index).map_err(storage_error)
             }

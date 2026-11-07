@@ -178,7 +178,6 @@ where
     applied_sequence: i64,
     retention_policy: LogRetentionPolicy,
     commit_mode: CommitMode,
-    replaying: bool,
     version_replay: bool,
     recovery_pending: bool,
     reload_pending: bool,
@@ -218,7 +217,6 @@ where
             applied_sequence: 0,
             retention_policy,
             commit_mode,
-            replaying: false,
             version_replay: false,
             recovery_pending: false,
             reload_pending: false,
@@ -365,9 +363,6 @@ where
     // ----- Write API ------------------------------------------------------
 
     pub fn create(&mut self, source: T, target: T) -> Result<T, LinkError> {
-        if self.replaying {
-            return self.inner.create_link(source, target);
-        }
         let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
         let mut observed = Vec::new();
@@ -419,11 +414,6 @@ where
         target: T,
         observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
     ) -> Result<GenericLink<T>, LinkError> {
-        if self.replaying {
-            return self
-                .inner
-                .update_link_observed(id, source, target, observer);
-        }
         let before = self.snapshot(id);
         let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
@@ -495,11 +485,6 @@ where
         id: T,
         observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
     ) -> Result<GenericLink<T>, LinkError> {
-        if self.replaying {
-            let deleted = self.inner.delete_link(id)?;
-            observer(deleted, GenericLink::null());
-            return Ok(deleted);
-        }
         let before = self.snapshot(id);
         let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
@@ -593,9 +578,6 @@ where
     pub fn ensure_created(&mut self, id: T) -> Result<T, LinkError> {
         if id == T::from_byte(0) || self.inner.link_exists(id) {
             return Ok(id);
-        }
-        if self.replaying {
-            return self.inner.ensure_link_created(id);
         }
         let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
@@ -769,7 +751,6 @@ where
             Some(p) => p,
             None => return Ok(()),
         };
-        self.replaying = true;
         let result = if let Some(image) = &pending.image {
             self.restore_image(image)
         } else {
@@ -779,7 +760,6 @@ where
                 .rev()
                 .try_for_each(|transition| self.try_revert_record(transition))
         };
-        self.replaying = false;
         result?;
         self.inner.flush()?;
         self.write_marker(&format!("{ROLLBACK_MARKER_PREFIX}{:032x}", pending.id))?;
@@ -844,6 +824,8 @@ fn now_unix_ms() -> i64 {
 }
 
 #[cfg(test)]
+mod contract_tests;
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -859,16 +841,11 @@ mod tests {
                 max_transitions: 1000
             }
         ));
-        match LogRetentionPolicy::parse("chunked:500:/tmp/x").unwrap() {
-            LogRetentionPolicy::Chunked {
-                chunk_size,
-                archive_directory,
-            } => {
-                assert_eq!(chunk_size, 500);
-                assert_eq!(archive_directory, PathBuf::from("/tmp/x"));
-            }
-            _ => panic!("expected Chunked"),
-        }
+        assert!(matches!(
+            LogRetentionPolicy::parse("chunked:500:/tmp/x").unwrap(),
+            LogRetentionPolicy::Chunked { chunk_size: 500, archive_directory }
+                if archive_directory == Path::new("/tmp/x")
+        ));
         assert!(LogRetentionPolicy::parse("garbage").is_err());
     }
 

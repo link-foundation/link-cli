@@ -134,6 +134,22 @@ pub trait LinksStorage<T: LinkReference> {
     /// Repoints `index` at `source`/`target`, returning the previous state.
     fn update_link(&mut self, index: T, source: T, target: T) -> Result<GenericLink<T>, LinkError>;
 
+    /// Writes exactly this row for undo and replay, returning the previous state.
+    ///
+    /// The change was already resolved when it was recorded, and any other
+    /// changes it caused have their own records. A store whose `update_link`
+    /// resolves duplicates must override this, or restoring a recorded duplicate
+    /// merges it away. A layered view keeps this default: it must not skip its
+    /// own checks, so a duplicate below such a view still merges when restored.
+    fn restore_link(
+        &mut self,
+        index: T,
+        source: T,
+        target: T,
+    ) -> Result<GenericLink<T>, LinkError> {
+        self.update_link(index, source, target)
+    }
+
     /// Deletes `index`, returning the link that was removed.
     fn delete_link(&mut self, index: T) -> Result<GenericLink<T>, LinkError>;
 

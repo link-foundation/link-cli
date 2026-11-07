@@ -185,7 +185,7 @@ where
             }
         }
         for row in &image.rows {
-            self.inner.update_link(row.index, row.source, row.target)?;
+            self.inner.restore_link(row.index, row.source, row.target)?;
         }
         if let Some(names) = &image.names {
             let current = self.inner.capture_names()?.ok_or_else(|| {

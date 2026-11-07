@@ -153,6 +153,11 @@ impl NamedTypesDecorator {
         self.update_observed(id, source, target, &mut |_, _| {})
     }
 
+    /// See [`LinkStorage::update_raw`](crate::LinkStorage::update_raw).
+    pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        self.pinned_types_decorator.update_raw(id, source, target)
+    }
+
     /// [`Self::update`], reporting every change the decorator stack made.
     ///
     /// Resolving a duplicate doublet deletes links, and a deleted link must not
