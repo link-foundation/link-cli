@@ -2,8 +2,10 @@
 //! to a layer above and writes it has to refuse.
 
 use anyhow::Result;
+use link_cli::triplets::match_triplets_query;
 use link_cli::{
-    DoubletRole, LinkStorage, NamedTypeLinks, Triplet, TripletQuery, Triplets, TripletsOverDoublets,
+    process_triplets_query, DoubletRole, LinkStorage, NamedTypeLinks, Triplet, TripletQuery,
+    Triplets, TripletsOverDoublets,
 };
 
 type Store = TripletsOverDoublets<LinkStorage>;
@@ -189,5 +191,91 @@ fn an_update_to_a_taken_pair_moves_to_a_duplicate_and_back() -> Result<()> {
         links.get_triplet(first),
         Some(Triplet::new(first, kind, from, to))
     );
+    Ok(())
+}
+
+fn seeded() -> Result<Store> {
+    let mut triplets = store()?;
+    process_triplets_query(&mut triplets, "() ((5: 5 0 0) (6: 5 5 5) (named: 5 0 0))")?;
+    Ok(triplets)
+}
+
+#[test]
+fn queries_of_a_wrong_shape_are_refused_by_name() -> Result<()> {
+    const SHAPE: &str = "A triplets query is ((restriction) (substitution)).";
+    for (query, expected) in [
+        ("((1: 2 3 4))", SHAPE),
+        ("(x: (1 2 3) (1 2 3))", SHAPE),
+        ("(30)", SHAPE),
+        ("(1 2 3)\n(1 2 3)\n(1 2 3)", SHAPE),
+        ("((1 2)) ()", "(1 2) has 2"),
+        ("((1 2 3 4 5)) ()", "(1 2 3 4 5) has 5"),
+        (
+            "((1 2 (3 4))) ()",
+            "A part of a triplet pattern is a reference, not (3 4).",
+        ),
+        ("() ((99))", "(99) has 1"),
+        ("() ((0: 5 0 0))", "A triplet cannot be at address 0."),
+        (
+            "() ((77: unknown 0 0))",
+            "The type part unknown of a substitution is not a triplet.",
+        ),
+        (
+            "() ((77: 5 unknown 0))",
+            "The from part unknown of a substitution is not a triplet.",
+        ),
+        (
+            "((($i: 5 0 0)) (($i: 1 0 0)))",
+            "The type part 1 of a substitution is not a triplet.",
+        ),
+    ] {
+        let error = process_triplets_query(&mut seeded()?, query)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{query}: {error}");
+    }
+    for restriction in ["(1 2 3)\n(1 2 3)", "((1 2))", "((1: (2) 3))"] {
+        assert!(
+            match_triplets_query(&mut seeded()?, restriction, "$i").is_err(),
+            "{restriction}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn a_name_or_variable_written_twice_is_one_triplet() -> Result<()> {
+    for query in [
+        "() (($v: 5 0 0) ($v: 5 0 0))",
+        "() ((n: 5 0 0) (n: 5 0 0))",
+        "((6: 5 5 5)) ((6: 5 5 0) (6: 5 0 0))",
+    ] {
+        let changes = process_triplets_query(&mut seeded()?, query)?;
+        assert_eq!(changes.len(), 1, "{query}: {changes:?}");
+    }
+    // The second pattern wrote the triplet last, and that is the one reported.
+    let mut triplets = seeded()?;
+    let changes = process_triplets_query(&mut triplets, "((6: 5 5 5)) ((6: 5 5 0) (6: 5 0 0))")?;
+    assert_eq!(changes[0].after, Some(Triplet::new(6, 5, 0, 0)));
+    assert_eq!(triplets.get_triplet(6), Some(Triplet::new(6, 5, 0, 0)));
+    Ok(())
+}
+
+#[test]
+fn a_variable_new_in_the_substitution_defines_a_triplet_others_can_use() -> Result<()> {
+    let mut triplets = seeded()?;
+    let changes = process_triplets_query(&mut triplets, "() (($new: 5 0 0) (72: $new 0 0))")?;
+    assert_eq!(changes.len(), 2);
+    let new = changes[0].after.unwrap().index;
+    assert_eq!(triplets.get_triplet(72), Some(Triplet::new(72, new, 0, 0)));
+    Ok(())
+}
+
+#[test]
+fn a_matched_triplet_the_substitution_leaves_out_is_deleted() -> Result<()> {
+    let mut triplets = seeded()?;
+    process_triplets_query(&mut triplets, "((6: 5 5 5)) ((88: 5 0 0))")?;
+    assert!(!triplets.is_triplet(6));
+    assert!(triplets.is_triplet(88));
     Ok(())
 }
