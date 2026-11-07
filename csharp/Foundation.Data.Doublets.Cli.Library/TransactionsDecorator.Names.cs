@@ -26,7 +26,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         if (_sequenceCounter == long.MaxValue)
             throw new InvalidOperationException("Transaction sequence space is exhausted.");
         var owns = _current is null;
-        var transaction = _current ??= new Transaction(this, autoCommit: true);
+        var transaction = _current ??= new Transaction(this);
         try
         {
             PrepareRowUndo(transaction);

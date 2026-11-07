@@ -21,7 +21,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             namesBefore = _inner.CaptureNames();
             if (_current is null)
             {
-                _current = new Transaction(this, autoCommit: true);
+                _current = new Transaction(this);
                 ownsTransaction = true;
             }
             else

@@ -21,12 +21,22 @@ public sealed class ScriptedPeerTests
             _listener.Start();
             _thread = new Thread(() =>
             {
-                using var client = _listener.AcceptTcpClient();
-                using var connection = new LinoConnection(client.GetStream(), new TextLinoProtocol());
-                foreach (var answer in answers)
+                // An escape from this thread would end the whole test host. A client that
+                // left, or Dispose stopping the listener (.NET 10 can raise a null reference
+                // there), only ends the script.
+                try
                 {
-                    if (connection.Receive() is null) return;
-                    foreach (var document in answer) connection.Send(document);
+                    using var client = _listener.AcceptTcpClient();
+                    using var connection = new LinoConnection(client.GetStream(), new TextLinoProtocol());
+                    foreach (var answer in answers)
+                    {
+                        if (connection.Receive() is null) return;
+                        foreach (var document in answer) connection.Send(document);
+                    }
+                }
+                catch (Exception error) when (error is SocketException or IOException or ObjectDisposedException
+                    or InvalidOperationException or NullReferenceException)
+                {
                 }
             })
             { IsBackground = true };

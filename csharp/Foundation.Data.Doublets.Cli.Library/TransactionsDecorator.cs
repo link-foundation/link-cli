@@ -339,7 +339,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             {
                 throw new InvalidOperationException("Nested transactions are not supported.");
             }
-            _current = new Transaction(this, autoCommit: false);
+            _current = new Transaction(this);
             Trace($"Began transaction {_current.Id:N}.");
             return _current;
         }
@@ -723,7 +723,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             }
         }
         catch (OperationCanceledException) { /* expected */ }
-        catch { /* background should never blow up */ }
     }
 
     private void Trace(string message)
@@ -746,16 +745,14 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     {
         private readonly TransactionsDecorator<TLinkAddress> _owner;
         private readonly List<JournalRecord<TLinkAddress>> _transitions = new();
-        private readonly bool _autoCommit;
         private int _state; // 0 = open, 1 = committed, 2 = rolled back
         internal TransactionUndoImage<TLinkAddress>? Image { get; set; }
         public bool IsRollbackOnly { get; private set; }
         public bool IsCommitAttempted { get; private set; }
 
-        public Transaction(TransactionsDecorator<TLinkAddress> owner, bool autoCommit)
+        public Transaction(TransactionsDecorator<TLinkAddress> owner)
         {
             _owner = owner;
-            _autoCommit = autoCommit;
             Id = Guid.NewGuid();
             StartedAt = DateTimeOffset.UtcNow;
         }
@@ -792,17 +789,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             }
             else if (_state == 0)
             {
-                // Per-write auto transactions should not auto-rollback if the
-                // caller forgot to commit (Commit happens automatically in
-                // RunWrite); for explicit user transactions, dispose = rollback.
-                if (_autoCommit)
-                {
-                    _owner.OnCommit(this, forceAsync: false);
-                }
-                else
-                {
-                    _owner.OnRollback(this);
-                }
+                _owner.OnRollback(this);
             }
         }
     }
