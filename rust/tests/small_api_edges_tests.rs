@@ -46,7 +46,7 @@ fn a_token_needs_a_subject() -> Result<()> {
 fn a_table_gives_back_its_store() -> Result<()> {
     let (table, subject, link) = table_with_a_token()?;
     assert!(table.store().all().iter().any(|row| row.index == link));
-    let mut store = table.into_inner();
+    let store = table.into_inner();
     assert!(store.exists(subject));
     Ok(())
 }
