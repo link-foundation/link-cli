@@ -293,7 +293,8 @@ fn sorted_mirrored_table_repairs_only_after_complete_validation() {
     assert_eq!(first.0.borrow().live, a);
     assert_eq!(second.0.borrow().live, b);
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_sorted_table_refuses_bounds_and_rows_outside_its_admission() {
     for (max_keys, max_bytes, expected) in [
         (0, 1024, "admission bounds"),

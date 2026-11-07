@@ -1,7 +1,9 @@
 #![cfg(feature = "physical-lsm")]
 // Production controls retain the public behaviors of the pre-implementation fixture.
 use link_cli::engine::cluster::{AtomicJournalStore, JournalVersion};
-use link_cli::engine::lsm::{LsmOptions, LsmStoreOptions, PhysicalLsmJournalStore};
+use link_cli::engine::lsm::{
+    LsmOptions, LsmStoreOptions, LsmTableNamespace, PhysicalLsmJournalStore,
+};
 use link_cli::engine::maintenance::{JournalMaintenanceStore, JournalScanOptions};
 use link_cli::engine::paged::CheckpointPagedLog;
 use link_cli::{LinkError, TransitionLogStore};
@@ -357,7 +359,8 @@ mod mirror;
 #[path = "common/lsm_selection.rs"]
 mod selection;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn the_store_refuses_a_namespace_outside_its_bounds() {
     for max_namespace_entries in [1, 65_537] {
         let harness = Harness::new();
@@ -377,7 +380,8 @@ fn the_store_refuses_a_namespace_outside_its_bounds() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_group_the_checkpoint_leaves_no_room_for_is_refused_and_changes_nothing() {
     let harness = Harness::new();
     let mut narrow = options();
@@ -401,4 +405,141 @@ fn a_group_the_checkpoint_leaves_no_room_for_is_refused_and_changes_nothing() {
         store.read(&["a".into()]).unwrap()[0].entries,
         vec!["x".repeat(490)]
     );
+}
+
+/// A namespace that answers with a chosen listing, refuses opening a chosen
+/// table and closing, and keeps the default, non-durable, flush answer.
+#[derive(Clone, Default)]
+struct Lying {
+    tables: Tables,
+    listing: Option<Vec<u64>>,
+    refuse_open: Option<u64>,
+    refuse_close: bool,
+}
+impl LsmTableNamespace for Lying {
+    type Device = Device;
+    fn list(&mut self, max_entries: usize) -> Result<Vec<u64>, LinkError> {
+        match &self.listing {
+            Some(listing) => Ok(listing.clone()),
+            None => self.tables.list(max_entries),
+        }
+    }
+    fn create(&mut self, id: u64) -> Result<Device, LinkError> {
+        self.tables.create(id)
+    }
+    fn open(&mut self, id: u64) -> Result<Device, LinkError> {
+        if self.refuse_open == Some(id) {
+            return Err(LinkError::StorageError("open refused".into()));
+        }
+        self.tables.open(id)
+    }
+    fn close(&mut self, device: &mut Device) -> Result<(), LinkError> {
+        self.tables.close(device)?;
+        if self.refuse_close {
+            return Err(LinkError::StorageError("close refused".into()));
+        }
+        Ok(())
+    }
+    fn delete(&mut self, id: u64) -> Result<(), LinkError> {
+        self.tables.delete(id)
+    }
+}
+fn lying_refusal(harness: &Harness, lying: Lying) -> String {
+    PhysicalLsmJournalStore::open(harness.wal().unwrap(), lying, options())
+        .err()
+        .expect("a namespace it cannot trust")
+        .to_string()
+}
+fn flushed(harness: &Harness, keys: &[&str]) {
+    let mut store = open(harness).unwrap();
+    for key in keys {
+        put(&mut store, key, vec![(*key).into()]).unwrap();
+        store.flush().unwrap();
+    }
+    assert!(store.close().is_ok());
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_listing_out_of_order_or_past_its_bound_is_refused() {
+    for listing in [
+        vec![0],
+        vec![2, 1],
+        vec![3, 3],
+        (1..=17).collect::<Vec<u64>>(),
+    ] {
+        let harness = Harness::new();
+        let lying = Lying {
+            tables: harness.tables.clone(),
+            listing: Some(listing.clone()),
+            ..Lying::default()
+        };
+        let refused = lying_refusal(&harness, lying);
+        assert!(
+            refused.contains("incomplete or unordered"),
+            "{listing:?}: {refused}"
+        );
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn tables_without_a_journal_are_refused() {
+    let harness = Harness::new();
+    let lying = Lying {
+        tables: harness.tables.clone(),
+        listing: Some(vec![1]),
+        ..Lying::default()
+    };
+    let refused = lying_refusal(&harness, lying);
+    assert!(refused.contains("uninitialized namespace"), "{refused}");
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_selected_table_that_is_gone_or_an_id_never_reserved_is_refused() {
+    let harness = Harness::new();
+    flushed(&harness, &["a"]);
+    for (listing, name) in [(vec![], "gone"), (vec![1, 2, 99], "never reserved")] {
+        let lying = Lying {
+            tables: harness.tables.clone(),
+            listing: Some(listing),
+            ..Lying::default()
+        };
+        let refused = lying_refusal(&harness, lying);
+        assert!(
+            refused.contains("missing selected or unreserved"),
+            "{name}: {refused}"
+        );
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_failed_recovery_reports_the_lease_it_could_not_release() {
+    let harness = Harness::new();
+    flushed(&harness, &["a", "b"]);
+    let selected = *harness.tables.0.borrow().files.keys().last().unwrap();
+    let lying = Lying {
+        tables: harness.tables.clone(),
+        refuse_open: Some(selected),
+        refuse_close: true,
+        ..Lying::default()
+    };
+    let refused = lying_refusal(&harness, lying);
+    assert!(refused.contains("recovery failed: "), "{refused}");
+    assert!(refused.contains("open refused"), "{refused}");
+    assert!(refused.contains("close refused"), "{refused}");
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_namespace_without_durable_flush_makes_the_store_not_durable() {
+    let harness = Harness::new();
+    let lying = Lying {
+        tables: harness.tables.clone(),
+        ..Lying::default()
+    };
+    let store = PhysicalLsmJournalStore::open(harness.wal().unwrap(), lying, options()).unwrap();
+    assert!(!store.supports_durable_flush());
 }
