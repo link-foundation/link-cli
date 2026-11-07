@@ -20,5 +20,16 @@
  {"where":{"type_id":{"_eq":1},"string":{"value":{"_eq":"x"}}},"plan":"(($i: 101 * *))","exact":false},
  {"where":{"_or":[{"type_id":{"_eq":1}},{"id":{"_gt":5}}]},"plan":"(union (($i: 101 * *)) all)","exact":false},
  {"where":{"_not":{"id":{"_gt":5}}},"plan":"all","exact":false},
- {"where":{},"plan":"all","exact":true}
+ {"where":{},"plan":"all","exact":true},
+ {"where":5,"plan":"all","exact":true},
+ {"where":{"type":5},"plan":"all","exact":false},
+ {"where":{"type_id":{"_eq":5},"_and":[{"type_id":{"_eq":6}}]},"plan":"empty","exact":true},
+ {"where":{"_and":[5]},"plan":"(intersect all)","exact":true},
+ {"where":{"_or":[]},"plan":"all","exact":false},
+ {"where":{"type_id":{"_gt":5}},"plan":"all","exact":false},
+ {"where":{"type_id":{"_in":5}},"plan":"all","exact":false},
+ {"where":{"id":{"_in":5}},"plan":"all","exact":false},
+ {"where":{"id":{"_gt":5}},"plan":"all","exact":false},
+ {"where":{"id":5},"plan":"all","exact":false},
+ {"where":{"id":{"_eq":5,"_gt":1}},"plan":"all","exact":false}
 ]
