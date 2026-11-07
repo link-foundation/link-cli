@@ -1,0 +1,40 @@
+Unicode sequence graph integrity: before-fix evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published baseline: 4729b539ddd9db9167895fed654282c95789e026
+Date: 2026-10-25 UTC
+
+Native minimum probe: one internal node points to itself; a Unicode-sequence
+and string wrapper refer to it. get_string does not return. The isolated child
+is bounded to 256 MiB address space, two CPU seconds and a three-second parent
+deadline; result -9 after printing that the graph was prepared.
+
+Automated native test before production changes:
+cargo test --manifest-path rust/Cargo.toml --test unicode_graph_cycle_tests -- --nocapture
+Result: 0 passed, 2 failed, 1 ignored. Both bounded parents fail after their
+two-second CPU-limited children fail to return. The parent tests exercise the
+ignored child entry; it is not an omitted acceptance case. Linux also limits
+each child to 128 MiB address space and disables core dumps.
+
+C# before production changes:
+dotnet test csharp --configuration Debug --disable-build-servers -m:1 --filter FullyQualifiedName~UnicodeGraphCycleTests
+Result: 2 failed, 0 passed/skipped. Both GetString and the public sequence
+converter child exit 137 after the two-second CPU limit. Each has a 128 MiB
+managed heap cap, disabled dumps and a ten-second parent deadline. All children
+are reaped. Cgroup counters remain oom=0, oom_kill=0.
+
+A separate native missing-child control rebuilds the three affected source
+files from the exact published baseline, without checkout/reset/history changes,
+then restores the working source in finally. Both published decoders silently
+skip the absent first child of (missing, Z):
+  missing child: string=Ok("Z"); code_units=Ok([90])
+  assertion: missing nodes must not silently discard data
+The bounded probe exits 101. With the revised source it exits zero and reports:
+  string=Err(Sequence link 4294843840 does not exist.)
+  code_units=Err(Sequence link 4294843840 does not exist.)
+
+Reproduce with run-unicode-cycle-probe.py and
+run-unicode-missing-probe.py --before / without --before under experiments/issue-138.
+Raw logs are unicode-cycle-probe-result.log, unicode-graph-native-before.log,
+unicode-graph-csharp-before.log and unicode-missing-before/after-result.log.
+The formal native/C# tests were corrected for ordinary fixture compile errors
+before these successful compilations and genuine behavioral before failures.

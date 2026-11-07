@@ -1,0 +1,38 @@
+Optional immutable journal object cache: exact-head CI
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 4729b539ddd9db9167895fed654282c95789e026
+Push: 2026-10-25T20:13:35Z
+Verified: 2026-10-25T20:37:22Z
+
+All nine workflows were created at the cache push timestamp on the exact
+published head. Rust native Linux/macOS/Windows tests and coverage pass; the
+last Windows step was post-test cache upload. No failing run was hidden by
+using an older commit. C# passes on all platforms and configurations.
+
+Broken Link Checker: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758160
+C# CI/CD Pipeline: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758080
+Dependencies: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758090
+Docs: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758081
+JS client CI: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758120
+Rust CI/CD Pipeline: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758150
+Security: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758072
+WebAssembly CI: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758074
+Workflows: success
+  created 2026-10-25T20:13:35Z head 4729b539ddd9db9167895fed654282c95789e026
+  https://github.com/link-foundation/link-cli/actions/runs/40229758122

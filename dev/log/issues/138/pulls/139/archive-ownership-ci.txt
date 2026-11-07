@@ -1,0 +1,38 @@
+Exclusive archive ownership: published-head CI
+Head: 7b03c07471bd6fd95a2f49d221f58f66d17c2bf4
+Commit: 2026-10-25T03:24:59+00:00
+All nine runs match this SHA and were created after its commit/push.
+
+Broken Link Checker: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:25:18Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132281
+C# CI/CD Pipeline: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:30:14Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132132
+Dependencies: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:25:37Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132333
+Docs: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:27:49Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132199
+JS client CI: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:28:38Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132387
+Rust CI/CD Pipeline: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:32:55Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132209
+Security: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:28:39Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132191
+WebAssembly CI: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:32:51Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132182
+Workflows: success
+  Created: 2026-10-25T03:25:08Z; updated: 2026-10-25T03:25:27Z
+  https://github.com/link-foundation/link-cli/actions/runs/40158132119
+
+Native Windows/Linux/macOS, fresh-merge, package, lint, release metadata, JS,
+TypeScript and actual-WASM tests/coverage pass. No archive workflow failed.
+Frozen-clock and symlink regressions execute on Linux; ordinary native contracts
+also pass on Windows/macOS. Complete coverage and the wider issue remain open.
+Later recovery-validation changes require fresh exact-head CI.

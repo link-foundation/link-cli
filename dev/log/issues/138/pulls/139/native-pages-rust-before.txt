@@ -1,0 +1,17 @@
+Public Rust native page contracts before implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+paged-rust-before.log
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+error[E0432]: unresolved import `link_cli::engine::paged`
+ --> tests/engine_paged_tests.rs:2:23
+  |
+2 | use link_cli::engine::paged::{PageDevice, PagedLog};
+  |                       ^^^^^ could not find `paged` in `engine`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `link-cli` (test "engine_paged_tests") due to 1 previous error
+
+paged-rust-file-before.log
+error: the package 'link-cli' does not contain this feature: native-pages
+

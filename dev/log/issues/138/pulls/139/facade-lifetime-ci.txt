@@ -1,0 +1,42 @@
+C# facade probe: Windows CI deadline follow-up
+
+Published SHA: 421dd39fa42576d35fc43373bad309d7fba1fc65.
+All nine workflows were created 2026-10-24 21:31:14 UTC, after publication.
+Eight workflows pass. C# run 40134580109 fails its Windows test job
+120993387596; Linux and macOS pass 903 tests each.
+
+The complete downloaded C# log is preserved locally at
+ci-logs/csharp-facade-40134580109.log (also under experiments/issue-138).
+Lines 7577-7581 and 7587-7591 identify:
+
+FacadeGraphJoinsCheckpointBeforeClosingMappedDependencies [FAIL]
+System.TimeoutException : The operation has timed out.
+FacadeLifetimeTests.cs:line 160
+
+This is the five-second await of the actual background worker in the test's
+finally block. The CI stack does not identify the worker's current instruction.
+The original post-gate callback performed a real mapped Flush, although the
+probe then deliberately aborted before native checkpoint marker writes.
+Filesystem latency is a possible contributor, not an observed worker stack.
+
+The revised callback checks only managed ownership after its gate opens and
+always throws before native markers. It still gates a real asynchronous
+transaction, starts actual graph disposal, and asserts the dependency stays
+open until the worker finishes. Normal construction retains real Flush.
+No production disposal, timeout, CI retry or platform exclusion changes.
+
+The revised probe was run against the pre-fix disposer (421dd39^). It fails:
+
+Failed FacadeGraphJoinsCheckpointBeforeClosingMappedDependencies [195 ms]
+The facade traversal closed a borrowed store while its checkpoint still used it.
+FacadeLifetimeTests.cs:line 159
+Failed: 1, Passed: 0, Total: 1.
+
+Restoring borrower-first disposal passes the same probe, then nine additional
+finite --no-build runs pass (ten total). Both actual worker and disposer are
+awaited, and the old traversal cannot touch unmapped native data in this probe.
+Reusable local script: experiments/issue-138/recheck-facade-probe.sh.
+Preserved outputs: facade-probe-managed-before.log, -after.log,
+-repeat-{1..9}.log and -validation.log.
+
+Fresh exact-SHA Windows and complete workflow validation is still required.

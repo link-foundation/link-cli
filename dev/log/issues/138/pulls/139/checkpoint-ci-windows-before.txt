@@ -1,0 +1,50 @@
+Fresh CI at a329fa7bad3d76777c1fb0d8bfb1495cc4ee217b, created 2026-10-26T13:42:08Z.
+https://github.com/link-foundation/link-cli/actions/runs/40332894391
+Windows has two failures during fixture cleanup; Directory.Delete can hide a preceding exception.
+The underlying cause is not established. Child stdout/stderr and termination phase need evidence.
+Full log: experiments/issue-138/ci-logs/csharp-40332894391.log
+21680: Test (windows-2025)	Run tests	2026-10-26T13:50:17.9472829Z [VersionControl] Created branch 'topic|:parent=?^@' from 'main' at seq 2.
+21681: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8042248Z [xUnit.net 00:06:14.36]     Foundation.Data.Doublets.Cli.Tests.VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(mode: "success", automatic: True, names: True) [FAIL]
+21682: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8050265Z [xUnit.net 00:06:14.36]       System.IO.IOException : The process cannot access the file 'branches.links' because it is being used by another process.
+21683: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8053695Z [xUnit.net 00:06:14.37]       Stack Trace:
+21684: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8062678Z [xUnit.net 00:06:14.37]            at System.IO.FileSystem.RemoveDirectoryRecursive(String fullPath, WIN32_FIND_DATA& findData, Boolean topLevel)
+21685: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8064304Z [xUnit.net 00:06:14.37]            at System.IO.Directory.Delete(String path, Boolean recursive)
+21686: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8066871Z [xUnit.net 00:06:14.37]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionProcessExitTests.cs(84,0): at Foundation.Data.Doublets.Cli.Tests.VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(String mode, Boolean automatic, Boolean names)
+21687: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8069364Z [xUnit.net 00:06:14.37]         --- End of stack trace from previous location ---
+21688: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8091004Z   Failed Foundation.Data.Doublets.Cli.Tests.VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(mode: "success", automatic: True, names: True) [15 s]
+21689: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8094541Z   Error Message:
+21690: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8096146Z    System.IO.IOException : The process cannot access the file 'branches.links' because it is being used by another process.
+21691: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8097194Z   Stack Trace:
+21692: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8098204Z      at System.IO.FileSystem.RemoveDirectoryRecursive(String fullPath, WIN32_FIND_DATA& findData, Boolean topLevel)
+21693: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8099436Z    at System.IO.Directory.Delete(String path, Boolean recursive)
+21694: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8101677Z    at Foundation.Data.Doublets.Cli.Tests.VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(String mode, Boolean automatic, Boolean names) in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionProcessExitTests.cs:line 84
+21695: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8103733Z --- End of stack trace from previous location ---
+21696: Test (windows-2025)	Run tests	2026-10-26T13:50:18.8876129Z [VersionControl] Prepared durable version movement.
+21697: Test (windows-2025)	Run tests	2026-10-26T13:50:20.6247346Z   Passed Foundation.Data.Doublets.Cli.Tests.SqliteCommitLogTests.EngineGroupsAndPinsReopenAcrossStrategies(structure: Shared, encoding: Changes) [7 s]
+21698: Test (windows-2025)	Run tests	2026-10-26T13:50:20.6789649Z [VersionControl] Completed durable version movement.
+21699: Test (windows-2025)	Run tests	2026-10-26T13:50:20.6790752Z [VersionControl] Switched to branch 'topic|:parent=?^@' at seq 2.
+21700: Test (windows-2025)	Run tests	2026-10-26T13:50:21.7798526Z [VersionControl] Prepared version publication 9418b941273e470f8957b78a9fd409eb: 2..3 on 'topic|:parent=?^@'.
+21701: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4669048Z [xUnit.net 00:06:18.03]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-after") [FAIL]
+21702: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4671324Z [xUnit.net 00:06:18.03]       System.IO.IOException : The process cannot access the file 'branches.links' because it is being used by another process.
+21703: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4672506Z [xUnit.net 00:06:18.03]       Stack Trace:
+21704: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4677129Z [xUnit.net 00:06:18.03]            at System.IO.FileSystem.RemoveDirectoryRecursive(String fullPath, WIN32_FIND_DATA& findData, Boolean topLevel)
+21705: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4679275Z [xUnit.net 00:06:18.03]            at System.IO.Directory.Delete(String path, Boolean recursive)
+21706: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4682088Z [xUnit.net 00:06:18.03]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionMovementRestartFailureTests.cs(59,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+21707: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4684319Z [xUnit.net 00:06:18.03]         --- End of stack trace from previous location ---
+21708: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4686042Z   Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-after") [15 s]
+21709: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4688669Z   Error Message:
+21710: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4689509Z    System.IO.IOException : The process cannot access the file 'branches.links' because it is being used by another process.
+21711: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4690633Z   Stack Trace:
+21712: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4691493Z      at System.IO.FileSystem.RemoveDirectoryRecursive(String fullPath, WIN32_FIND_DATA& findData, Boolean topLevel)
+21713: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4692457Z    at System.IO.Directory.Delete(String path, Boolean recursive)
+21714: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4694363Z    at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionMovementRestartFailureTests.cs:line 59
+21715: Test (windows-2025)	Run tests	2026-10-26T13:50:22.4697221Z --- End of stack trace from previous location ---
+21716: Test (windows-2025)	Run tests	2026-10-26T13:50:24.3708077Z [VersionControl] Prepared version publication 9418b941273e470f8957b78a9fd409eb: 2..3 on 'topic|:parent=?^@'.
+21717: Test (windows-2025)	Run tests	2026-10-26T13:50:25.0190760Z [VersionControl] Published committed version tx 9418b941273e470f8957b78a9fd409eb on 'topic|:parent=?^@'.
+22773: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7687780Z Test Run Failed.
+22774: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7688200Z Total tests: 2180
+22775: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7688471Z      Passed: 2178
+22776: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7688661Z      Failed: 2
+22777: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7690539Z  Total time: 7.2892 Minutes
+22778: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7898422Z      1>Project "D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.sln" (1) is building "D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\Foundation.Data.Doublets.Cli.Tests.csproj" (2) on node 1 (VSTest target(s)).
+22779: Test (windows-2025)	Run tests	2026-10-26T13:51:19.7899959Z      2>_VSTestConsole:

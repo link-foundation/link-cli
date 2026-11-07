@@ -1,0 +1,10 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  ClusterExample -> /tmp/gh-issue-solver-1793187246880/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.73

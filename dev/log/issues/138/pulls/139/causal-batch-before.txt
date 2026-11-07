@@ -1,0 +1,34 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Test-first controls precede the selected production batch implementations.
+Node: the requested engine-causal-batch.js API was absent.
+  experiments/issue-138/causal-batch-api-before.log line(s) 2, 5, 16: ERR_MODULE_NOT_FOUND
+  1485 bytes; SHA256 c9928000d86d4bbb06f57e28c05fd60247917aaccf3c2718aa11539ff4dcd365.
+Rust: engine::causal_batch was absent.
+  experiments/issue-138/causal-batch-native-before.log line(s) 2: error[E0432]
+  465 bytes; SHA256 ec87cba9909e3dba37909e5b3f3fa6bfdfa8eb4ddfc4228af961721140c966dd.
+C#: CausalBatch/CausalBatchEdit types were absent.
+  experiments/issue-138/causal-batch-csharp-before.log line(s) 3, 4: error CS0246
+  1033 bytes; SHA256 20b0ca03608ce54c8d15bced990c2bb8360cca8bc85e153ce6df67faf8639351.
+JS: caller payload mutation crossed the first store await.
+  experiments/issue-138/causal-batch-ownership-before.log line(s) 27: + 'changed after admission'
+  1745 bytes; SHA256 2cec3e20b4e71cd90b8bb28f463674d4909689dcd192d7f5fdbb6f2dc42eb5bf.
+Physical composition: the example incorrectly assumed receipt-only publication advanced the owner key.
+  experiments/issue-138/causal-batch-physical-generation-before.log line(s) 15: '3' !== '4'
+  1453 bytes; SHA256 35b6d985522aa84090812fe5479be9abb8d2d9f4bfe6dddec22114f79b821852.
+The JS production correction owns normalized observations and payloads before any await.
+The physical correction changes all three examples' expected owner generation to 3.
+An added real-WAL/table contract checks unchanged owner generation after an empty receipt and the following jump to 3.
+The underlying physical store updates only changed keys using its shared generation counter; the batch implementation already guards both actual key generations.
+No production store generation semantics were changed to match the example.
+The old ambient SDK 10.0.112 formatter also produced only existing-file whitespace diagnostics; SDK 10.0.403 matches CI and is explicitly selected by the drivers.
+C# Release complete-production coverage before adding a null retry-token admission control.
+CausalBatch.cs line 27: 87.5% (7/8) branch outcomes; the null token path is missing.
+2491 tests pass; zero failed/skipped. No production source change is needed.
+experiments/issue-138/causal-batch-csharp-Release-before-null-token.xml: 2316476 bytes; SHA256 e87aad6227adb5840d39292e935e99b61230ca3256c35bef1aaf1026421b1460.
+The existing C# admission contract now includes null retry tokens; production code is unchanged.
+Complete native coverage: 1226 passing tests, zero failures; production source unchanged.
+causal_batch.rs line 64, edit.observed.len() > 64: true=0, false=334; component branches 87/88.
+The direct oversized observed-version request is missing from the existing admission contract.
+experiments/issue-138/causal-batch-native-before-observation-limit.json: 22004593 bytes; SHA256 2feb608e42a2501c11eb014a45a3b82470544df3177b5164dc69248acb9caa43.
+The existing portable admission contract now includes 65 supplied observations before pruning; production code is unchanged.
+These controls do not establish completion of ordinary links sessions or any wider unmet issue criterion.

@@ -12,6 +12,7 @@ namespace Foundation.Data.Doublets.Cli
 
         public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
         {
+            foreach (var address in addresses) EnsureSupportedInternalReference(links, address);
             if (links is IReferencedLinks<TLinkAddress> referenced)
             {
                 foreach (var address in addresses)
@@ -28,7 +29,12 @@ namespace Foundation.Data.Doublets.Cli
                 composed.EnsureCreated(addresses);
                 return;
             }
-            links.EnsureCreated(links.Create, addresses);
+            if (links is INamedTypesLinks<TLinkAddress> named)
+            {
+                var fallback = addresses.Where(address => !named.TryEnsureCreated(address)).ToArray();
+                links.EnsureCreated(links.Create, fallback);
+            }
+            else links.EnsureCreated(links.Create, addresses);
         }
 
         public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>

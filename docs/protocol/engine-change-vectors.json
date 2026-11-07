@@ -1,0 +1,309 @@
+{
+  "valid": [
+    "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+    "engine2|2|1|3|+1,2,0,-;-2|dd7dc9ad043c5e3e",
+    "engine2|3|2|4294967296|+4294967295,0,4294967295,|f8fdb2837a5a0d35",
+    "engine2|4|3|4294967297||004512f383b3c52d"
+  ],
+  "mixed": [
+    "engine1|1|3|1,0,0,e99baa3b7cf09f9880000a;2,1,2,|18cda83b7d43c566",
+    "engine2|2|1|3|+1,2,0,-;-2|dd7dc9ad043c5e3e",
+    "engine1|3|4294967296|1,2,0,-;4294967295,0,4294967295,|7414e6ae3b1d998c",
+    "engine2|4|3|4294967297||004512f383b3c52d"
+  ],
+  "invalidU32": [
+    {
+      "case": "missing initial revision",
+      "records": [
+        "engine2|2|1|3|+1,2,0,-;-2|dd7dc9ad043c5e3e"
+      ]
+    },
+    {
+      "case": "wrong base",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|0|3|+1,2,0,-|463906531f8ad081"
+      ]
+    },
+    {
+      "case": "revision gap",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|3|1|3|+1,2,0,-|8472568bdd170631"
+      ]
+    },
+    {
+      "case": "allocator backwards",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|1|2|-2|77a0f3cc1b2c429f"
+      ]
+    },
+    {
+      "case": "repeated revision",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559"
+      ]
+    },
+    {
+      "case": "duplicate operation",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|1|3|+1,2,0,-;-1|dd7dc8ad043c5c8b"
+      ]
+    },
+    {
+      "case": "unsorted operations",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|1|3|-2;+1,2,0,-|51eef2aabf61740e"
+      ]
+    },
+    {
+      "case": "absent tombstone",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|1|4|-3|97931eba82fbf90e"
+      ]
+    },
+    {
+      "case": "unchanged put",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|1|3|+1,0,0,e99baa3b7cf09f9880000a|5f5e2323325d2a48"
+      ]
+    },
+    {
+      "case": "zero address",
+      "records": [
+        "engine2|1|0|2|+0,0,0,-|93f70f884ed96ac6"
+      ]
+    },
+    {
+      "case": "address beyond allocator",
+      "records": [
+        "engine2|1|0|2|+2,0,0,-|23119382bd6b1440"
+      ]
+    },
+    {
+      "case": "zero allocator",
+      "records": [
+        "engine2|1|0|0||11cca808e484cad0"
+      ]
+    },
+    {
+      "case": "revision overflow",
+      "records": [
+        "engine2|18446744073709551616|0|2||6888ce4cc0025591"
+      ]
+    },
+    {
+      "case": "allocator overflow",
+      "records": [
+        "engine2|1|0|340282366920938463463374607431768211456||ca580f2963c220a4"
+      ]
+    },
+    {
+      "case": "address overflow",
+      "records": [
+        "engine2|1|0|4294967297|+4294967296,0,0,-|00307e7341c331a1"
+      ]
+    },
+    {
+      "case": "source overflow",
+      "records": [
+        "engine2|1|0|2|+1,4294967296,0,-|b0e306bc07cd1f93"
+      ]
+    },
+    {
+      "case": "invalid UTF8",
+      "records": [
+        "engine2|1|0|2|+1,0,0,ff|b8078a2c88ab4c2a"
+      ]
+    },
+    {
+      "case": "odd hex name",
+      "records": [
+        "engine2|1|0|2|+1,0,0,f|6de3bee343fe0a48"
+      ]
+    },
+    {
+      "case": "uppercase hex name",
+      "records": [
+        "engine2|1|0|2|+1,0,0,EF|b87e5c2c89102465"
+      ]
+    },
+    {
+      "case": "nonhex name",
+      "records": [
+        "engine2|1|0|2|+1,0,0,gg|b80aab2c88adba14"
+      ]
+    },
+    {
+      "case": "unknown operation",
+      "records": [
+        "engine2|1|0|2|?1|68370624c663e69a"
+      ]
+    },
+    {
+      "case": "unsigned put",
+      "records": [
+        "engine2|1|0|2|1,0,0,-|d0e7c8d491ff976e"
+      ]
+    },
+    {
+      "case": "delete fields",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|1|3|-2,0|f56e824cff25a476"
+      ]
+    },
+    {
+      "case": "trailing operation",
+      "records": [
+        "engine2|1|0|2|+1,0,0,-;|b8d04f2c89561876"
+      ]
+    },
+    {
+      "case": "empty operation",
+      "records": [
+        "engine2|1|0|2|;+1,0,0,-|f1fd487f063fd5f8"
+      ]
+    },
+    {
+      "case": "missing put field",
+      "records": [
+        "engine2|1|0|2|+1,0,0|7223eb5e62a61826"
+      ]
+    },
+    {
+      "case": "extra put field",
+      "records": [
+        "engine2|1|0|2|+1,0,0,-,0|5fe2e0ad5d26229d"
+      ]
+    },
+    {
+      "case": "extra header field",
+      "records": [
+        "engine2|1|0|2|+1,0,0,-|extra|ad5af354d6702333"
+      ]
+    },
+    {
+      "case": "short header",
+      "records": [
+        "engine2|1|2|+1,0,0,-|28a44ec292141fed"
+      ]
+    },
+    {
+      "case": "unknown mandatory format",
+      "records": [
+        "engine3|1|0|2|+1,0,0,-|ec2da9e381e0ac98"
+      ]
+    },
+    {
+      "case": "revision leading zero",
+      "records": [
+        "engine2|01|0|2|+1,0,0,-|034208381acc2163"
+      ]
+    },
+    {
+      "case": "base leading zero",
+      "records": [
+        "engine2|1|00|2|+1,0,0,-|7a6a2d99df7ab9f9"
+      ]
+    },
+    {
+      "case": "allocator leading zero",
+      "records": [
+        "engine2|1|0|02|+1,0,0,-|fc071d17e26a2781"
+      ]
+    },
+    {
+      "case": "address leading zero",
+      "records": [
+        "engine2|1|0|2|+01,0,0,-|0feef508ecb61f43"
+      ]
+    },
+    {
+      "case": "signed address",
+      "records": [
+        "engine2|1|0|2|++1,0,0,-|be87d1e56cf300a8"
+      ]
+    },
+    {
+      "case": "source whitespace",
+      "records": [
+        "engine2|1|0|2|+1, 0,0,-|e762ab3360fc30d5"
+      ]
+    },
+    {
+      "case": "non ASCII decimal",
+      "records": [
+        "engine2|1|0|2|+1,０,0,-|43e4a2fa6497ff60"
+      ]
+    },
+    {
+      "case": "embedded NUL",
+      "records": [
+        "engine2|1|0|2|+1,0\u0000,0,-|530e355cace92715"
+      ]
+    },
+    {
+      "case": "wrong checksum",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf550"
+      ]
+    },
+    {
+      "case": "uppercase checksum",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|B78F5A262E9CF559"
+      ]
+    },
+    {
+      "case": "short checksum",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf55"
+      ]
+    }
+  ],
+  "physicalMixed": {
+    "logical": [
+      "engine1|1|33|1,0,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;2,0,0,6e616d656420726f77203220e99baae99baae99baae99baae99baae99baae99baae99baa;3,0,0,6e616d656420726f77203320e99baae99baae99baae99baae99baae99baae99baae99baa;4,0,0,6e616d656420726f77203420e99baae99baae99baae99baae99baae99baae99baae99baa;5,0,0,6e616d656420726f77203520e99baae99baae99baae99baae99baae99baae99baae99baa;6,0,0,6e616d656420726f77203620e99baae99baae99baae99baae99baae99baae99baae99baa;7,0,0,6e616d656420726f77203720e99baae99baae99baae99baae99baae99baae99baae99baa;8,0,0,6e616d656420726f77203820e99baae99baae99baae99baae99baae99baae99baae99baa;9,0,0,6e616d656420726f77203920e99baae99baae99baae99baae99baae99baae99baae99baa;10,0,0,6e616d656420726f7720313020e99baae99baae99baae99baae99baae99baae99baae99baa;11,0,0,6e616d656420726f7720313120e99baae99baae99baae99baae99baae99baae99baae99baa;12,0,0,6e616d656420726f7720313220e99baae99baae99baae99baae99baae99baae99baae99baa;13,0,0,6e616d656420726f7720313320e99baae99baae99baae99baae99baae99baae99baae99baa;14,0,0,6e616d656420726f7720313420e99baae99baae99baae99baae99baae99baae99baae99baa;15,0,0,6e616d656420726f7720313520e99baae99baae99baae99baae99baae99baae99baae99baa;16,0,0,6e616d656420726f7720313620e99baae99baae99baae99baae99baae99baae99baae99baa;17,0,0,6e616d656420726f7720313720e99baae99baae99baae99baae99baae99baae99baae99baa;18,0,0,6e616d656420726f7720313820e99baae99baae99baae99baae99baae99baae99baae99baa;19,0,0,6e616d656420726f7720313920e99baae99baae99baae99baae99baae99baae99baae99baa;20,0,0,6e616d656420726f7720323020e99baae99baae99baae99baae99baae99baae99baae99baa;21,0,0,6e616d656420726f7720323120e99baae99baae99baae99baae99baae99baae99baae99baa;22,0,0,6e616d656420726f7720323220e99baae99baae99baae99baae99baae99baae99baae99baa;23,0,0,6e616d656420726f7720323320e99baae99baae99baae99baae99baae99baae99baae99baa;24,0,0,6e616d656420726f7720323420e99baae99baae99baae99baae99baae99baae99baae99baa;25,0,0,6e616d656420726f7720323520e99baae99baae99baae99baae99baae99baae99baae99baa;26,0,0,6e616d656420726f7720323620e99baae99baae99baae99baae99baae99baae99baae99baa;27,0,0,6e616d656420726f7720323720e99baae99baae99baae99baae99baae99baae99baae99baa;28,0,0,6e616d656420726f7720323820e99baae99baae99baae99baae99baae99baae99baae99baa;29,0,0,6e616d656420726f7720323920e99baae99baae99baae99baae99baae99baae99baae99baa;30,0,0,6e616d656420726f7720333020e99baae99baae99baae99baae99baae99baae99baae99baa;31,0,0,6e616d656420726f7720333120e99baae99baae99baae99baae99baae99baae99baae99baa;32,0,0,6e616d656420726f7720333220e99baae99baae99baae99baae99baae99baae99baae99baa|9029b1645d2c55a3",
+      "engine1|2|33|1,1,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;2,0,0,6e616d656420726f77203220e99baae99baae99baae99baae99baae99baae99baae99baa;3,0,0,6e616d656420726f77203320e99baae99baae99baae99baae99baae99baae99baae99baa;4,0,0,6e616d656420726f77203420e99baae99baae99baae99baae99baae99baae99baae99baa;5,0,0,6e616d656420726f77203520e99baae99baae99baae99baae99baae99baae99baae99baa;6,0,0,6e616d656420726f77203620e99baae99baae99baae99baae99baae99baae99baae99baa;7,0,0,6e616d656420726f77203720e99baae99baae99baae99baae99baae99baae99baae99baa;8,0,0,6e616d656420726f77203820e99baae99baae99baae99baae99baae99baae99baae99baa;9,0,0,6e616d656420726f77203920e99baae99baae99baae99baae99baae99baae99baae99baa;10,0,0,6e616d656420726f7720313020e99baae99baae99baae99baae99baae99baae99baae99baa;11,0,0,6e616d656420726f7720313120e99baae99baae99baae99baae99baae99baae99baae99baa;12,0,0,6e616d656420726f7720313220e99baae99baae99baae99baae99baae99baae99baae99baa;13,0,0,6e616d656420726f7720313320e99baae99baae99baae99baae99baae99baae99baae99baa;14,0,0,6e616d656420726f7720313420e99baae99baae99baae99baae99baae99baae99baae99baa;15,0,0,6e616d656420726f7720313520e99baae99baae99baae99baae99baae99baae99baae99baa;16,0,0,6e616d656420726f7720313620e99baae99baae99baae99baae99baae99baae99baae99baa;17,0,0,6e616d656420726f7720313720e99baae99baae99baae99baae99baae99baae99baae99baa;18,0,0,6e616d656420726f7720313820e99baae99baae99baae99baae99baae99baae99baae99baa;19,0,0,6e616d656420726f7720313920e99baae99baae99baae99baae99baae99baae99baae99baa;20,0,0,6e616d656420726f7720323020e99baae99baae99baae99baae99baae99baae99baae99baa;21,0,0,6e616d656420726f7720323120e99baae99baae99baae99baae99baae99baae99baae99baa;22,0,0,6e616d656420726f7720323220e99baae99baae99baae99baae99baae99baae99baae99baa;23,0,0,6e616d656420726f7720323320e99baae99baae99baae99baae99baae99baae99baae99baa;24,0,0,6e616d656420726f7720323420e99baae99baae99baae99baae99baae99baae99baae99baa;25,0,0,6e616d656420726f7720323520e99baae99baae99baae99baae99baae99baae99baae99baa;26,0,0,6e616d656420726f7720323620e99baae99baae99baae99baae99baae99baae99baae99baa;27,0,0,6e616d656420726f7720323720e99baae99baae99baae99baae99baae99baae99baae99baa;28,0,0,6e616d656420726f7720323820e99baae99baae99baae99baae99baae99baae99baae99baa;29,0,0,6e616d656420726f7720323920e99baae99baae99baae99baae99baae99baae99baae99baa;30,0,0,6e616d656420726f7720333020e99baae99baae99baae99baae99baae99baae99baae99baa;31,0,0,6e616d656420726f7720333120e99baae99baae99baae99baae99baae99baae99baae99baa;32,0,0,6e616d656420726f7720333220e99baae99baae99baae99baae99baae99baae99baae99baa|e63b86d5044912c3",
+      "engine2|3|2|33|+1,2,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;-2|50ab87bdc215551e",
+      "engine1|4|33|1,3,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;3,0,0,6e616d656420726f77203320e99baae99baae99baae99baae99baae99baae99baae99baa;4,0,0,6e616d656420726f77203420e99baae99baae99baae99baae99baae99baae99baae99baa;5,0,0,6e616d656420726f77203520e99baae99baae99baae99baae99baae99baae99baae99baa;6,0,0,6e616d656420726f77203620e99baae99baae99baae99baae99baae99baae99baae99baa;7,0,0,6e616d656420726f77203720e99baae99baae99baae99baae99baae99baae99baae99baa;8,0,0,6e616d656420726f77203820e99baae99baae99baae99baae99baae99baae99baae99baa;9,0,0,6e616d656420726f77203920e99baae99baae99baae99baae99baae99baae99baae99baa;10,0,0,6e616d656420726f7720313020e99baae99baae99baae99baae99baae99baae99baae99baa;11,0,0,6e616d656420726f7720313120e99baae99baae99baae99baae99baae99baae99baae99baa;12,0,0,6e616d656420726f7720313220e99baae99baae99baae99baae99baae99baae99baae99baa;13,0,0,6e616d656420726f7720313320e99baae99baae99baae99baae99baae99baae99baae99baa;14,0,0,6e616d656420726f7720313420e99baae99baae99baae99baae99baae99baae99baae99baa;15,0,0,6e616d656420726f7720313520e99baae99baae99baae99baae99baae99baae99baae99baa;16,0,0,6e616d656420726f7720313620e99baae99baae99baae99baae99baae99baae99baae99baa;17,0,0,6e616d656420726f7720313720e99baae99baae99baae99baae99baae99baae99baae99baa;18,0,0,6e616d656420726f7720313820e99baae99baae99baae99baae99baae99baae99baae99baa;19,0,0,6e616d656420726f7720313920e99baae99baae99baae99baae99baae99baae99baae99baa;20,0,0,6e616d656420726f7720323020e99baae99baae99baae99baae99baae99baae99baae99baa;21,0,0,6e616d656420726f7720323120e99baae99baae99baae99baae99baae99baae99baae99baa;22,0,0,6e616d656420726f7720323220e99baae99baae99baae99baae99baae99baae99baae99baa;23,0,0,6e616d656420726f7720323320e99baae99baae99baae99baae99baae99baae99baae99baa;24,0,0,6e616d656420726f7720323420e99baae99baae99baae99baae99baae99baae99baae99baa;25,0,0,6e616d656420726f7720323520e99baae99baae99baae99baae99baae99baae99baae99baa;26,0,0,6e616d656420726f7720323620e99baae99baae99baae99baae99baae99baae99baae99baa;27,0,0,6e616d656420726f7720323720e99baae99baae99baae99baae99baae99baae99baae99baa;28,0,0,6e616d656420726f7720323820e99baae99baae99baae99baae99baae99baae99baae99baa;29,0,0,6e616d656420726f7720323920e99baae99baae99baae99baae99baae99baae99baae99baa;30,0,0,6e616d656420726f7720333020e99baae99baae99baae99baae99baae99baae99baae99baa;31,0,0,6e616d656420726f7720333120e99baae99baae99baae99baae99baae99baae99baae99baa;32,0,0,6e616d656420726f7720333220e99baae99baae99baae99baae99baae99baae99baae99baa|de5ee87bcca37ea1",
+      "engine1|5|33|1,4,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;3,0,0,6e616d656420726f77203320e99baae99baae99baae99baae99baae99baae99baae99baa;4,0,0,6e616d656420726f77203420e99baae99baae99baae99baae99baae99baae99baae99baa;5,0,0,6e616d656420726f77203520e99baae99baae99baae99baae99baae99baae99baae99baa;6,0,0,6e616d656420726f77203620e99baae99baae99baae99baae99baae99baae99baae99baa;7,0,0,6e616d656420726f77203720e99baae99baae99baae99baae99baae99baae99baae99baa;8,0,0,6e616d656420726f77203820e99baae99baae99baae99baae99baae99baae99baae99baa;9,0,0,6e616d656420726f77203920e99baae99baae99baae99baae99baae99baae99baae99baa;10,0,0,6e616d656420726f7720313020e99baae99baae99baae99baae99baae99baae99baae99baa;11,0,0,6e616d656420726f7720313120e99baae99baae99baae99baae99baae99baae99baae99baa;12,0,0,6e616d656420726f7720313220e99baae99baae99baae99baae99baae99baae99baae99baa;13,0,0,6e616d656420726f7720313320e99baae99baae99baae99baae99baae99baae99baae99baa;14,0,0,6e616d656420726f7720313420e99baae99baae99baae99baae99baae99baae99baae99baa;15,0,0,6e616d656420726f7720313520e99baae99baae99baae99baae99baae99baae99baae99baa;16,0,0,6e616d656420726f7720313620e99baae99baae99baae99baae99baae99baae99baae99baa;17,0,0,6e616d656420726f7720313720e99baae99baae99baae99baae99baae99baae99baae99baa;18,0,0,6e616d656420726f7720313820e99baae99baae99baae99baae99baae99baae99baae99baa;19,0,0,6e616d656420726f7720313920e99baae99baae99baae99baae99baae99baae99baae99baa;20,0,0,6e616d656420726f7720323020e99baae99baae99baae99baae99baae99baae99baae99baa;21,0,0,6e616d656420726f7720323120e99baae99baae99baae99baae99baae99baae99baae99baa;22,0,0,6e616d656420726f7720323220e99baae99baae99baae99baae99baae99baae99baae99baa;23,0,0,6e616d656420726f7720323320e99baae99baae99baae99baae99baae99baae99baae99baa;24,0,0,6e616d656420726f7720323420e99baae99baae99baae99baae99baae99baae99baae99baa;25,0,0,6e616d656420726f7720323520e99baae99baae99baae99baae99baae99baae99baae99baa;26,0,0,6e616d656420726f7720323620e99baae99baae99baae99baae99baae99baae99baae99baa;27,0,0,6e616d656420726f7720323720e99baae99baae99baae99baae99baae99baae99baae99baa;28,0,0,6e616d656420726f7720323820e99baae99baae99baae99baae99baae99baae99baae99baa;29,0,0,6e616d656420726f7720323920e99baae99baae99baae99baae99baae99baae99baae99baa;30,0,0,6e616d656420726f7720333020e99baae99baae99baae99baae99baae99baae99baae99baa;31,0,0,6e616d656420726f7720333120e99baae99baae99baae99baae99baae99baae99baae99baa;32,0,0,6e616d656420726f7720333220e99baae99baae99baae99baae99baae99baae99baae99baa|a137b30c0ebb70cd"
+    ],
+    "physical": [
+      "engine1|1|33|1,0,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;2,0,0,6e616d656420726f77203220e99baae99baae99baae99baae99baae99baae99baae99baa;3,0,0,6e616d656420726f77203320e99baae99baae99baae99baae99baae99baae99baae99baa;4,0,0,6e616d656420726f77203420e99baae99baae99baae99baae99baae99baae99baae99baa;5,0,0,6e616d656420726f77203520e99baae99baae99baae99baae99baae99baae99baae99baa;6,0,0,6e616d656420726f77203620e99baae99baae99baae99baae99baae99baae99baae99baa;7,0,0,6e616d656420726f77203720e99baae99baae99baae99baae99baae99baae99baae99baa;8,0,0,6e616d656420726f77203820e99baae99baae99baae99baae99baae99baae99baae99baa;9,0,0,6e616d656420726f77203920e99baae99baae99baae99baae99baae99baae99baae99baa;10,0,0,6e616d656420726f7720313020e99baae99baae99baae99baae99baae99baae99baae99baa;11,0,0,6e616d656420726f7720313120e99baae99baae99baae99baae99baae99baae99baae99baa;12,0,0,6e616d656420726f7720313220e99baae99baae99baae99baae99baae99baae99baae99baa;13,0,0,6e616d656420726f7720313320e99baae99baae99baae99baae99baae99baae99baae99baa;14,0,0,6e616d656420726f7720313420e99baae99baae99baae99baae99baae99baae99baae99baa;15,0,0,6e616d656420726f7720313520e99baae99baae99baae99baae99baae99baae99baae99baa;16,0,0,6e616d656420726f7720313620e99baae99baae99baae99baae99baae99baae99baae99baa;17,0,0,6e616d656420726f7720313720e99baae99baae99baae99baae99baae99baae99baae99baa;18,0,0,6e616d656420726f7720313820e99baae99baae99baae99baae99baae99baae99baae99baa;19,0,0,6e616d656420726f7720313920e99baae99baae99baae99baae99baae99baae99baae99baa;20,0,0,6e616d656420726f7720323020e99baae99baae99baae99baae99baae99baae99baae99baa;21,0,0,6e616d656420726f7720323120e99baae99baae99baae99baae99baae99baae99baae99baa;22,0,0,6e616d656420726f7720323220e99baae99baae99baae99baae99baae99baae99baae99baa;23,0,0,6e616d656420726f7720323320e99baae99baae99baae99baae99baae99baae99baae99baa;24,0,0,6e616d656420726f7720323420e99baae99baae99baae99baae99baae99baae99baae99baa;25,0,0,6e616d656420726f7720323520e99baae99baae99baae99baae99baae99baae99baae99baa;26,0,0,6e616d656420726f7720323620e99baae99baae99baae99baae99baae99baae99baae99baa;27,0,0,6e616d656420726f7720323720e99baae99baae99baae99baae99baae99baae99baae99baa;28,0,0,6e616d656420726f7720323820e99baae99baae99baae99baae99baae99baae99baae99baa;29,0,0,6e616d656420726f7720323920e99baae99baae99baae99baae99baae99baae99baae99baa;30,0,0,6e616d656420726f7720333020e99baae99baae99baae99baae99baae99baae99baae99baa;31,0,0,6e616d656420726f7720333120e99baae99baae99baae99baae99baae99baae99baae99baa;32,0,0,6e616d656420726f7720333220e99baae99baae99baae99baae99baae99baae99baae99baa|9029b1645d2c55a3",
+      "delta1|9029b1645d2c55a3|2|33|2|2593|1|e63b86d5044912c3|a8c24c5b714ab994",
+      "engine2|3|2|33|+1,2,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;-2|50ab87bdc215551e",
+      "engine1|4|33|1,3,0,6e616d656420726f77203120e99baae99baae99baae99baae99baae99baae99baae99baa;3,0,0,6e616d656420726f77203320e99baae99baae99baae99baae99baae99baae99baae99baa;4,0,0,6e616d656420726f77203420e99baae99baae99baae99baae99baae99baae99baae99baa;5,0,0,6e616d656420726f77203520e99baae99baae99baae99baae99baae99baae99baae99baa;6,0,0,6e616d656420726f77203620e99baae99baae99baae99baae99baae99baae99baae99baa;7,0,0,6e616d656420726f77203720e99baae99baae99baae99baae99baae99baae99baae99baa;8,0,0,6e616d656420726f77203820e99baae99baae99baae99baae99baae99baae99baae99baa;9,0,0,6e616d656420726f77203920e99baae99baae99baae99baae99baae99baae99baae99baa;10,0,0,6e616d656420726f7720313020e99baae99baae99baae99baae99baae99baae99baae99baa;11,0,0,6e616d656420726f7720313120e99baae99baae99baae99baae99baae99baae99baae99baa;12,0,0,6e616d656420726f7720313220e99baae99baae99baae99baae99baae99baae99baae99baa;13,0,0,6e616d656420726f7720313320e99baae99baae99baae99baae99baae99baae99baae99baa;14,0,0,6e616d656420726f7720313420e99baae99baae99baae99baae99baae99baae99baae99baa;15,0,0,6e616d656420726f7720313520e99baae99baae99baae99baae99baae99baae99baae99baa;16,0,0,6e616d656420726f7720313620e99baae99baae99baae99baae99baae99baae99baae99baa;17,0,0,6e616d656420726f7720313720e99baae99baae99baae99baae99baae99baae99baae99baa;18,0,0,6e616d656420726f7720313820e99baae99baae99baae99baae99baae99baae99baae99baa;19,0,0,6e616d656420726f7720313920e99baae99baae99baae99baae99baae99baae99baae99baa;20,0,0,6e616d656420726f7720323020e99baae99baae99baae99baae99baae99baae99baae99baa;21,0,0,6e616d656420726f7720323120e99baae99baae99baae99baae99baae99baae99baae99baa;22,0,0,6e616d656420726f7720323220e99baae99baae99baae99baae99baae99baae99baae99baa;23,0,0,6e616d656420726f7720323320e99baae99baae99baae99baae99baae99baae99baae99baa;24,0,0,6e616d656420726f7720323420e99baae99baae99baae99baae99baae99baae99baae99baa;25,0,0,6e616d656420726f7720323520e99baae99baae99baae99baae99baae99baae99baae99baa;26,0,0,6e616d656420726f7720323620e99baae99baae99baae99baae99baae99baae99baae99baa;27,0,0,6e616d656420726f7720323720e99baae99baae99baae99baae99baae99baae99baae99baa;28,0,0,6e616d656420726f7720323820e99baae99baae99baae99baae99baae99baae99baae99baa;29,0,0,6e616d656420726f7720323920e99baae99baae99baae99baae99baae99baae99baae99baa;30,0,0,6e616d656420726f7720333020e99baae99baae99baae99baae99baae99baae99baae99baa;31,0,0,6e616d656420726f7720333120e99baae99baae99baae99baae99baae99baae99baae99baa;32,0,0,6e616d656420726f7720333220e99baae99baae99baae99baae99baae99baae99baae99baa|de5ee87bcca37ea1",
+      "delta1|de5ee87bcca37ea1|5|33|2|2514|4|a137b30c0ebb70cd|c048cd7f0a97809f"
+    ]
+  },
+  "invalidPhysical": [
+    {
+      "case": "physical delta cannot use a logical change as its base",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "delta1|9029b1645d2c55a3|2|33|2|2593|1|e63b86d5044912c3|a8c24c5b714ab994"
+      ]
+    },
+    {
+      "case": "logical base must precede revision",
+      "records": [
+        "engine2|1|0|3|+1,0,0,e99baa3b7cf09f9880000a;+2,1,2,|b78f5a262e9cf559",
+        "engine2|2|0|3|+1,2,0,-|463906531f8ad081"
+      ]
+    },
+    {
+      "case": "short logical header",
+      "records": [
+        "engine2|1|2|+1,0,0,-|28a44ec292141fed"
+      ]
+    }
+  ]
+}

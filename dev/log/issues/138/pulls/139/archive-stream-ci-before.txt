@@ -1,0 +1,58 @@
+Archive-stream CI at d98c2ee30faa578f9116571520f7949014559ac9
+Eight workflows pass; Rust Windows process-exit contracts fail.
+
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40322084241
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40322084274
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40322084270
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40322084232
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40322084262
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40322084401
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40322084387
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40322084202
+Rust CI/CD Pipeline: failure https://github.com/link-foundation/link-cli/actions/runs/40322084347
+
+Full log retained locally: experiments/issue-138/ci-logs/rust-40322084347.log (42971 lines).
+Relevant lines 34860..34896:
+34860: Test (windows-2025)	Run tests	2026-10-26T12:34:08.7720682Z
+34861: Test (windows-2025)	Run tests	2026-10-26T12:34:08.7739748Z ^[[1m^[[92m     Running^[[0m `D:\a\link-cli\link-cli\rust\target\debug\deps\version_process_exit_tests-45d449e74310316f.exe`
+34862: Test (windows-2025)	Run tests	2026-10-26T12:34:08.7832546Z
+34863: Test (windows-2025)	Run tests	2026-10-26T12:34:08.7832884Z running 8 tests
+34864: Test (windows-2025)	Run tests	2026-10-26T12:34:19.0337189Z test explicit_commit_checkpoint_error_survives_exit ... FAILED
+34865: Test (windows-2025)	Run tests	2026-10-26T12:34:19.0440476Z test automatic_commit_checkpoint_error_survives_exit ... FAILED
+34866: Test (windows-2025)	Run tests	2026-10-26T12:34:19.0503425Z test pending_exit_does_not_publish_an_aborted_version ... FAILED
+34867: Test (windows-2025)	Run tests	2026-10-26T12:34:19.0504178Z test abrupt_name_only_versions_recover_exact_names_and_attribution ... FAILED
+34868: Test (windows-2025)	Run tests	2026-10-26T12:34:19.0505858Z test version_exit_child ... ignored, finite child process entry point
+34869: Test (windows-2025)	Run tests	2026-10-26T12:34:29.1874286Z test rollback_exit_does_not_publish_an_aborted_version ... ok
+34870: Test (windows-2025)	Run tests	2026-10-26T12:34:30.4721018Z test successful_automatic_commit_survives_exit ... ok
+34871: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5709719Z test successful_explicit_commit_survives_exit ... ok
+34872: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5710112Z
+34873: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5710255Z failures:
+34874: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5710369Z
+34875: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5710647Z ---- explicit_commit_checkpoint_error_survives_exit stdout ----
+34876: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5711265Z Error: finite version-exit child did not finish: checkpoint/false
+34877: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5711577Z
+34878: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5711850Z ---- automatic_commit_checkpoint_error_survives_exit stdout ----
+34879: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5712363Z Error: finite version-exit child did not finish: checkpoint/true
+34880: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5712642Z
+34881: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5712893Z ---- pending_exit_does_not_publish_an_aborted_version stdout ----
+34882: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5713423Z Error: finite version-exit child did not finish: pending/false
+34883: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5713714Z
+34884: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5714042Z ---- abrupt_name_only_versions_recover_exact_names_and_attribution stdout ----
+34885: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5714673Z Error: finite version-exit child did not finish: success/false
+34886: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5714980Z
+34887: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5714987Z
+34888: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5715082Z failures:
+34889: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5715447Z     abrupt_name_only_versions_recover_exact_names_and_attribution
+34890: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5715947Z     automatic_commit_checkpoint_error_survives_exit
+34891: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5716375Z     explicit_commit_checkpoint_error_survives_exit
+34892: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5716773Z     pending_exit_does_not_publish_an_aborted_version
+34893: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5717007Z
+34894: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5717408Z test result: FAILED. 3 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out; finished in 21.79s
+34895: Test (windows-2025)	Run tests	2026-10-26T12:34:30.5717869Z
+34896: Test (windows-2025)	Run tests	2026-10-26T12:34:30.9382936Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test version_process_exit_tests`
+
+All four failures hit the existing ten-second child deadline.
+The original harness discards child stdout and does not preserve phase timings.
+No root cause is established by these logs. Do not claim the archive head passes.
+Follow-up preserves both streams in a file and reports elapsed phases without
+extending the deadline. Fresh Windows execution must inspect that evidence.

@@ -19,6 +19,9 @@ clink --db deep.links --serve 127.0.0.1:3006 --graphql --jwt-secret secret \
 | `--deep-package <file>` | Deep links as JSON rows to load before serving; repeatable. Rows whose id exists are left alone. |
 | `--permissions <rules>` | The permission layer of [issue #149](../examples/permissions), judging each subject. |
 
+Ctrl+C or `SIGTERM` stops the server gracefully: it closes the store and exits
+with status 0.
+
 ## How Deep maps to links
 
 | Deep | clink |

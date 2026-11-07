@@ -1,0 +1,190 @@
+Numbered excerpts from experiments/issue-138/csharp-checkpoint-and-names-before.log.
+All failures were reviewed; repeating stack frames are omitted here.
+
+1:   Determining projects to restore...
+2:   All projects are up-to-date for restore.
+3:   Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+4:   Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+5:   Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+6: Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+7: VSTest version 18.0.2 (x64)
+8:
+9: Starting test execution, please wait...
+10: A total of 1 test files matched the specified pattern.
+11: [xUnit.net 00:00:01.27]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-after", operation: "set") [FAIL]
+12: [xUnit.net 00:00:01.29]     Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "data-before", automatic: False, operation: "create") [FAIL]
+14:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-after", operation: "set") [340 ms]
+15:   Error Message:
+16:    Assert.Throws() Failure: No exception was thrown
+17: Expected: typeof(System.InvalidOperationException)
+18:   Stack Trace:
+19:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+20:    at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+21:    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+22:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "data-before", automatic: False, operation: "create") [340 ms]
+23:   Error Message:
+24:    Assert.Throws() Failure: No exception was thrown
+25: Expected: typeof(System.InvalidOperationException)
+26:   Stack Trace:
+27:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass9_0.<WritesWaitForKnownCommitCheckpoint>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 83
+28:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+29:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(String point, Boolean automatic, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 80
+30:    at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+31:    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+38:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "log-before", automatic: False, operation: "set") [87 ms]
+39:   Error Message:
+40:    Assert.Throws() Failure: No exception was thrown
+41: Expected: typeof(System.InvalidOperationException)
+42:   Stack Trace:
+43:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass9_0.<WritesWaitForKnownCommitCheckpoint>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 83
+44:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+45:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(String point, Boolean automatic, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 80
+46:    at InvokeStub_TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(Object, Span`1)
+47:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+48:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "undo-after", operation: "remove") [103 ms]
+49:   Error Message:
+50:    Assert.Throws() Failure: No exception was thrown
+51: Expected: typeof(System.InvalidOperationException)
+52:   Stack Trace:
+53:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+54:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+55:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+56:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "data-before", automatic: False, operation: "delete") [102 ms]
+57:   Error Message:
+58:    Assert.Throws() Failure: No exception was thrown
+59: Expected: typeof(System.InvalidOperationException)
+60:   Stack Trace:
+61:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass9_0.<WritesWaitForKnownCommitCheckpoint>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 83
+62:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+63:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(String point, Boolean automatic, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 80
+64:    at InvokeStub_TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(Object, Span`1)
+65:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+66:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "log-after", operation: "remove") [116 ms]
+67:   Error Message:
+68:    Assert.Throws() Failure: No exception was thrown
+69: Expected: typeof(System.InvalidOperationException)
+70:   Stack Trace:
+71:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+72:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+73:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+74:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "marker-before", automatic: True, operation: "update") [93 ms]
+75:   Error Message:
+76:    Assert.Throws() Failure: No exception was thrown
+77: Expected: typeof(System.InvalidOperationException)
+78:   Stack Trace:
+79:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass9_0.<WritesWaitForKnownCommitCheckpoint>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 83
+80:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+81:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(String point, Boolean automatic, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 80
+82:    at InvokeStub_TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(Object, Span`1)
+83:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+128:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "log-before", automatic: True, operation: "remove") [84 ms]
+129:   Error Message:
+130:    Assert.Throws() Failure: No exception was thrown
+131: Expected: typeof(System.InvalidOperationException)
+132:   Stack Trace:
+133:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass9_0.<WritesWaitForKnownCommitCheckpoint>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 83
+134:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+135:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(String point, Boolean automatic, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 80
+136:    at InvokeStub_TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(Object, Span`1)
+137:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+185:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "log-before", operation: "remove") [82 ms]
+186:   Error Message:
+187:    Assert.Throws() Failure: No exception was thrown
+188: Expected: typeof(System.InvalidOperationException)
+189:   Stack Trace:
+190:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+191:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+192:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+193:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "log-after", automatic: True, operation: "set") [57 ms]
+194:   Error Message:
+223:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-before", operation: "remove") [67 ms]
+224:   Error Message:
+225:    Assert.Throws() Failure: No exception was thrown
+226: Expected: typeof(System.InvalidOperationException)
+227:   Stack Trace:
+228:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+229:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+230:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+231:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "data-after", automatic: True, operation: "update") [65 ms]
+232:   Error Message:
+247:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-after", operation: "remove") [75 ms]
+248:   Error Message:
+249:    Assert.Throws() Failure: No exception was thrown
+250: Expected: typeof(System.InvalidOperationException)
+251:   Stack Trace:
+252:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+253:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+254:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+255:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "data-before", automatic: True, operation: "remove") [46 ms]
+256:   Error Message:
+368:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-before", operation: "remove") [74 ms]
+369:   Error Message:
+370:    Assert.Throws() Failure: No exception was thrown
+371: Expected: typeof(System.InvalidOperationException)
+372:   Stack Trace:
+373:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+374:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+375:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+376: [xUnit.net 00:00:02.97]     Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "data-after", automatic: True, operation: "delete") [FAIL]
+377: [xUnit.net 00:00:03.01]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-after", operation: "set") [FAIL]
+532:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "undo-before", operation: "remove") [51 ms]
+533:   Error Message:
+534:    Assert.Throws() Failure: No exception was thrown
+535: Expected: typeof(System.InvalidOperationException)
+536:   Stack Trace:
+537:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+538:    at InvokeStub_TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(Object, Span`1)
+539:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+540:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.WritesWaitForKnownCommitCheckpoint(point: "log-before", automatic: False, operation: "delete") [55 ms]
+541:   Error Message:
+824:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "data-before", automatic: True, cleanup: "owner") [35 ms]
+825:   Error Message:
+826:    Cleanup must finish the committed checkpoint.
+827:   Stack Trace:
+828:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass8_0.<RetryFinishesKnownCommitBeforeFollowingEdit>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 72
+829:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+830:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(String point, Boolean automatic, String cleanup) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 65
+831:    at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+832:    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+833:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "marker-after", automatic: True, cleanup: "owner") [51 ms]
+842:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "data-after", automatic: False, cleanup: "rollback") [48 ms]
+843:   Error Message:
+844:    Cleanup must finish the committed checkpoint.
+845:   Stack Trace:
+846:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass8_0.<RetryFinishesKnownCommitBeforeFollowingEdit>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 72
+847:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+848:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(String point, Boolean automatic, String cleanup) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 65
+849:    at InvokeStub_TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(Object, Span`1)
+850:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+851:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "log-before", automatic: False, cleanup: "commit") [55 ms]
+852:   Error Message:
+853:    Cleanup must finish the committed checkpoint.
+854:   Stack Trace:
+855:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass8_0.<RetryFinishesKnownCommitBeforeFollowingEdit>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 72
+856:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+857:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(String point, Boolean automatic, String cleanup) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 65
+858:    at InvokeStub_TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(Object, Span`1)
+859:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+860:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "data-before", automatic: False, cleanup: "commit") [91 ms]
+869:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "log-after", automatic: False, cleanup: "async") [51 ms]
+870:   Error Message:
+871:    Cleanup must finish the committed checkpoint.
+872:   Stack Trace:
+873:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass8_0.<RetryFinishesKnownCommitBeforeFollowingEdit>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 72
+874:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+875:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(String point, Boolean automatic, String cleanup) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 65
+876:    at InvokeStub_TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(Object, Span`1)
+877:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+878:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "data-after", automatic: False, cleanup: "dispose") [48 ms]
+879:   Error Message:
+880:    Cleanup must finish the committed checkpoint.
+881:   Stack Trace:
+882:      at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.<>c__DisplayClass8_0.<RetryFinishesKnownCommitBeforeFollowingEdit>b__0(TransactionsDecorator tx, ITransaction`1 pending, Fault fault, UInt32 id) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 72
+883:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.Run(String point, Boolean automatic, Action`4 verify) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 140
+884:    at Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(String point, Boolean automatic, String cleanup) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionCommitCheckpointFailureTests.cs:line 65
+885:    at InvokeStub_TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(Object, Span`1)
+886:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+887:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "log-after", automatic: False, cleanup: "dispose") [47 ms]
+1174:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+1175:
+1176: Failed!  - Failed:   112, Passed:    16, Skipped:     0, Total:   128, Duration: 5 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

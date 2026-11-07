@@ -1,0 +1,52 @@
+✔ merge-changesets honors the requested directory and package name (91.386881ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (75.555885ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (480.439322ms)
+✔ create-github-release dry run uses tag prefix and component changelog (75.667332ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (72.888907ms)
+✔ buildNugetBadges links both badges to the exact version (0.780106ms)
+✔ buildNugetBadges URL-encodes the package id (0.336218ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.521884ms)
+✔ prependNugetBadges is a no-op without a package id (0.355143ms)
+✔ buildNugetBadges accepts multiple package ids (0.563272ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (2.13853ms)
+✔ buildReleasePayload places NuGet badges above the package footer (2.612075ms)
+✔ create-github-release dry run reports matching assets without uploading (79.955576ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (597.478659ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.656455ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.240949ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.272849ms)
+✔ classifyPushFailure separates repository rules from lost races (0.357637ms)
+✔ version-and-commit rebases and retries when another release pushed first (842.568282ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (444.620641ms)
+✔ check-release-needed decide(): changesets take the normal release path (2.615992ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.187981ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.174296ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.143568ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.168634ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (1.735318ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (181.351405ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (167.380682ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.799742ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.635236ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.595501ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.646757ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.34311ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (4.810247ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (2.154039ms)
+✔ answers a retry cannot change are not retried (2.355797ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3334.619683

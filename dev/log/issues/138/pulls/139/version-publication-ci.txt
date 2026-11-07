@@ -1,0 +1,21 @@
+Version-publication CI on exact published head 2a1c9e3205046bdb6b22043903fc145b4f278647
+
+Broken Link Checker: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211475
+C# CI/CD Pipeline: failure, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211459
+Dependencies: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211434
+Docs: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211490
+JS client CI: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211473
+Rust CI/CD Pipeline: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211427
+Security: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211567
+WebAssembly CI: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211566
+Workflows: success, created 2026-10-25T00:49:47Z, https://github.com/link-foundation/link-cli/actions/runs/40148211467
+
+Eight workflows pass. C# fails only on Windows: 1,430 pass, ten fail out of 1,440.
+Every failure is File.ReadAllBytes opening branches.links while its exclusive
+mapped store remains live, before the fixture's intended preservation assertion.
+Downloaded complete log: ci-logs/csharp-40148211459.log (18,056 lines).
+Exact excerpts and original line numbers: version-publication-windows-before.txt.
+Local Ubuntu Debug/Release both pass 1,440 on this published batch.
+The fixture correction closes all stores before binary snapshots and tests
+actual reopening. New exact-head CI must verify Windows after publication;
+passing the other eight workflows does not complete that verification.

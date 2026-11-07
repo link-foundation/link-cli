@@ -1,0 +1,27 @@
+C# mirror initial exact-head CI investigation, 2026-10-26 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 288cc6d79155362d013280bebac59248d3723bc2
+Run created: 2026-10-26T07:45:02Z
+https://github.com/link-foundation/link-cli/actions/runs/40287699127
+Preserved complete log: experiments/issue-138/ci-logs/csharp-40287699127.log.
+The repository layout check disallows a root ci-logs directory; the downloaded
+log was moved intact under the existing investigation tree before checks reran.
+
+The other eight exact-head workflows succeeded. This C# run has two actual
+failures; local Linux success was insufficient to establish Windows/CI parity.
+
+Log lines 2413–2428: formatter WHITESPACE failures in MirroredPagedTests.cs
+at source lines 46–50, 61–64 and 107–112, and MirroredPageDevice.cs line 75.
+The CI formatter indents chained loops differently from installed SDK 10.0.112.
+Explicit outer braces preserve every schedule and remove the ambiguous layout.
+
+Log lines 14861–14878: Windows NativeRecoveryRepairsCommittedDataAndMetadataThenAcceptsFollowingWrites
+fails with IOException while File.ReadAllBytes opens journal at source line 22.
+The test still holds FilePageDevice's exclusive owner; Windows correctly rejects
+the second handle. Move the before snapshot before acquisition and compare
+after disposal, retaining all invalid-repair bounds and disposed-handle checks.
+The provider's exclusive sharing contract remains intact.
+
+All 15 focused mirror checks, local format verification and source sizes pass
+after correction. These corrections still require fresh exact-head CI. No timeout
+was increased and no platform or fault schedule was removed.

@@ -1,0 +1,27 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: c1abe42ab45392621b7b0cae131ec96fb85f5ccc
+Commit: 2026-10-27T07:30:48Z; all runs created 2026-10-27T07:30:58Z.
+Every run below is for that exact head and starts after the commit/push.
+Fresh API data: experiments/issue-138/chunk-reclamation-ci-current.json.
+
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581454 Docs
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581471 Broken Link Checker
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581450 Workflows
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581546 Dependencies
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581703 Security
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581514 JS client CI
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581508 WebAssembly CI
+SUCCESS https://github.com/link-foundation/link-cli/actions/runs/40467581488 Rust CI/CD Pipeline
+FAILURE https://github.com/link-foundation/link-cli/actions/runs/40467581526 C# CI/CD Pipeline
+
+All Rust test platforms, full coverage, formatting, fresh merge and package
+build pass. C# Linux/macOS and its other gates pass. Windows fails exactly one
+of 2,442 tests: DistinctFiniteProgressSurvivesAnAggregateDeadline reports timeout
+while its diagnostics show five completed phases and actual child exit 0.
+Complete downloaded log: experiments/issue-138/ci-logs/csharp-40467581526.log, lines 29273-29327.
+phase-context-before.txt records the specific stack, independent failing
+finite child, captured-context dependency and bounded regression.
+
+This exact head does not have all passing CI. Preserve this failure and inspect
+fresh correction-head Windows CI; passing preceding runs are insufficient.
+Broader unmet requirements remain active and PR 139 stays draft/unmerged.

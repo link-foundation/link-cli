@@ -1,0 +1,13 @@
+✔ connect cancellation is not-sent and destroys a pending socket (6.212488ms)
+✔ socket errors classify every pipelined request and leave queued work not-sent (2.510553ms)
+✔ unsolicited replies and decoder faults close the connection (5.852046ms)
+✔ graceful close forcibly ends an unresponsive owned peer after its grace period (4.916831ms)
+✔ a deadline expiring during registration cannot remove another queued request or send expired work (2.63253ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 211.519387

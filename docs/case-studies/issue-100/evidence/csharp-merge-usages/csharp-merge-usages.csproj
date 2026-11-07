@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Platform.Data.Doublets" Version="0.18.10" />
+    <PackageReference Include="Platform.Data.Doublets" Version="1.0.0" />
   </ItemGroup>
 </Project>

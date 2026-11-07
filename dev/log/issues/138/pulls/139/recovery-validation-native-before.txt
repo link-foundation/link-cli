@@ -1,0 +1,141 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.23s
+     Running tests/transactions_recovery_validation_tests.rs (rust/target/debug/deps/transactions_recovery_validation_tests-896455635d14a493)
+
+running 18 tests
+test reject_commit_followed_by_abort ... FAILED
+test reject_abort_followed_by_commit ... FAILED
+test reject_two_owners_of_one_sequence ... FAILED
+test reject_negative_sequence ... FAILED
+test reject_two_payloads_for_one_sequence ... FAILED
+test reject_zero_abort_owner ... FAILED
+test reject_retained_contradictory_decisions ... FAILED
+test reject_conflicting_timestamps ... FAILED
+test reject_zero_owner ... FAILED
+test reject_zero_commit_owner ... FAILED
+test reject_zero_sequence ... FAILED
+test repeated_identical_aborts_and_records_are_idempotent ... FAILED
+test repeated_identical_commits_and_records_are_idempotent ... FAILED
+test repeated_pending_records_are_undone_once ... FAILED
+test retain_owner_after_malformed_applied_marker ... FAILED
+test retain_owner_after_malformed_transition ... FAILED
+test retained_applied_checkpoints_reserve_gaps_without_payloads ... ok
+test retain_owner_after_malformed_commit ... FAILED
+
+failures:
+
+---- reject_commit_followed_by_abort stdout ----
+
+thread 'reject_commit_followed_by_abort' (1303255) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+commit-abort: contradictory journal accepted
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- reject_abort_followed_by_commit stdout ----
+
+thread 'reject_abort_followed_by_commit' (1303254) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+abort-commit: contradictory journal accepted
+
+---- reject_two_owners_of_one_sequence stdout ----
+
+thread 'reject_two_owners_of_one_sequence' (1303259) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+owners: contradictory journal accepted
+
+---- reject_negative_sequence stdout ----
+
+thread 'reject_negative_sequence' (1303257) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+negative-sequence: contradictory journal accepted
+
+---- reject_two_payloads_for_one_sequence stdout ----
+
+thread 'reject_two_payloads_for_one_sequence' (1303260) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+payloads: contradictory journal accepted
+
+---- reject_zero_abort_owner stdout ----
+
+thread 'reject_zero_abort_owner' (1303261) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+zero-abort: contradictory journal accepted
+
+---- reject_retained_contradictory_decisions stdout ----
+
+thread 'reject_retained_contradictory_decisions' (1303258) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+retained-contradiction: contradictory journal accepted
+
+---- reject_conflicting_timestamps stdout ----
+
+thread 'reject_conflicting_timestamps' (1303256) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+timestamp: contradictory journal accepted
+
+---- reject_zero_owner stdout ----
+
+thread 'reject_zero_owner' (1303263) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+zero-owner: contradictory journal accepted
+
+---- reject_zero_commit_owner stdout ----
+
+thread 'reject_zero_commit_owner' (1303262) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+zero-commit: contradictory journal accepted
+
+---- reject_zero_sequence stdout ----
+
+thread 'reject_zero_sequence' (1303264) panicked at tests/transactions_recovery_validation_tests.rs:66:9:
+zero-sequence: contradictory journal accepted
+
+---- repeated_identical_aborts_and_records_are_idempotent stdout ----
+
+thread 'repeated_identical_aborts_and_records_are_idempotent' (1303265) panicked at tests/transactions_recovery_validation_tests.rs:138:5:
+assertion `left == right` failed: one logical sequence despite idempotent retries
+  left: 3
+ right: 1
+
+---- repeated_identical_commits_and_records_are_idempotent stdout ----
+
+thread 'repeated_identical_commits_and_records_are_idempotent' (1303266) panicked at tests/transactions_recovery_validation_tests.rs:138:5:
+assertion `left == right` failed: one logical sequence despite idempotent retries
+  left: 3
+ right: 1
+
+---- repeated_pending_records_are_undone_once stdout ----
+
+thread 'repeated_pending_records_are_undone_once' (1303267) panicked at tests/transactions_recovery_validation_tests.rs:138:5:
+assertion `left == right` failed: one logical sequence despite idempotent retries
+  left: 3
+ right: 1
+
+---- retain_owner_after_malformed_applied_marker stdout ----
+
+thread 'retain_owner_after_malformed_applied_marker' (1303268) panicked at tests/transactions_recovery_validation_tests.rs:71:9:
+failed recovery released admission
+
+---- retain_owner_after_malformed_transition stdout ----
+
+thread 'retain_owner_after_malformed_transition' (1303270) panicked at tests/transactions_recovery_validation_tests.rs:71:9:
+failed recovery released admission
+
+---- retain_owner_after_malformed_commit stdout ----
+
+thread 'retain_owner_after_malformed_commit' (1303269) panicked at tests/transactions_recovery_validation_tests.rs:71:9:
+failed recovery released admission
+
+
+failures:
+    reject_abort_followed_by_commit
+    reject_commit_followed_by_abort
+    reject_conflicting_timestamps
+    reject_negative_sequence
+    reject_retained_contradictory_decisions
+    reject_two_owners_of_one_sequence
+    reject_two_payloads_for_one_sequence
+    reject_zero_abort_owner
+    reject_zero_commit_owner
+    reject_zero_owner
+    reject_zero_sequence
+    repeated_identical_aborts_and_records_are_idempotent
+    repeated_identical_commits_and_records_are_idempotent
+    repeated_pending_records_are_undone_once
+    retain_owner_after_malformed_applied_marker
+    retain_owner_after_malformed_commit
+    retain_owner_after_malformed_transition
+
+test result: FAILED. 1 passed; 17 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test transactions_recovery_validation_tests`

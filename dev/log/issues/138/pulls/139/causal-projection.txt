@@ -1,0 +1,113 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-projection-focused.sh; bash experiments/issue-138/validate-causal-projection.sh
+Missing production API controls precede every port; frozen filter-before-select visibility resurrects a losing live value.
+Independent six-version/two-author/two-row model: 128 scenarios, 3914 permutations and duplicate replays; 132 shared vectors.
+Model process limits: 192 MiB address space and 8 MiB stack. Model success alone does not verify production ports.
+node-focused: {'tests': 5, 'pass': 5, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+100% production lines/branches/functions with unchanged thresholds and complete denominators.
+Five portable contracts pass native Rust, C#, Node, Bun, Deno and actual WASM.
+START 2026-10-27T18:20:41Z
+CSHARP PASS 2026-10-27T18:22:57Z
+NATIVE PASS 2026-10-27T18:23:25Z
+ACTUAL WASM PASS 2026-10-27T18:24:45Z
+ALL FOCUSED PASS 2026-10-27T18:25:12Z
+START 2026-10-27T18:28:27Z
+JAVASCRIPT PASS 2026-10-27T18:33:53Z
+CSHARP PASS 2026-10-27T18:43:43Z
+NATIVE PASS 2026-10-27T19:01:26Z
+ACTUAL WASM PASS 2026-10-27T19:07:13Z
+ALL PASS 2026-10-27T19:07:39Z
+C# Debug: 2496 passed, zero failed/skipped, SDK 10.0.403 matching CI.
+Complete lines: 10063/10372 (97.02083%).
+Complete branches: 6497/6942 (93.58974%).
+CausalVersion.cs: lines 100/100, branches 138/138.
+CausalReplica.cs: lines 136/136, branches 180/180.
+CausalMerkle.cs: lines 218/218, branches 246/246.
+CausalBatch.cs: lines 153/153, branches 180/180.
+CausalProjection.cs: lines 39/39, branches 42/42.
+C# Release: 2496 passed, zero failed/skipped, SDK 10.0.403 matching CI.
+Complete lines: 7769/7970 (97.47804%).
+Complete branches: 6438/6901 (93.29083%).
+CausalVersion.cs: lines 74/74, branches 138/138.
+CausalReplica.cs: lines 108/108, branches 180/180.
+CausalMerkle.cs: lines 160/160, branches 246/246.
+CausalBatch.cs: lines 123/123, branches 178/178.
+Class aggregate Foundation.Data.Doublets.Cli.Engine.CausalBatch: branch-rate=0.9945999999999999; includes raw methods omitted from source-line listings.
+CausalProjection.cs: lines 34/34, branches 42/42.
+Source-line branch totals do not establish complete compiled branch coverage; the existing Release batch aggregate gap is investigated separately.
+Native Rust: 1231 passed, zero failed; 22 existing parent-driven entries ignored by normal harness.
+Complete lines: 18700/19598 (95.41790%).
+Complete branches: 3696/4194 (88.12589%).
+Complete functions: 2384/2556 (93.27074%).
+Complete regions: 28803/31057 (92.74238%).
+Complete instantiations: 12580/22534 (55.82675%).
+causal_projection.rs lines: 69/69 (100.00000%).
+causal_projection.rs branches: 16/16 (100.00000%).
+causal_projection.rs functions: 9/9 (100.00000%).
+causal_projection.rs regions: 108/109 (99.08257%).
+causal_projection.rs instantiations: 9/18 (50.00000%).
+Actual WASM: 757 passed, zero failed; 0 existing parent-driven entries ignored by normal harness.
+Complete lines: 14676/17307 (84.79806%).
+Complete branches: 3065/3583 (85.54284%).
+Complete functions: 1802/2234 (80.66249%).
+Complete regions: 22634/27311 (82.87503%).
+Complete instantiations: 4535/7734 (58.63719%).
+causal_projection.rs lines: 69/69 (100.00000%).
+causal_projection.rs branches: 16/16 (100.00000%).
+causal_projection.rs functions: 9/9 (100.00000%).
+causal_projection.rs regions: 108/109 (99.08257%).
+causal_projection.rs instantiations: 9/9 (100.00000%).
+js-full: {'tests': 686, 'pass': 686, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+100% production lines/branches/functions with unchanged thresholds and complete denominators.
+repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+Formats, strict native/WASM Clippy, TS declarations, workflow/ShellCheck, source sizes, release changesets and 127 fresh dependencies/locks pass.
+Bare Rust normal dependencies omit JSON/SQL/SHA; selecting causal-projection adds neither SQLite nor SHA. JS uses a separate export.
+Complete supplied input is bounded before deduplication/pruning: 1..4096 configured capacity, 1..8 MiB canonical bytes, at most 64 supplied versions per row.
+Exact 4096-version and 8 MiB inputs pass; next input rejects. Every supplied identity and equal-clock contradiction is validated before dominance.
+Explicit reject or ordinal fixed-width author/numeric-counter maximum policy selects from all retained siblings before visibility; this is not wall-clock order.
+Owned versions, selected versions and ordinary rows/names survive caller/returned-value mutation. The projection performs no I/O, publication, allocation or coordination.
+The SQL-free physical cache example passes Node, Bun and Deno: concurrent deletion, explicit observed resolution, refreshed rows and unchanged old view.
+Deno requires read/write/environment permissions; initial missing executable/permission diagnostics are retained separately. CI runs the Node recipe.
+CPU O(V log V + sum(r^2 W)) plus encoding/copying with r<=64; retained space O(VW); every read allocates owned results.
+Ordinary mutable sessions and their physical matrix, global allocation, safe membership/history reclamation, generic mapped failures, complete project 100% and all wider unmet criteria remain unfinished.
+Fresh publication/platform CI remains required. PR139 stays draft and unmerged.
+experiments/issue-138/causal-projection-Debug-results/202d917f-4bef-43f2-bbe3-021fa9d3ed74/coverage.cobertura.xml: 2629218 bytes; SHA256 84affb74742f882c0ee30c9976d859bd19b5a249673831c75f53827af5d4b119.
+experiments/issue-138/causal-projection-Release-results/c2e222e8-c853-40f0-9b64-59d7021e105c/coverage.cobertura.xml: 2327970 bytes; SHA256 272a9994a8c28bbd388827c84c1918e3a951003d98b463b50549a1e743659116.
+experiments/issue-138/causal-projection-native-coverage.json: 22033925 bytes; SHA256 340f0687129d964e5efd7fd5247065265de22c31ed8059f102f5e420ab811797.
+experiments/issue-138/causal-projection-wasm-coverage.json: 25105463 bytes; SHA256 529f6ad99e6e7d1277cc24d7e7f522e37c44e7fcf408b523caf6a1474c198dbb.
+experiments/issue-138/causal-projection-js-before.log: 1518 bytes; SHA256 88db8a36e561dfce3a19ec65e1a7ec7640cdefecb56e4b258cd6ce0acb269272.
+experiments/issue-138/causal-projection-native-before.log: 1822 bytes; SHA256 3d6bf8b7a4174f2ffa1c57bdb306fa1a766f8245dc739f87b86483d00345ac26.
+experiments/issue-138/causal-projection-csharp-before.log: 15183 bytes; SHA256 9410da1dd4164bd47f0ddae7e69014069cb9f044dff1f8fcf52138f8a6c6598d.
+experiments/issue-138/causal-projection-visibility-before.log: 1273 bytes; SHA256 64b5a06cc33a41e3f0b230efa97c988c8828f762d8fe80f89e73f957182100bf.
+experiments/issue-138/causal-projection-model.log: 616 bytes; SHA256 5fa566d8801a9ba54e245d45371b6f7551a4ec635d6b8997853554cf740f9d7f.
+experiments/issue-138/causal-projection-focused-driver.log: 169 bytes; SHA256 8ae3a6e2d5d22216bb07706722aedb5c5368ffcf0c922b3c727ebff98061e3ca.
+experiments/issue-138/causal-projection-validation.log: 198 bytes; SHA256 8dcc8f4e9b0c103796369646e34bdbf63d6c27aaf5b55179d962846e96f23c11.
+experiments/issue-138/causal-projection-node-focused.log: 1425 bytes; SHA256 c394e383c4c528fbaea13a52bbe40ea560373098974c2f12e9c44a627843e308.
+experiments/issue-138/causal-projection-js-full.log: 61161 bytes; SHA256 76fcc7f687a39bb5cdd8ca6bf3a0022e9735f650f38d73544aa550c01b806873.
+experiments/issue-138/causal-projection-native-focused.log: 753 bytes; SHA256 7085df8e54108d274ac6714163089b6ec0c1e70d527525e30032b751e9ab9f1f.
+experiments/issue-138/causal-projection-wasm-focused.log: 16829242 bytes; SHA256 d8319adfd26e5c04caa6edb87ea57a08a26fe4076a3f2c3b9058f5dad9b2269f.
+experiments/issue-138/causal-projection-csharp-focused.log: 1021 bytes; SHA256 f0c37e6b6fb320d1495d8286f23c154f0c7f0f5b1cfd53ea841cf8d35eddba34.
+experiments/issue-138/causal-projection-bun.log: 619 bytes; SHA256 5d6c8ef0ffcc0af1de9781c4ec56784ef5f71597dd7f5ab5b11c354e6b4a480b.
+experiments/issue-138/causal-projection-deno.log: 574 bytes; SHA256 2fdeac65e6eeec787e0b62be3956e90dc6a0a7af933d3f58452a8bc613fdd82b.
+experiments/issue-138/causal-projection-csharp-Debug-full.log: 1095 bytes; SHA256 0fbc4580e097a05f425b9d4309dbda866da9d81ddac55dacd1118ac1733964d8.
+experiments/issue-138/causal-projection-csharp-Release-full.log: 1106 bytes; SHA256 487d525864b395726cd87867f08348fb337ff0e2cde7d2f93ac19e1c7ddcdc4b.
+experiments/issue-138/causal-projection-native-full.log: 594405 bytes; SHA256 1b310c3a14e0f45f43bf96b529d73f10403ca3371c75b7b5f705510c42642478.
+experiments/issue-138/causal-projection-doctests.log: 976 bytes; SHA256 28f60269db6716159b64b4e0b531eb28710ccc4ca7379a9de9cf0f41dc231341.
+experiments/issue-138/causal-projection-wasm-full.log: 67508 bytes; SHA256 038db298c25dcc54dc8293731228c949d51f2d94c8cac89eee4643b57e7d174b.
+experiments/issue-138/causal-projection-repository.log: 18480 bytes; SHA256 f1fc7a2d62018eda124f67bd763cbb53c363862f9a59f7acf5eae04701fa746b.
+experiments/issue-138/causal-projection-dependency-freshness.log: 56 bytes; SHA256 d507522804fdd2e8e757a643f09b2027ddf4e835b8a9856827a6600ffffb5844.
+experiments/issue-138/causal-projection-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-projection-dotnet-sdk.log: 9 bytes; SHA256 00922204861c9366b1259b84337ee228d58ec876604bb149e82c077108ce3be2.
+experiments/issue-138/causal-projection-example-node.log: 82 bytes; SHA256 1f43a8f002b08206e171a86db5171f30cfd7ca0841c511f05b7e59cc45168acc.
+experiments/issue-138/causal-projection-example-bun.log: 82 bytes; SHA256 1f43a8f002b08206e171a86db5171f30cfd7ca0841c511f05b7e59cc45168acc.
+experiments/issue-138/causal-projection-example-deno.log: 82 bytes; SHA256 1f43a8f002b08206e171a86db5171f30cfd7ca0841c511f05b7e59cc45168acc.
+experiments/issue-138/causal-projection-example-deno-path-before.log: 79 bytes; SHA256 a63a8d7eca7a26ef58f589739a779eac9cbd9b99338a0ffe3a588dc2a58c0670.
+experiments/issue-138/causal-projection-example-deno-permissions-before.log: 424 bytes; SHA256 2358cd2f9ea9d16015edb7a6f8f5cb83b173980c037c356c77bd3ca57a985643.
+js/client/src/engine-causal-projection.js: 2161 bytes; SHA256 18fae34ad7f1db8771e0acd95ee83d3d37c0a01764aac3c9c37404af195c14ec.
+js/client/test/engine-causal-projection.test.mjs: 6575 bytes; SHA256 139d70a95226fcfa4552e53d377315fc183ca8ffcd892894e8e5ccdd2e830863.
+rust/src/engine/causal_projection.rs: 3065 bytes; SHA256 07d213483ff9571b4f6b9f6e92489266cac47c2cdb5e525a073ed035e0726b72.
+rust/tests/engine_causal_projection_tests.rs: 10390 bytes; SHA256 e24374cad41bdae96f3bb41068fbc3606df7897710b4d3f555c670d7aa35e38d.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalProjection.cs: 2814 bytes; SHA256 8682aee43a762a7b648dcf58b38fa9b04325002cd61f556b282d8736b5973738.
+csharp/Foundation.Data.Doublets.Cli.Tests/CausalProjectionTests.cs: 8187 bytes; SHA256 68b4e3d5449a2b830fcb315a8bbad43a40a2b56d7c51f6a48efe9aaa404ba2af.
+docs/protocol/causal-projection-v1.json: 287819 bytes; SHA256 7721ae3a544982be39db91f429e113b59bbb3dc395f01bc6210952cd988b16b4.
+examples/native-lsm-js/projection-cache.mjs: 2516 bytes; SHA256 fa6ee25d2724ea3be8d877092f52dab388cad73fd590563c5f73688bc2c51692.

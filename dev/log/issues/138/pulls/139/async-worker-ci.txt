@@ -1,0 +1,28 @@
+Async checkpoint worker CI
+Head: 24554b007cbe99407d74521348e1bdae08aa044b
+Commit time: 2026-10-25T00:18:35Z
+All nine workflows were created at 2026-10-25T00:18:41Z after the commit.
+
+Broken Link Checker: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192810
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192851
+Dependencies: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192874
+Docs: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192861
+JS client CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192878
+Rust CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192886
+Security: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192892
+WebAssembly CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40146193033
+Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40146192869
+
+The workflow conclusions include required Windows/Linux/macOS native jobs.
+No failed run on this exact head requires a new log download. Earlier failure
+logs and bounded starvation before/after evidence remain preserved. New code
+requires new exact-head CI; this report establishes only the named SHA.

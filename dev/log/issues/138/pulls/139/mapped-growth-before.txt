@@ -1,0 +1,28 @@
+Failed owned mapped-file growth; PR https://github.com/link-foundation/link-cli/pull/139
+Before production change: Debug focused run, 1 failed / 1 passed.
+Log: experiments/issue-138/mapped-growth-before-corrected.log
+
+Lines 16-20:
+Expected bounded growth rejection: Specified file length was too large for the file system. (Parameter 'value')
+System.ObjectDisposedException: Cannot access a disposed object.
+Object name: 'Foundation.Data.Doublets.Cli.DurableMappedMemory'.
+   at Foundation.Data.Doublets.Cli.DurableMappedMemory.Flush() ... DurableMappedMemory.cs:line 28
+   at Foundation.Data.Doublets.Cli.Tests.MappedGrowthTests.QuotaChild(String directory) ... MappedGrowthTests.cs:line 68
+
+The isolated Linux child ignores SIGXFSZ and inherits an 8192-byte soft file
+quota, a 128 MiB managed heap cap and disabled runtime memfd code mappings.
+The parent reaps it after a finite deadline. Files are at most three 4 KiB pages.
+After writing and flushing one page, requesting three pages is rejected. The
+base keeps its 4096-byte reservation and old pointer, but the callback already
+disposed the old mapping and stream. Flush fails before the test reads that
+unsafe pointer. The separate ordinary-growth/invalid-capacity control passes.
+
+The first draft expected only IOException for EFBIG and overestimated Unix
+FileShare.Read enforcement. Those test oracles were corrected before the actual
+product failure above: accept the runtime's ArgumentOutOfRangeException too,
+and check denial of an exclusive file handle on every supported platform.
+The initial two-failure run is not counted as product reproduction evidence.
+
+The base setter was traced in installed Platform.Memory 0.4.1 source, commit
+dd464b7b48a4efcaa90fcbaf0621944c184611fd. Capacity is published only after the
+resize callback returns. No upstream source modification is required.

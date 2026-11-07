@@ -1,0 +1,160 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <worktree>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.10]     Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "read", unicode: False) [FAIL]
+[xUnit.net 00:00:01.25]     Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "append", unicode: True) [FAIL]
+[xUnit.net 00:00:01.40]     Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "read", unicode: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "read", unicode: False) [196 ms]
+  Error Message:
+   Child exited 1:
+
+Expected actual quota failure: System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Append(String record) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 73
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.<>c__DisplayClass1_0.<QuotaChild>b__0() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 51
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.core/Record.cs:line 25
+Xunit.Sdk.EqualException: Assert.Equal() Failure: Collections differ
+Expected: string[]     ["committed"]
+Actual:   List<string> ["committed", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···]
+                                     ↑ (pos 1)
+   at Xunit.Assert.Equal[T](T expected, T actual, IEqualityComparer`1 comparer) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 283
+   at Xunit.Assert.Equal[T](T expected, T actual) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 89
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaChild(String directory, String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 56
+   at Foundation.Data.Doublets.Cli.Tests.ProbeProgram.Main(String[] args) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/ProbeProgram.cs:line 18
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 38
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "append", unicode: True) [151 ms]
+  Error Message:
+   Child exited 1:
+
+Expected actual quota failure: System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Append(String record) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 73
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.<>c__DisplayClass1_0.<QuotaChild>b__0() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 51
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.core/Record.cs:line 25
+System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at System.IO.Strategies.BufferedFileStreamStrategy.Flush(Boolean flushToDisk)
+   at System.IO.Strategies.BufferedFileStreamStrategy.Dispose(Boolean disposing)
+   at System.IO.Stream.Close()
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Dispose() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 76
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaChild(String directory, String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 60
+   at Foundation.Data.Doublets.Cli.Tests.ProbeProgram.Main(String[] args) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/ProbeProgram.cs:line 18
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 38
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:01.60]     Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "flush", unicode: False) [FAIL]
+[xUnit.net 00:00:01.75]     Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "append", unicode: False) [FAIL]
+[xUnit.net 00:00:01.90]     Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "flush", unicode: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "read", unicode: True) [146 ms]
+  Error Message:
+   Child exited 1:
+
+Expected actual quota failure: System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Append(String record) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 73
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.<>c__DisplayClass1_0.<QuotaChild>b__0() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 51
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.core/Record.cs:line 25
+System.Text.DecoderFallbackException: Unable to translate bytes [E9] at index -1 from specified code page to Unicode.
+   at System.Text.DecoderExceptionFallbackBuffer.Throw(Byte[] bytesUnknown, Int32 index)
+   at System.Text.DecoderExceptionFallbackBuffer.Fallback(Byte[] bytesUnknown, Int32 index)
+   at System.Text.DecoderNLS.DrainLeftoverDataForGetChars(ReadOnlySpan`1 bytes, Span`1 chars, Int32& bytesConsumed)
+   at System.Text.Encoding.GetCharsWithFallback(Byte* pOriginalBytes, Int32 originalByteCount, Char* pOriginalChars, Int32 originalCharCount, Int32 bytesConsumedSoFar, Int32 charsWrittenSoFar, DecoderNLS decoder)
+   at System.Text.Encoding.GetChars(Byte* pBytes, Int32 byteCount, Char* pChars, Int32 charCount, DecoderNLS decoder)
+   at System.Text.DecoderNLS.GetChars(Byte[] bytes, Int32 byteIndex, Int32 byteCount, Char[] chars, Int32 charIndex, Boolean flush)
+   at System.IO.StreamReader.ReadBuffer()
+   at System.IO.StreamReader.ReadLine()
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Read() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 64
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaChild(String directory, String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 56
+   at Foundation.Data.Doublets.Cli.Tests.ProbeProgram.Main(String[] args) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/ProbeProgram.cs:line 18
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 38
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "flush", unicode: False) [198 ms]
+  Error Message:
+   Child exited 1:
+
+Expected actual quota failure: System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Append(String record) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 73
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.<>c__DisplayClass1_0.<QuotaChild>b__0() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 51
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.core/Record.cs:line 25
+Xunit.Sdk.EqualException: Assert.Equal() Failure: Collections differ
+Expected: string[]     ["committed"]
+Actual:   List<string> ["committed", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···]
+                                     ↑ (pos 1)
+   at Xunit.Assert.Equal[T](T expected, T actual, IEqualityComparer`1 comparer) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 283
+   at Xunit.Assert.Equal[T](T expected, T actual) in /_/src/xunit.assert/Asserts/EqualityAsserts.cs:line 89
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaChild(String directory, String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 57
+   at Foundation.Data.Doublets.Cli.Tests.ProbeProgram.Main(String[] args) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/ProbeProgram.cs:line 18
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 38
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "append", unicode: False) [150 ms]
+  Error Message:
+   Child exited 1:
+
+Expected actual quota failure: System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Append(String record) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 73
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.<>c__DisplayClass1_0.<QuotaChild>b__0() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 51
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.core/Record.cs:line 25
+System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at System.IO.Strategies.BufferedFileStreamStrategy.Flush(Boolean flushToDisk)
+   at System.IO.Strategies.BufferedFileStreamStrategy.Dispose(Boolean disposing)
+   at System.IO.Stream.Close()
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Dispose() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 76
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaChild(String directory, String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 60
+   at Foundation.Data.Doublets.Cli.Tests.ProbeProgram.Main(String[] args) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/ProbeProgram.cs:line 18
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 38
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(mode: "flush", unicode: True) [146 ms]
+  Error Message:
+   Child exited 1:
+
+Expected actual quota failure: System.ArgumentOutOfRangeException: Specified file length was too large for the file system. (Parameter 'value')
+   at System.IO.RandomAccess.WriteAtOffset(SafeFileHandle handle, ReadOnlySpan`1 buffer, Int64 fileOffset)
+   at System.IO.Strategies.OSFileStreamStrategy.Write(ReadOnlySpan`1 buffer)
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Append(String record) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 73
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.<>c__DisplayClass1_0.<QuotaChild>b__0() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 51
+   at Xunit.Record.Exception(Action testCode) in /_/src/xunit.core/Record.cs:line 25
+System.Text.DecoderFallbackException: Unable to translate bytes [E9] at index -1 from specified code page to Unicode.
+   at System.Text.DecoderExceptionFallbackBuffer.Throw(Byte[] bytesUnknown, Int32 index)
+   at System.Text.DecoderExceptionFallbackBuffer.Fallback(Byte[] bytesUnknown, Int32 index)
+   at System.Text.DecoderNLS.DrainLeftoverDataForGetChars(ReadOnlySpan`1 bytes, Span`1 chars, Int32& bytesConsumed)
+   at System.Text.Encoding.GetCharsWithFallback(Byte* pOriginalBytes, Int32 originalByteCount, Char* pOriginalChars, Int32 originalCharCount, Int32 bytesConsumedSoFar, Int32 charsWrittenSoFar, DecoderNLS decoder)
+   at System.Text.Encoding.GetChars(Byte* pBytes, Int32 byteCount, Char* pChars, Int32 charCount, DecoderNLS decoder)
+   at System.Text.DecoderNLS.GetChars(Byte[] bytes, Int32 byteIndex, Int32 byteCount, Char[] chars, Int32 charIndex, Boolean flush)
+   at System.IO.StreamReader.ReadBuffer()
+   at System.IO.StreamReader.ReadLine()
+   at Foundation.Data.Doublets.Cli.Engine.FileCommitLog.Read() in <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs:line 64
+   at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaChild(String directory, String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 57
+   at Foundation.Data.Doublets.Cli.Tests.ProbeProgram.Main(String[] args) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/ProbeProgram.cs:line 18
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.JournalLiveTailTests.QuotaFailureRepairsTheLiveWriter(String mode, Boolean unicode) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs:line 38
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     6, Passed:     0, Skipped:     0, Total:     6, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

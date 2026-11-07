@@ -1,0 +1,22 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published commit: 9bb985f602c4cad882703722c7a496e5b8b3b8de
+Commit time: 2026-10-27T11:23:14+00:00
+All nine exact-head workflows complete successfully; created after this commit.
+Broken Link Checker: success; created 2026-10-27T11:23:27Z; https://github.com/link-foundation/link-cli/actions/runs/40495781061
+Dependencies: success; created 2026-10-27T11:23:27Z; https://github.com/link-foundation/link-cli/actions/runs/40495781082
+WebAssembly CI: success; created 2026-10-27T11:23:27Z; https://github.com/link-foundation/link-cli/actions/runs/40495781068
+Workflows: success; created 2026-10-27T11:23:27Z; https://github.com/link-foundation/link-cli/actions/runs/40495781124
+Rust CI/CD Pipeline: success; created 2026-10-27T11:23:27Z; https://github.com/link-foundation/link-cli/actions/runs/40495781041
+Docs: success; created 2026-10-27T11:23:26Z; https://github.com/link-foundation/link-cli/actions/runs/40495781060
+Security: success; created 2026-10-27T11:23:26Z; https://github.com/link-foundation/link-cli/actions/runs/40495780967
+JS client CI: success; created 2026-10-27T11:23:26Z; https://github.com/link-foundation/link-cli/actions/runs/40495781036
+C# CI/CD Pipeline: success; created 2026-10-27T11:23:26Z; https://github.com/link-foundation/link-cli/actions/runs/40495781030
+Rust: Windows/Linux/macOS, complete coverage, fresh merge, lint and package jobs pass.
+C#: Windows/Linux/macOS each pass all 2462 tests, including setup-progress and finite supervision controls.
+C# complete log: experiments/issue-138/ci-logs/csharp-40495781030.log.
+Actual platform total/pass lines: Linux 19100-19101; macOS 25476-25477; Windows 31421-31422.
+Original intermittent Windows name-exit/success/automatic=True/names=True case passes at line 28051.
+Setup boundary controls pass at Linux 14667-14668, macOS 24919-24920 and Windows 29164-29165.
+This head includes empty/rejected-shrink ownership and returned-creation progress; successful CI does not establish the earlier timeout host cause.
+Later generic-growth admission, initialization and platform-coverage retention changes require fresh exact-head CI.
+All complete coverage denominators and every unmet R1-R12 requirement remain active; PR139 stays draft/unmerged.

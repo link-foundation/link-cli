@@ -232,7 +232,7 @@ impl<'a> UnicodeStringStorage<'a> {
             .ok_or_else(|| anyhow::anyhow!("Unicode sequence link {sequence} does not exist."))?;
 
         self.sequence_walker
-            .walk(self.links, unicode_sequence.source)
+            .try_walk(self.links, unicode_sequence.source)?
             .into_iter()
             .map(|symbol| {
                 self.unicode_symbol_to_char_converter
@@ -287,6 +287,28 @@ impl<'a> UnicodeStringStorage<'a> {
             .name_holders(name)?
             .into_iter()
             .find_map(external_reference_value))
+    }
+
+    /// Logical external names, including names assigned before row allocation.
+    pub fn external_names(&self) -> Result<std::collections::BTreeMap<u32, String>> {
+        let mut names = std::collections::BTreeMap::new();
+        let mut pairs: Vec<_> = self.links.all().into_iter().copied().collect();
+        pairs.sort_unstable_by_key(|pair| pair.index);
+        for pair in pairs {
+            let Some(index) = external_reference_value(pair.source) else {
+                continue;
+            };
+            if names.contains_key(&index) {
+                continue;
+            }
+            let Some(candidate) = self.links.get(pair.target) else {
+                continue;
+            };
+            if candidate.source == self.name_type {
+                names.insert(index, self.get_string(candidate.target)?);
+            }
+        }
+        Ok(names)
     }
 
     pub fn remove_name_by_external_reference(&mut self, external_reference_id: u32) -> Result<()> {

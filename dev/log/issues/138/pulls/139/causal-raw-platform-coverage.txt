@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published pre-session head: 86378e89854498ee20f309f8cff599e54d9749a1
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40568997232
+
+linux: https://github.com/link-foundation/link-cli/actions/runs/40568997232/job/122420909140
+Successful job: 2026-10-27T19:31:42Z through 2026-10-27T19:34:08Z.
+a214aba2-b2da-4078-bf96-11473080a77c/coverage.json: 1882879 bytes; SHA256 e3d52901c96318b6ddb5b0152a265aab5821373c5dfa0763dbbdc1ae6a4e902a.
+a214aba2-b2da-4078-bf96-11473080a77c/coverage.cobertura.xml: 2327944 bytes; SHA256 5218bf2542703245fdec4951142765daf493b8963d2dc1551fdfdd24e91e5472.
+Complete lines: 7769/7970 (97.47804%).
+Complete branches: 6439/6901 (93.30532%).
+CausalBatch.cs: 188/188 compiled branches, including methods without source lines.
+CausalMerkle.cs: 246/246 compiled branches, including methods without source lines.
+CausalProjection.cs: 42/42 compiled branches, including methods without source lines.
+CausalReplica.cs: 182/182 compiled branches, including methods without source lines.
+CausalVersion.cs: 138/138 compiled branches, including methods without source lines.
+
+macos: https://github.com/link-foundation/link-cli/actions/runs/40568997232/job/122420909164
+Successful job: 2026-10-27T19:31:57Z through 2026-10-27T19:35:04Z.
+5078faa7-d819-4240-964e-bf2d31686a0c/coverage.json: 1882981 bytes; SHA256 75eba37dd96f4c74c6c7e90c81473cccfee72ceb34adc50a929ff23ad0ca645a.
+5078faa7-d819-4240-964e-bf2d31686a0c/coverage.cobertura.xml: 2327926 bytes; SHA256 b65672b8f4178897d9ebfdb6e2a6c4a75af8a43c483c85bbb73949956ba557e9.
+Complete lines: 7764/7970 (97.41531%).
+Complete branches: 6434/6901 (93.23286%).
+CausalBatch.cs: 188/188 compiled branches, including methods without source lines.
+CausalMerkle.cs: 246/246 compiled branches, including methods without source lines.
+CausalProjection.cs: 42/42 compiled branches, including methods without source lines.
+CausalReplica.cs: 182/182 compiled branches, including methods without source lines.
+CausalVersion.cs: 138/138 compiled branches, including methods without source lines.
+
+windows: https://github.com/link-foundation/link-cli/actions/runs/40568997232/job/122420909090
+Successful job: 2026-10-27T19:31:36Z through 2026-10-27T19:42:01Z.
+faa1a506-3114-45c2-b8af-c6f233e5b27d/coverage.json: 1953759 bytes; SHA256 9ecd38194bb76bc410c2d8fbe6c809facbdf089e000332cda537db842326a572.
+faa1a506-3114-45c2-b8af-c6f233e5b27d/coverage.cobertura.xml: 2370696 bytes; SHA256 dfa789a102d6212b3ec63361d994c194dd86661587859eec3e683bcc5757663a.
+Complete lines: 7755/7970 (97.30238%).
+Complete branches: 6419/6901 (93.01550%).
+CausalBatch.cs: 188/188 compiled branches, including methods without source lines.
+CausalMerkle.cs: 246/246 compiled branches, including methods without source lines.
+CausalProjection.cs: 42/42 compiled branches, including methods without source lines.
+CausalReplica.cs: 182/182 compiled branches, including methods without source lines.
+CausalVersion.cs: 138/138 compiled branches, including methods without source lines.
+
+All three independent archives retain raw JSON and Cobertura XML. Whole-project coverage remains below 100%.
+Windows-path regression: two verifier contracts fail before slash normalization; all five pass afterward, including new-session admission.
+The original five causal component results are immutable pre-session evidence. New session validation and every wider R1-R12 criterion remain separately tracked; PR139 stays draft.
+experiments/issue-138/causal-raw-platform-artifacts.json: 2884 bytes; SHA256 52fce09e4c4b599e06ef70a5729b65050f79d90ecfaf0c38bf304cffe8ae1d31.
+experiments/issue-138/causal-raw-csharp-jobs.json: 17591 bytes; SHA256 5984a63623f338b022f2fbf44d5a8b9b5e8133d2306386485b03bd3bac215dd9.
+experiments/issue-138/ci-logs/causal-raw-csharp-linux-12764408073.zip: 291419 bytes; SHA256 ca43b97ddbc59417aa6bc599acd93fb2aa1ffe80bcc39639ec3d7c8e063bffa9.
+experiments/issue-138/ci-logs/causal-raw-csharp-macos-12765037640.zip: 291349 bytes; SHA256 e96853cfb87bdb3d52264af087aac30494aa20529c008c653f0510fa67e8c89f.
+experiments/issue-138/ci-logs/causal-raw-csharp-windows-12765338438.zip: 292179 bytes; SHA256 85014f06d862ba77611bb056c90d5a5c038cf51c5506fe6d9a9fea88cbca5242.
+experiments/issue-138/causal-session-raw-windows-before.log: 1979 bytes; SHA256 4747329843967410fdb6e93d5f30c484dfbdbba5441db7435d7247f9a1e29329.
+experiments/issue-138/causal-session-raw-verifier.log: 103 bytes; SHA256 e74245acedd60441274983a88f482c9d32c605da70754ef7d014a9a42c611b03.
+experiments/issue-138/check-causal-raw-coverage.py: 1733 bytes; SHA256 2c40c1ab54c8ae9046d6a8f6d93a7eb11426246813a1432c7302f83541168a77.
+experiments/issue-138/test-causal-raw-coverage.py: 2930 bytes; SHA256 7893b742f3d8e6a949a5980994416f26638c3900d8596a46f30c7f57a6eea27f.

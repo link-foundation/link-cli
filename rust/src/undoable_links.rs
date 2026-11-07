@@ -265,6 +265,20 @@ impl<L: NamedTypeLinks> UndoableLinksDecorator<L> {
 }
 
 impl<L: NamedTypeLinks> NamedTypeLinks for UndoableLinksDecorator<L> {
+    fn query_limits(&self) -> Option<crate::query_options::QueryLimits> {
+        self.links.query_limits()
+    }
+
+    fn reserve_query_allocations(
+        &mut self,
+        processor: &crate::query_processor::QueryProcessor,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<std::collections::HashSet<u32>>> {
+        self.links
+            .reserve_query_allocations(processor, restriction, substitution)
+    }
+
     fn create(&mut self, source: u32, target: u32) -> u32 {
         let id = self.links.create(source, target);
         self.created(id)

@@ -1,0 +1,71 @@
+# Logical checkpoint journals
+
+A checkpoint journal starts with exactly one `engine3` record:
+
+```text
+engine3|revision|next|rows|checksum
+```
+
+Its fields, row/name encoding and checksum follow the engine1 full-revision
+format, with `engine3` included in the checksum input. The first revision can be
+any unsigned 64-bit revision. Revision zero must have no rows and allocator one.
+Every nonzero row address must be below the allocator, within the selected address
+type and unique. Names retain the distinction between absent and empty, using
+strict UTF-8. Selected row/name/reference constraints apply during replay.
+
+Only the first record can be engine3. Later engine1 or engine2 records must advance
+exactly one revision and never decrease the allocator. Changed-row records also
+validate their exact predecessor. A second checkpoint, broken checksum, invalid
+row, revision gap or backwards allocator rejects opening the journal. Independent
+[vectors](engine-checkpoint-vectors.json) are shared by Rust, C# and actual WASM.
+
+`Engine::export_checkpoint`, `LinksEngine.ExportCheckpoint` and
+`WasmEngine.exportCheckpoint` return owned records for retained committed states.
+The oldest retained state becomes engine3; later retained states become engine1
+records with unchanged revisions. With history disabled only current is exported;
+Last N exports its retained states; All exports every available revision,
+including zero when it is retained.
+Opening a checkpoint does not manufacture unavailable revision-zero history.
+
+Exports retain each revision's committed allocator. This preserves exact saved
+branch descriptors and committed holes, including created-then-deleted addresses,
+while excluding pending reservations of the original live owner. Resuming a
+branch requires its exact merge base to remain in the checkpoint journal; an
+evicted base is rejected. Selected history retains one allocator value alongside
+each snapshot; history-disabled owners retain only the existing current value. A copy is an independent database, not a
+second coordinated writer: its future allocations can overlap private addresses
+reserved by the original owner. Export leaves that owner's allocator, active
+sessions, retained snapshots and live log unchanged. An uncertain owner rejects
+export until it is reopened.
+
+Export allocates snapshot strings proportional to retained row/name contents.
+It does not rewrite local files/pages or provide atomic publication, flushing,
+encryption or authentication. Callers own safe replacement and synchronization.
+Old readers reject engine3: upgrade every reader/writer before enabling this
+format, and retain an ordinary journal if rollback to an old reader is required.
+
+The optional coordinated interval publishes exported records in the same atomic
+generation comparison/update as ordinary commits. All selected shard generations,
+including read-only dependencies, are still checked. Read-only groups publish no
+rewrite. Journal lengths may shrink or stay equal after a real write; generations
+remain the conflict token. A failed or lost response still requires a fresh read
+to discover the outcome, with no automatic mutation replay.
+
+Physical delta decorators retain the exact first engine3 bytes and checksum.
+That complete image may be the base of a following delta1, which reconstructs
+an ordinary engine1 record and checks its own original checksum. No delta1
+format changes are needed. Following engine2 changes pass through unchanged and
+interrupt complete-image compression. A second engine3, a revision gap, or a
+following record after the maximum u64 revision is rejected. The selected codec
+still requires canonical printable ASCII headers; the engine validates rows,
+allocators, names and selected constraints after expansion. Independent
+physicalDelta vectors in the shared checkpoint fixture cover these boundaries.
+Append/flush uncertainty fences the decorator until reopen discovers its actual
+prefix. Logical export does not replace or compact an existing physical stream.
+
+The independent `nativePageSeed` fixture starts at revision 40 with 32 rows,
+allocator 41, retired addresses 33 through 40 and BOM/Unicode/NUL names. The
+native page interoperability examples import it into dedicated empty journals
+and preserve its exact bytes through following writes in all three providers.
+This tests persisted checkpoint import and physical encoding composition;
+it does not replace an existing acknowledged journal.

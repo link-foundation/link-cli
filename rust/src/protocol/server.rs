@@ -23,18 +23,21 @@
 
 use super::error::ProtocolResult;
 use super::links_operations::{
-    matches, notification_document, parse_changes, subscription_document, Change, LinksOperation,
-    Part,
+    matches, notification_document, parse_changes_for, subscription_document, Change,
+    GenericLinksOperation, LinksOperation, Part,
 };
-use super::protocols::{read_any_document, MessageFormat, ProtocolLimits};
+use super::protocols::{read_any_document_with_query_limits, MessageFormat, ProtocolLimits};
 use super::sessions::{LinksSessions, SessionId};
 use super::triplets_operations::{
     matches_triplet, pack_triplets, triplet_notification_document, TripletsOperation,
 };
-use crate::link::Link;
+use crate::link::{GenericLink, Link};
 use crate::named_type_links::NamedTypeLinks;
 use crate::permissions::AccessPolicy;
-use crate::query_processor::QueryProcessor;
+use crate::query_address::QueryAddress;
+use crate::query_options::QueryLimits;
+use crate::query_processor::{GenericQueryProcessor, QueryProcessor};
+use crate::query_reply_budget::QueryReplyBudget;
 use crate::triplets::{Triplet, TripletChange};
 use links_notation::binary::{format_document, LinoDocument};
 use links_notation::LiNo;
@@ -46,6 +49,12 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
+
+#[path = "server_query.rs"]
+mod query;
+pub(super) use query::admit_document;
+pub(super) use query::{execute_observed_request, reference_name};
+pub use query::{execute_request, execute_request_for, parse_document_with_limits, query_document};
 
 /// Which protocols a server accepts.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -214,6 +223,66 @@ impl LinksServer {
         self.serve_sessions(&mut sessions)
     }
 
+    /// Serves the selected address type through the same request path.
+    /// Checked adapters may use a wider marker to retain their full stored range.
+    pub fn serve_for<T: QueryAddress, S: NamedTypeLinks<T>>(
+        self,
+        storage: &mut S,
+    ) -> ProtocolResult<()> {
+        let LinksServer {
+            listener,
+            options,
+            readable: _,
+            jobs,
+            queue,
+            stopping,
+        } = self;
+        let query_limits = storage.query_limits();
+        let acceptor = {
+            let stopping = Arc::clone(&stopping);
+            thread::spawn(move || accept_loop(listener, jobs, stopping, options, query_limits))
+        };
+        let processor = GenericQueryProcessor::<T>::new(false)
+            .with_auto_create_missing_references(options.auto_create_missing_references);
+        while let Ok(job) = queue.recv() {
+            match job {
+                Job::Shutdown => break,
+                Job::Close(_) => {}
+                Job::Request {
+                    document,
+                    outbox,
+                    format,
+                    done,
+                    ..
+                } => {
+                    if options.trace
+                        && storage
+                            .query_limits()
+                            .is_none_or(|limits| admit_document(&document, limits).is_ok())
+                    {
+                        crate::diagnostics::stderr!(
+                            "[server] request: {}",
+                            format_document(&document)
+                        );
+                    }
+                    let response = execute_request_for(storage, &processor, &document);
+                    if options.trace {
+                        crate::diagnostics::stderr!(
+                            "[server] reply: {}",
+                            format_document(&response)
+                        );
+                    }
+                    outbox.reply(response, format);
+                    let _ = done.send(());
+                }
+            }
+        }
+        stopping.store(true, Ordering::SeqCst);
+        drop(queue);
+        let _ = acceptor.join();
+        Ok(())
+    }
+
     /// Serves `sessions` until a [`ShutdownHandle`] stops the server: every
     /// connection is a session of its own, opened with the default subject
     /// of `sessions` and closed when the connection closes (issue #149).
@@ -234,9 +303,10 @@ impl LinksServer {
                 .ensure_triplets()
                 .map_err(|error| io::Error::other(format!("{error:#}")))?;
         }
+        let query_limits = sessions.store().query_limits();
         let acceptor = {
             let stopping = Arc::clone(&stopping);
-            thread::spawn(move || accept_loop(listener, jobs, stopping, options))
+            thread::spawn(move || accept_loop(listener, jobs, stopping, options, query_limits))
         };
         let mut dispatcher = Dispatcher::new(options, readable);
         while let Ok(job) = queue.recv() {
@@ -289,8 +359,13 @@ impl Dispatcher {
                 format,
                 done,
             } => {
-                if self.options.trace {
-                    eprintln!("[server] request: {}", format_document(&document));
+                if self.options.trace
+                    && sessions
+                        .store()
+                        .query_limits()
+                        .is_none_or(|limits| admit_document(&document, limits).is_ok())
+                {
+                    crate::diagnostics::stderr!("[server] request: {}", format_document(&document));
                 }
                 let current = self
                     .connections
@@ -313,7 +388,7 @@ impl Dispatcher {
                         }
                     });
                 if self.options.trace {
-                    eprintln!("[server] reply: {}", format_document(&reply));
+                    crate::diagnostics::stderr!("[server] reply: {}", format_document(&reply));
                 }
                 let reply = if triplets {
                     pack_triplets(reply, format)
@@ -612,6 +687,7 @@ fn accept_loop(
     jobs: Sender<Job>,
     stopping: Arc<AtomicBool>,
     options: ServerOptions,
+    query_limits: Option<QueryLimits>,
 ) {
     for stream in listener.incoming() {
         if stopping.load(Ordering::SeqCst) {
@@ -620,9 +696,9 @@ fn accept_loop(
         let Ok(stream) = stream else { continue };
         let jobs = jobs.clone();
         thread::spawn(move || {
-            if let Err(error) = handle_connection(stream, jobs, options) {
+            if let Err(error) = handle_connection(stream, jobs, options, query_limits) {
                 if options.trace {
-                    eprintln!("[server] connection closed: {error}");
+                    crate::diagnostics::stderr!("[server] connection closed: {error}");
                 }
             }
         });
@@ -633,6 +709,7 @@ fn handle_connection(
     stream: TcpStream,
     jobs: Sender<Job>,
     options: ServerOptions,
+    query_limits: Option<QueryLimits>,
 ) -> ProtocolResult<()> {
     static CONNECTIONS: AtomicU64 = AtomicU64::new(0);
     let connection = CONNECTIONS.fetch_add(1, Ordering::Relaxed);
@@ -652,12 +729,12 @@ fn handle_connection(
         thread::spawn(move || {
             if let Err(error) = outbox.write_all(&mut stream, options.limits) {
                 if options.trace {
-                    eprintln!("[server] connection closed: {error}");
+                    crate::diagnostics::stderr!("[server] connection closed: {error}");
                 }
             }
         })
     };
-    let result = serve_connection(stream, connection, &outbox, &jobs, options);
+    let result = serve_connection(stream, connection, &outbox, &jobs, options, query_limits);
     // Its subscriptions go with it.
     let _ = jobs.send(Job::Close(connection));
     outbox.close();
@@ -671,25 +748,27 @@ fn serve_connection(
     outbox: &Arc<Outbox>,
     jobs: &Sender<Job>,
     options: ServerOptions,
+    query_limits: Option<QueryLimits>,
 ) -> ProtocolResult<()> {
     let mut reader = BufReader::new(stream);
     loop {
-        let (document, format) = match read_any_document(&mut reader, &options.limits) {
-            Ok(Some(message)) => message,
-            Ok(None) => {
-                if options.trace {
-                    eprintln!("[server] client hung up");
+        let (document, format) =
+            match read_any_document_with_query_limits(&mut reader, &options.limits, query_limits) {
+                Ok(Some(message)) => message,
+                Ok(None) => {
+                    if options.trace {
+                        crate::diagnostics::stderr!("[server] client hung up");
+                    }
+                    return Ok(());
                 }
-                return Ok(());
-            }
-            Err(_) if outbox.is_closed() => return Ok(()),
-            Err(error) => {
-                // The stream may be out of sync; answer in text and hang up.
-                outbox.reply(error_document(&error.to_string()), MessageFormat::Text);
-                outbox.wait_for_replies();
-                return Err(error);
-            }
-        };
+                Err(_) if outbox.is_closed() => return Ok(()),
+                Err(error) => {
+                    // The stream may be out of sync; answer in text and hang up.
+                    outbox.reply(error_document(&error.to_string()), MessageFormat::Text);
+                    outbox.wait_for_replies();
+                    return Err(error);
+                }
+            };
         if options.accept.accepts(format) {
             let (done, finished) = mpsc::channel();
             let job = Job::Request {
@@ -712,7 +791,7 @@ fn serve_connection(
         outbox.wait_for_replies();
         if outbox.is_closed() {
             if options.trace {
-                eprintln!("[server] connection closed");
+                crate::diagnostics::stderr!("[server] connection closed");
             }
             return Ok(());
         }
@@ -739,111 +818,6 @@ pub fn error_message(document: &[LiNo<String>]) -> Option<&str> {
         },
         _ => None,
     }
-}
-
-/// Executes one request against `storage`.
-///
-/// A non-empty document is a substitution query; the reply holds one
-/// `(before) (after)` line per change, exactly like `clink --changes`. The
-/// empty document asks for every link, one `(index: source target)` per line.
-/// Failures produce an [`error_document`].
-pub fn execute_request<S: NamedTypeLinks>(
-    storage: &mut S,
-    processor: &QueryProcessor,
-    document: &[LiNo<String>],
-) -> LinoDocument {
-    execute_observed_request(storage, processor, document, &mut Vec::new())
-}
-
-/// Like [`execute_request`], adding the net change of every link the request
-/// changed to `changed`, with plain numbers.
-pub(super) fn execute_observed_request<S: NamedTypeLinks>(
-    storage: &mut S,
-    processor: &QueryProcessor,
-    document: &[LiNo<String>],
-    changed: &mut Vec<Change>,
-) -> LinoDocument {
-    match try_execute_request(storage, processor, document, changed) {
-        Ok(reply) => reply,
-        Err(error) => error_document(&format!("{error:#}")),
-    }
-}
-
-fn try_execute_request<S: NamedTypeLinks>(
-    storage: &mut S,
-    processor: &QueryProcessor,
-    document: &[LiNo<String>],
-    changed: &mut Vec<Change>,
-) -> anyhow::Result<LinoDocument> {
-    if let Some(operation) = LinksOperation::from_document(document)? {
-        let reply = operation.execute(storage)?;
-        if matches!(
-            operation,
-            LinksOperation::Create { .. }
-                | LinksOperation::Update { .. }
-                | LinksOperation::Delete(_)
-        ) {
-            changed.extend(parse_changes(&reply)?);
-        }
-        return Ok(reply);
-    }
-    if document.is_empty() {
-        let mut links = storage.all_links();
-        links.sort_by_key(|link| link.index);
-        return links.iter().map(|link| link_lino(storage, link)).collect();
-    }
-    let changes = processor.process_query(storage, &format_document(document))?;
-    changed.extend(changes.iter().map(|(before, after)| {
-        (
-            before.unwrap_or_else(Link::null),
-            after.unwrap_or_else(Link::null),
-        )
-    }));
-    if !changes.is_empty() {
-        storage.save()?;
-    }
-    changes
-        .iter()
-        .map(|(before, after)| {
-            Ok(LiNo::Link {
-                id: None,
-                values: vec![
-                    change_side(storage, before.as_ref())?,
-                    change_side(storage, after.as_ref())?,
-                ],
-            })
-        })
-        .collect()
-}
-
-/// `(index: source target)`, naming every reference that has a name.
-fn link_lino<S: NamedTypeLinks>(storage: &mut S, link: &Link) -> anyhow::Result<LiNo<String>> {
-    Ok(LiNo::Link {
-        id: Some(reference_name(storage, link.index)?),
-        values: vec![
-            LiNo::Ref(reference_name(storage, link.source)?),
-            LiNo::Ref(reference_name(storage, link.target)?),
-        ],
-    })
-}
-
-/// `()` for a missing side of a change, `((index: source target))` otherwise.
-fn change_side<S: NamedTypeLinks>(
-    storage: &mut S,
-    link: Option<&Link>,
-) -> anyhow::Result<LiNo<String>> {
-    let values = match link {
-        Some(link) => vec![link_lino(storage, link)?],
-        None => Vec::new(),
-    };
-    Ok(LiNo::Link { id: None, values })
-}
-
-pub(super) fn reference_name<S: NamedTypeLinks + ?Sized>(
-    storage: &mut S,
-    id: u32,
-) -> anyhow::Result<String> {
-    Ok(storage.get_name(id)?.unwrap_or_else(|| id.to_string()))
 }
 
 #[cfg(test)]

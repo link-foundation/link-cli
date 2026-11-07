@@ -1,0 +1,30 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: 950bcb34ed060674ed3896f1deb187706be62c09
+Commit time: 2026-10-27T09:56:14+00:00
+All nine runs were created 2026-10-27T10:09:14/15Z, after that commit.
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40486274470
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40486274611
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40486274327
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40486274060
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40486274292
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40486274138
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40486274204
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40486274067
+C# CI/CD Pipeline: failure https://github.com/link-foundation/link-cli/actions/runs/40486274057
+
+Rust passes Windows/Linux/macOS and package build; workflow completed 10:40:17Z.
+C# passes Linux/macOS and simulated fresh merge, all 2,451 tests on each.
+The original Linux finite-progress control and all occupied-worker controls pass.
+Windows passes 2,450/2,451 and fails one different case:
+VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(success, automatic=True, names=True).
+Complete log: experiments/issue-138/ci-logs/csharp-40486274057.log.
+Lines 25689–25702 report TimeoutException, name-exit/success/True, PID7808,
+elapsed 19.8139369 seconds, phase6/version-open and killed exit -1.
+Completed child phases: 21/153/361/362/4278/4295 ms.
+The unchanged 15-second idle bound expires while the compound initial
+CreateAndUpdate operation has no intermediate completed-creation phase.
+The log cannot identify the inner write/flush or establish a physical storage hang.
+No timeout is widened. VERSION-SETUP-PROGRESS-PLAN.md retains the next investigation.
+This is eight passing workflows and one failing workflow, not a green head.
+Fresh exact-head platform verification and every wider R1-R12 gap remain required.
+The PR stays draft/unmerged.

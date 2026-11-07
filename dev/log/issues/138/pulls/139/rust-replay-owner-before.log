@@ -1,0 +1,104 @@
+   Compiling link-cli v1.0.9 (<worktree>/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.84s
+     Running tests/transactions_replay_owner_tests.rs (rust/target/debug/deps/transactions_replay_owner_tests-126fea69782e7f51)
+
+running 6 tests
+test apply_rejects_failed_rollback_owner ... FAILED
+test apply_rejects_live_owner ... FAILED
+test revert_rejects_live_owner ... FAILED
+test revert_rejects_failed_rollback_owner ... FAILED
+test apply_rejects_failed_commit_owner ... FAILED
+test revert_rejects_failed_commit_owner ... FAILED
+
+failures:
+
+---- apply_rejects_failed_rollback_owner stdout ----
+
+thread 'apply_rejects_failed_rollback_owner' (1055566) panicked at tests/transactions_replay_owner_tests.rs:86:5:
+unlogged replay bypassed the live owner
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: transactions_replay_owner_tests::verify
+   3: transactions_replay_owner_tests::apply_rejects_failed_rollback_owner
+   4: transactions_replay_owner_tests::apply_rejects_failed_rollback_owner::{closure#0}
+   5: <transactions_replay_owner_tests::apply_rejects_failed_rollback_owner::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+---- apply_rejects_live_owner stdout ----
+
+thread 'apply_rejects_live_owner' (1055567) panicked at tests/transactions_replay_owner_tests.rs:86:5:
+unlogged replay bypassed the live owner
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: transactions_replay_owner_tests::verify
+   3: transactions_replay_owner_tests::apply_rejects_live_owner
+   4: transactions_replay_owner_tests::apply_rejects_live_owner::{closure#0}
+   5: <transactions_replay_owner_tests::apply_rejects_live_owner::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+---- revert_rejects_live_owner stdout ----
+
+thread 'revert_rejects_live_owner' (1055570) panicked at tests/transactions_replay_owner_tests.rs:86:5:
+unlogged replay bypassed the live owner
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: transactions_replay_owner_tests::verify
+   3: transactions_replay_owner_tests::revert_rejects_live_owner
+   4: transactions_replay_owner_tests::revert_rejects_live_owner::{closure#0}
+   5: <transactions_replay_owner_tests::revert_rejects_live_owner::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+---- revert_rejects_failed_rollback_owner stdout ----
+
+thread 'revert_rejects_failed_rollback_owner' (1055569) panicked at tests/transactions_replay_owner_tests.rs:86:5:
+unlogged replay bypassed the live owner
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: transactions_replay_owner_tests::verify
+   3: transactions_replay_owner_tests::revert_rejects_failed_rollback_owner
+   4: transactions_replay_owner_tests::revert_rejects_failed_rollback_owner::{closure#0}
+   5: <transactions_replay_owner_tests::revert_rejects_failed_rollback_owner::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+---- apply_rejects_failed_commit_owner stdout ----
+
+thread 'apply_rejects_failed_commit_owner' (1055565) panicked at tests/transactions_replay_owner_tests.rs:86:5:
+unlogged replay bypassed the live owner
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: transactions_replay_owner_tests::verify
+   3: transactions_replay_owner_tests::apply_rejects_failed_commit_owner
+   4: transactions_replay_owner_tests::apply_rejects_failed_commit_owner::{closure#0}
+   5: <transactions_replay_owner_tests::apply_rejects_failed_commit_owner::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+---- revert_rejects_failed_commit_owner stdout ----
+
+thread 'revert_rejects_failed_commit_owner' (1055568) panicked at tests/transactions_replay_owner_tests.rs:86:5:
+unlogged replay bypassed the live owner
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: transactions_replay_owner_tests::verify
+   3: transactions_replay_owner_tests::revert_rejects_failed_commit_owner
+   4: transactions_replay_owner_tests::revert_rejects_failed_commit_owner::{closure#0}
+   5: <transactions_replay_owner_tests::revert_rejects_failed_commit_owner::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    apply_rejects_failed_commit_owner
+    apply_rejects_failed_rollback_owner
+    apply_rejects_live_owner
+    revert_rejects_failed_commit_owner
+    revert_rejects_failed_rollback_owner
+    revert_rejects_live_owner
+
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `--test transactions_replay_owner_tests`

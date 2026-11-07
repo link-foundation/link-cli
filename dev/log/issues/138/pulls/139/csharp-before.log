@@ -1,0 +1,19 @@
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.85]     Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CompleteCorruptTransitionsFailRecovery [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CompleteCorruptTransitionsFailRecovery [171 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CompleteCorruptTransitionsFailRecovery() in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 18
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 204 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

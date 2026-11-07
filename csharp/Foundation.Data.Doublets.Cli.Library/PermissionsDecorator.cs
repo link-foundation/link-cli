@@ -54,6 +54,24 @@ namespace Foundation.Data.Doublets.Cli
         where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
     {
         private readonly INamedTypesLinks<TLinkAddress> _named;
+
+        public QueryLimits? QueryLimits => _named.QueryLimits;
+
+        /// <summary>
+        /// Only addresses that do not exist yet are allocations; a preview lists every row, and counting
+        /// a hidden one would let it answer differently from a missing one. A subject who may not create
+        /// gets no reservation, so its first new link is refused whether or not the same pair is hidden.
+        /// </summary>
+        public IReadOnlySet<TLinkAddress>? ReserveQueryAllocations(Action<INamedTypesLinks<TLinkAddress>> preview)
+        {
+            if (!Policy.CanCreate(Subject))
+            {
+                return null;
+            }
+            var reserved = _named.ReserveQueryAllocations(preview);
+            return reserved?.Where(address => !_links.Exists(address)).ToHashSet();
+        }
+
         private readonly Func<TLinkAddress> _subject;
         private readonly HashSet<TLinkAddress> _created = new();
 
@@ -160,39 +178,28 @@ namespace Foundation.Data.Doublets.Cli
             {
                 throw new ForbiddenException("create");
             }
-            var created = TLinkAddress.Zero;
-            var result = _links.Create(substitution, (before, after) =>
+            return _links.Create(substitution, (before, after) =>
             {
                 if (before is null && after is not null)
                 {
-                    created = after[_constants.IndexPart];
-                    _created.Add(created);
+                    _created.Add(after[_constants.IndexPart]);
                 }
                 return handler is null ? _constants.Continue : handler(before, after);
             });
-            if (created == TLinkAddress.Zero && result != _constants.Null && result != _constants.Break && result != _constants.Continue)
-            {
-                _created.Add(result);
-            }
-            return result;
         }
 
         public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
         {
             var index = IndexOf(restriction, "update");
             var before = Visible(index);
-            if (before is null)
-            {
-                return _links.Update(restriction, substitution, handler);
-            }
-            var after = After(index, substitution, before.Value);
-            if (!(Owns(before.Value) && after.Source == _constants.Null)
-                && (!CanWrite(before.Value) || !Policy.CanWrite(Subject, after)))
+            var after = After(index, substitution, before);
+            if (!(Owns(before) && after.Source == _constants.Null)
+                && (!CanWrite(before) || !Policy.CanWrite(Subject, after)))
             {
                 throw new ForbiddenException($"update {index}");
             }
-            CheckReference(after.Source, before.Value);
-            CheckReference(after.Target, before.Value);
+            CheckReference(after.Source, before);
+            CheckReference(after.Target, before);
             var log = new LinksUndoLog<TLinkAddress>();
             UndoableLinksDecorator<TLinkAddress>.KeepNamesBeforeUpdate(log, _named, index, substitution);
             return Checked($"update {index}", index, log, recorder => _links.Update(restriction, substitution, recorder), handler);
@@ -201,12 +208,7 @@ namespace Foundation.Data.Doublets.Cli
         public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
         {
             var index = IndexOf(restriction, "delete");
-            var before = Visible(index);
-            if (before is null)
-            {
-                return _links.Delete(restriction, handler);
-            }
-            if (!CanWrite(before.Value))
+            if (!CanWrite(Visible(index)))
             {
                 throw new ForbiddenException($"delete {index}");
             }
@@ -262,22 +264,18 @@ namespace Foundation.Data.Doublets.Cli
 
         private void RequireWritable(TLinkAddress index, string what)
         {
-            var link = Visible(index) ?? throw new ArgumentException($"Link not found: {index}");
-            if (!CanWrite(link))
+            if (!CanWrite(Visible(index)))
             {
                 throw new ForbiddenException($"{what} {index}");
             }
         }
 
-        /// <summary>The stored link at <paramref name="index"/>, null when there is none; a hidden one is not found.</summary>
-        private Link<TLinkAddress>? Visible(TLinkAddress index)
+        /// <summary>The stored link at <paramref name="index"/>; the null link, an absent one and a hidden one are not found.</summary>
+        private Link<TLinkAddress> Visible(TLinkAddress index)
         {
-            if (index == _constants.Null || !_links.Exists(index))
-            {
-                return null;
-            }
-            var link = new Link<TLinkAddress>(_links.GetLink(index));
-            if (!CanRead(link))
+            // An absent link answers as a hidden one does: the two must not be told apart, and
+            // the memory store below reads a write's address without checking it.
+            if (!_links.Exists(index) || new Link<TLinkAddress>(_links.GetLink(index)) is var link && !CanRead(link))
             {
                 throw new ArgumentException($"Link not found: {index}");
             }

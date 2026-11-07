@@ -1,0 +1,35 @@
+{
+  "valid": [
+    "engine1|1|2|1,0,0,e99baa3b7cf09f9880|ab1ceba4ea412e20",
+    "engine1|2|2||2d94f92b8e91e85e",
+    "engine1|3|4294967296|4294967295,0,4294967295,|e92c96d8f4e6e1db"
+  ],
+  "invalidU32": [
+    "bad",
+    "engine1|1|2|1,0,0,e99baa3b7cf09f9880|ab1ceba4ea412e200",
+    "engine2|1|2|1,0,0,-|b070ed089e17d59a",
+    "engine1|bad|2||b7309eb9706b6c41",
+    "engine1|1|bad||733d1185062c0e16",
+    "engine1|1|0||6e914943a6677f67",
+    "engine1|1|2|1,0|b89ae6c82b9ab7a0",
+    "engine1|1|2|0,0,0,-|12d359f36d2e9bfc",
+    "engine1|1|2|2,0,0,-|41a225eb48e32422",
+    "engine1|1|2|1,0,0,-;1,0,0,-|592a480195bbc52c",
+    "engine1|1|2|1,0,0,f|4f0172770a6a1122",
+    "engine1|1|2|1,0,0,zz|a95de046b218810c",
+    "engine1|1|2|1,0,0,ff|a986c446b23b568c",
+    "engine1|1|2|1,bad,0,-|cf0420248445c324",
+    "engine1|1|2|1,0,4294967296,-|8a3884e77cb1abd9",
+    "engine1|+1|2|1,0,0,-|9bdcfe9fb45f88e4",
+    "engine1|1|+2|1,0,0,-|c5c7822670273d8a",
+    "engine1|1\u0000|2|1,0,0,-|ef322de44acaca85",
+    "engine1|1|2|1,0\u0000,0,-|18b86677ac0b7187",
+    "engine1|1|2|1,0,0,\u00e9|ab9b8746b3ff4dc0",
+    "engine1|1|2|1,0,0,+a|a8bdbf46b1901d80",
+    "engine1|18446744073709551616|2||002fdc3e5c6ad17c",
+    "engine1|1|340282366920938463463374607431768211456||a75a755d1e6d06af",
+    "engine1|1|2|1,0,15,-| fa4944f785bc9b1",
+    "engine1|1|2|1,0,15,-|+fa4944f785bc9b1",
+    "engine1|1|2|1,0,0,e99baa3b7cf09f9880|ab1ceba4ea412e21"
+  ]
+}

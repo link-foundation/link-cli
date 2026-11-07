@@ -1,0 +1,48 @@
+Physical LSM composition experiment
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-lsm-store-prototype.sh
+
+Node: 13 tests pass; 0 failures/skips.
+Bun: 13 tests pass; 0 failures.
+Deno: 13 tests pass; 0 failures.
+Each runtime: 36 compaction mutation effects, 72 before/after cuts;
+40 group-write-with-compaction effects, 80 before/after cuts.
+Every cut requires the old owner to fence, recovers acknowledged state from
+durable images, preserves whole-group atomicity, then permits following use.
+Compaction recovery verifies table identities are never reused.
+
+The experiment uses the actual production checkpoint-page, sorted-table and
+semantic WAL components over finite image devices and a faultable namespace.
+It verifies guards, owned Unicode values, tombstones, live empty journals,
+buffer admission, repeated WAL replacement and compaction, selected-file damage,
+unreserved-name rejection, counter exhaustion, constructor cleanup and reentry.
+Prospective manifest plus following-group admission is checked before mutation.
+Two later before-failing controls expose hidden conflicts between historical
+copies beneath a newer version, and a silently downgraded durability capability
+after a provider returns a non-durable table device. Both are corrected in the
+isolated prototype. Identical historical copies remain valid; recovery tracks
+temporary generation/owner metadata and rereads repeated versions for exact
+payload comparison. The live on-disk index still retains no journal payload map.
+Actual before logs: lsm-store-historical-before.log:16 and
+lsm-store-capability-before.log:15 (Missing expected exception).
+
+Node/Deno heap128MiB, stack512KiB; Bun uses --smol. Inputs/traces are finite.
+Full logs: experiments/issue-138/lsm-store-prototype-{node,bun,deno}.log.
+The initial missing production entry fails with ERR_MODULE_NOT_FOUND in
+experiments/issue-138/lsm-store-before-js.log before the prototype is implemented.
+Rust/C# behavioral fixtures now fail with their named missing-store errors on
+codec-only baseline d12760f, separately from the experiment. lsm-store-before.txt
+preserves actual errors and reproduction. No production store entry exists yet.
+
+No actual native files/process exits, native directory durability, actual WASM,
+cross-language store interchange or whole-project coverage is claimed here.
+The prototype is isolated under experiments, not exported by any package.
+Native WAL discovery must validate the selected prefix/tables before cleanup;
+ordinary checkpoint constructors may truncate an uncommitted suffix on open.
+Six separate read-only discovery controls pass in each of Node/Bun/Deno:
+empty inspection, ignored uncommitted suffix, missing selected table before
+cleanup, damaged selected page/page bound, root/table identity mismatch, and
+finite option/repair-completion guards. Reproduce with
+bash experiments/issue-138/run-lsm-readonly-inspection.sh.
+These controls read real production page formats but add no production API.
+All production physical-LSM and wider unmet R1-R12 requirements remain active.

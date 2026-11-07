@@ -1,0 +1,66 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.51]     Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "update", chunked: True) [FAIL]
+[xUnit.net 00:00:01.61]     Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "recreate", chunked: False) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "update", chunked: True) [457 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(String operation, Boolean chunked) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRetentionOrderingTests.cs:line 73
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "recreate", chunked: False) [113 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(String operation, Boolean chunked) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRetentionOrderingTests.cs:line 72
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:01.74]     Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "recreate", chunked: True) [FAIL]
+[xUnit.net 00:00:01.85]     Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "delete", chunked: False) [FAIL]
+[xUnit.net 00:00:01.94]     Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "delete", chunked: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "recreate", chunked: True) [130 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(String operation, Boolean chunked) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRetentionOrderingTests.cs:line 72
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "delete", chunked: False) [101 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(String operation, Boolean chunked) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRetentionOrderingTests.cs:line 69
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "delete", chunked: True) [93 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(String operation, Boolean chunked) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRetentionOrderingTests.cs:line 69
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.07]     Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "update", chunked: False) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(operation: "update", chunked: False) [119 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRetentionOrderingTests.RetentionCheckpointsOlderGapWithoutOverwritingNewerCommit(String operation, Boolean chunked) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRetentionOrderingTests.cs:line 73
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     6, Passed:    39, Skipped:     0, Total:    45, Duration: 4 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

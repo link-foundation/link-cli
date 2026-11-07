@@ -1,0 +1,521 @@
+{
+  "objects": [
+    {
+      "epoch": "0",
+      "entries": [],
+      "key": "blob2-0000000000000000-5cfce29b8ee808fc"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        ""
+      ],
+      "key": "blob2-0000000000000000-748c9a71b48e427a"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "",
+        ""
+      ],
+      "key": "blob2-0000000000000000-01a23a6c9423d94c"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "ab",
+        "c"
+      ],
+      "key": "blob2-0000000000000000-a73add1ac66bb615"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "a",
+        "bc"
+      ],
+      "key": "blob2-0000000000000000-08a602c689c23f35"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "雪😀"
+      ],
+      "key": "blob2-0000000000000000-f064162baeef54c4"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "﻿\u0000\n",
+        "é"
+      ],
+      "key": "blob2-0000000000000000-cac371bf3d30f6dc"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "0:",
+        "雪",
+        ""
+      ],
+      "key": "blob2-0000000000000000-1c255b48faeab201"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "one",
+        "two"
+      ],
+      "key": "blob2-0000000000000000-e7a925713caa5e68"
+    },
+    {
+      "epoch": "0",
+      "entries": [
+        "𐀀",
+        "￿"
+      ],
+      "key": "blob2-0000000000000000-14021729a17a1e16"
+    },
+    {
+      "epoch": "1",
+      "entries": [],
+      "key": "blob2-0000000000000001-5cfce29b8ee808fc"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        ""
+      ],
+      "key": "blob2-0000000000000001-748c9a71b48e427a"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "",
+        ""
+      ],
+      "key": "blob2-0000000000000001-01a23a6c9423d94c"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "ab",
+        "c"
+      ],
+      "key": "blob2-0000000000000001-a73add1ac66bb615"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "a",
+        "bc"
+      ],
+      "key": "blob2-0000000000000001-08a602c689c23f35"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "雪😀"
+      ],
+      "key": "blob2-0000000000000001-f064162baeef54c4"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "﻿\u0000\n",
+        "é"
+      ],
+      "key": "blob2-0000000000000001-cac371bf3d30f6dc"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "0:",
+        "雪",
+        ""
+      ],
+      "key": "blob2-0000000000000001-1c255b48faeab201"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "one",
+        "two"
+      ],
+      "key": "blob2-0000000000000001-e7a925713caa5e68"
+    },
+    {
+      "epoch": "1",
+      "entries": [
+        "𐀀",
+        "￿"
+      ],
+      "key": "blob2-0000000000000001-14021729a17a1e16"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [],
+      "key": "blob2-ffffffffffffffff-5cfce29b8ee808fc"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        ""
+      ],
+      "key": "blob2-ffffffffffffffff-748c9a71b48e427a"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "",
+        ""
+      ],
+      "key": "blob2-ffffffffffffffff-01a23a6c9423d94c"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "ab",
+        "c"
+      ],
+      "key": "blob2-ffffffffffffffff-a73add1ac66bb615"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "a",
+        "bc"
+      ],
+      "key": "blob2-ffffffffffffffff-08a602c689c23f35"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "雪😀"
+      ],
+      "key": "blob2-ffffffffffffffff-f064162baeef54c4"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "﻿\u0000\n",
+        "é"
+      ],
+      "key": "blob2-ffffffffffffffff-cac371bf3d30f6dc"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "0:",
+        "雪",
+        ""
+      ],
+      "key": "blob2-ffffffffffffffff-1c255b48faeab201"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "one",
+        "two"
+      ],
+      "key": "blob2-ffffffffffffffff-e7a925713caa5e68"
+    },
+    {
+      "epoch": "18446744073709551615",
+      "entries": [
+        "𐀀",
+        "￿"
+      ],
+      "key": "blob2-ffffffffffffffff-14021729a17a1e16"
+    }
+  ],
+  "epochs": [
+    {
+      "entries": [
+        "gc1",
+        "0"
+      ],
+      "valid": true
+    },
+    {
+      "entries": [
+        "gc1",
+        "1"
+      ],
+      "valid": true
+    },
+    {
+      "entries": [
+        "gc1",
+        "18446744073709551615"
+      ],
+      "valid": true
+    },
+    {
+      "entries": [],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        "0",
+        "extra"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc0",
+        "0"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        ""
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        "00"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        "+1"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        "-1"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        " 1"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "gc1",
+        "18446744073709551616"
+      ],
+      "valid": false
+    }
+  ],
+  "pointers": [
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "objectEntries": [
+        "live 雪"
+      ],
+      "valid": true
+    },
+    {
+      "entries": [
+        "blob2",
+        "west",
+        "blob2-ffffffffffffffff-5cfce29b8ee808fc",
+        "18446744073709551615"
+      ],
+      "objectEntries": [],
+      "valid": true
+    },
+    {
+      "entries": [
+        "blob1",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob3",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "../east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "missing",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0-0000000000000000",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "BLOB2-0000000000000000-7AFD044359937B86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b860",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000_7afd044359937b86",
+        "7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "0"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "00"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "01"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "+7"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "-1"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "18446744073709551616"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86"
+      ],
+      "valid": false
+    },
+    {
+      "entries": [
+        "blob2",
+        "east",
+        "blob2-0000000000000000-7afd044359937b86",
+        "7",
+        "extra"
+      ],
+      "valid": false
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+Owned mapped growth; PR https://github.com/link-foundation/link-cli/pull/139
+Run: bash experiments/issue-138/validate-mapped-growth.sh
+Before: 1 failed / 1 passing control; see mapped-growth-before.txt.
+After: 2 focused tests passed; actual Linux quota child, 8192-byte file quota,
+128 MiB child GC heap, finite deadline and three-page maximum requested file.
+
+Complete C# Debug: 2126 passed, 0 failed/skipped.
+lines: 7943/8260 (96.16223%)
+branches: 4264/4638 (91.93618%)
+DurableMappedMemory.cs unique lines: 45/46
+Report: experiments/issue-138/mapped-growth-csharp-Debug-results/92915b57-c706-489f-98f0-110e5cfb7905/coverage.cobertura.xml
+
+Complete C# Release: 2126 passed, 0 failed/skipped.
+lines: 6099/6298 (96.84027%)
+branches: 4219/4611 (91.49859%)
+DurableMappedMemory.cs unique lines: 39/40
+Report: experiments/issue-138/mapped-growth-csharp-Release-results/1beee187-afc8-4c28-898e-94415898178e/coverage.cobertura.xml
+
+Repeated failed growth preserves current reservation, pointer, unflushed bytes,
+flush and file ownership. Failed initialization releases its newly opened handle.
+Following growth/writes, shrink/regrowth, exact used-length disposal and reopening pass.
+Formatting, release/source-size checks, ShellCheck and 221 repository tests pass.
+Native Rust 930 / actual WASM 546 / JS 209 unchanged since their recorded runs.
+No power-loss or legacy physical-repair certification claimed.
+Whole-project 100% and every wider unfinished acceptance criterion remain open.

@@ -1,0 +1,9 @@
+   Compiling clink-wasm v2.4.0 (/tmp/gh-issue-solver-1792854251187/rust/wasm)
+    Finished `test` profile [unoptimized] target(s) in 8.74s
+     Running tests/storage.rs (rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm)
+Set WASM_BINDGEN_TEST_TIMEOUT to 30 seconds...
+running 2 tests
+test version_ancestry_semantics::nested_ancestry_preserves_cutoffs_order_and_following_writes ... ok
+test version_ancestry_semantics::finite_deep_ancestry_and_following_writes_in_actual_wasm ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 278 filtered out; finished in 4.65s

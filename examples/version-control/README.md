@@ -18,6 +18,7 @@ C# and the Rust CLIs expose the same flag surface.
 |------|---------------|
 | `run-csharp.sh` | End-to-end version-control demo using the C# `clink` binary |
 | `run-rust.sh`   | End-to-end version-control demo using the Rust `clink` binary |
+| `tag-names.sh`  | Exact delimiter/Unicode tags, existing-tag aliases and following edits in either native CLI |
 | `README.md`     | This file |
 
 ## What the demo does
@@ -43,7 +44,7 @@ C# and the Rust CLIs expose the same flag surface.
 --branch-from <seq>          Fork point when creating a branch
 --checkout <seq|tag>         Time-travel to a sequence number or named tag
                               Implies --vc.
---tag <name[=seq]>           Tag the current head, or a specific seq.
+--tag <name[=point]>         Tag the current head, a sequence or an existing tag.
                               Implies --vc.
 --list-branches              Print all branches and exit
 --list-tags                  Print all tags and exit
@@ -52,3 +53,78 @@ C# and the Rust CLIs expose the same flag surface.
 When neither `--vc` nor any version-control flag is used the bare CLI
 behaviour is unchanged: no `versioncontrol.links` sidecar is created
 (R17).
+
+When a name contains `=`, the first delimiter whose complete suffix resolves
+separates the name and point. Existing aliases keep priority: once `release=0`
+exists, `--tag 'alias=release=0'` points `alias` at that tag. An unknown point
+still rejects the command. Quote delimiter/Unicode names when invoking a shell.
+
+The finite example creates a temporary database, checks exact rows after four
+checkouts, then commits another edit and removes its files:
+
+```sh
+bash examples/version-control/tag-names.sh rust/target/debug/clink
+bash examples/version-control/tag-names.sh dotnet csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+```
+
+## Interrupted commits
+
+Keep the data, transaction journal, version sidecar and their names files
+together when reopening a store. A version commit now persists its selected
+branch and exact transition range before the inner journal decision. If the
+process exits after that decision, reopening the same paths completes journal
+recovery and restores the committed branch head. Pending or rolled-back work
+does not become a version.
+
+A commit error can still represent durable work. After repairing an I/O failure,
+retry cleanup on the same owner: Rust `commit`, `rollback` or `save`; C#
+transaction/owner disposal or rollback. New mutations remain fenced until that
+work finishes. C# `SupportsDurablePublication` reports whether both the inner
+decision and sidecar have a durable flush. Custom metadata adapters must supply
+the corresponding flush behavior.
+
+The finite process tests exercise this scenario without running destructors:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test version_process_exit_tests
+dotnet test csharp --filter FullyQualifiedName~VersionProcessExitTests
+```
+
+They verify exact recovered rows, branch heads, checkout and a following edit,
+with pending and rollback controls. These are process-exit tests; device power
+loss remains a separate storage guarantee. The
+[metadata protocol](../../docs/protocol/version-metadata.md#pending-transaction-publication)
+describes compatibility and the three extra sidecar flushes per version commit.
+
+## Bounded transaction history
+
+A branch or tag can outlive the transition payloads retained by a sized or chunked
+journal. Checkout and branch switching now reject a move if any required undo or
+redo record is missing, before changing rows, the selected branch or branch heads.
+Keep sufficient transaction history for the versions you need to visit.
+
+An unavailable shared prefix does not prevent a move that only replays an
+available suffix. No-op checkout also remains valid. These regressions exercise
+missing undo and redo, following edits, and native save/close/reopen:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test version_retained_history_tests
+dotnet test csharp --filter FullyQualifiedName~VersionRetainedHistoryTests
+```
+
+This check prevents partial replay caused by unavailable records. Atomic recovery
+from an I/O failure while applying available records remains a separate guarantee.
+
+## Replay and transaction ownership
+
+The lower-level unlogged apply/revert helpers require no live transaction owner.
+Finish the original transaction or retry its failed commit/rollback cleanup
+before replaying another transition. Rejection preserves rows, the journal and
+ownership; replay remains available after cleanup without appending a new entry.
+
+These finite contracts also verify following edits and the portable WASM path:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test transactions_replay_owner_tests
+dotnet test csharp --filter FullyQualifiedName~TransactionReplayOwnerTests
+```

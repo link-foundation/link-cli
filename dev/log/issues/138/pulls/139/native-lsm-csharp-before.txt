@@ -1,0 +1,31 @@
+C# native facade reproductions; https://github.com/link-foundation/link-cli/pull/139
+
+The preserved bc364d2 baseline contract fails with missing FileLsmOptions and
+FileLsmJournalStore APIs; native-lsm-js-before.txt links the shared before fixture.
+The current targeted preimplementation compile also fails at lines 5-6 in
+experiments/issue-138/native-lsm-csharp-before.log with CS0246/CS0103.
+
+The new surviving-copy regression first fails in the complete Debug suite:
+experiments/issue-138/native-lsm-csharp-surviving-copy-before.log
+12-16: MissingRedundantImagesStayAbsentUntilEverySelectedTableValidates fails
+       with InvalidDataException: Missing selected native LSM data.
+18-20: NativeLsmReadOnly.ReadPage propagates through MirroredPageDevice.ReadCheckedPage.
+2408 cases pass; 1 fails; 2409 total; duration 3m42s.
+
+Cause: the new discovery-only device uses InvalidDataException for a missing
+physical data image. C# mirror recovery recognizes IOException read failures;
+InvalidDataException is outside that inheritance tree. A complete surviving
+mirror therefore cannot supply its page during the read-only validation pass.
+Use EndOfStreamException, matching the underlying physical short-read contract.
+Do not broaden the existing mirror's exception handling or perform early repair.
+
+The regression also corrupts both copies of a later selected table and checks
+every existing file byte and missing filename before restoring it. Only after
+the complete selected state validates may recovery create the missing redundant
+files and repair them from the surviving copy. Separate controls retain a valid
+plain metadata slot and defer mirrored repair on later binding failure.
+
+An earlier new test used a guessed discovery-close operation index; its first
+failure is retained in native-lsm-csharp-focused.log. The test now derives the
+first close from the actual finite successful trace. No production correction
+is claimed for that test-harness assumption.

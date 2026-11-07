@@ -1,0 +1,41 @@
+Windows coordinator fixture failure (2026-10-24)
+
+Exact source SHA: e652c2c88c8da4860c1cfe4d836f4adbc865969d
+Run: https://github.com/link-foundation/link-cli/actions/runs/40123502538
+Job: https://github.com/link-foundation/link-cli/actions/runs/40123502538/job/120960332762
+Full logs retained locally in ci-logs/rust-40123502538.log; failing job preserved
+separately in ci-logs/rust-windows-40123502538.log.
+
+Failing-job log lines 680-686:
+  tests\engine_etcd_tests.rs:59:46: peer header read unwrap fails
+  Os { code: 10035, kind: WouldBlock,
+       message: "A non-blocking socket operation could not be completed immediately." }
+  tests\engine_etcd_tests.rs:278:38: coordinator read fails
+  "An established connection was aborted by the software in your host machine."
+  (os error 10053)
+  etcd_safe_read_failover_but_lost_mutation_response_is_not_replayed: FAILED
+
+This is an existing real-socket fixture failure, unrelated to the new console
+fault tests. Seven other etcd adapter tests pass in the same job. The full
+workflow SHA/timestamps were checked before inspecting the failed job.
+
+Portable fixture corrections, without changing deadlines:
+  Explicitly restore blocking mode after accepting from a nonblocking listener.
+  Use an owned peer that receives one request then closes without replying,
+  instead of releasing a local port for another parallel fixture to reuse.
+  Include request index and header-byte count in future read-failure diagnostics.
+  Verify one failed read request, one successful read, and one lost mutation
+  reply; mutation is still never retried.
+
+Winsock accept documents that accepted sockets retain the listener's properties:
+https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-accept
+The log alone does not distinguish inherited socket mode, timeout, or port reuse;
+these fixture corrections remove both portability/race assumptions. Fresh
+Windows CI must verify the corrected fixture.
+
+Fresh exact-SHA verification:
+  3720ba5a86891ec28a892a7b2e226c9cb9906a45
+  Rust workflow 40124044877, Windows job 120962009751: SUCCESS
+  https://github.com/link-foundation/link-cli/actions/runs/40124044877/job/120962009751
+  All checks finished: 37 success, 10 skipped, one neutral.
+  Recent run timestamps are 2026-10-24T19:10:02Z/03Z and match this SHA.

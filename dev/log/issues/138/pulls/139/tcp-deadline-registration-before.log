@@ -1,0 +1,36 @@
+✔ connect cancellation is not-sent and destroys a pending socket (5.648064ms)
+✔ socket errors classify every pipelined request and leave queued work not-sent (1.275539ms)
+✔ unsolicited replies and decoder faults close the connection (2.096571ms)
+✔ graceful close forcibly ends an unresponsive owned peer after its grace period (3.044499ms)
+✖ a deadline expiring during registration cannot remove another queued request or send expired work (4.232134ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 167.251398
+
+✖ failing tests:
+
+test at js/client/test/tcp-edge.test.mjs:68:1
+✖ a deadline expiring during registration cannot remove another queued request or send expired work (4.232134ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+  +   'expired'
+  -   'second'
+    ]
+
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/tcp-edge.test.mjs:78:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'expired' ],
+    expected: [ 'second' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

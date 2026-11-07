@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-mapped-empty-before.sh
+Reproduce: bash experiments/issue-138/validate-mapped-empty.sh
+Immutable 2478d59: four regressions fail; two complete-shrink/destructor controls pass.
+Zero removal truncates fresh/live files and destroys persisted values before adoption; excessive removal poisons the live flush descriptor.
+START 2026-10-27T10:38:26Z
+FOCUSED AND STRICT CHECKS PASS 2026-10-27T10:39:47Z
+NATIVE PASS 2026-10-27T10:56:08Z
+ACTUAL WASM PASS 2026-10-27T11:01:03Z
+ALL PASS 2026-10-27T11:01:26Z
+api-after: six flush, six growth and six empty/shrink controls pass; one parent-driven child entry ignored.
+default-after: six flush, six growth and six empty/shrink controls pass; one parent-driven child entry ignored.
+Nine ownership/growth unit controls pass, including injected mapping-after-extension and clone failures.
+Finite quota probe retains pointer, prefix and checked flush after EFBIG; owned-flush example passes.
+Native Rust: 1190 passed; 22 parent-driven child entries ignored by normal harness.
+Complete lines: 17156/18036 (95.12087%)
+Complete branches: 3293/3780 (87.11640%)
+Complete functions: 2217/2379 (93.19042%)
+Complete regions: 26395/28542 (92.47775%)
+Complete instantiations: 12351/22019 (56.09247%)
+/rust/src/storage/file_mem_grow.rs lines: 43/45 (95.55556%)
+/rust/src/storage/file_mem_grow.rs branches: 1/2 (50.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 4/4 (100.00000%)
+/rust/src/storage/file_mem.rs lines: 74/88 (84.09091%)
+/rust/src/storage/file_mem.rs branches: 5/6 (83.33333%)
+/rust/src/storage/file_mem.rs functions: 10/13 (76.92308%)
+/rust/src/storage/mapped_flush.rs lines: 82/82 (100.00000%)
+/rust/src/storage/mapped_flush.rs branches: 4/4 (100.00000%)
+/rust/src/storage/mapped_flush.rs functions: 17/17 (100.00000%)
+Actual WASM: 723 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 13144/15745 (83.48047%)
+Complete branches: 2663/3171 (83.97982%)
+Complete functions: 1636/2057 (79.53330%)
+Complete regions: 20244/24796 (81.64220%)
+Complete instantiations: 4342/7495 (57.93195%)
+/rust/src/storage/file_mem_grow.rs lines: 0/45 (0.00000%)
+/rust/src/storage/file_mem_grow.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 0/4 (0.00000%)
+/rust/src/storage/file_mem.rs lines: 0/88 (0.00000%)
+/rust/src/storage/file_mem.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem.rs functions: 0/13 (0.00000%)
+/rust/src/storage/mapped_flush.rs lines: 0/82 (0.00000%)
+/rust/src/storage/mapped_flush.rs branches: 0/2 (0.00000%)
+/rust/src/storage/mapped_flush.rs functions: 0/17 (0.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.75s
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, native/WASM strict Clippy, source sizes, changeset, dependency freshness and workflow/ShellCheck checks pass.
+Zero removal performs no I/O, mapping replacement, lock or allocation; rejected excessive removal validates before invalidation.
+Genuine complete shrink, empty reopen, following growth and exact-once destructor retirement remain verified.
+General failed partial shrink and destructor-bearing growth safety remain unfinished; no physical repair or hardware power-loss claim.
+All production coverage denominators remain included. Complete native/C#/linked-WASM 100% and other unmet R1-R12 criteria remain required.
+Fresh exact-head Windows/Linux/macOS CI remains required. The PR stays draft and unmerged.

@@ -1,0 +1,385 @@
+Author-fence C# contract coverage, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Production baseline: a711106; no production changes in this step.
+Before: nine focused cases pass but the independent raw gate rejects
+62/63 source lines and 106/124 compiled branches in Release.
+Six additional public-contract cases cover malformed providers, finite
+budgets, capabilities, retained request identity, contention, absent
+ownership and caller-owned arguments. Debug additionally exposes the
+missing unknown-record-tag outcome; that provider frame is now tested.
+After: all 15 focused cases pass in Debug and Release. All production
+sources remain instrumented. The strict component gate checks every raw
+branch, including generated methods with no source-line map. Complete
+focused-report denominators remain below and are not full-suite coverage.
+CI now checks this gate against each complete platform test report.
+No production source, branch, exclusion or instrumentation is removed.
+Full suites remain in CI per maintainer feedback. Fresh CI is pending.
+Display trims trailing whitespace; SHA256 identifies original raw logs.
+
+--- author-fence-focused-coverage-before.log SHA256 951d36c80f9724c2c4ee5176d9c3b5892f21f156f85d3b218761d18b47a53f4c ---
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 228 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Attachments:
+  /tmp/issue-138-recovery/author-fence-focused-20261028-1400/12baf755-e46b-4b0f-b8df-8a6e705428f2/coverage.json
+  /tmp/issue-138-recovery/author-fence-focused-20261028-1400/12baf755-e46b-4b0f-b8df-8a6e705428f2/coverage.cobertura.xml
+
+--- author-fence-csharp-coverage-before.log SHA256 14114fff058f4d648e256e1f684408ac9729f7dae40258e79fa380b4e5e88690 ---
+Report: /tmp/issue-138-recovery/author-fence-focused-20261028-1400/12baf755-e46b-4b0f-b8df-8a6e705428f2/coverage.json; bytes 2086131; SHA256 de0942e714d4472963b5eef8f77b86ca27e6b9ea9c61a288d217d662e4de80a8
+UNCOVERED System.Boolean Foundation.Data.Doublets.Cli.Engine.AuthorFence::Key(System.String); {'Line': 29, 'Offset': 1, 'EndOffset': 20, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED System.Void Foundation.Data.Doublets.Cli.Engine.AuthorFence::Admit(System.Collections.Generic.IReadOnlyList`1<System.String>); {'Line': 37, 'Offset': 1, 'EndOffset': 22, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED System.ValueTuple`2<Foundation.Data.Doublets.Cli.Engine.JournalVersion,System.Collections.Generic.List`1<Foundation.Data.Doublets.Cli.Engine.AuthorClaim>> Foundation.Data.Doublets.Cli.Engine.AuthorFence::Parse(Foundation.Data.Doublets.Cli.Engine.JournalVersion); {'Line': 44, 'Offset': 1, 'EndOffset': 3, 'Path': 0, 'Ordinal': 0, 'Hits': 0}
+UNCOVERED System.ValueTuple`3<Foundation.Data.Doublets.Cli.Engine.JournalVersion,System.Collections.Generic.List`1<Foundation.Data.Doublets.Cli.Engine.AuthorClaim>,System.Collections.Generic.IReadOnlyList`1<Foundation.Data.Doublets.Cli.Engine.JournalVersion>> Foundation.Data.Doublets.Cli.Engine.AuthorFence::Read(System.Collections.Generic.IReadOnlyList`1<System.String>); {'Line': 66, 'Offset': 39, 'EndOffset': 57, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED System.ValueTuple`3<Foundation.Data.Doublets.Cli.Engine.JournalVersion,System.Collections.Generic.List`1<Foundation.Data.Doublets.Cli.Engine.AuthorClaim>,System.Collections.Generic.IReadOnlyList`1<Foundation.Data.Doublets.Cli.Engine.JournalVersion>> Foundation.Data.Doublets.Cli.Engine.AuthorFence::Read(System.Collections.Generic.IReadOnlyList`1<System.String>); {'Line': 66, 'Offset': 55, 'EndOffset': 57, 'Path': 0, 'Ordinal': 2, 'Hits': 0}
+UNCOVERED Foundation.Data.Doublets.Cli.Engine.AuthorClaim Foundation.Data.Doublets.Cli.Engine.AuthorFence::Claim(System.UInt64,System.String); {'Line': 80, 'Offset': 86, 'EndOffset': 100, 'Path': 1, 'Ordinal': 5, 'Hits': 0}
+UNCOVERED Foundation.Data.Doublets.Cli.Engine.AuthorClaim Foundation.Data.Doublets.Cli.Engine.AuthorFence::Claim(System.UInt64,System.String); {'Line': 84, 'Offset': 147, 'EndOffset': 149, 'Path': 0, 'Ordinal': 10, 'Hits': 0}
+UNCOVERED Foundation.Data.Doublets.Cli.Engine.AuthorClaim Foundation.Data.Doublets.Cli.Engine.AuthorFence::Claim(System.UInt64,System.String); {'Line': 90, 'Offset': 336, 'EndOffset': 338, 'Path': 0, 'Ordinal': 14, 'Hits': 0}
+UNCOVERED Foundation.Data.Doublets.Cli.Engine.AuthorFence/GuardedJournalStore Foundation.Data.Doublets.Cli.Engine.AuthorFence::Bind(Foundation.Data.Doublets.Cli.Engine.AuthorClaim); {'Line': 94, 'Offset': 1, 'EndOffset': 30, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED Foundation.Data.Doublets.Cli.Engine.AuthorFence/GuardedJournalStore Foundation.Data.Doublets.Cli.Engine.AuthorFence::Bind(Foundation.Data.Doublets.Cli.Engine.AuthorClaim); {'Line': 94, 'Offset': 20, 'EndOffset': 30, 'Path': 1, 'Ordinal': 3, 'Hits': 0}
+UNCOVERED System.Void Foundation.Data.Doublets.Cli.Engine.AuthorFence::.ctor(Foundation.Data.Doublets.Cli.Engine.IAtomicJournalStore,System.String,System.String,Foundation.Data.Doublets.Cli.Engine.AuthorFenceOptions); {'Line': 22, 'Offset': 35, 'EndOffset': 48, 'Path': 1, 'Ordinal': 3, 'Hits': 0}
+UNCOVERED System.Void Foundation.Data.Doublets.Cli.Engine.AuthorFence::.ctor(Foundation.Data.Doublets.Cli.Engine.IAtomicJournalStore,System.String,System.String,Foundation.Data.Doublets.Cli.Engine.AuthorFenceOptions); {'Line': 22, 'Offset': 71, 'EndOffset': 73, 'Path': 0, 'Ordinal': 8, 'Hits': 0}
+UNCOVERED System.Void Foundation.Data.Doublets.Cli.Engine.AuthorFence::.ctor(Foundation.Data.Doublets.Cli.Engine.IAtomicJournalStore,System.String,System.String,Foundation.Data.Doublets.Cli.Engine.AuthorFenceOptions); {'Line': 22, 'Offset': 104, 'EndOffset': 106, 'Path': 0, 'Ordinal': 14, 'Hits': 0}
+UNCOVERED System.Void Foundation.Data.Doublets.Cli.Engine.AuthorFence::.ctor(Foundation.Data.Doublets.Cli.Engine.IAtomicJournalStore,System.String,System.String,Foundation.Data.Doublets.Cli.Engine.AuthorFenceOptions); {'Line': 22, 'Offset': 124, 'EndOffset': 126, 'Path': 0, 'Ordinal': 18, 'Hits': 0}
+UNCOVERED System.String[] Foundation.Data.Doublets.Cli.Engine.AuthorFence/GuardedJournalStore::Keys(System.Collections.Generic.IReadOnlyList`1<System.String>); {'Line': 105, 'Offset': 6, 'EndOffset': 32, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED System.ValueTuple`2<Foundation.Data.Doublets.Cli.Engine.JournalVersion,System.Collections.Generic.IReadOnlyList`1<Foundation.Data.Doublets.Cli.Engine.JournalVersion>> Foundation.Data.Doublets.Cli.Engine.AuthorFence/GuardedJournalStore::Current(System.Collections.Generic.IReadOnlyList`1<System.String>); {'Line': 111, 'Offset': 24, 'EndOffset': 58, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED System.Boolean Foundation.Data.Doublets.Cli.Engine.AuthorFence/GuardedJournalStore::CompareExchange(System.Collections.Generic.IReadOnlyList`1<System.String>,System.Collections.Generic.IReadOnlyList`1<Foundation.Data.Doublets.Cli.Engine.JournalVersion>,System.Collections.Generic.IReadOnlyList`1<System.Collections.Generic.IReadOnlyList`1<System.String>>); {'Line': 117, 'Offset': 9, 'EndOffset': 36, 'Path': 1, 'Ordinal': 1, 'Hits': 0}
+UNCOVERED System.Boolean Foundation.Data.Doublets.Cli.Engine.AuthorFence/GuardedJournalStore::CompareExchange(System.Collections.Generic.IReadOnlyList`1<System.String>,System.Collections.Generic.IReadOnlyList`1<Foundation.Data.Doublets.Cli.Engine.JournalVersion>,System.Collections.Generic.IReadOnlyList`1<System.Collections.Generic.IReadOnlyList`1<System.String>>); {'Line': 117, 'Offset': 12, 'EndOffset': 36, 'Path': 1, 'Ordinal': 3, 'Hits': 0}
+AuthorFence.cs: 62/63 lines, 106/124 raw compiled branches
+Uncovered source lines: [102]
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/check-author-fence-coverage.py", line 34, in <module>
+    assert not uncovered_lines and not uncovered_branches, 'Uncovered author guard contracts'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Uncovered author guard contracts
+
+--- author-fence-csharp-coverage-debug.log SHA256 3b197477fb6d1431b1523e960585c47c080bb3ab2ead96b7bee4b95e4c020473 ---
+Report: /tmp/issue-138-recovery/author-fence-focused-debug-20261028-1404/e0342063-5f48-4d9a-a0a6-7c04c39d8ed6/coverage.json; bytes 2152418; SHA256 6faa584b42f13596f321e2c4b527d677a35853147dbddbe0b11da44bd7d24cd6
+Complete production lines: 509/11256; focused execution is not full-project coverage
+Complete production branches: 457/7762; focused execution is not full-project coverage
+UNCOVERED System.ValueTuple`2<Foundation.Data.Doublets.Cli.Engine.JournalVersion,System.Collections.Generic.List`1<Foundation.Data.Doublets.Cli.Engine.AuthorClaim>> Foundation.Data.Doublets.Cli.Engine.AuthorFence::Parse(Foundation.Data.Doublets.Cli.Engine.JournalVersion); {'Line': 55, 'Offset': 386, 'EndOffset': 405, 'Path': 1, 'Ordinal': 17, 'Hits': 0}
+AuthorFence.cs: 87/87 lines, 123/124 raw compiled branches
+Uncovered source lines: []
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/check-author-fence-coverage.py", line 39, in <module>
+    assert not uncovered_lines and not uncovered_branches, 'Uncovered author guard contracts'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Uncovered author guard contracts
+
+--- author-fence-focused-coverage-Debug-complete.log SHA256 17dbd264cd94b04d35707d7250795e580c03896ba75350547fa449b703d40937 ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    15, Skipped:     0, Total:    15, Duration: 291 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Attachments:
+  /tmp/issue-138-recovery/author-fence-focused-Debug-complete/b8c4dba8-9b5e-48c1-93f6-41ea445c14c4/coverage.json
+  /tmp/issue-138-recovery/author-fence-focused-Debug-complete/b8c4dba8-9b5e-48c1-93f6-41ea445c14c4/coverage.cobertura.xml
+
+--- author-fence-csharp-coverage-Debug-complete.log SHA256 ba2d0d5b4b051c8c7db9377136c6a10bc55c5c98716bb58c41c477571452dd08 ---
+Report: /tmp/issue-138-recovery/author-fence-focused-Debug-complete/b8c4dba8-9b5e-48c1-93f6-41ea445c14c4/coverage.json; bytes 2152420; SHA256 31a4394aaf0dad81790a11f121be30d6c4ba8c22d9dbcffa16da146c7a3b4a31
+Complete production lines: 509/11256; focused execution is not full-project coverage
+Complete production branches: 458/7762; focused execution is not full-project coverage
+AuthorFence.cs: 87/87 lines, 124/124 raw compiled branches
+Uncovered source lines: []
+PASS all author guard lines and raw branches; complete project coverage is separate
+
+--- author-fence-focused-coverage-Release-complete.log SHA256 c9314caa88f027878c00884193f5aa7c6d0dd8912eb5560f8ad62c60acaa78c8 ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    15, Skipped:     0, Total:    15, Duration: 275 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Attachments:
+  /tmp/issue-138-recovery/author-fence-focused-Release-complete/c5593bcb-5622-4e9a-a99d-298057c2964e/coverage.json
+  /tmp/issue-138-recovery/author-fence-focused-Release-complete/c5593bcb-5622-4e9a-a99d-298057c2964e/coverage.cobertura.xml
+
+--- author-fence-csharp-coverage-Release-complete.log SHA256 e94192965dc532e3b3da562ccf0ec4dcddfb67c0e7af048f2eece2d38c12cbde ---
+Report: /tmp/issue-138-recovery/author-fence-focused-Release-complete/c5593bcb-5622-4e9a-a99d-298057c2964e/coverage.json; bytes 2086152; SHA256 cc2832d9caa50af350c1ec4c462e198fb3a941c6199db4b5ef08ea0d7ddda760
+Complete production lines: 395/8685; focused execution is not full-project coverage
+Complete production branches: 456/7711; focused execution is not full-project coverage
+AuthorFence.cs: 63/63 lines, 124/124 raw compiled branches
+Uncovered source lines: []
+PASS all author guard lines and raw branches; complete project coverage is separate
+
+--- author-fence-coverage-format.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-coverage-repository.log SHA256 9c030b47030d64cf8146daa4fb8143f9f5ea3f8b23a4e1bd240ad34c09aebadc ---
+
+> link-cli-web@2.4.0 test:js
+> node --test test/*.test.mjs ../csharp/scripts/*.test.mjs ../.github/scripts/*.test.mjs
+
+✔ versions compare numerically, not as text (10.288456ms)
+✔ a declared version is compared only as far as it is written (7.086261ms)
+✔ pre-releases are never the latest version (0.48165ms)
+✔ every Cargo dependency form is found, path-only ones are skipped (2.727486ms)
+✔ NuGet package references are found (0.673118ms)
+✔ npm ranges lose their operator, and locked versions come from the lock file (1.061573ms)
+✔ actions pinned to a major tag are found once per repository (0.991985ms)
+✔ runtimes and installed tools are found (3.241847ms)
+✔ actions pinned to a commit, a digest or an exact tag are found (1.100767ms)
+✔ only real updates of cargo update --dry-run count (0.72289ms)
+✔ a manifest comment links the issue that holds a dependency back (0.186258ms)
+✔ Cargo comments hold back the dependency on their line only (0.299179ms)
+✔ csproj comments hold back the package reference on their line (0.186719ms)
+✔ workflow comments hold back actions, runtimes and tools (0.479426ms)
+✔ only an open issue holds an outdated dependency back (0.538856ms)
+✔ a dropped connection to a registry is retried instead of failing the check (29.318244ms)
+✔ a lookup that keeps failing reports the network cause and the attempts (3.272294ms)
+✔ an answer a retry cannot change fails at once (0.493001ms)
+✔ retries wait longer each time and stop after the last attempt (63.32531ms)
+  Retrying the Wayback API (attempt 2 of 3) after: fetch failed: ECONNRESET
+✔ the errors section stops at the next top-level heading (2.505051ms)
+✔ a report without an errors section yields nothing (0.382955ms)
+✔ redirected links are not reported as broken (1.136744ms)
+✔ every http error is extracted exactly once (1.176228ms)
+✔ errors that the Wayback Machine cannot answer are still reported (0.339064ms)
+✔ the parsed error count matches the count lychee reports (0.509411ms)
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 503
+  Retrying the Wayback API (attempt 2 of 2) after: fetch failed: ECONNRESET
+✔ transient Wayback failures are retried before a snapshot is reported (24.362724ms)
+✔ a Wayback lookup that keeps failing is reported as failed, not as unarchived (2.731904ms)
+✔ a definite Wayback answer is not retried (0.884202ms)
+✔ only inactive or missing Codecov repositories make uploading optional (92.508471ms)
+✔ Codecov lookup failures and malformed responses do not silently disable upload checks (6.447098ms)
+✔ Cobertura totals remain visible in the summary without Codecov (1.400146ms)
+✔ missing and invalid coverage reports fail instead of publishing misleading totals (1.132146ms)
+✔ summary command finds nested Cobertura files and appends the Actions summary (121.805395ms)
+✔ csharp.yml: use an exact SDK version to avoid the broken channel redirect (3.340041ms)
+✔ docs.yml: use an exact SDK version to avoid the broken channel redirect (0.640147ms)
+✔ js-client.yml: use an exact SDK version to avoid the broken channel redirect (0.509823ms)
+✔ security.yml: use an exact SDK version to avoid the broken channel redirect (0.229658ms)
+✔ npm release validation uses the actual registry lookup result (4.12058ms)
+✔ npm release validation succeeds when published=true (29.119873ms)
+✔ npm release validation succeeds when published=false (24.11491ms)
+✔ release helper check compiles every executable, denies warnings, and propagates failures (197.616124ms)
+✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (90.661509ms)
+✔ npm trust verification fails clearly when OIDC or the registry policy is missing (3.953648ms)
+✔ there is at least one workflow to inspect (5.598712ms)
+✔ no workflow reacts to both pull_request and non-main push branches (2.415384ms)
+✔ the JavaScript unit tests are executed by a workflow (0.524991ms)
+✔ csharp.yml: every job declares timeout-minutes (1.644663ms)
+✔ csharp.yml: declares a top-level permissions block (0.357909ms)
+✔ csharp.yml: every job is covered by a concurrency group (1.158374ms)
+✔ csharp.yml: writer jobs own a never-cancelled concurrency group (3.539544ms)
+✔ csharp.yml: does not mask failures with continue-on-error (3.097819ms)
+✔ csharp.yml: crates.io trusted publishing runs only when enabled (5.782997ms)
+✔ csharp.yml: single-line if expressions do not start with ! (1.8306ms)
+✔ csharp.yml: every release_mode option is handled by a job (0.620819ms)
+✔ csharp.yml: publish steps do not silently skip on missing credentials (2.298535ms)
+✔ csharp.yml: npm lookups tell "not published" apart from a failure (2.023882ms)
+✔ csharp.yml: required choice inputs declare a default (1.000069ms)
+✔ csharp.yml: hosted runners use pinned OS labels (1.928574ms)
+✔ csharp.yml: provides init.defaultBranch to actions/checkout (0.788102ms)
+✔ dependencies.yml: every job declares timeout-minutes (0.457355ms)
+✔ dependencies.yml: declares a top-level permissions block (0.105386ms)
+✔ dependencies.yml: every job is covered by a concurrency group (0.927484ms)
+✔ dependencies.yml: writer jobs own a never-cancelled concurrency group (0.319196ms)
+✔ dependencies.yml: does not mask failures with continue-on-error (0.516194ms)
+✔ dependencies.yml: crates.io trusted publishing runs only when enabled (0.142416ms)
+✔ dependencies.yml: single-line if expressions do not start with ! (0.421107ms)
+✔ dependencies.yml: every release_mode option is handled by a job (1.374809ms)
+✔ dependencies.yml: publish steps do not silently skip on missing credentials (0.13389ms)
+✔ dependencies.yml: npm lookups tell "not published" apart from a failure (0.132177ms)
+✔ dependencies.yml: required choice inputs declare a default (0.135352ms)
+✔ dependencies.yml: hosted runners use pinned OS labels (1.218778ms)
+✔ dependencies.yml: provides init.defaultBranch to actions/checkout (0.107992ms)
+✔ docs.yml: every job declares timeout-minutes (0.458026ms)
+✔ docs.yml: declares a top-level permissions block (0.196708ms)
+✔ docs.yml: every job is covered by a concurrency group (0.305631ms)
+✔ docs.yml: writer jobs own a never-cancelled concurrency group (0.390329ms)
+✔ docs.yml: does not mask failures with continue-on-error (0.232234ms)
+✔ docs.yml: crates.io trusted publishing runs only when enabled (0.456784ms)
+✔ docs.yml: single-line if expressions do not start with ! (0.220602ms)
+✔ docs.yml: every release_mode option is handled by a job (0.174486ms)
+✔ docs.yml: publish steps do not silently skip on missing credentials (0.211626ms)
+✔ docs.yml: npm lookups tell "not published" apart from a failure (0.337149ms)
+✔ docs.yml: required choice inputs declare a default (0.13898ms)
+✔ docs.yml: hosted runners use pinned OS labels (0.280904ms)
+✔ docs.yml: provides init.defaultBranch to actions/checkout (0.183803ms)
+✔ js-client.yml: every job declares timeout-minutes (0.316462ms)
+✔ js-client.yml: declares a top-level permissions block (0.095058ms)
+✔ js-client.yml: every job is covered by a concurrency group (0.366023ms)
+✔ js-client.yml: writer jobs own a never-cancelled concurrency group (0.440674ms)
+✔ js-client.yml: does not mask failures with continue-on-error (0.180396ms)
+✔ js-client.yml: crates.io trusted publishing runs only when enabled (0.455141ms)
+✔ js-client.yml: single-line if expressions do not start with ! (2.099512ms)
+✔ js-client.yml: every release_mode option is handled by a job (0.729383ms)
+✔ js-client.yml: publish steps do not silently skip on missing credentials (1.179444ms)
+✔ js-client.yml: npm lookups tell "not published" apart from a failure (0.563784ms)
+✔ js-client.yml: required choice inputs declare a default (0.232915ms)
+✔ js-client.yml: hosted runners use pinned OS labels (0.248003ms)
+✔ js-client.yml: provides init.defaultBranch to actions/checkout (0.100128ms)
+✔ links.yml: every job declares timeout-minutes (0.128941ms)
+✔ links.yml: declares a top-level permissions block (0.061174ms)
+✔ links.yml: every job is covered by a concurrency group (0.087914ms)
+✔ links.yml: writer jobs own a never-cancelled concurrency group (0.167563ms)
+✔ links.yml: does not mask failures with continue-on-error (0.089668ms)
+✔ links.yml: crates.io trusted publishing runs only when enabled (0.139301ms)
+✔ links.yml: single-line if expressions do not start with ! (0.092163ms)
+✔ links.yml: every release_mode option is handled by a job (0.111459ms)
+✔ links.yml: publish steps do not silently skip on missing credentials (1.494773ms)
+✔ links.yml: npm lookups tell "not published" apart from a failure (0.161552ms)
+✔ links.yml: required choice inputs declare a default (0.118942ms)
+✔ links.yml: hosted runners use pinned OS labels (0.290223ms)
+✔ links.yml: provides init.defaultBranch to actions/checkout (0.089216ms)
+✔ rust.yml: every job declares timeout-minutes (0.456904ms)
+✔ rust.yml: declares a top-level permissions block (0.109455ms)
+✔ rust.yml: every job is covered by a concurrency group (0.306372ms)
+✔ rust.yml: writer jobs own a never-cancelled concurrency group (0.351286ms)
+✔ rust.yml: does not mask failures with continue-on-error (0.21994ms)
+✔ rust.yml: crates.io trusted publishing runs only when enabled (5.462347ms)
+✔ rust.yml: single-line if expressions do not start with ! (0.270756ms)
+✔ rust.yml: every release_mode option is handled by a job (0.353681ms)
+✔ rust.yml: publish steps do not silently skip on missing credentials (0.291725ms)
+✔ rust.yml: npm lookups tell "not published" apart from a failure (0.320469ms)
+✔ rust.yml: required choice inputs declare a default (0.241531ms)
+✔ rust.yml: hosted runners use pinned OS labels (0.286506ms)
+✔ rust.yml: provides init.defaultBranch to actions/checkout (0.127648ms)
+✔ security.yml: every job declares timeout-minutes (0.210514ms)
+✔ security.yml: declares a top-level permissions block (0.072505ms)
+✔ security.yml: every job is covered by a concurrency group (0.118912ms)
+✔ security.yml: writer jobs own a never-cancelled concurrency group (0.131505ms)
+✔ security.yml: does not mask failures with continue-on-error (0.10708ms)
+✔ security.yml: crates.io trusted publishing runs only when enabled (0.242302ms)
+✔ security.yml: single-line if expressions do not start with ! (0.116978ms)
+✔ security.yml: every release_mode option is handled by a job (0.10674ms)
+✔ security.yml: publish steps do not silently skip on missing credentials (0.122949ms)
+✔ security.yml: npm lookups tell "not published" apart from a failure (0.168415ms)
+✔ security.yml: required choice inputs declare a default (0.133129ms)
+✔ security.yml: hosted runners use pinned OS labels (0.175478ms)
+✔ security.yml: provides init.defaultBranch to actions/checkout (0.083956ms)
+✔ wasm.yml: every job declares timeout-minutes (0.106279ms)
+✔ wasm.yml: declares a top-level permissions block (0.072485ms)
+✔ wasm.yml: every job is covered by a concurrency group (0.332391ms)
+✔ wasm.yml: writer jobs own a never-cancelled concurrency group (0.139711ms)
+✔ wasm.yml: does not mask failures with continue-on-error (0.119063ms)
+✔ wasm.yml: crates.io trusted publishing runs only when enabled (0.157865ms)
+✔ wasm.yml: single-line if expressions do not start with ! (1.102651ms)
+✔ wasm.yml: every release_mode option is handled by a job (0.123511ms)
+✔ wasm.yml: publish steps do not silently skip on missing credentials (0.131435ms)
+✔ wasm.yml: npm lookups tell "not published" apart from a failure (0.153998ms)
+✔ wasm.yml: required choice inputs declare a default (0.100497ms)
+✔ wasm.yml: hosted runners use pinned OS labels (0.108552ms)
+✔ wasm.yml: provides init.defaultBranch to actions/checkout (0.084918ms)
+✔ workflows.yml: every job declares timeout-minutes (0.127799ms)
+✔ workflows.yml: declares a top-level permissions block (0.093554ms)
+✔ workflows.yml: every job is covered by a concurrency group (0.109294ms)
+✔ workflows.yml: writer jobs own a never-cancelled concurrency group (0.141956ms)
+✔ workflows.yml: does not mask failures with continue-on-error (0.706641ms)
+✔ workflows.yml: crates.io trusted publishing runs only when enabled (0.162584ms)
+✔ workflows.yml: single-line if expressions do not start with ! (0.1014ms)
+✔ workflows.yml: every release_mode option is handled by a job (0.078507ms)
+✔ workflows.yml: publish steps do not silently skip on missing credentials (0.120726ms)
+✔ workflows.yml: npm lookups tell "not published" apart from a failure (0.147325ms)
+✔ workflows.yml: required choice inputs declare a default (0.107081ms)
+✔ workflows.yml: hosted runners use pinned OS labels (0.283549ms)
+✔ workflows.yml: provides init.defaultBranch to actions/checkout (0.09028ms)
+✔ exactly one workflow publishes GitHub Pages (0.689239ms)
+✔ only the Pages publisher uploads a Pages artifact (0.425255ms)
+✔ every clippy invocation denies warnings (2.753456ms)
+✔ the Rust and C# pipelines simulate a fresh merge on pull requests (0.270686ms)
+✔ every cargo audit invocation denies warnings (2.291482ms)
+✔ coverage uploads use OIDC and retain reports without requiring Codecov (4.471636ms)
+✔ Rust PR lint compiles release helpers without executing them (1.351305ms)
+✔ registry trust can be verified without versioning or publishing a release (3.824246ms)
+✔ Dependabot watches every directory the dependency check reads (33.1003ms)
+✔ exclusions match whole path components, not substrings (12.30813ms)
+✔ a trailing newline does not count as an extra line (2.199129ms)
+✔ CLI fails when a file exceeds the limit and passes otherwise (169.053843ms)
+✔ merge-changesets honors the requested directory and package name (164.577858ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (146.456437ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (877.483726ms)
+✔ create-github-release dry run uses tag prefix and component changelog (145.149975ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (113.592549ms)
+✔ buildNugetBadges links both badges to the exact version (0.908037ms)
+✔ buildNugetBadges URL-encodes the package id (9.821592ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.785917ms)
+✔ prependNugetBadges is a no-op without a package id (0.416258ms)
+✔ buildNugetBadges accepts multiple package ids (0.515913ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (2.582887ms)
+✔ buildReleasePayload places NuGet badges above the package footer (2.138425ms)
+✔ create-github-release dry run reports matching assets without uploading (98.440434ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (1639.485831ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (1.577619ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (1.564333ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.285834ms)
+✔ classifyPushFailure separates repository rules from lost races (3.621306ms)
+✔ version-and-commit rebases and retries when another release pushed first (1294.950109ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (682.743052ms)
+✔ check-release-needed decide(): changesets take the normal release path (0.639716ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.206937ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.276085ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.18749ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.162284ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (1.64839ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (276.209576ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (250.734113ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (1.63777ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.306272ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (1.57353ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (1.041847ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.345025ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (23.405786ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (6.553295ms)
+✔ answers a retry cannot change are not retried (8.108772ms)
+✔ buildGraph reflects create, delete, and recreate snapshots without stale nodes (3.89089ms)
+✔ language code package manifests and generated evidence stay out of the root folder (22.060882ms)
+✔ the browser-only WebAssembly wrapper opts out of crates.io publishing (1.044602ms)
+✔ JavaScript package scripts target the relocated WebAssembly crate and split script trees (0.70162ms)
+✔ WebAssembly workflow uses the JavaScript package lockfile from js (0.65268ms)
+✔ the documentation workflow deploys GitHub Pages automatically on push to main (1.70707ms)
+✔ CSharp release workflow attaches NuGet packages to GitHub Releases (0.489664ms)
+✔ CSharp release workflow includes self-healing release gates (0.644445ms)
+✔ CSharp and Rust release workflows are scheduled on every push to main (4.808605ms)
+✔ GitHub workflows avoid Node 20 action major versions that are being retired (13.892389ms)
+ℹ tests 221
+ℹ suites 0
+ℹ pass 221
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6412.34138
+
+--- author-fence-coverage-source-size.log SHA256 803292c12eb7734484bb61f75e10797a1a464b28eacd57c7200aa298f8e50298 ---
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 350 C# file(s)
+Checking Rust files in rust/...
+  Found 405 Rust file(s)
+
+Checked 755 file(s) - all within the line limit
+
+
+--- author-fence-coverage-whitespace.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---

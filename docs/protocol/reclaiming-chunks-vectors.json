@@ -1,0 +1,410 @@
+[
+  {
+    "epoch": "0",
+    "entries": [],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": []
+  },
+  {
+    "epoch": "0",
+    "entries": [
+      ""
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          ""
+        ],
+        "address": "blob2-0000000000000000-748c9a71b48e427a"
+      }
+    ]
+  },
+  {
+    "epoch": "0",
+    "entries": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          "a",
+          "b"
+        ],
+        "address": "blob2-0000000000000000-79336d7346ab36b1"
+      },
+      {
+        "entries": [
+          "c",
+          "d"
+        ],
+        "address": "blob2-0000000000000000-23cab761fd061ec9"
+      },
+      {
+        "entries": [
+          "e"
+        ],
+        "address": "blob2-0000000000000000-a235a735d2f3fa56"
+      }
+    ]
+  },
+  {
+    "epoch": "0",
+    "entries": [
+      "é",
+      "😀",
+      "",
+      "﻿\u0000",
+      "tail"
+    ],
+    "maxRecords": 3,
+    "maxBytes": 6,
+    "chunks": [
+      {
+        "entries": [
+          "é",
+          "😀",
+          ""
+        ],
+        "address": "blob2-0000000000000000-bfed8d906e8b0a31"
+      },
+      {
+        "entries": [
+          "﻿\u0000"
+        ],
+        "address": "blob2-0000000000000000-4e9bc0d61134f2a7"
+      },
+      {
+        "entries": [
+          "tail"
+        ],
+        "address": "blob2-0000000000000000-4f59f0f99a216248"
+      }
+    ]
+  },
+  {
+    "epoch": "0",
+    "entries": [
+      "ab",
+      "c",
+      "é",
+      "",
+      "x"
+    ],
+    "maxRecords": 9,
+    "maxBytes": 3,
+    "chunks": [
+      {
+        "entries": [
+          "ab",
+          "c"
+        ],
+        "address": "blob2-0000000000000000-a73add1ac66bb615"
+      },
+      {
+        "entries": [
+          "é",
+          "",
+          "x"
+        ],
+        "address": "blob2-0000000000000000-9c8a9ae7e91e5907"
+      }
+    ]
+  },
+  {
+    "epoch": "0",
+    "entries": [
+      "😀"
+    ],
+    "maxRecords": 1,
+    "maxBytes": 4,
+    "chunks": [
+      {
+        "entries": [
+          "😀"
+        ],
+        "address": "blob2-0000000000000000-ec53a548638356b7"
+      }
+    ]
+  },
+  {
+    "epoch": "1",
+    "entries": [],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": []
+  },
+  {
+    "epoch": "1",
+    "entries": [
+      ""
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          ""
+        ],
+        "address": "blob2-0000000000000001-748c9a71b48e427a"
+      }
+    ]
+  },
+  {
+    "epoch": "1",
+    "entries": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          "a",
+          "b"
+        ],
+        "address": "blob2-0000000000000001-79336d7346ab36b1"
+      },
+      {
+        "entries": [
+          "c",
+          "d"
+        ],
+        "address": "blob2-0000000000000001-23cab761fd061ec9"
+      },
+      {
+        "entries": [
+          "e"
+        ],
+        "address": "blob2-0000000000000001-a235a735d2f3fa56"
+      }
+    ]
+  },
+  {
+    "epoch": "1",
+    "entries": [
+      "é",
+      "😀",
+      "",
+      "﻿\u0000",
+      "tail"
+    ],
+    "maxRecords": 3,
+    "maxBytes": 6,
+    "chunks": [
+      {
+        "entries": [
+          "é",
+          "😀",
+          ""
+        ],
+        "address": "blob2-0000000000000001-bfed8d906e8b0a31"
+      },
+      {
+        "entries": [
+          "﻿\u0000"
+        ],
+        "address": "blob2-0000000000000001-4e9bc0d61134f2a7"
+      },
+      {
+        "entries": [
+          "tail"
+        ],
+        "address": "blob2-0000000000000001-4f59f0f99a216248"
+      }
+    ]
+  },
+  {
+    "epoch": "1",
+    "entries": [
+      "ab",
+      "c",
+      "é",
+      "",
+      "x"
+    ],
+    "maxRecords": 9,
+    "maxBytes": 3,
+    "chunks": [
+      {
+        "entries": [
+          "ab",
+          "c"
+        ],
+        "address": "blob2-0000000000000001-a73add1ac66bb615"
+      },
+      {
+        "entries": [
+          "é",
+          "",
+          "x"
+        ],
+        "address": "blob2-0000000000000001-9c8a9ae7e91e5907"
+      }
+    ]
+  },
+  {
+    "epoch": "1",
+    "entries": [
+      "😀"
+    ],
+    "maxRecords": 1,
+    "maxBytes": 4,
+    "chunks": [
+      {
+        "entries": [
+          "😀"
+        ],
+        "address": "blob2-0000000000000001-ec53a548638356b7"
+      }
+    ]
+  },
+  {
+    "epoch": "18446744073709551615",
+    "entries": [],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": []
+  },
+  {
+    "epoch": "18446744073709551615",
+    "entries": [
+      ""
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          ""
+        ],
+        "address": "blob2-ffffffffffffffff-748c9a71b48e427a"
+      }
+    ]
+  },
+  {
+    "epoch": "18446744073709551615",
+    "entries": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          "a",
+          "b"
+        ],
+        "address": "blob2-ffffffffffffffff-79336d7346ab36b1"
+      },
+      {
+        "entries": [
+          "c",
+          "d"
+        ],
+        "address": "blob2-ffffffffffffffff-23cab761fd061ec9"
+      },
+      {
+        "entries": [
+          "e"
+        ],
+        "address": "blob2-ffffffffffffffff-a235a735d2f3fa56"
+      }
+    ]
+  },
+  {
+    "epoch": "18446744073709551615",
+    "entries": [
+      "é",
+      "😀",
+      "",
+      "﻿\u0000",
+      "tail"
+    ],
+    "maxRecords": 3,
+    "maxBytes": 6,
+    "chunks": [
+      {
+        "entries": [
+          "é",
+          "😀",
+          ""
+        ],
+        "address": "blob2-ffffffffffffffff-bfed8d906e8b0a31"
+      },
+      {
+        "entries": [
+          "﻿\u0000"
+        ],
+        "address": "blob2-ffffffffffffffff-4e9bc0d61134f2a7"
+      },
+      {
+        "entries": [
+          "tail"
+        ],
+        "address": "blob2-ffffffffffffffff-4f59f0f99a216248"
+      }
+    ]
+  },
+  {
+    "epoch": "18446744073709551615",
+    "entries": [
+      "ab",
+      "c",
+      "é",
+      "",
+      "x"
+    ],
+    "maxRecords": 9,
+    "maxBytes": 3,
+    "chunks": [
+      {
+        "entries": [
+          "ab",
+          "c"
+        ],
+        "address": "blob2-ffffffffffffffff-a73add1ac66bb615"
+      },
+      {
+        "entries": [
+          "é",
+          "",
+          "x"
+        ],
+        "address": "blob2-ffffffffffffffff-9c8a9ae7e91e5907"
+      }
+    ]
+  },
+  {
+    "epoch": "18446744073709551615",
+    "entries": [
+      "😀"
+    ],
+    "maxRecords": 1,
+    "maxBytes": 4,
+    "chunks": [
+      {
+        "entries": [
+          "😀"
+        ],
+        "address": "blob2-ffffffffffffffff-ec53a548638356b7"
+      }
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: 8d2ecdfde4757d6cfed219b99aa518707c5fadb0
+Commit time: 2026-10-27T05:38:18Z
+All nine workflow runs were created 2026-10-27T05:38:28Z, after that commit.
+Fresh API snapshots: experiments/issue-138/native-lsm-phase-ci-complete.json
+and native-lsm-phase-rust-latest.json. All nine conclude success on this SHA.
+
+Workflow / run / completion UTC:
+Broken Link Checker / 40456464884 / 05:38:41
+Workflows / 40456464798 / 05:38:42
+Dependencies / 40456464786 / 05:38:54
+Docs / 40456464825 / 05:41:03
+Security / 40456464829 / 05:43:31
+JS client CI / 40456464937 / 05:45:17
+WebAssembly CI / 40456464811 / 05:48:57
+C# CI/CD Pipeline / 40456464654 / 05:49:53
+Rust CI/CD Pipeline / 40456464913 / 06:18:30
+
+Rust run: https://github.com/link-foundation/link-cli/actions/runs/40456464913
+Linux tests finish 05:46:05Z; macOS 05:47:04Z; Windows 06:17:50Z.
+Strict lint, coverage, fresh-merge simulation and package build also succeed.
+The Windows job starts 05:39:28Z and remains within its existing 45-minute
+budget. No test deadline or job timeout was increased for this publication.
+
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40456464654
+All three platforms pass 2,421 tests. csharp-phase-progress-ci-after.txt records
+the exact downloaded log lines for the finite supervision regression controls
+and both Windows movement scenarios that previously exceeded aggregate bounds.
+
+This verifies the published native Rust facade and phase supervision changes.
+The subsequent chunks1 work is not included in this SHA. Passing these workflows
+does not satisfy the still-open full coverage, physical durability, algorithm,
+composition and horizontal scaling acceptance criteria. Keep PR139 unmerged.

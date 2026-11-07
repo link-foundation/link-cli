@@ -1,0 +1,63 @@
+{
+  "intents": [
+    {
+      "id": "00112233445566778899aabbccddeeff",
+      "before": 0,
+      "after": 0,
+      "branch": "main",
+      "marker": "__vc:pending:2|00112233445566778899aabbccddeeff|0|0|006D00610069006E"
+    },
+    {
+      "id": "00112233445566778899aabbccddeeff",
+      "before": 2,
+      "after": 4,
+      "branch": "topic|:parent=\u96ea\u0000",
+      "marker": "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|0074006F007000690063007C003A0070006100720065006E0074003D96EA0000"
+    },
+    {
+      "id": "ffffffffffffffffffffffffffffffff",
+      "before": 9223372036854775806,
+      "after": 9223372036854775807,
+      "branch": "\ud83d\ude00=\n",
+      "marker": "__vc:pending:2|ffffffffffffffffffffffffffffffff|9223372036854775806|9223372036854775807|D83DDE00003D000A"
+    }
+  ],
+  "invalidIntents": [
+    "garbage",
+    "__vc:pending:",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|006D00610069006E|extra",
+    "__vc:pending:1|00112233445566778899aabbccddeeff|2|4|006D00610069006E",
+    "__vc:pending:3|00112233445566778899aabbccddeeff|2|4|006D00610069006E",
+    "__vc:pending:|00112233445566778899aabbccddeeff|2|4|006D00610069006E",
+    "__vc:pending:2||2|4|006D00610069006E",
+    "__vc:pending:2|00000000000000000000000000000000|2|4|006D00610069006E",
+    "__vc:pending:2|gggggggggggggggggggggggggggggggg|2|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeef|2|4|006D00610069006E",
+    "__vc:pending:2| 00112233445566778899aabbccddeeff|2|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff\u0000|2|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff||4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|-1|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|+2|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff| 2|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2 |4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2\u0000|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|9223372036854775808|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|5|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|\uff12|4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2||006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|-1|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|+4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2| 4|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4 |006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4\u0000|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|9223372036854775808|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|1|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|\uff14|006D00610069006E",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|0020",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|000A",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|001",
+    "__vc:pending:2|00112233445566778899aabbccddeeff|2|4|00ZZ"
+  ]
+}

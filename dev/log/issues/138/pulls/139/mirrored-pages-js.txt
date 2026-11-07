@@ -1,0 +1,47 @@
+Optional two-copy native page repair — JS/TS, 2026-10-26 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Before: mirrored-js-before.log and mirrored-native-js-before.log preserve
+public contracts failing because the requested modules did not exist.
+Independent Python transforms validated plain-mode vectors to mode 1 and adds
+36 one-copy corruption/short/stale instructions; regeneration matches exactly.
+
+Complete JS suite: 209 passed, 0 failed/skipped; all 23 production modules
+100% lines, branches and functions, with thresholds enforced. Node 24 repeats
+all 209 checks at the same thresholds. Strict TypeScript declarations and
+negative capability/checksum/mode type contracts pass.
+221 repository checks, optional SQL import rejection guard, actionlint,
+source-size check and git diff --check pass.
+
+Finite tests inject every flush/repair write/sync position before and after its
+effect, retaining durable images and reopening to an old/complete group followed
+by another commit. Independent vectors repair damaged/short/truncated metadata
+and data on either side, including locally valid stale pages. Both-copy loss,
+identity/equal-generation conflicts and canonical UTF-8 defects reject without
+premature repair. Changed surviving repair sources reject. Uncertain mutations
+fence both the wrapper and log. Repeated recovery is idempotent.
+Native controls cover owner contention, partial construction, all eight close
+errors and retained uncertain fences. Real child exits use 96 MiB heaps,
+10-second parent deadlines, 64 KiB output and explicit fencing only after exit.
+
+For the same next record after 0/1/32 groups, selected mirroring writes two new
+4096-byte pages, two 128-byte decisions and four syncs, with no historical flush
+reads/writes. Plain-mode byte vectors, costs and tests continue to pass.
+
+Actual generated WASM in Node, Bun and Deno: each 32 configurations = plain or
+mirrored x flat/shared x snapshot/changes x scan/indexed x delta off/on. Two
+real-file opens, exact Unicode/BOM/NUL/emoji names, two-revision shared groups,
+pinned history, two replica acknowledgements, rejected constraints, rollback
+and following commits all pass. Between opens the mirror tests corrupt data
+and metadata in one copy and verify engine recovery and following writes.
+
+Logs: paged-js-full.log, mirrored-js-node24.log, mirrored-js-types.log,
+mirrored-repository-tests.log, mirrored-js-optional.log, paged-{node,bun,deno}-
+conformance.log, mirrored-actionlint.log and mirrored-size.log in experiments/
+issue-138. Scripts, bounded probes, independent vectors and tests are retained.
+
+Rust/C# mirror parity, all-language mirrored file interchange and fresh CI are
+still unfinished, as are the wider inventoried requirements. Mirroring requires
+one surviving exact page/decision per damaged item under successful-sync
+assumptions; it is not physical power-loss certification or legacy mapped-file
+repair. Complete-project native/WASM/C# coverage remains below 100%.

@@ -1,0 +1,222 @@
+Dependencies are on their latest versions	Set up job	﻿2026-10-28T11:49:33.7733532Z Current runner version: '2.338.0'
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7771229Z ##[group]Runner Image Provisioner
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7772749Z Hosted Compute Agent
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7774015Z Version: 20261021.618
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7775493Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7776944Z Build Date: 2026-10-21T00:45:21Z
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7778305Z Worker ID: {d7fe4d32-47b0-4f49-8a8b-7adb42d31e4d}
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7779612Z Region: eastus
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7780701Z Cloud: Azure
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7781756Z ##[endgroup]
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7784253Z ##[group]Operating System
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7785850Z Ubuntu
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7786904Z 24.04.5
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7787913Z LTS
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7788887Z ##[endgroup]
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7789959Z ##[group]Runner Image
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7791153Z Image: ubuntu-24.04
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7792462Z Version: 20261025.353.1
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7794498Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7798183Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7800103Z ##[endgroup]
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7802421Z ##[group]GITHUB_TOKEN Permissions
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7805637Z Contents: read
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7806890Z Issues: read
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7807984Z Metadata: read
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7809198Z ##[endgroup]
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7812347Z Secret source: Actions
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7814090Z Cache mode: write
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.7815680Z Prepare workflow directory
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.8414098Z Prepare all required actions
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:33.8489803Z Getting action download info
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:34.0323517Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:34.3672921Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+Dependencies are on their latest versions	Set up job	2026-10-28T11:49:34.7008995Z Complete job name: Dependencies are on their latest versions
+Dependencies are on their latest versions	Run actions/checkout@v7	﻿2026-10-28T11:49:34.7938872Z ##[group]Run actions/checkout@v7
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7939892Z with:
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7940441Z   persist-credentials: false
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7941091Z   repository: link-foundation/link-cli
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7945174Z   token: ***
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7945719Z   ssh-strict: true
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7946241Z   ssh-user: git
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7946749Z   clean: true
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7947288Z   sparse-checkout-cone-mode: true
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7947910Z   fetch-depth: 1
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7948428Z   fetch-tags: false
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7948958Z   show-progress: true
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7949492Z   lfs: false
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7949999Z   submodules: false
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7950544Z   set-safe-directory: true
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7951149Z   allow-unsafe-pr-checkout: false
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7952000Z env:
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7952508Z   GIT_CONFIG_COUNT: 1
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7953077Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7953727Z   GIT_CONFIG_VALUE_0: main
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:34.7954363Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.5864350Z Syncing repository: link-foundation/link-cli
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.5867303Z ##[group]Getting Git version info
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.5868344Z Working directory is '/home/runner/work/link-cli/link-cli'
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.5869779Z [command]/usr/bin/git version
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.8686331Z git version 2.56.0
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.8709572Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.8720892Z Temporarily overriding HOME='/home/runner/work/_temp/4aa9bc2f-b7bc-47f1-839e-d3630734ce8e' before making global git config changes
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.8722544Z Adding repository directory to the temporary git global config as a safe directory
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.8726862Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9023473Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9027337Z ##[group]Determining repository object format
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9029080Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9029742Z ##[group]Initializing the repository
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9033755Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9637937Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9649194Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9992769Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9994050Z ##[group]Disabling automatic garbage collection
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:36.9998985Z [command]/usr/bin/git config --local gc.auto 0
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.0048319Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.0053553Z ##[group]Setting up auth
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.0053976Z Removing SSH command configuration
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.0055193Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.0102982Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4279715Z Removing HTTP extra header
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4281624Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4347853Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4592239Z Removing includeIf entries pointing to credentials config files
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4599212Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4646611Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4896380Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4945792Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git.path /home/runner/work/_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.4989754Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.5034810Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.5078247Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.5120057Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.5120629Z ##[group]Fetching the repository
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:37.5128086Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +81974447bf671e1c335e82e7bfe4f5823e5cea73:refs/remotes/pull/139/merge
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9026994Z From https://github.com/link-foundation/link-cli
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9028093Z  * [new ref]         81974447bf671e1c335e82e7bfe4f5823e5cea73 -> pull/139/merge
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9032630Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9033633Z ##[group]Determining the checkout info
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9034624Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9041039Z [command]/usr/bin/git sparse-checkout disable
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9178024Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9223665Z ##[group]Checking out the ref
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:38.9228791Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/139/merge
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1284032Z Note: switching to 'refs/remotes/pull/139/merge'.
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1284411Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1284653Z You are in 'detached HEAD' state. You can look around, make experimental
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1286114Z changes and commit them, and you can discard any commits you make in this
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1286616Z state without impacting any branches by switching back to a branch.
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1286904Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1287092Z If you want to create a new branch to retain commits you create, you may
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1287544Z do so (now or later) by using -c with the switch command. Example:
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1287818Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1287930Z   git switch -c <new-branch-name>
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1288102Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1288208Z Or undo this operation with:
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1288365Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1288456Z   git switch -
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1288576Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1288796Z Turn off this advice by setting config variable advice.detachedHead to false
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1289110Z
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1289446Z HEAD is now at 8197444 Merge 4160136b13cfb2588c65e79a324dde64b618056e into eb7074aa504e87e50106ad9ecd46d7422e61c9a8
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1549125Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1633956Z [command]/usr/bin/git log -1 --format=%H
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1672999Z 81974447bf671e1c335e82e7bfe4f5823e5cea73
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1682320Z ##[group]Removing auth
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1682761Z Removing SSH command configuration
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1686578Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1729960Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1971881Z Removing HTTP extra header
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.1975997Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2022012Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2265399Z Removing includeIf entries pointing to credentials config files
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2268743Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2308911Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2309908Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2310460Z includeif.gitdir:/github/workspace/.git.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2310867Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2317906Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2352728Z /home/runner/work/_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2363205Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-01418cba\-a8a3\-4561\-bcc7\-d63a43b6e75e\.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2419780Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2454808Z /home/runner/work/_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2464579Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-01418cba\-a8a3\-4561\-bcc7\-d63a43b6e75e\.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2510880Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2551159Z /github/runner_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2566464Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-01418cba\-a8a3\-4561\-bcc7\-d63a43b6e75e\.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2606238Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2640685Z /github/runner_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2651735Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-01418cba\-a8a3\-4561\-bcc7\-d63a43b6e75e\.config
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2698349Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2938945Z Removing credentials config '/home/runner/work/_temp/git-credentials-01418cba-a8a3-4561-bcc7-d63a43b6e75e.config'
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-10-28T11:49:39.2948929Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/setup-node@v7	﻿2026-10-28T11:49:39.3281104Z ##[group]Run actions/setup-node@v7
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3281421Z with:
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3281629Z   node-version: 24.x
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3281854Z   check-latest: false
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3284150Z   token: ***
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3284390Z   package-manager-cache: true
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3284635Z env:
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3284817Z   GIT_CONFIG_COUNT: 1
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3285248Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3285526Z   GIT_CONFIG_VALUE_0: main
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.3285751Z ##[endgroup]
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:39.4850328Z Found in cache @ /opt/hostedtoolcache/node/24.22.1/x64
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:40.3776671Z ##[group]Environment details
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:42.4410625Z node: v24.22.1
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:42.4411059Z npm: 11.19.1
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:42.4411356Z yarn: 1.22.22
+Dependencies are on their latest versions	Run actions/setup-node@v7	2026-10-28T11:49:42.4411835Z ##[endgroup]
+Dependencies are on their latest versions	Setup Rust	﻿2026-10-28T11:49:42.4558340Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4558999Z ^[[36;1mrustup toolchain install stable --profile minimal --no-self-update^[[0m
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4559418Z ^[[36;1mrustup default stable^[[0m
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4620251Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4620628Z env:
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4620826Z   GIT_CONFIG_COUNT: 1
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4621058Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4621329Z   GIT_CONFIG_VALUE_0: main
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:42.4621552Z ##[endgroup]
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.1698535Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.3762693Z
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.3849130Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.3849599Z
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.3929040Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.3938093Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.3938559Z
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.4021958Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+Dependencies are on their latest versions	Setup Rust	2026-10-28T11:49:44.4022586Z
+Dependencies are on their latest versions	Compare every dependency with its registry	﻿2026-10-28T11:49:44.4077098Z ##[group]Run node .github/scripts/check-latest-dependencies.mjs
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4077615Z ^[[36;1mnode .github/scripts/check-latest-dependencies.mjs^[[0m
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4099104Z shell: /usr/bin/bash -e {0}
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4099364Z env:
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4099560Z   GIT_CONFIG_COUNT: 1
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4099791Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4100065Z   GIT_CONFIG_VALUE_0: main
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4102594Z   GITHUB_TOKEN: ***
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:44.4102860Z ##[endgroup]
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.0911441Z Checked 127 declared versions and the Cargo.lock files.
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2015931Z
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2017022Z 4 dependencies are behind their latest release:
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2017606Z
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2017983Z | File | Dependency | Used | Latest |
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2018631Z |---|---|---|---|
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2019864Z | docs/case-studies/issue-100/evidence/external-range/rust/Cargo.toml | doublets | 0.8.0 | 0.9.0 |
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2021327Z | js/package-lock.json | lucide-react | 1.62.0 | 1.63.0 |
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2022079Z | js/package.json | lucide-react | 1.62.0 | 1.63.0 |
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2023421Z | rust/Cargo.toml | doublets | 0.8.0 | 0.9.0 |
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T11:49:51.2367892Z ##[error]Process completed with exit code 1.
+Dependencies are on their latest versions	Post Run actions/checkout@v7	﻿2026-10-28T11:49:51.2522990Z Post job cleanup.
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3392460Z [command]/usr/bin/git version
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3440543Z git version 2.56.0
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3484087Z Temporarily overriding HOME='/home/runner/work/_temp/0aba0948-06e6-4e89-a378-9167d8e764d7' before making global git config changes
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3485965Z Adding repository directory to the temporary git global config as a safe directory
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3490616Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3527531Z Removing SSH command configuration
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3535227Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3574365Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3838333Z Removing HTTP extra header
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3844010Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.3885265Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.4147639Z Removing includeIf entries pointing to credentials config files
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.4153774Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Dependencies are on their latest versions	Post Run actions/checkout@v7	2026-10-28T11:49:51.4199367Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Dependencies are on their latest versions	Complete job	﻿2026-10-28T11:49:51.4618458Z Cleaning up orphan processes

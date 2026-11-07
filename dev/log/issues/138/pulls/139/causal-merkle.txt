@@ -1,0 +1,93 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-merkle.sh
+Test-first diagnostics: absent APIs and finite node-only/leaf-only traversal starvation.
+causal-merkle-before.txt preserves exact diagnostics, hashes and the reproducible frozen candidate.
+START 2026-10-27T14:52:35Z
+PHYSICAL COMPOSITION PASS 2026-10-27T15:07:12Z
+RESUME after canonical serialization lint correction 2026-10-27T15:09:57Z
+RESUME after canonical serialization lint correction 2026-10-27T15:10:55Z
+STRICT AND FOCUSED PASS 2026-10-27T15:11:51Z
+CSHARP PASS 2026-10-27T15:22:01Z
+NATIVE PASS 2026-10-27T15:41:47Z
+ACTUAL WASM PASS 2026-10-27T15:47:39Z
+FINAL CSHARP ADMISSION CONTROLS START 2026-10-27T15:48:08Z
+REPOSITORY, 127 DEPENDENCIES, WORKFLOW AND SHELLCHECK PASS 2026-10-27T15:49:15Z
+FINAL CSHARP ADMISSION CONTROLS PASS 2026-10-27T15:59:59Z
+ALL PASS 2026-10-27T15:59:59Z
+Independent bounded model: 64 snapshot pairs, 48 leaf/proof groups; eight roots, four leaf and three node wire vectors.
+Nine Merkle contracts pass in native Rust, C#, Node, Bun, Deno and actual WASM, alongside thirteen causal version/local-owner contracts.
+SQL-free physical matrix: 50 plain/mirrored wire handoffs across five writers/readers, concurrent siblings and following edits.
+Twenty reaped exit-73 children; 100 unchanged-byte stale-owner refusals and 100 recovered retry/reopen/following handoffs.
+Physical reads and duplicate pulls preserve file hashes. Real pulls carry four-node/one-leaf continuations, at most forty attempts.
+Ownership markers are quarantined only after reaping. Application exits do not certify hardware power loss.
+C# Debug: 2484 passed; zero failed/skipped.
+Complete lines: 9871/10180 (96.96464%).
+Complete branches: 6265/6710 (93.36811%).
+CausalVersion.cs executable lines: 100/100.
+CausalVersion.cs branches: 138/138.
+CausalReplica.cs executable lines: 136/136.
+CausalReplica.cs branches: 180/180.
+CausalMerkle.cs executable lines: 218/218.
+CausalMerkle.cs branches: 246/246.
+C# Release: 2484 passed; zero failed/skipped.
+Complete lines: 7612/7813 (97.42736%).
+Complete branches: 6209/6671 (93.07450%).
+CausalVersion.cs executable lines: 74/74.
+CausalVersion.cs branches: 138/138.
+CausalReplica.cs executable lines: 108/108.
+CausalReplica.cs branches: 180/180.
+CausalMerkle.cs executable lines: 160/160.
+CausalMerkle.cs branches: 246/246.
+Native Rust: 1219 passed; 22 parent-driven child entries ignored by normal harness.
+Complete lines: 18268/19163 (95.32954%).
+Complete branches: 3590/4090 (87.77506%).
+Complete functions: 2346/2515 (93.28032%).
+Complete regions: 28154/30381 (92.66976%).
+Complete instantiations: 12537/22433 (55.88642%).
+causal_merkle.rs lines: 511/516 (99.03101%).
+causal_merkle.rs branches: 112/116 (96.55172%).
+causal_merkle.rs functions: 63/67 (94.02985%).
+Actual WASM: 745 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 14244/16872 (84.42390%).
+Complete branches: 2959/3479 (85.05318%).
+Complete functions: 1764/2193 (80.43776%).
+Complete regions: 21985/26635 (82.54177%).
+Complete instantiations: 4482/7664 (58.48121%).
+causal_merkle.rs lines: 511/516 (99.03101%).
+causal_merkle.rs branches: 112/116 (96.55172%).
+causal_merkle.rs functions: 63/67 (94.02985%).
+Doctests: six passed; one existing ignored example.
+js-full: {'tests': 666, 'pass': 666, 'fail': 0, 'skipped': 0}.
+100% production lines, branches and functions; unchanged thresholds and denominators.
+js-focused: {'tests': 9, 'pass': 9, 'fail': 0, 'skipped': 0}.
+100% production lines, branches and functions; unchanged thresholds and denominators.
+repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}.
+Repository-layout before control: one failure at log line 250 because retained CI logs were at the root.
+Moved the three logs into experiments/issue-138/ci-logs and corrected the receipt paths; all 221 checks then pass without changing a check.
+Formatting, strict native/WASM Clippy, TS declarations, source sizes, one C# changeset, fresh dependencies and workflow/ShellCheck checks pass.
+Bare Rust normal dependencies contain no serde_json, rusqlite or sha2. Native physical composition selects no SQLite feature; JS is a separate export.
+Admission: 4096 versions/8 MiB total, at most 64 per address before pruning. Fixed depth/fanout 16; opaque cursor retains at most 241 paths of at most 16 digits.
+Per-frame preparse bounds: nodes 32768 bytes, leaves 1081344 bytes, five array levels, 32768 unquoted separators, ASCII and no escapes.
+Positive per-attempt node/leaf/accepted-byte defaults 4096/64/8388608; maxima 65536/4096/8388608. A rejected fetched leaf remains pending.
+Worst-case response-frame budgets are 194 MiB by default and 6272 MiB at maximum counts. Accepted bytes do not cap proofs or rejected frames; processing does not retain all frames.
+Tree retained data O(16R+VW), plus path/container overhead; local journal historical replay/publication costs remain. Construction is not an incremental persistent index.
+SHA256 equality assumes collision resistance. Content roots omit pruned history, retry receipts and membership; absence never authorizes deletion.
+Complete coverage gaps, ordinary links projection, global allocation, safe membership/history reclamation, automatic balancing and wider R1-R12 requirements remain unfinished.
+Fresh exact-head platform CI is still required; PR139 remains draft and unmerged.
+experiments/issue-138/causal-merkle-Debug-results/d4292d25-8653-42cd-b442-f2ac9c4de8de/coverage.cobertura.xml: 2568132 bytes; SHA256 c52b30dde34716aa09ec1c08982e0e633ed1c41bc6f39aab2b3878a5a41ad88c.
+experiments/issue-138/causal-merkle-Release-results/d1a89ab3-d2ae-4aeb-b174-269d83631cf0/coverage.cobertura.xml: 2271580 bytes; SHA256 36261fe3f6a606f03c38e050ec3ad7d716adf41c711e0a77cbabac549c589c68.
+experiments/issue-138/causal-merkle-native-coverage.json: 21866311 bytes; SHA256 6134a7b00b2601b1d2454806f56ecc54d476ff8153e88fb99d941267b49a3418.
+experiments/issue-138/causal-merkle-wasm-coverage.json: 24871507 bytes; SHA256 1951ca0142f22a281d68876b274f7834c0b137e40bd7408a6372bcb4058a5782.
+experiments/issue-138/causal-merkle-validation.log: 598 bytes; SHA256 4bc1d6f1704333b7fe47b8346b3fc7fe513076e8ad633d482685dedab5edc586.
+experiments/issue-138/causal-merkle-js-full.log: 59151 bytes; SHA256 4e64b795d1d56a4ed709f851b7fc2b706e8f8c4e538cca1214119c6480a95ed0.
+experiments/issue-138/causal-merkle-rust-focused.log: 875 bytes; SHA256 31e214ad78c1ea4ae848fc490f3cdd5f183255e9d595a237b9a3ae86970c5252.
+experiments/issue-138/causal-merkle-wasm-focused.log: 16262446 bytes; SHA256 3969ed9fa2a548ed83c5e33dbf76b1cdcbd475d73f02e26355600760390e1533.
+experiments/issue-138/causal-merkle-physical-handoffs.log: 50073 bytes; SHA256 47f66e28929dfea4da1f782f749afc6ee9552ad07026f7281e2cd7c30b316153.
+experiments/issue-138/causal-merkle-csharp-Debug-full.log: 1092 bytes; SHA256 952380d75216a892a55a760f623d809c3d0e429573cde95e6d7431c9c488016a.
+experiments/issue-138/causal-merkle-csharp-Release-full.log: 1102 bytes; SHA256 be9a17928cfd24ce387b32d187f01331cef658897ef1ba75a915cc940d754f65.
+experiments/issue-138/causal-merkle-native-full.log: 594035 bytes; SHA256 bdfcd5a35b99aeb52081c191c054e15b89185ad5c568cb736cf190222cc6fe81.
+experiments/issue-138/causal-merkle-wasm-full.log: 66639 bytes; SHA256 7ee20571659795d0714af4ee2833067063eaeaa9670466e7ae08d8a28a27699b.
+experiments/issue-138/causal-merkle-repository-before.log: 19318 bytes; SHA256 bdc1de23691c77eab86fa4915c5aab51f5c79e78fc967bf7e0b2e4cf7df4dd0d.
+experiments/issue-138/causal-merkle-repository.log: 18485 bytes; SHA256 8d2b3721d2add3ff05a20103a99a2528062d6764346b142d2bc12d20d5c13583.
+experiments/issue-138/causal-merkle-dependency-freshness.log: 56 bytes; SHA256 d507522804fdd2e8e757a643f09b2027ddf4e835b8a9856827a6600ffffb5844.
+experiments/issue-138/causal-merkle-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.

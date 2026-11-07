@@ -1,0 +1,17 @@
+Missing-feature baseline for PR https://github.com/link-foundation/link-cli/pull/139
+Finite contract: experiments/issue-138/sorted-runs-contract.mjs
+Executed before the sorted-run implementation against retained pre-feature web WASM.
+Command: CLINK_WASM="$PWD/experiments/issue-138/inline-names-wasm-package" node experiments/issue-138/sorted-runs-contract.mjs
+Exit status: 1
+WASM SHA-256: 91b08296ca1f8501ff29877dc2298b64e293a1e3b53d1b52346027f600f183ef
+The retained package predates this feature; this execution does not establish its source commit.
+This demonstrates an unavailable option, not a defect in previously supported behavior.
+
+
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+unknown state structure
+(Use `node --trace-uncaught ...` to show where the exception was thrown)
+
+Node.js v26.12.1

@@ -1,0 +1,469 @@
+Rust author-guard coverage audit, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Production is unchanged from the ASCII admission correction a711106.
+The independently digest-verified aae1422 native artifact predates that
+correction and rejects at 216/217 LCOV lines and 62/68 branches. These
+export counts do not replace official LLVM JSON file summaries.
+Six additional portable public-contract tests cover finite byte budgets,
+unknown tags, retained predecessors, absent/forged ownership, independent
+group lengths, provider errors and invalid guard arguments. The shared
+model now supplies 25 fixtures. All 13 native contract tests, 15 C# cases
+and 10 tests on each of Node/Bun/Deno pass in focused local execution.
+The first focused LLVM measurement still rejects three uncovered error
+propagation regions. The final same-provider controls cover those outcomes.
+After cleaning prior workspace coverage artifacts, the official native
+file summary is 217/217 lines, 70/70 branches, 22/22 functions and
+313/313 regions. Instantiations remain 22/38, explicitly unfinished.
+The gate retains and prints that counter; it requires complete source
+lines/branches/functions/regions without claiming full instantiation or
+whole-project coverage. Full native/WASM CI now runs it after measurement.
+CI keeps full LCOV plus official LLVM per-file/global JSON summaries,
+including reports when the new gate fails. No source, branch, region or
+instantiation is excluded and no production code is restructured.
+Full suites remain in CI per maintainer feedback; fresh CI is pending.
+Display trims trailing whitespace; hashes identify original raw logs.
+
+--- author-fence-rust-artifact-before.log; SHA256 11a8da015ed52424b55e06341d54eae1ad476239e544c41a5d3a90072dc41632 ---
+Verified GitHub artifact 12821485617 aae1422fd88cf09d6a9414e3544b495cd5ca63ac 531164 sha256:e99cb2e888659c6995b35cfe06dbc3be19a3cb0d10634d1704d74b5bf151e737
+Report: /tmp/issue-138-recovery/rust-aae1422-coverage/coverage.lcov; bytes 9743313; SHA256 b2556b5e72cdc248d9b3e5624abf5b9f3060b326203a8f238ac583b64d4b27b8
+Complete LCOV export totals: {"branches": {"count": 4498, "covered": 3969}, "functions": {"count": 2774, "covered": 2580}, "lines": {"count": 21277, "covered": 20305}}
+LCOV omits official LLVM regions/instantiations; selected counts are export evidence only
+Author guard lines: 216/217
+Author guard branches: 62/68
+Author guard functions: 22/22
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/check-author-fence-rust-coverage.py", line 58, in <module>
+    assert not missing, f'Uncovered author guard counters: {missing}'
+           ^^^^^^^^^^^
+AssertionError: Uncovered author guard counters: ['lines', 'branches']
+
+--- author-fence-rust-coverage-tool.log; SHA256 f2f5be66bd0c0d1a3ccaa0730e363c793e65ccdfce5dd91d1f957105e30eacfb ---
+cargo-llvm-cov 0.9.1
+
+--- author-fence-rust-coverage-draft.log; SHA256 e61984b295d92a6340506526b5695538a684dd585b73fdab8c8a71a4eb6439dd ---
+Report: /tmp/issue-138-recovery/author-fence-native-summary.json; bytes 46567; SHA256 c6ef39ece3a7b6154c18dbd37e080e024e7b5feb7a328905321088a4278102d1
+Complete instrumented production totals: {"branches": {"count": 2384, "covered": 81, "notcovered": 2303, "percent": 3.3976510067114094}, "functions": {"count": 1957, "covered": 26, "percent": 1.3285641287685233}, "instantiations": {"count": 3156, "covered": 26, "percent": 0.8238276299112801}, "lines": {"count": 15390, "covered": 239, "percent": 1.552956465237167}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 24069, "covered": 339, "notcovered": 23730, "percent": 1.4084507042253522}}
+Author guard lines: 217/217
+Author guard branches: 70/70
+Author guard functions: 22/22
+Author guard regions: 310/313
+Author guard instantiations: 22/38
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/check-author-fence-rust-coverage.py", line 58, in <module>
+    assert not missing, f'Uncovered author guard counters: {missing}'
+           ^^^^^^^^^^^
+AssertionError: Uncovered author guard counters: ['regions', 'instantiations']
+
+--- author-fence-rust-coverage-clean.log; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-rust-coverage-tests-complete.log; SHA256 16f010e7817dc6e5df71d58712cdadb3e69d3cae815ba72017be27b76d8101c7 ---
+warning: --branch option is unstable
+info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); you can opt-out it by passing --no-cfg-coverage and --no-cfg-coverage-nightly
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `test` profile [unoptimized] target(s) in 12.72s
+     Running tests/engine_author_fence_tests.rs (rust/target/llvm-cov-target/debug/deps/engine_author_fence_tests-5f86051167aed22e)
+
+running 13 tests
+test canonical_claim_journal_fixtures_are_read_only ... ok
+test explicit_takeover_fences_old_reads_writes_and_receipts ... ok
+test finite_budgets_and_read_only_guards_preserve_active_retry ... ok
+test finite_byte_budget_retains_the_current_owner_and_exact_retry ... ok
+test forged_and_absent_owners_have_no_publication_authority ... ok
+test malformed_admission_and_provider_snapshots_cannot_publish ... ok
+test mismatched_expected_and_update_groups_never_reach_publication ... ok
+test provider_and_argument_failures_preserve_guarded_publication_state ... ok
+test retained_active_claim_requires_its_original_full_width_predecessor ... ok
+test takeover_inside_guarded_data_cas_is_atomic ... ok
+test takeover_resolves_decided_batch_and_burns_old_reservation_suffix ... ok
+test uncertain_claims_and_competing_predecessors_preserve_original_identity ... ok
+test unknown_claim_record_tag_cannot_publish_or_rewrite_provider_state ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+--- author-fence-rust-coverage-after.log; SHA256 73a1bb87f44d0f9aca36c3a304b283faab0a85a844e5fc82a2a62d469f4f7827 ---
+Report: /tmp/issue-138-recovery/author-fence-native-summary-complete.json; bytes 48630; SHA256 033fba0f7e8d087caac0c2a09f5444750c1a89bf97dac00f2df02ebef0d6188f
+Report scope is retained unchanged; focused execution is not a full-suite coverage claim
+Complete instrumented production totals: {"branches": {"count": 2742, "covered": 257, "notcovered": 2485, "percent": 9.37272064186725}, "functions": {"count": 2076, "covered": 110, "percent": 5.298651252408478}, "instantiations": {"count": 3306, "covered": 113, "percent": 3.4180278281911676}, "lines": {"count": 16556, "covered": 1168, "percent": 7.054844165257308}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 25887, "covered": 1713, "notcovered": 24174, "percent": 6.617220998957006}}
+Author guard lines: 217/217
+Author guard branches: 70/70
+Author guard functions: 22/22
+Author guard regions: 313/313
+Author guard instantiations: 22/38
+UNFINISHED: unexecuted LLVM instantiation entries remain in the report and acceptance inventory
+PASS required author-guard counters: lines, branches, functions, regions
+Instantiation and full-project acceptance gaps remain separate and unfinished
+
+--- author-fence-rust-coverage-model.log; SHA256 d559e5deb4cbe3e6ce70f9e403e50158141bd3ed3664e71e8bcec009a43c72f2 ---
+PASS independent author fencing: 6 complete takeover/publication schedules; 25 wire fixtures
+
+--- author-fence-rust-coverage-focused.log; SHA256 ff6e6edb83c9e4c7be6f539c6a37cc7793547da0c7f8e48aa603f1b8a529ec32 ---
+PASS independent author fencing: 6 complete takeover/publication schedules; 25 wire fixtures
+✔ independent canonical claim journal fixtures are owned and read-only (11.357368ms)
+✔ non-ASCII wire records are refused before the JSON parser is called (1.411294ms)
+✔ explicit takeover fences old reads and publications without undoing earlier data (4.410392ms)
+✔ a takeover inside guarded CAS conflicts atomically and explicit retry is fenced (0.970942ms)
+✔ same-base claim races and uncertain replies never blindly retake ownership (4.578385ms)
+✔ finite budgets and maximum generation preserve retained active retries (2.232256ms)
+✔ guarded read-only CAS preserves the fence generation and provider ownership (1.356803ms)
+✔ invalid options, requests, snapshots and guard frames cannot publish (8.794374ms)
+✔ guard captures selected keys, expected frames and writes before its first await (2.069963ms)
+✔ new owner resolves a decided batch and burns the previous grant suffix (31.025439ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 255.734887
+ℹ start of coverage report
+ℹ --------------------------------------------------------------------------
+ℹ file                      | line % | branch % | funcs % | uncovered lines
+ℹ --------------------------------------------------------------------------
+ℹ js                        |        |          |         |
+ℹ  client                   |        |          |         |
+ℹ   src                     |        |          |         |
+ℹ    engine-author-fence.js | 100.00 |   100.00 |  100.00 |
+ℹ --------------------------------------------------------------------------
+ℹ all files                 | 100.00 |   100.00 |  100.00 |
+ℹ --------------------------------------------------------------------------
+ℹ end of coverage report
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.66s
+     Running tests/engine_author_fence_tests.rs (rust/target/debug/deps/engine_author_fence_tests-5f86051167aed22e)
+
+running 12 tests
+test canonical_claim_journal_fixtures_are_read_only ... ok
+test explicit_takeover_fences_old_reads_writes_and_receipts ... ok
+test finite_budgets_and_read_only_guards_preserve_active_retry ... ok
+test finite_byte_budget_retains_the_current_owner_and_exact_retry ... ok
+test forged_and_absent_owners_have_no_publication_authority ... ok
+test malformed_admission_and_provider_snapshots_cannot_publish ... ok
+test mismatched_expected_and_update_groups_never_reach_publication ... ok
+test retained_active_claim_requires_its_original_full_width_predecessor ... ok
+test takeover_inside_guarded_data_cas_is_atomic ... ok
+test takeover_resolves_decided_batch_and_burns_old_reservation_suffix ... ok
+test uncertain_claims_and_competing_predecessors_preserve_original_identity ... ok
+test unknown_claim_record_tag_cannot_publish_or_rewrite_provider_state ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    15, Skipped:     0, Total:    15, Duration: 263 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+--- author-fence-rust-coverage-bun.log; SHA256 19ddc8ac8836bb25d5ddd363cb6ce077faf8704deef0dedef8ab3ee733a6061e ---
+bun test v1.4.4 (38afee6c8)
+
+js/client/test/engine-author-fence.test.mjs:
+(pass) independent canonical claim journal fixtures are owned and read-only [6.71ms]
+(pass) non-ASCII wire records are refused before the JSON parser is called [1.23ms]
+(pass) explicit takeover fences old reads and publications without undoing earlier data [3.85ms]
+(pass) a takeover inside guarded CAS conflicts atomically and explicit retry is fenced [0.82ms]
+(pass) same-base claim races and uncertain replies never blindly retake ownership [2.08ms]
+(pass) finite budgets and maximum generation preserve retained active retries [1.06ms]
+(pass) guarded read-only CAS preserves the fence generation and provider ownership [0.54ms]
+(pass) invalid options, requests, snapshots and guard frames cannot publish [7.51ms]
+(pass) guard captures selected keys, expected frames and writes before its first await [0.56ms]
+(pass) new owner resolves a decided batch and burns the previous grant suffix [33.24ms]
+
+ 10 pass
+ 0 fail
+Ran 10 tests across 1 file. [124.00ms]
+
+--- author-fence-rust-coverage-deno.log; SHA256 7f636cfc8a7860129888fc00b13599ab3ccb981ddcee235b1692a1ac9e55fff7 ---
+running 10 tests from ./js/client/test/engine-author-fence.test.mjs
+independent canonical claim journal fixtures are owned and read-only ... ok (10ms)
+non-ASCII wire records are refused before the JSON parser is called ... ok (1ms)
+explicit takeover fences old reads and publications without undoing earlier data ... ok (3ms)
+a takeover inside guarded CAS conflicts atomically and explicit retry is fenced ... ok (1ms)
+same-base claim races and uncertain replies never blindly retake ownership ... ok (1ms)
+finite budgets and maximum generation preserve retained active retries ... ok (929µs)
+guarded read-only CAS preserves the fence generation and provider ownership ... ok (375µs)
+invalid options, requests, snapshots and guard frames cannot publish ... ok (3ms)
+guard captures selected keys, expected frames and writes before its first await ... ok (465µs)
+new owner resolves a decided batch and burns the previous grant suffix ... ok (25ms)
+
+ok | 10 passed | 0 failed (70ms)
+
+
+--- author-fence-rust-coverage-clippy.log; SHA256 fba195287ae7a6b8f45c5b9549a5e60ed6c83c86e9c28d5bf02ccb1cdb5f500b ---
+    Checking link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `dev` profile [unoptimized] target(s) in 0.66s
+
+--- author-fence-rust-coverage-repository.log; SHA256 fa9b425d533a50248db16926b7a5d5e20bc1bf7c57592e6f5216d949dbde9d2d ---
+
+> link-cli-web@2.4.0 test:js
+> node --test test/*.test.mjs ../csharp/scripts/*.test.mjs ../.github/scripts/*.test.mjs
+
+✔ versions compare numerically, not as text (3.88984ms)
+✔ a declared version is compared only as far as it is written (0.470468ms)
+✔ pre-releases are never the latest version (0.486458ms)
+✔ every Cargo dependency form is found, path-only ones are skipped (1.82671ms)
+✔ NuGet package references are found (0.670832ms)
+✔ npm ranges lose their operator, and locked versions come from the lock file (0.815853ms)
+✔ actions pinned to a major tag are found once per repository (0.636517ms)
+✔ runtimes and installed tools are found (1.426092ms)
+✔ actions pinned to a commit, a digest or an exact tag are found (2.414597ms)
+✔ only real updates of cargo update --dry-run count (1.020415ms)
+✔ a manifest comment links the issue that holds a dependency back (0.251699ms)
+✔ Cargo comments hold back the dependency on their line only (2.434534ms)
+✔ csproj comments hold back the package reference on their line (0.928945ms)
+✔ workflow comments hold back actions, runtimes and tools (0.783513ms)
+✔ only an open issue holds an outdated dependency back (0.437968ms)
+✔ a dropped connection to a registry is retried instead of failing the check (43.526287ms)
+✔ a lookup that keeps failing reports the network cause and the attempts (2.454371ms)
+✔ an answer a retry cannot change fails at once (0.436275ms)
+✔ retries wait longer each time and stop after the last attempt (62.137903ms)
+  Retrying the Wayback API (attempt 2 of 3) after: fetch failed: ECONNRESET
+✔ the errors section stops at the next top-level heading (3.14567ms)
+✔ a report without an errors section yields nothing (0.315078ms)
+✔ redirected links are not reported as broken (1.888184ms)
+✔ every http error is extracted exactly once (1.364427ms)
+✔ errors that the Wayback Machine cannot answer are still reported (0.534678ms)
+✔ the parsed error count matches the count lychee reports (0.427849ms)
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 503
+  Retrying the Wayback API (attempt 2 of 2) after: fetch failed: ECONNRESET
+✔ transient Wayback failures are retried before a snapshot is reported (27.175861ms)
+✔ a Wayback lookup that keeps failing is reported as failed, not as unarchived (3.268721ms)
+✔ a definite Wayback answer is not retried (4.408068ms)
+✔ only inactive or missing Codecov repositories make uploading optional (65.731751ms)
+✔ Codecov lookup failures and malformed responses do not silently disable upload checks (4.813695ms)
+✔ Cobertura totals remain visible in the summary without Codecov (1.071129ms)
+✔ missing and invalid coverage reports fail instead of publishing misleading totals (0.553783ms)
+✔ summary command finds nested Cobertura files and appends the Actions summary (73.761267ms)
+✔ csharp.yml: use an exact SDK version to avoid the broken channel redirect (3.082884ms)
+✔ docs.yml: use an exact SDK version to avoid the broken channel redirect (0.540989ms)
+✔ js-client.yml: use an exact SDK version to avoid the broken channel redirect (0.432499ms)
+✔ security.yml: use an exact SDK version to avoid the broken channel redirect (0.201727ms)
+✔ npm release validation uses the actual registry lookup result (4.113557ms)
+✔ npm release validation succeeds when published=true (20.9764ms)
+✔ npm release validation succeeds when published=false (19.14881ms)
+✔ release helper check compiles every executable, denies warnings, and propagates failures (142.480694ms)
+✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (50.52586ms)
+✔ npm trust verification fails clearly when OIDC or the registry policy is missing (4.929139ms)
+✔ there is at least one workflow to inspect (5.340608ms)
+✔ no workflow reacts to both pull_request and non-main push branches (3.12871ms)
+✔ the JavaScript unit tests are executed by a workflow (0.770559ms)
+✔ csharp.yml: every job declares timeout-minutes (1.546827ms)
+✔ csharp.yml: declares a top-level permissions block (0.317934ms)
+✔ csharp.yml: every job is covered by a concurrency group (1.208796ms)
+✔ csharp.yml: writer jobs own a never-cancelled concurrency group (3.301663ms)
+✔ csharp.yml: does not mask failures with continue-on-error (3.985208ms)
+✔ csharp.yml: crates.io trusted publishing runs only when enabled (3.50398ms)
+✔ csharp.yml: single-line if expressions do not start with ! (1.218454ms)
+✔ csharp.yml: every release_mode option is handled by a job (0.657628ms)
+✔ csharp.yml: publish steps do not silently skip on missing credentials (2.152187ms)
+✔ csharp.yml: npm lookups tell "not published" apart from a failure (1.603522ms)
+✔ csharp.yml: required choice inputs declare a default (0.629634ms)
+✔ csharp.yml: hosted runners use pinned OS labels (1.050111ms)
+✔ csharp.yml: provides init.defaultBranch to actions/checkout (9.955671ms)
+✔ dependencies.yml: every job declares timeout-minutes (0.231893ms)
+✔ dependencies.yml: declares a top-level permissions block (0.140422ms)
+✔ dependencies.yml: every job is covered by a concurrency group (0.224749ms)
+✔ dependencies.yml: writer jobs own a never-cancelled concurrency group (0.198381ms)
+✔ dependencies.yml: does not mask failures with continue-on-error (0.216955ms)
+✔ dependencies.yml: crates.io trusted publishing runs only when enabled (0.224889ms)
+✔ dependencies.yml: single-line if expressions do not start with ! (3.264153ms)
+✔ dependencies.yml: every release_mode option is handled by a job (0.429882ms)
+✔ dependencies.yml: publish steps do not silently skip on missing credentials (0.141975ms)
+✔ dependencies.yml: npm lookups tell "not published" apart from a failure (0.174406ms)
+✔ dependencies.yml: required choice inputs declare a default (0.124152ms)
+✔ dependencies.yml: hosted runners use pinned OS labels (0.664931ms)
+✔ dependencies.yml: provides init.defaultBranch to actions/checkout (0.114474ms)
+✔ docs.yml: every job declares timeout-minutes (0.478393ms)
+✔ docs.yml: declares a top-level permissions block (0.184625ms)
+✔ docs.yml: every job is covered by a concurrency group (0.314368ms)
+✔ docs.yml: writer jobs own a never-cancelled concurrency group (0.428599ms)
+✔ docs.yml: does not mask failures with continue-on-error (0.237093ms)
+✔ docs.yml: crates.io trusted publishing runs only when enabled (0.415696ms)
+✔ docs.yml: single-line if expressions do not start with ! (0.237033ms)
+✔ docs.yml: every release_mode option is handled by a job (0.157814ms)
+✔ docs.yml: publish steps do not silently skip on missing credentials (0.236872ms)
+✔ docs.yml: npm lookups tell "not published" apart from a failure (0.317482ms)
+✔ docs.yml: required choice inputs declare a default (0.154098ms)
+✔ docs.yml: hosted runners use pinned OS labels (0.318634ms)
+✔ docs.yml: provides init.defaultBranch to actions/checkout (0.208038ms)
+✔ js-client.yml: every job declares timeout-minutes (0.226703ms)
+✔ js-client.yml: declares a top-level permissions block (0.098845ms)
+✔ js-client.yml: every job is covered by a concurrency group (0.271787ms)
+✔ js-client.yml: writer jobs own a never-cancelled concurrency group (0.390699ms)
+✔ js-client.yml: does not mask failures with continue-on-error (0.205784ms)
+✔ js-client.yml: crates.io trusted publishing runs only when enabled (0.508108ms)
+✔ js-client.yml: single-line if expressions do not start with ! (0.182882ms)
+✔ js-client.yml: every release_mode option is handled by a job (1.615906ms)
+✔ js-client.yml: publish steps do not silently skip on missing credentials (0.354292ms)
+✔ js-client.yml: npm lookups tell "not published" apart from a failure (0.684949ms)
+✔ js-client.yml: required choice inputs declare a default (0.175098ms)
+✔ js-client.yml: hosted runners use pinned OS labels (0.319797ms)
+✔ js-client.yml: provides init.defaultBranch to actions/checkout (0.100157ms)
+✔ links.yml: every job declares timeout-minutes (0.129622ms)
+✔ links.yml: declares a top-level permissions block (0.068758ms)
+✔ links.yml: every job is covered by a concurrency group (0.101379ms)
+✔ links.yml: writer jobs own a never-cancelled concurrency group (0.157865ms)
+✔ links.yml: does not mask failures with continue-on-error (0.094498ms)
+✔ links.yml: crates.io trusted publishing runs only when enabled (0.141134ms)
+✔ links.yml: single-line if expressions do not start with ! (0.092473ms)
+✔ links.yml: every release_mode option is handled by a job (0.105957ms)
+✔ links.yml: publish steps do not silently skip on missing credentials (1.352494ms)
+✔ links.yml: npm lookups tell "not published" apart from a failure (0.136725ms)
+✔ links.yml: required choice inputs declare a default (0.069649ms)
+✔ links.yml: hosted runners use pinned OS labels (0.077374ms)
+✔ links.yml: provides init.defaultBranch to actions/checkout (0.051346ms)
+✔ rust.yml: every job declares timeout-minutes (0.204262ms)
+✔ rust.yml: declares a top-level permissions block (0.082245ms)
+✔ rust.yml: every job is covered by a concurrency group (0.181068ms)
+✔ rust.yml: writer jobs own a never-cancelled concurrency group (0.283358ms)
+✔ rust.yml: does not mask failures with continue-on-error (0.163836ms)
+✔ rust.yml: crates.io trusted publishing runs only when enabled (2.399709ms)
+✔ rust.yml: single-line if expressions do not start with ! (0.155139ms)
+✔ rust.yml: every release_mode option is handled by a job (0.228126ms)
+✔ rust.yml: publish steps do not silently skip on missing credentials (0.253482ms)
+✔ rust.yml: npm lookups tell "not published" apart from a failure (0.264474ms)
+✔ rust.yml: required choice inputs declare a default (0.153145ms)
+✔ rust.yml: hosted runners use pinned OS labels (0.197779ms)
+✔ rust.yml: provides init.defaultBranch to actions/checkout (0.05927ms)
+✔ security.yml: every job declares timeout-minutes (0.082975ms)
+✔ security.yml: declares a top-level permissions block (0.046528ms)
+✔ security.yml: every job is covered by a concurrency group (0.084499ms)
+✔ security.yml: writer jobs own a never-cancelled concurrency group (0.105617ms)
+✔ security.yml: does not mask failures with continue-on-error (0.076343ms)
+✔ security.yml: crates.io trusted publishing runs only when enabled (0.125865ms)
+✔ security.yml: single-line if expressions do not start with ! (0.087133ms)
+✔ security.yml: every release_mode option is handled by a job (0.07511ms)
+✔ security.yml: publish steps do not silently skip on missing credentials (0.103353ms)
+✔ security.yml: npm lookups tell "not published" apart from a failure (0.093475ms)
+✔ security.yml: required choice inputs declare a default (0.067265ms)
+✔ security.yml: hosted runners use pinned OS labels (0.11256ms)
+✔ security.yml: provides init.defaultBranch to actions/checkout (0.087223ms)
+✔ wasm.yml: every job declares timeout-minutes (0.130384ms)
+✔ wasm.yml: declares a top-level permissions block (0.076243ms)
+✔ wasm.yml: every job is covered by a concurrency group (0.156641ms)
+✔ wasm.yml: writer jobs own a never-cancelled concurrency group (0.092813ms)
+✔ wasm.yml: does not mask failures with continue-on-error (0.80863ms)
+✔ wasm.yml: crates.io trusted publishing runs only when enabled (0.130564ms)
+✔ wasm.yml: single-line if expressions do not start with ! (0.072194ms)
+✔ wasm.yml: every release_mode option is handled by a job (0.058941ms)
+✔ wasm.yml: publish steps do not silently skip on missing credentials (0.080651ms)
+✔ wasm.yml: npm lookups tell "not published" apart from a failure (0.094096ms)
+✔ wasm.yml: required choice inputs declare a default (0.063148ms)
+✔ wasm.yml: hosted runners use pinned OS labels (0.077344ms)
+✔ wasm.yml: provides init.defaultBranch to actions/checkout (0.050333ms)
+✔ workflows.yml: every job declares timeout-minutes (0.092964ms)
+✔ workflows.yml: declares a top-level permissions block (0.063578ms)
+✔ workflows.yml: every job is covered by a concurrency group (0.067145ms)
+✔ workflows.yml: writer jobs own a never-cancelled concurrency group (0.081001ms)
+✔ workflows.yml: does not mask failures with continue-on-error (0.434791ms)
+✔ workflows.yml: crates.io trusted publishing runs only when enabled (0.116567ms)
+✔ workflows.yml: single-line if expressions do not start with ! (0.098724ms)
+✔ workflows.yml: every release_mode option is handled by a job (0.060042ms)
+✔ workflows.yml: publish steps do not silently skip on missing credentials (0.074318ms)
+✔ workflows.yml: npm lookups tell "not published" apart from a failure (0.075641ms)
+✔ workflows.yml: required choice inputs declare a default (0.060334ms)
+✔ workflows.yml: hosted runners use pinned OS labels (0.222926ms)
+✔ workflows.yml: provides init.defaultBranch to actions/checkout (0.063679ms)
+✔ exactly one workflow publishes GitHub Pages (0.602515ms)
+✔ only the Pages publisher uploads a Pages artifact (0.308425ms)
+✔ every clippy invocation denies warnings (1.758382ms)
+✔ the Rust and C# pipelines simulate a fresh merge on pull requests (0.426737ms)
+✔ every cargo audit invocation denies warnings (1.057033ms)
+✔ coverage uploads use OIDC and retain reports without requiring Codecov (4.116794ms)
+✔ Rust PR lint compiles release helpers without executing them (0.391019ms)
+✔ registry trust can be verified without versioning or publishing a release (2.556491ms)
+✔ Dependabot watches every directory the dependency check reads (19.891866ms)
+✔ exclusions match whole path components, not substrings (12.708289ms)
+✔ a trailing newline does not count as an extra line (2.78627ms)
+✔ CLI fails when a file exceeds the limit and passes otherwise (152.286285ms)
+✔ merge-changesets honors the requested directory and package name (110.747017ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (87.281631ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (426.478664ms)
+✔ create-github-release dry run uses tag prefix and component changelog (68.371708ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (83.455199ms)
+✔ buildNugetBadges links both badges to the exact version (1.051563ms)
+✔ buildNugetBadges URL-encodes the package id (0.386351ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.618655ms)
+✔ prependNugetBadges is a no-op without a package id (0.330617ms)
+✔ buildNugetBadges accepts multiple package ids (0.761171ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (1.885048ms)
+✔ buildReleasePayload places NuGet badges above the package footer (1.37126ms)
+✔ create-github-release dry run reports matching assets without uploading (81.656102ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (528.328295ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.5357ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.344163ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.226764ms)
+✔ classifyPushFailure separates repository rules from lost races (0.288107ms)
+✔ version-and-commit rebases and retries when another release pushed first (748.819146ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (399.931146ms)
+✔ check-release-needed decide(): changesets take the normal release path (0.61093ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.203179ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.230441ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.166732ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.172643ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (1.613753ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (179.8127ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (158.494602ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.80383ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.272379ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.665812ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.523777ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.377755ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (4.565601ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (1.687539ms)
+✔ answers a retry cannot change are not retried (2.160723ms)
+✔ buildGraph reflects create, delete, and recreate snapshots without stale nodes (3.363398ms)
+✔ language code package manifests and generated evidence stay out of the root folder (8.844638ms)
+✔ the browser-only WebAssembly wrapper opts out of crates.io publishing (0.953279ms)
+✔ JavaScript package scripts target the relocated WebAssembly crate and split script trees (0.735021ms)
+✔ WebAssembly workflow uses the JavaScript package lockfile from js (0.694665ms)
+✔ the documentation workflow deploys GitHub Pages automatically on push to main (0.736275ms)
+✔ CSharp release workflow attaches NuGet packages to GitHub Releases (0.617393ms)
+✔ CSharp release workflow includes self-healing release gates (0.447636ms)
+✔ CSharp and Rust release workflows are scheduled on every push to main (1.072903ms)
+✔ GitHub workflows avoid Node 20 action major versions that are being retired (3.202868ms)
+ℹ tests 221
+ℹ suites 0
+ℹ pass 221
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3377.002763
+
+--- author-fence-rust-coverage-source-size.log; SHA256 803292c12eb7734484bb61f75e10797a1a464b28eacd57c7200aa298f8e50298 ---
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 350 C# file(s)
+Checking Rust files in rust/...
+  Found 405 Rust file(s)
+
+Checked 755 file(s) - all within the line limit
+
+
+--- author-fence-rust-coverage-format.log; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-rust-coverage-workflows.log; SHA256 ad754caf3e0a7b15c08f4621aa3f9e19328d0041454622ae88bdd605162bf290 ---
+PASS actionlint 1.7.12 with ShellCheck 0.11.0
+
+--- author-fence-rust-coverage-shellcheck.log; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-rust-coverage-whitespace.log; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---

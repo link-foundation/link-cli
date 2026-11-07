@@ -180,6 +180,46 @@ namespace Foundation.Data.Doublets.Cli.Tests
         }
 
         [Fact]
+        public void Doublets_Outside_The_Encoding_Are_Foreign()
+        {
+            using var store = new Store();
+            var (named, triplets) = (store.Named, store.Triplets);
+            var type = triplets.CreateTripletPoint();
+            var (from, to) = (triplets.CreateTripletPoint(), triplets.CreateTripletPoint());
+            triplets.CreateTriplet(type, from, to);
+            var duplicate = Doublet(named, triplets.CreateTriplet(type, from, to)).Target;
+            Assert.Equal(DoubletRole.DuplicatePair, triplets.RoleOf(duplicate));
+
+            var withoutSource = named.CreateAndUpdate(0u, to);
+            var overDuplicate = named.CreateAndUpdate(duplicate, type);
+            var toMarker = named.CreateAndUpdate(type, triplets.Markers.Nothing);
+
+            Assert.Equal(DoubletRole.Foreign, triplets.RoleOf(withoutSource));
+            Assert.Equal(DoubletRole.Foreign, triplets.RoleOf(overDuplicate));
+            Assert.Equal(DoubletRole.Foreign, triplets.RoleOf(toMarker));
+        }
+
+        [Fact]
+        public void An_Update_Refuses_To_Merge_Into_A_Doublet_Already_Used()
+        {
+            using var store = new Store();
+            var (named, triplets) = (store.Named, store.Triplets);
+            var type = triplets.CreateTripletPoint();
+            var (from, to, other) = (triplets.CreateTripletPoint(), triplets.CreateTripletPoint(), triplets.CreateTripletPoint());
+            var taken = triplets.CreateTriplet(type, from, to);
+            var moving = triplets.CreateTriplet(type, from, other);
+            var pair = Doublet(named, taken).Target;
+            // The doublets the update would need, already there for another reason.
+            var duplicate = named.CreateAndUpdate(pair, moving);
+            var foreign = named.CreateAndUpdate(type, duplicate);
+
+            var refused = Assert.Throws<InvalidOperationException>(() => triplets.UpdateTriplet(moving, type, from, to));
+
+            Assert.Contains($"is already {foreign}", refused.Message);
+            Assert.Equal(T(moving, type, from, other), triplets.GetTriplet(moving));
+        }
+
+        [Fact]
         public void Duplicates_Get_Their_Own_Address()
         {
             using var store = new Store();

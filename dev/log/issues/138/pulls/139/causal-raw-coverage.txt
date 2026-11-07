@@ -1,0 +1,57 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-raw-coverage.sh
+Before: Release generated ParseEdits lambda has no source lines; IL offset 8, path 1, line 61 has zero hits. Raw batch branches 187/188 despite complete source-line branch conditions.
+Before: workflow-policy contract fails because JSON collection/retention is absent.
+54 independent shared cases preserve every previous vector and add a scalar individual receipt edit. Production code and thresholds are unchanged.
+C# Debug: all 2496 tests pass; SDK 10.0.403.
+Whole-project lines: 10063/10372 (97.02083%).
+Whole-project branches: 6497/6942 (93.58974%).
+CausalBatch.cs: 190/190 compiled branches, including all methods with no source lines.
+CausalMerkle.cs: 246/246 compiled branches, including all methods with no source lines.
+CausalProjection.cs: 42/42 compiled branches, including all methods with no source lines.
+CausalReplica.cs: 182/182 compiled branches, including all methods with no source lines.
+CausalVersion.cs: 138/138 compiled branches, including all methods with no source lines.
+C# Release: all 2496 tests pass; SDK 10.0.403.
+Whole-project lines: 7769/7970 (97.47804%).
+Whole-project branches: 6439/6901 (93.30532%).
+CausalBatch.cs: 188/188 compiled branches, including all methods with no source lines.
+CausalMerkle.cs: 246/246 compiled branches, including all methods with no source lines.
+CausalProjection.cs: 42/42 compiled branches, including all methods with no source lines.
+CausalReplica.cs: 182/182 compiled branches, including all methods with no source lines.
+CausalVersion.cs: 138/138 compiled branches, including all methods with no source lines.
+Seven shared-vector contracts pass native Rust and actual WASM. These are focused fixture checks; the preceding full projection suite/LLVM reports remain separate historical evidence.
+node: {'tests': 686, 'pass': 686, 'fail': 0, 'skipped': 0, 'cancelled': 0}; complete production coverage=True.
+repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0, 'cancelled': 0}; complete production coverage=False.
+START 2026-10-27T19:13:05Z
+CSHARP Debug PASS 2026-10-27T19:16:45Z
+CSHARP Release PASS 2026-10-27T19:20:12Z
+NATIVE AND ACTUAL WASM PASS 2026-10-27T19:20:52Z
+ALL PASS 2026-10-27T19:24:52Z
+Complete Node production lines/branches/functions remain 100%. Bun/Deno pass all 15 batch contracts; repository, actionlint, ShellCheck and whitespace pass.
+CI collects and retains both raw JSON and Cobertura reports on all three platforms. A raw component guard does not replace any full-project denominator.
+All wider unmet criteria, full-project 100%, mutable sessions and their physical matrix remain unfinished. PR139 stays draft and unmerged.
+experiments/issue-138/causal-raw-Debug-results/ebf8fcd2-d8af-4c20-9258-5f513924f7c0/coverage.json: 1948185 bytes; SHA256 a542699d7ae555af979ad9da8497cd71f8244061ab6e92c9ed292638827cadcd.
+experiments/issue-138/causal-raw-Debug-results/ebf8fcd2-d8af-4c20-9258-5f513924f7c0/coverage.cobertura.xml: 2629218 bytes; SHA256 9b51a1172d7ce9eab66079244d02891db13d365840194d82698b4d6239fa2eb8.
+experiments/issue-138/causal-raw-Release-results/71b11695-a87e-4fe2-85cb-7e2da231e018/coverage.json: 1882774 bytes; SHA256 35e0aff54fa06743c5145d449f8f2beea04b1394981d676a7cc315f28f26a278.
+experiments/issue-138/causal-raw-Release-results/71b11695-a87e-4fe2-85cb-7e2da231e018/coverage.cobertura.xml: 2327941 bytes; SHA256 2750c1d4e6fd1acfab33b2a2855aceacfe29e7a19ad1ed8b52f28a137e369856.
+experiments/issue-138/causal-raw-coverage-before.log: 967 bytes; SHA256 534f221c02ed1ba7983228d77d75ecf0f8d721b23973f10c63d621c6db7ffb01.
+experiments/issue-138/causal-raw-retention-before.log: 9817 bytes; SHA256 29a30d4099ae9edf332fe326537e4a98fd57964dcfb9156500786975e6b43c86.
+experiments/issue-138/causal-raw-driver.log: 186 bytes; SHA256 44c3ad58ac8a559b9e99e528611a2184f4655ee7aae8df8332dc20ac10c3d0b2.
+experiments/issue-138/causal-raw-Debug-records.log: 453 bytes; SHA256 c805889361ff16e4120bad7902f02801de85516d4b21f67b9259b1778715c9d2.
+experiments/issue-138/causal-raw-Release-records.log: 455 bytes; SHA256 e7522daab20a91dd289c8fb439b01ddd41616059cd5e82c1b0b085e02c93e47f.
+experiments/issue-138/causal-raw-csharp-Debug.log: 1224 bytes; SHA256 5750d4a7ec0b8698f0d1f1227e369183ebe9dd9975a81e4564f4a2327883114b.
+experiments/issue-138/causal-raw-csharp-Release.log: 1236 bytes; SHA256 5c4bc762be3f1a20446a3bfe8ec3238aea87a38d769a8b8f112cc457e5a10a57.
+experiments/issue-138/causal-raw-native.log: 841 bytes; SHA256 ac18becceb46cfe3047780a4fa954a031bc4b004d7253493877c2add48a49552.
+experiments/issue-138/causal-raw-wasm.log: 16829394 bytes; SHA256 ab1090e1b80fc15626c12e5838c8beae6cfa49382725ed6ffbc7c33e5b42f1cd.
+experiments/issue-138/causal-raw-node.log: 61158 bytes; SHA256 d2857911c7433962229459d083aed3614f54db913450cf72c842455475683c08.
+experiments/issue-138/causal-raw-bun.log: 1470 bytes; SHA256 83124de18a57dc6df807814de8e36e5db870be1672ac46636123f96b8e8714cf.
+experiments/issue-138/causal-raw-deno.log: 1405 bytes; SHA256 da504f9e50d525a7e1633706cba314319836ff80ed7cdb6c3769f21806886670.
+experiments/issue-138/causal-raw-repository.log: 18483 bytes; SHA256 7c8a898182b03723ffc646e8658ec44c0ebcb222a868003c59ffebf26ed87ac2.
+experiments/issue-138/causal-raw-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-raw-whitespace.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+docs/protocol/causal-batch-v1.json: 90279 bytes; SHA256 8e77f5096910ce09a912bce334b74bb73bae26f3877c47f25d637f38b6a47a3f.
+.github/workflows/csharp.yml: 36092 bytes; SHA256 cf6a0141f6b340aefbb8e4206d0785edf699946f8c92701f85f4147b95d3d1f4.
+.github/scripts/workflow-policy.test.mjs: 23822 bytes; SHA256 d00fb0075c43410d02217b17c0bcee6ebef4a1d6957c6b2decfc98271a6a40b2.
+experiments/issue-138/generate-causal-batch-vectors.py: 7015 bytes; SHA256 f6840d8101975fd1374227e19e8480a3284ccaf0b9e153750e25c62b6dc30d62.
+experiments/issue-138/check-causal-raw-coverage.py: 1530 bytes; SHA256 1791f14da46b898b438be77ac92d8cb9bddf1f2c8194984ad8bac348bfeaf592.
+experiments/issue-138/validate-causal-raw-coverage.sh: 2684 bytes; SHA256 d79e24581ef71b572eb829a245037e7469e87b4d60b868b54c739ec92e233de4.

@@ -1,0 +1,34 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.35]     Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.UnpairedCodeUnitsRemainUsableForBranchMovement(codeUnit: 55296) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.UnpairedCodeUnitsRemainUsableForBranchMovement(codeUnit: 55296) [302 ms]
+  Error Message:
+   System.InvalidOperationException : Version movement requires valid Unicode branch names.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.VersionControlDecorator.StartMovementLocked(List`1 targetPath, String newBranch) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.Movement.cs:line 85
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.ApplyDiffToLocked(List`1 targetPath, String newBranch) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 342
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.SwitchBranch(String name) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 294
+   at Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.DelimiterAndUnicodeNamesSurviveBranchHistoryReopening(String branch, String tag, Boolean legacyMarkers) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMetadataNamesTests.cs:line 33
+   at Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.UnpairedCodeUnitsRemainUsableForBranchMovement(Int32 codeUnit) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMetadataNamesTests.cs:line 83
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:01.42]     Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.UnpairedCodeUnitsRemainUsableForBranchMovement(codeUnit: 57343) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.UnpairedCodeUnitsRemainUsableForBranchMovement(codeUnit: 57343) [74 ms]
+  Error Message:
+   System.InvalidOperationException : Version movement requires valid Unicode branch names.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.VersionControlDecorator.StartMovementLocked(List`1 targetPath, String newBranch) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.Movement.cs:line 85
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.ApplyDiffToLocked(List`1 targetPath, String newBranch) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 342
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.SwitchBranch(String name) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 294
+   at Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.DelimiterAndUnicodeNamesSurviveBranchHistoryReopening(String branch, String tag, Boolean legacyMarkers) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMetadataNamesTests.cs:line 33
+   at Foundation.Data.Doublets.Cli.Tests.VersionMetadataNamesTests.UnpairedCodeUnitsRemainUsableForBranchMovement(Int32 codeUnit) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMetadataNamesTests.cs:line 83
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 406 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

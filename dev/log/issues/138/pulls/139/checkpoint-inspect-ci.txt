@@ -1,0 +1,64 @@
+Checkpoint inspection exact-head CI; https://github.com/link-foundation/link-cli/pull/139
+Commit: 7baafed475fd5d54ff77e74474a5fffbb2d80e41
+All nine workflows created 2026-10-27T02:42:37Z after publication.
+Every workflow completed successfully. Conditional release jobs may be skipped.
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40440002036
+  Detect Changes: success; 2026-10-27T02:42:39Z through 2026-10-27T02:43:34Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121977815169
+  Rust coverage: success; 2026-10-27T02:43:18Z through 2026-10-27T02:48:05Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121977815518
+  Create Changelog PR: skipped; 2026-10-27T02:42:38Z through 2026-10-27T02:42:37Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121977816681
+  Verify crates.io trusted publishing: skipped; 2026-10-27T02:42:38Z through 2026-10-27T02:42:37Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121977816718
+  Lint and Format Check: success; 2026-10-27T02:43:36Z through 2026-10-27T02:45:36Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121978110788
+  Simulate Fresh Merge: success; 2026-10-27T02:44:07Z through 2026-10-27T02:49:09Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121978111185
+  Test (macos-26): success; 2026-10-27T02:44:09Z through 2026-10-27T02:48:29Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121978111542
+  Test (windows-2025): success; 2026-10-27T02:43:56Z through 2026-10-27T02:52:23Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121978111698
+  Test (ubuntu-24.04): success; 2026-10-27T02:44:08Z through 2026-10-27T02:48:59Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121978111846
+  Changelog Fragment Check: skipped; 2026-10-27T02:43:35Z through 2026-10-27T02:43:34Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121978112436
+  Build Package: success; 2026-10-27T02:52:25Z through 2026-10-27T02:52:58Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121980850750
+  Auto Release: skipped; 2026-10-27T02:52:59Z through 2026-10-27T02:52:58Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121981032584
+  Manual Release: skipped; 2026-10-27T02:52:59Z through 2026-10-27T02:52:58Z; https://github.com/link-foundation/link-cli/actions/runs/40440002036/job/121981033611
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40440002060
+  Detect Changes: success; 2026-10-27T02:42:40Z through 2026-10-27T02:42:48Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977815670
+  Verify NuGet trusted publishing: skipped; 2026-10-27T02:42:38Z through 2026-10-27T02:42:38Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977817259
+  Create Changeset PR: skipped; 2026-10-27T02:42:38Z through 2026-10-27T02:42:38Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977817273
+  Changeset Validation: success; 2026-10-27T02:43:06Z through 2026-10-27T02:43:11Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977871101
+  Lint and Format Check: success; 2026-10-27T02:43:07Z through 2026-10-27T02:44:41Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977871205
+  Simulate Fresh Merge: success; 2026-10-27T02:43:08Z through 2026-10-27T02:44:22Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977871219
+  Test (ubuntu-24.04): success; 2026-10-27T02:43:14Z through 2026-10-27T02:45:23Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977991077
+  Test (macos-26): success; 2026-10-27T02:43:45Z through 2026-10-27T02:47:00Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977991442
+  Test (windows-2025): success; 2026-10-27T02:43:31Z through 2026-10-27T02:51:59Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121977991773
+  Build Package: success; 2026-10-27T02:52:01Z through 2026-10-27T02:52:46Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121980726532
+  Instant Release: skipped; 2026-10-27T02:52:47Z through 2026-10-27T02:52:46Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121980971804
+  Release: skipped; 2026-10-27T02:52:47Z through 2026-10-27T02:52:46Z; https://github.com/link-foundation/link-cli/actions/runs/40440002060/job/121980971927
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40440002039
+  Lint Workflows: success; 2026-10-27T02:42:39Z through 2026-10-27T02:42:53Z; https://github.com/link-foundation/link-cli/actions/runs/40440002039/job/121977815675
+  zizmor: success; 2026-10-27T02:42:39Z through 2026-10-27T02:42:53Z; https://github.com/link-foundation/link-cli/actions/runs/40440002039/job/121977815861
+  Workflow Policy Tests: success; 2026-10-27T02:42:40Z through 2026-10-27T02:42:50Z; https://github.com/link-foundation/link-cli/actions/runs/40440002039/job/121977815867
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40440002065
+  Check Links: success; 2026-10-27T02:42:40Z through 2026-10-27T02:42:49Z; https://github.com/link-foundation/link-cli/actions/runs/40440002065/job/121977815617
+Dependencies: success; https://github.com/link-foundation/link-cli/actions/runs/40440002075
+  Dependencies are on their latest versions: success; 2026-10-27T02:42:40Z through 2026-10-27T02:43:06Z; https://github.com/link-foundation/link-cli/actions/runs/40440002075/job/121977815555
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40440002040
+  Build documentation: success; 2026-10-27T02:43:05Z through 2026-10-27T02:45:51Z; https://github.com/link-foundation/link-cli/actions/runs/40440002040/job/121977815165
+  Deploy to GitHub Pages: skipped; 2026-10-27T02:45:51Z through 2026-10-27T02:45:51Z; https://github.com/link-foundation/link-cli/actions/runs/40440002040/job/121978833088
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40440002123
+  Dependency Review: success; 2026-10-27T02:42:52Z through 2026-10-27T02:43:06Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815756
+  CodeQL (csharp): success; 2026-10-27T02:42:39Z through 2026-10-27T02:44:39Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815833
+  Scan for committed secrets: success; 2026-10-27T02:42:50Z through 2026-10-27T02:43:02Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815876
+  Cargo audit (rust/wasm): success; 2026-10-27T02:42:50Z through 2026-10-27T02:43:02Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815898
+  CodeQL (javascript-typescript): success; 2026-10-27T02:42:40Z through 2026-10-27T02:43:44Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815900
+  Audit npm lock: success; 2026-10-27T02:42:55Z through 2026-10-27T02:43:04Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815948
+  CodeQL (actions): success; 2026-10-27T02:43:04Z through 2026-10-27T02:43:53Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977815989
+  Cargo audit (rust): success; 2026-10-27T02:43:04Z through 2026-10-27T02:43:17Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977816086
+  CodeQL (rust): success; 2026-10-27T02:43:12Z through 2026-10-27T02:46:43Z; https://github.com/link-foundation/link-cli/actions/runs/40440002123/job/121977816134
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40440002045
+  Conformance on Node.js, Bun and Deno: success; 2026-10-27T02:43:12Z through 2026-10-27T02:48:59Z; https://github.com/link-foundation/link-cli/actions/runs/40440002045/job/121977815466
+  Unit tests and types: success; 2026-10-27T02:42:54Z through 2026-10-27T02:43:35Z; https://github.com/link-foundation/link-cli/actions/runs/40440002045/job/121977815781
+  Verify npm trusted publishing: skipped; 2026-10-27T02:42:38Z through 2026-10-27T02:42:38Z; https://github.com/link-foundation/link-cli/actions/runs/40440002045/job/121977816406
+  Release to npm: success; 2026-10-27T02:49:02Z through 2026-10-27T02:49:13Z; https://github.com/link-foundation/link-cli/actions/runs/40440002045/job/121979808999
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40440002085
+  Test: success; 2026-10-27T02:43:14Z through 2026-10-27T02:51:25Z; https://github.com/link-foundation/link-cli/actions/runs/40440002085/job/121977815395
+  WASM coverage: success; 2026-10-27T02:43:15Z through 2026-10-27T02:48:47Z; https://github.com/link-foundation/link-cli/actions/runs/40440002085/job/121977815619
+
+Preceding c501b2a workflow/C# policy failures concern historical fixture manifests.
+checkpoint-inspect-ci-before.txt preserves cause and exact failing log lines.
+Whole-project coverage and the wider unfinished acceptance criteria remain active.

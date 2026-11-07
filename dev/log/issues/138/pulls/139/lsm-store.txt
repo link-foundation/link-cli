@@ -1,0 +1,70 @@
+Portable physical LSM store validation; https://github.com/link-foundation/link-cli/pull/139
+Codec-only missing-API baseline: d12760fc13db30439d114ee15ab98be970aae5f1.
+Selected production stores use real immutable doublets pages and the checkpoint WAL over finite durable images.
+Reproduce: bash experiments/issue-138/validate-lsm-store.sh
+START native 2026-10-27T01:20:38Z
+PASS native; START csharp 2026-10-27T01:33:04Z
+RESUME csharp 2026-10-27T01:36:20Z
+PASS native; START csharp 2026-10-27T01:36:20Z
+PASS csharp; START wasm 2026-10-27T01:43:44Z
+PASS wasm; START javascript 2026-10-27T01:48:47Z
+PASS javascript; START native interchange 2026-10-27T01:51:24Z
+PASS native interchange; START repository 2026-10-27T01:51:56Z
+PASS repository; ALL PASSED 2026-10-27T01:52:07Z
+Initial C# formatting gate rejects whitespace; repository formatter applies the changes before focused/full suites.
+Sequential compilers: Cargo jobs1/reduced debug, .NET640MiB, actual-WASM max256MiB.
+
+Native Rust: 1091 passed; 19 child entries ignored by direct discovery.
+Five mirror/admission controls added after the full run pass in the expanded 18-test target: 1096 distinct native controls.
+Coverage merges this expanded target with --no-clean; production Rust source is unchanged between these runs.
+Complete lines: 15655/16527 (94.72379%)
+Complete branches: 3004/3484 (86.22273%)
+Complete functions: 2011/2167 (92.80111%)
+Component src/engine/lsm/lease.rs
+lines: 70/79 (88.60759%)
+branches: 2/2 (100.00000%)
+functions: 21/26 (80.76923%)
+Component src/engine/lsm/store.rs
+lines: 557/585 (95.21368%)
+branches: 115/150 (76.66667%)
+functions: 63/67 (94.02985%)
+
+Actual WASM: 692 passed; 0 child entries ignored by direct discovery.
+Complete lines: 12839/15257 (84.15154%)
+Complete branches: 2561/3067 (83.50179%)
+Complete functions: 1612/2007 (80.31888%)
+Component src/engine/lsm/lease.rs
+lines: 70/79 (88.60759%)
+branches: 2/2 (100.00000%)
+functions: 21/26 (80.76923%)
+Component src/engine/lsm/store.rs
+lines: 557/585 (95.21368%)
+branches: 115/150 (76.66667%)
+functions: 63/67 (94.02985%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+C# Debug: 2369 passed; zero failed/skipped.
+Complete lines: 9038/9341 (96.75624%)
+Complete branches: 5343/5778 (92.47144%)
+
+C# Release: 2369 passed; zero failed/skipped.
+Complete lines: 6967/7161 (97.29088%)
+Complete branches: 5294/5741 (92.21390%)
+JS: {'tests': 568, 'pass': 568, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Bun/Deno: all 209 selected tests each; strict TypeScript and JS 100% production coverage pass.
+Formatting, strict Clippy, SQLite optionality, source limits, changesets, actionlint and ShellCheck pass.
+Existing immutable-table interchange, Rust/C#/Node/Bun/Deno: all 25 writer/reader pairs pass.
+Every reader preserves three physical file hashes and releases ownership.
+Independent LSM WAL fixture: 111 cases, 11 valid; regenerates identically without production imports.
+Rust/C# typed log APIs skip only the wire non-string provider-record case, which their contracts cannot represent.
+Native binary page and sorted-table fixtures also regenerate identically.
+Missing APIs fail before production implementation in all three languages; see lsm-store-before.txt.
+Two initial JS controls fail due to early repair completion and lost explicit close retry; all production ports preserve deferred repair and retriable cleanup.
+Each language verifies 72 compaction and 80 group-write before/after mutation cuts; these are finite page-image schedules.
+Native Rust/C# use actual cluster/named-link consumers; JS cluster binding is mocked. Partition/reclamation consumers use physical stores in all ports.
+Independent mirrored table controls defer a surviving-copy repair until every selected binding validates.
+Fresh-loader guards preserve the ordinary-root lazy boundary and test explicit import positively.
+Rust and actual WASM coverage retain complete production denominators, including all uncovered source.
+Portable stores do not own a native directory fence or retroactively validate effects of an already constructed WAL.
+Native directory/read-only discovery, physical process/interchange, whole-project 100% coverage and every other unmet R1-R12 criterion remain unfinished.

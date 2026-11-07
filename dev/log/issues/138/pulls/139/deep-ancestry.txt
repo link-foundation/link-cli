@@ -1,0 +1,51 @@
+Recovered ancestry validation (2026-10-25, production source f5af989)
+
+Reproduction evidence is retained in deep-ancestry-*-before.txt in this folder.
+Three bounded native depth cases per language fail before the iterative fix.
+Real-name shallow semantics and actual-WASM depth controls pass before the fix.
+The original deep real-name probe times out constructing its fixture; inconclusive.
+
+Setup: bash experiments/issue-138/setup-resumed-validation.sh (Linux x86_64 tools).
+Focused: bash experiments/issue-138/validate-resumed-ancestry-focused.sh
+Full: bash experiments/issue-138/validate-resumed-ancestry-full.sh
+Run focused first: it rebuilds both C# configurations used by full --no-build.
+All compilers run sequentially with Cargo jobs=1 and reduced debug data.
+C# runtime GC cap: 0x28000000. No container OOM or OOM-kill events occurred.
+Native Rust stable 1.99.0; actual-WASM coverage Rust 1.98.0/LLVM 22
+matches wasm-bindgen-test's minicov runtime. wasm-bindgen is 0.2.129.
+
+Focused native oracle: 1 pass, 512 histories x 5 targets = 2,560 comparisons.
+C# Debug/Release focused: 107 each, including the same finite shallow oracle.
+Full native: 770 standard tests pass, 0 failures, 10 ignored child entries
+invoked by bounded parents, plus the successful custom stdout harness.
+Full C# Debug: 1,695 pass, 0 failures, 0 skipped.
+Full C# Release: 1,695 pass, 0 failures, 0 skipped.
+Actual WASM: 433 pass, 0 failures, 0 ignored.
+JS: 106 pass; TypeScript strict check passes.
+All seventeen production JS modules: 100% lines, branches, functions.
+All three actual-WASM wrapper files: 100% lines, branches, functions.
+Native/WASM strict Clippy, both Rust formats, dotnet format, changesets,
+source sizes and git diff --check pass.
+
+The first repository run passes 216/217 and exits 1: an empty root ci-logs
+folder created for this session's CI investigation violates repositoryLayout.
+Log: experiments/issue-138/resumed-ancestry-repository-tests.log:242.
+Removing that empty folder changes no code or test policy. The rerun passes
+217/217; log: resumed-ancestry-repository-tests-after.log. Other full checks
+passed before that workspace-only correction and were not needlessly repeated.
+
+Official LLVM totals (covered / total), no coordinate-union substitution:
+Native lines 10,154/10,972 = 92.54%; branches 1,779/2,158 = 82.44%;
+functions 1,329/1,467 = 90.59%.
+Complete linked WASM lines 7,330/10,534 = 69.58%; branches 1,336/1,865 = 71.64%;
+functions 981/1,447 = 67.80%.
+Coverlet integer totals, percentages rounded from counts:
+Debug lines 6,540/7,029 = 93.04%; branches 3,136/3,552 = 88.29%.
+Release lines 5,002/5,303 = 94.32%; branches 3,111/3,533 = 88.06%.
+The project-wide 100% requirement remains unfinished.
+
+Full logs and raw JSON/XML reports are under experiments/issue-138 locally.
+The source/test inputs have not changed since these runs; subsequent changes
+in this batch document recovery, evidence, planning and reusable commands only.
+All nine preceding recovery-validation workflows pass on 0e95c81; see
+recovery-validation-ci.txt. New ancestry publication still requires exact-head CI.

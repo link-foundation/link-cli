@@ -1,0 +1,31 @@
+Shared immutable state: exact-head GitHub Actions verification
+
+Commit: 3960c2554074b4ea568a291756784b00ced029e4
+Commit created: 2026-10-25T16:31:31Z
+Verified: 2026-10-25T16:50Z
+All nine workflow runs were created after this commit, on its exact SHA.
+Skipped release/deployment jobs do not replace test jobs.
+
+Broken Link Checker: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099815
+C# CI/CD Pipeline: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099816
+Dependencies: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099795
+Docs: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099781
+JS client CI: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099870
+Rust CI/CD Pipeline: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099832
+Security: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099807
+WebAssembly CI: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099848
+Workflows: SUCCESS, created 2026-10-25T16:31:37Z
+https://github.com/link-foundation/link-cli/actions/runs/40212099874
+
+PR: https://github.com/link-foundation/link-cli/pull/139
+This completes CI verification of the shared-state batch only. Complete
+coverage, physical persistence and wider acceptance criteria remain open.
+Subsequent source changes require fresh exact-head verification.

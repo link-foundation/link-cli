@@ -1,0 +1,11 @@
+Investigation-script error; PR https://github.com/link-foundation/link-cli/pull/139
+Original C# wrapper exit: 127, after both complete test commands exit 0.
+The executing script was edited while its parsed case body ran. Bash then
+resumed at an obsolete file offset and interpreted a trailing fragment.
+This does not change the retained Debug/Release test and coverage reports.
+The resulting validator passes later syntax and ShellCheck checks.
+Do not modify executing shell scripts.
+
+Complete C# Debug with coverage: passed
+Complete C# Release with coverage: passed
+experiments/issue-138/validate-sorted-runs.sh: line 60: 8/sorted-runs-shellcheck.log: No such file or directory

@@ -29,6 +29,7 @@
 //! - `triplets` - Triplets `(index: type from to)` stored in doublets, with substitution and LiNo
 //! - `transactions`, `version_control` - Reversible transitions, branches and tags
 //! - `union_links` - Many networks seen as one, the first member shadowing the rest
+//! - `cache_links` - A store as a cache: links that expire and bounded capacity
 //! - `remap_links` - A network under other addresses: an offset or a table
 //! - `external_ids` - The ids of other systems (UUIDs, URLs) bound to links
 //! - `graphql` - A Hasura-compatible GraphQL server for the Deep standard
@@ -42,8 +43,11 @@
 //! implements the trait and slots in anywhere, including under
 //! [`QueryProcessor`], which never learns what is beneath it.
 
+pub mod cache_links;
 pub mod changes_simplifier;
 pub mod cli;
+mod diagnostics;
+pub mod engine;
 pub mod error;
 pub mod external_ids;
 pub mod graphql;
@@ -63,14 +67,18 @@ pub mod permissions;
 pub mod persistent_transformations;
 pub mod pinned_types;
 pub mod protocol;
+pub mod query_address;
 pub mod query_options;
 mod query_parser;
 pub mod query_processor;
 pub mod query_processor_substitution;
+mod query_reply_budget;
 pub mod query_types;
 pub mod remap_links;
 pub mod sequences;
 pub mod storage;
+mod structure_format;
+mod text_storage_format;
 pub mod transactions;
 pub mod triplets;
 pub mod types;
@@ -86,6 +94,7 @@ pub mod version_control;
 pub use doublets;
 
 // Re-export main types for easy access
+pub use cache_links::{CacheLinks, CacheOptions};
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
 pub use external_ids::{LinksExternalIds, EXTERNAL_ID_NAME};
@@ -113,18 +122,19 @@ pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use protocol::{
     BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer, LinoProtocol, TextLinoProtocol,
 };
+pub use query_address::QueryAddress;
 pub use query_options::QueryOptions;
-pub use query_processor::{Changes, QueryProcessor};
+pub use query_processor::{Changes, GenericQueryProcessor, QueryProcessor};
 pub use remap_links::{AddressMap, AddressTable, OffsetAddressMap, RemapLinks};
 pub use storage::{
     decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
-    LinksStorage, LinksStorageRef, LockMode, NamedLinksStorage, PersistentFileMapped,
+    LinksStorage, LinksStorageRef, LockMode, MappedFlush, NamedLinksStorage, PersistentFileMapped,
     ResolvedFileMappedUnitStore, StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
-    GenericTransition, LogRetentionPolicy, TransactionHandle, TransactionsDecorator, Transition,
-    TransitionKind, TransitionLogStore,
+    GenericTransition, LogRetentionPolicy, ReplaceableTransitionLogStore, RowUndoPolicy,
+    TransactionHandle, TransactionsDecorator, Transition, TransitionKind, TransitionLogStore,
 };
 pub use triplets::{
     import_triplets_lino, process_triplets_query, triplets_to_lino, DoubletRole, Triplet,
@@ -135,4 +145,6 @@ pub use types::{ensure_point, TypeMarkers, Types, TypesDecorator, EXTENDS_NAME, 
 pub use undoable_links::{LinkChange, LinksUndoLog, UndoableLinksDecorator};
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use union_links::{UnionLinks, UnionMember};
-pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};
+pub use version_control::{
+    BranchInfo, GenericVersionControlDecorator, VersionControlDecorator, DEFAULT_BRANCH_NAME,
+};

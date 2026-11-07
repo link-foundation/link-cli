@@ -1,0 +1,97 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <repository>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <repository>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.23]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "middle", pending: True) [FAIL]
+[xUnit.net 00:00:01.30]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "middle", pending: False) [FAIL]
+[xUnit.net 00:00:01.39]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "tail", pending: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "middle", pending: True) [366 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(String history, Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 128
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "middle", pending: False) [76 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(String history, Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 128
+   at InvokeStub_InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.45]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "all", pending: False) [FAIL]
+[xUnit.net 00:00:01.50]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "all", pending: True) [FAIL]
+[xUnit.net 00:00:01.67]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "tail", pending: False) [FAIL]
+[xUnit.net 00:00:01.86]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(pending: True) [FAIL]
+[xUnit.net 00:00:01.95]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(pending: False) [FAIL]
+[xUnit.net 00:00:02.00]     Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ConstructionRejectsAnOpenBorrowedTransactionWithoutPublishingMetadata [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "tail", pending: True) [88 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   3
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(String history, Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 124
+   at InvokeStub_InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "all", pending: False) [66 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   2
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(String history, Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 124
+   at InvokeStub_InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "all", pending: True) [49 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   2
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(String history, Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 124
+   at InvokeStub_InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(history: "tail", pending: False) [158 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 2
+Actual:   3
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(String history, Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 124
+   at InvokeStub_InitialVersionAbortTests.InitialHistoryExcludesAbortedAndRecoveredPendingRecords(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(pending: True) [186 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 66
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(pending: False) [93 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(Boolean pending) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 66
+   at InvokeStub_InitialVersionAbortTests.ExistingSidecarCannotAttributeAnAbortedRecord(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ConstructionRejectsAnOpenBorrowedTransactionWithoutPublishingMetadata [44 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.InitialVersionAbortTests.ConstructionRejectsAnOpenBorrowedTransactionWithoutPublishingMetadata() in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/InitialVersionAbortTests.cs:line 20
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     9, Passed:     0, Skipped:     0, Total:     9, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

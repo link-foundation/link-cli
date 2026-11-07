@@ -1,0 +1,15 @@
+ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen
+# link-cli-client conformance on node 26.12.1: wasm
+ok - wasm: golden conversation (docs/protocol/links-operations.txt) (18 ms)
+ok - wasm: addresses: the whole u32 range as BigInt, nothing beyond it (3 ms)
+ok - wasm: duplicates: as the backend states in capabilities.duplicateLinks (4 ms)
+ok - wasm: holes: deletion cascades, frees addresses, and misses are errors (5 ms)
+skip - wasm: append and restart: a fresh server process reads back every write (not persistent)
+ok - wasm: aborted batch: every write reported ok is there, nothing reported not-sent is (20 ms)
+skip - wasm: a server stopped mid-write keeps every acknowledged write (no server process)
+ok - wasm: Unicode and LiNo fidelity of names, read back by a fresh client (40 ms)
+ok - wasm: empty names, renaming and moving names (4 ms)
+ok - wasm: limits: oversized requests are refused before sending (1 ms)
+skip - wasm: incompatible protocol: a binary-only server is refused up front (no server process)
+skip - wasm: ownership: a client stops only the server process it started (no server process)
+# 8 passed, 0 failed, 4 skipped

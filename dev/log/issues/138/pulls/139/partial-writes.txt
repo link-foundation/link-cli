@@ -1,0 +1,51 @@
+Observed partial-write audit (2026-10-24), baseline b163326
+
+Rust before:
+  cargo test --manifest-path rust/Cargo.toml --all-features \
+    --test transactions_partial_failure_tests
+  0 passed, six failed with exact row-state assertions:
+    automatic/explicit failed update retains (1,21,22), expected (1,11,12)
+    automatic/explicit failed delete leaves [], expected (1,11,12)
+    failed update cascade leaves the updated row and newly created address 2
+    successful repeated create/update callbacks leave address 2 after rollback
+
+C# before:
+  dotnet test csharp --configuration Debug --disable-build-servers -m:1 \
+    --filter FullyQualifiedName~TransactionPartialFailureTests
+  0 passed, 15 failed after correcting the fixture to capture allocation IDs
+  from callbacks (Create returns a continuation result, not the new address).
+  Cases include failed adapter create/update/delete, failed cascades, successful
+  repeated callbacks followed by rollback, and actual user callbacks throwing
+  after create/update/delete, each with automatic/explicit transaction ownership.
+  Assertion failures show extra/missing rows or modified endpoints.
+
+Root causes:
+  Rust/C# wrappers collect observed changes, but discard them on inner errors.
+  Repeated callbacks additionally replace an initially absent before-state
+  with an intermediate newly created row, preventing its eventual removal.
+
+After:
+  Record the observed partial changes before returning/rethrowing the error.
+  Roll back automatic operations and release admission; leave explicit
+  transactions owned by the caller with every change available for rollback.
+  Preserve the original before-state across repeated callbacks.
+  Every regression checks the baseline, following transactions and persistent
+  reopening. At most three data rows are live in any fixture.
+
+Scope: this verifies Result/exception failures with the storage callback contract.
+It does not claim Rust panic safety or recoverability for silent mutations, and
+journal/checkpoint failures retain their independent error semantics.
+
+Full local verification:
+  Rust: 488 standard tests pass, four child entry points ignored, custom stdout
+    harness passes; Clippy denies warnings.
+    8,962/9,919 lines; 1,442/1,834 branches; 1,211/1,372 functions;
+    13,594/15,662 regions. Complete native coverage remains unfinished.
+  C#: 718 pass in Debug and Release. Focused partial-write suite: 21 pass.
+    Debug: 5,793/6,447 lines; 2,538/3,066 branches.
+    Release: 4,404/4,819 lines; 2,517/3,047 branches.
+    Formatting verification passes. Counts have different optimized sequence
+    point denominators; no source exclusions were added.
+  Actual WASM: 17 pass; wrapper 331/331 lines, 68/68 functions, 16/16 branches,
+    505/505 regions. Linked report 2,729/9,093 lines, 392/1,287 branches,
+    347/1,308 functions, 3,943/14,307 regions. WASM Clippy and formatting pass.

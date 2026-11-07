@@ -1,0 +1,31 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Base: 8d2ecdfde4757d6cfed219b99aa518707c5fadb0
+Scope: selected bounded append-only immutable journal chunks in Rust/C#/JS.
+No production chunk behavior was changed before these reproductions.
+
+JavaScript minimum shared-vector control:
+node --test --test-name-pattern='selected journal chunks match independent shared byte vectors' js/client/test/partitioned-chunks.test.mjs
+Expected chunks1/east/0/0 live-empty manifest; actual blob1/east/blob1-5d07e49b8ef213e7/1.
+Log: experiments/issue-138/partitioned-chunks-js-before.log, lines 1-40.
+
+Rust minimum selected-API control:
+CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test --manifest-path rust/Cargo.toml --test engine_chunked_tests
+E0432: no JournalChunkOptions in engine::partitioned, tests/engine_chunked_tests.rs:3.
+E0599: no with_chunks method, then-current test lines 47,109,118.
+Log: experiments/issue-138/partitioned-chunks-rust-before.log, lines 1-33.
+
+C# minimum selected-API control (SDK 10.0.403):
+dotnet test csharp --configuration Debug --disable-build-servers -m:1 --filter FullyQualifiedName~PartitionedJournalChunkTests
+CS0246: JournalChunkOptions missing, then-current test line 35.
+Log: experiments/issue-138/partitioned-chunks-csharp-before.log, lines 1-5.
+
+Additional JavaScript dense-admission regression:
+A sparse update/record/snapshot array can skip Array.map/some callbacks.
+The new control first fails with Missing expected rejection (TypeError).
+Copy to a dense owned array before validating; reject the hole before staging.
+Log: experiments/issue-138/partitioned-sparse-before.log.
+
+The independent model and six UTF-8/address vectors precede production code.
+The model checks ten finite before/after publication cuts, stale/empty/admission
+and collision controls. This append-only policy alone does not implement chunk
+reclamation, bounded replay, multi-catalog atomicity or horizontal throughput.

@@ -1,0 +1,188 @@
+{
+  "native": {
+    "passed": 882,
+    "failed": 0,
+    "ignored": 15
+  },
+  "wasm": {
+    "passed": 520,
+    "failed": 0,
+    "ignored": 0
+  },
+  "native_coverage": {
+    "lines": {
+      "count": 12749,
+      "covered": 11946,
+      "percent": 93.70146678170836
+    },
+    "branches": {
+      "count": 2574,
+      "covered": 2165,
+      "notcovered": 409,
+      "percent": 84.11033411033411
+    },
+    "functions": {
+      "count": 1664,
+      "covered": 1536,
+      "percent": 92.3076923076923
+    },
+    "structure_formatter": {
+      "lines": {
+        "count": 39,
+        "covered": 39,
+        "percent": 100.0
+      },
+      "branches": {
+        "count": 6,
+        "covered": 6,
+        "notcovered": 0,
+        "percent": 100.0
+      },
+      "functions": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      }
+    }
+  },
+  "wasm_coverage": {
+    "lines": {
+      "count": 12058,
+      "covered": 8966,
+      "percent": 74.35727317963178
+    },
+    "branches": {
+      "count": 2229,
+      "covered": 1691,
+      "notcovered": 538,
+      "percent": 75.86361597128757
+    },
+    "functions": {
+      "count": 1614,
+      "covered": 1172,
+      "percent": 72.61462205700124
+    },
+    "structure_formatter": {
+      "lines": {
+        "count": 39,
+        "covered": 39,
+        "percent": 100.0
+      },
+      "branches": {
+        "count": 6,
+        "covered": 6,
+        "notcovered": 0,
+        "percent": 100.0
+      },
+      "functions": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      }
+    },
+    "wrappers": {
+      "/tmp/gh-issue-solver-1792987800525/rust/wasm/src/engine.rs": {
+        "lines": {
+          "count": 220,
+          "covered": 220,
+          "percent": 100.0
+        },
+        "branches": {
+          "count": 6,
+          "covered": 6,
+          "notcovered": 0,
+          "percent": 100.0
+        },
+        "functions": {
+          "count": 43,
+          "covered": 43,
+          "percent": 100.0
+        }
+      },
+      "/tmp/gh-issue-solver-1792987800525/rust/wasm/src/engine_log.rs": {
+        "lines": {
+          "count": 37,
+          "covered": 37,
+          "percent": 100.0
+        },
+        "branches": {
+          "count": 2,
+          "covered": 2,
+          "notcovered": 0,
+          "percent": 100.0
+        },
+        "functions": {
+          "count": 9,
+          "covered": 9,
+          "percent": 100.0
+        }
+      },
+      "/tmp/gh-issue-solver-1792987800525/rust/wasm/src/lib.rs": {
+        "lines": {
+          "count": 125,
+          "covered": 125,
+          "percent": 100.0
+        },
+        "branches": {
+          "count": 12,
+          "covered": 12,
+          "notcovered": 0,
+          "percent": 100.0
+        },
+        "functions": {
+          "count": 21,
+          "covered": 21,
+          "percent": 100.0
+        }
+      }
+    }
+  },
+  "csharp_Debug": {
+    "failed": 0,
+    "passed": 2027,
+    "skipped": 0,
+    "total": 2027,
+    "coverage": {
+      "lines-covered": 7398,
+      "lines-valid": 7892,
+      "branches-covered": 3882,
+      "branches-valid": 4314
+    },
+    "structure_formatter": [
+      {
+        "line-rate": "0.9473",
+        "branch-rate": "0.9229999999999999"
+      }
+    ]
+  },
+  "csharp_Release": {
+    "failed": 0,
+    "passed": 2027,
+    "skipped": 0,
+    "total": 2027,
+    "coverage": {
+      "lines-covered": 5689,
+      "lines-valid": 5995,
+      "branches-covered": 3849,
+      "branches-valid": 4289
+    },
+    "structure_formatter": [
+      {
+        "line-rate": "0.9558",
+        "branch-rate": "0.9229999999999999"
+      }
+    ]
+  },
+  "js": {
+    "tests": 177,
+    "pass": 177,
+    "fail": 0,
+    "skipped": 0
+  },
+  "repository": {
+    "tests": 221,
+    "pass": 221,
+    "fail": 0,
+    "skipped": 0
+  }
+}

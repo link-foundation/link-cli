@@ -1,0 +1,67 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 3.18s
+     Running tests/transactions_named_history_tests.rs (rust/target/debug/deps/transactions_named_history_tests-6404c8af775db81d)
+
+running 6 tests
+test name_only_versions_advance_and_replay ... FAILED
+test rollback_restores_both_owners_after_name_move ... FAILED
+test rollback_restores_deleted_links_name ... FAILED
+test rollback_restores_cascaded_links_names ... FAILED
+test rollback_restores_renamed_link ... FAILED
+test rollback_restores_removed_name ... FAILED
+
+failures:
+
+---- name_only_versions_advance_and_replay stdout ----
+
+thread 'name_only_versions_advance_and_replay' (151512) panicked at tests/transactions_named_history_tests.rs:78:5:
+a name-only write must advance version history
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- rollback_restores_both_owners_after_name_move stdout ----
+
+thread 'rollback_restores_both_owners_after_name_move' (151513) panicked at tests/transactions_named_history_tests.rs:47:5:
+assertion `left == right` failed
+  left: None
+ right: Some("first 雪|\0\n")
+
+---- rollback_restores_deleted_links_name stdout ----
+
+thread 'rollback_restores_deleted_links_name' (151515) panicked at tests/transactions_named_history_tests.rs:48:5:
+assertion `left == right` failed
+  left: None
+ right: Some("second")
+
+---- rollback_restores_cascaded_links_names stdout ----
+
+thread 'rollback_restores_cascaded_links_names' (151514) panicked at tests/transactions_named_history_tests.rs:47:5:
+assertion `left == right` failed
+  left: None
+ right: Some("first 雪|\0\n")
+
+---- rollback_restores_renamed_link stdout ----
+
+thread 'rollback_restores_renamed_link' (151517) panicked at tests/transactions_named_history_tests.rs:47:5:
+assertion `left == right` failed
+  left: Some("changed")
+ right: Some("first 雪|\0\n")
+
+---- rollback_restores_removed_name stdout ----
+
+thread 'rollback_restores_removed_name' (151516) panicked at tests/transactions_named_history_tests.rs:47:5:
+assertion `left == right` failed
+  left: None
+ right: Some("first 雪|\0\n")
+
+
+failures:
+    name_only_versions_advance_and_replay
+    rollback_restores_both_owners_after_name_move
+    rollback_restores_cascaded_links_names
+    rollback_restores_deleted_links_name
+    rollback_restores_removed_name
+    rollback_restores_renamed_link
+
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+error: test failed, to rerun pass `--test transactions_named_history_tests`

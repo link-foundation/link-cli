@@ -1,0 +1,49 @@
+Same-handle file journal tail recovery (R1/R4/R7/R8)
+
+Six schedules per file adapter first fail behaviorally: ASCII/incomplete UTF-8
+partial append followed by read, append or flush. Rust and C# use real Linux
+8 KiB file-size quota failures with finite child deadlines; JS writes one byte
+before the injected error. True before logs are preserved beside this report.
+Initial C# JIT startup, error-type and coverage-exit fixture issues are recorded
+separately and are not counted as product reproductions. The first full Rust
+coverage run exposed inherited stderr already larger than the quota; a finite
+9000-byte-stderr control reproduces the resulting diagnostic failure. Rust now
+pipes child diagnostics and restores its child-only soft limit after all journal
+operations, before LLVM exit profiling. All eight focused quota cases produce
+valid complete coverage profiles. Initial fixture logs remain separate.
+
+All file adapters retain uncertain framing until repair and its persistence
+complete. Every read/append/flush retries repair first. Complete records survive
+errors after their effects, and complete invalid UTF-8 remains an error rather
+than being truncated. Successful operations check one flag, without rescanning;
+repair scans backward using a fixed 8 KiB buffer. Rust opens a repair handle only
+on that error path. C# disables the managed write buffer, so append immediately
+performs a file write and failed buffered bytes cannot reappear during repair.
+The public constructor signature and raw cache paths are preserved.
+
+Focused expanded suites: 20 Rust and 31 C# pass. C# portable finite filesystem
+faults cover partial/full writes, failed repair reads/truncation/sync, repeated
+blocked operations, retry, exact reopening, resource cleanup and complete bad
+UTF-8. Eight Rust Linux quota cases also verify retry after unavailable repair
+paths. Existing JS controls retain short reads/writes, no-progress errors,
+exclusive writer fencing and reopening; eleven new fault schedules pass.
+
+Full C# Debug/Release: 1,469 pass each, zero skips on this Linux host. Six quota
+cases return without using Linux quotas on other platforms; the fourteen new
+portable cases still run there. Full native Rust: 690 standard tests plus the
+custom stdout harness pass; six ignored child entries run via finite parents.
+Actual WASM: 365 pass; file adapters are native and absent from that target.
+All three WASM wrapper modules remain at 100% measured coverage. JS: 106 pass,
+all seventeen production modules at 100% lines/branches/functions; types pass.
+Formatting, release metadata, source sizes and strict native/WASM Clippy pass.
+Debug: 6,286/6,775 lines (92.78%), 2,945/3,348 branches (87.96%)
+Release: 4,782/5,080 lines (94.13%), 2,925/3,329 branches (87.86%)
+native: 9,737/10,557 lines (92.23%), 1,652/1,998 branches (82.68%), 1,295/1,435 functions (90.24%)
+wasm: 6,928/10,149 lines (68.26%), 1,195/1,703 branches (70.17%), 947/1,418 functions (66.78%)
+
+Complete project coverage remains below 100%. This change repairs file framing;
+it does not settle uncertain engine commits or simulate device power loss.
+All nine workflows pass on preceding replay-owner head 31a50a0 (including a
+successful retry after an external Bun-download HTTP 502). This tail correction
+requires fresh exact-head CI. Atomic legacy checkout recovery, ordinary name
+history and the wider algorithm/composition requirements remain unfinished.

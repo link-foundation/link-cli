@@ -1,0 +1,40 @@
+C# whole-facade ownership and cleanup (R1/R8)
+
+Before the fix, three of four focused contracts fail at runtime. An outer
+borrower sees its dependency already disposed (expected DisposeCalls 0, actual
+1); a failed borrower cleanup closes dependencies needed for retry; and a real
+asynchronous transaction graph closes mapped data while its checkpoint still
+uses that store. Full original output: facade-lifetime-before.log locally.
+
+The finite checkpoint probe gates the worker, starts graph disposal and observes
+whether the data owner closes before the gate is released. The callback performs
+only managed Flush, then always throws before native applied-marker writes.
+This prevents even the failing traversal from dereferencing unmapped memory.
+All gates and joins are finite, and both actual worker and disposer are awaited.
+
+LinksFacadeDisposer now captures inner links before cleanup can detach fields,
+disposes borrowers before dependencies, and shares reference-identity traversal
+state across synchronous nested calls. Root cleanup always clears the thread's
+traversal scope, including after exceptions. A borrower failure propagates before
+its dependencies close so callers may retry. Shared references and cycles are
+visited once in that traversal. The helper owns the entire reachable graph;
+direct TransactionsDecorator.Dispose continues to borrow its data/log stores.
+
+Six regression/control tests pass after the fix. Real version disposal rolls back
+an open transaction before releasing its mappings; every data/log/branch file can
+then be opened exclusively, and reopening confirms the pending row is absent.
+Constructor failure, existing decorator disposal and ACID controls bring the
+focused suite to 31 passing tests.
+
+Full Debug and Release each pass 903 tests, zero failed/skipped.
+Debug lines 5,999/6,542 (91.70%); branches 2,732/3,158 (86.51%).
+Release lines 4,555/4,888 (93.19%); branches 2,712/3,139 (86.40%).
+LinksFacadeDisposer and its reference enumerator each measure 100% lines and
+branches in both configurations. Full project coverage remains below 100%.
+Production Rust/JS/WASM code is unchanged in this step; the preceding commit's
+complete local validation and exact-SHA nine-workflow CI all pass.
+
+Latest fetched main eb7074aa504e87e50106ad9ecd46d7422e61c9a8 is an ancestor.
+Fresh feedback: no issue comments, required sub-issues, inline comments or reviews.
+The sole Codecov bot comment reports 95.89178% patch coverage with 41 missing
+lines. That separate CI patch measurement does not replace project coverage.

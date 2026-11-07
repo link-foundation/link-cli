@@ -1,0 +1,14 @@
+Recovered ancestry validation: all nine workflows passed.
+Head aa601e2bfd66b13225426c98cac60ea6e1966fb2
+All runs created 2026-10-25T11:08:29Z after the published commit.
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40187620893
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40187620873
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40187620935
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40187620917
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40187620907
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40187620871
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40187620923
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40187620904
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40187620881
+
+This validates the recovered ancestry batch, not later group commit work.

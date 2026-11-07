@@ -1,0 +1,42 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Base: 58d35f8800f92b81342d97ed982459960a4d86d7
+Scope: explicitly selected bounded chunks on the epoch-fenced reclaiming store.
+These minimum controls precede production changes.
+
+Reproduce all three controls sequentially against an isolated immutable archive:
+  bash experiments/issue-138/run-reclaiming-chunks-before.sh
+It never checks out or edits the working branch. Logs and the finite source
+archive remain in experiments/issue-138/chunks2-before.XXXXXX for inspection.
+Use the same SDK 10.0.403 selected by the complete validation driver.
+
+JavaScript:
+  node --test experiments/issue-138/chunk-reclamation-api.test.mjs
+Assertion at line 14: actual blob2, expected chunks2. The existing options
+silently ignore chunk selection. Log: chunk-reclamation-js-before.log, 1-31.
+
+Rust:
+  CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test --manifest-path rust/Cargo.toml --test engine_reclaiming_tests selected_chunks_reuse_within_epoch_and_restage_after_fence
+E0599: no open_chunked associated function, test chunks.rs:10.
+Log: chunk-reclamation-rust-before.log, 1-22.
+
+C# (SDK 10.0.403, one worker, .NET heap640MiB):
+  dotnet test csharp --disable-build-servers -m:1 --filter FullyQualifiedName~SelectedChunksReuseWithinEpochAndRestageAfterFence
+CS1501: no Open overload takes five arguments, ReclamationChunkTests.cs:12.
+Log: chunk-reclamation-csharp-before.log, 1-5.
+
+The independent chunk-reference model predates this implementation. Unsafe
+old-epoch reuse loses a live chunk after 62 states; omitting the epoch CAS loses
+one after 19. Current-epoch staging with epoch CAS passes all 879 two-writer /
+one-collector, 999 one-writer / two-collector and 32,666 two-writer / two-collector
+states, within 192MiB and 150,000 states. No production modules are imported.
+
+The independent reader model first reproduces a fractured prefix/suffix result
+after 41 states when only the missing chunk refreshes. Whole-group refresh
+passes 1,601 states across sixteen cache masks, with 245 coherent terminals
+and sixty bounded fail-closed terminals. Its limits are 128MiB / 100,000 states.
+These models do not substitute for production or physical durability tests.
+
+The independent UTF-8/address oracle produces eighteen chunks2 vectors before
+the production codecs are changed, covering epochs zero, one and u64 max.
+Original controls remain in experiments/issue-138; normal Rust/C#/JS suites
+now contain and expand the controls. All raw logs are under that directory.

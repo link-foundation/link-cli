@@ -149,7 +149,10 @@ export class TcpTransport {
     const early = scopeError(scope, 'not-sent');
     if (early) return Promise.reject(early);
     return new Promise((resolve, reject) => {
-      const entry = { bytes, resolve, reject, sent: false, stop: () => {} };
+      const entry = { bytes, resolve, reject, sent: false };
+      // The deadline can expire synchronously while watchScope registers.
+      // Queue first so cancellation removes this entry, never its neighbor.
+      this.#queue.push(entry);
       entry.stop = watchScope(scope, (errorOf) => {
         if (!entry.sent) {
           this.#queue.splice(this.#queue.indexOf(entry), 1);
@@ -159,10 +162,7 @@ export class TcpTransport {
           this.#fail(errorOf('unknown'), entry);
         }
       });
-      if (!this.#closedError) {
-        this.#queue.push(entry);
-        this.#pump();
-      }
+      if (!this.#closedError) this.#pump();
     });
   }
 
@@ -285,7 +285,7 @@ export class TcpTransport {
     const early = scopeError(scope, 'not-sent');
     if (early) return Promise.reject(early);
     return new Promise((resolve, reject) => {
-      const waiter = { resolve, reject, stop: () => {} };
+      const waiter = { resolve, reject };
       waiter.stop = watchScope(scope, (errorOf) => {
         this.#pushWaiters.splice(this.#pushWaiters.indexOf(waiter), 1);
         reject(errorOf('not-sent'));
@@ -310,7 +310,6 @@ export class TcpTransport {
   #fail(error, culprit) {
     if (this.#closedError) return;
     this.#closedError = error;
-    if (error.outcome === undefined) error.outcome = 'unknown';
     for (const entry of this.#inFlight) {
       entry.stop();
       entry.reject(

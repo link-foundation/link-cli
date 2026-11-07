@@ -1,0 +1,55 @@
+Native checkpoint ownership; https://github.com/link-foundation/link-cli/pull/139
+Baseline: 133c4ff4a51240cda983dc34f7e4ca58c44d1c4c; native-checkpoint-before.txt preserves actual failures.
+Validation: bash experiments/issue-138/validate-native-checkpoint-all.sh
+Sequential compilers: Cargo jobs=1/reduced debug, .NET SDK10.0.403/640MiB heap; WASM256MiB cap.
+Initial driver lost its final C# success message after a live edit; both complete reports/coverage were verified, and the remaining stages ran without editing the driver.
+csharp: complete stage passed
+native: complete stage passed
+wasm: complete stage passed
+js: complete stage passed
+cluster: complete stage passed
+interop: complete stage passed
+repository: complete stage passed
+
+Native Rust: 1013 passed; 18 bounded child entry points ignored by direct discovery.
+Complete lines: 13642/14449 (94.41484%)
+Complete branches: 2547/2958 (86.10548%)
+Complete functions: 1772/1907 (92.92082%)
+/rust/src/engine/paged/file_checkpoint.rs lines: 214/221 (96.83258%)
+/rust/src/engine/paged/file_checkpoint.rs branches: 5/6 (83.33333%)
+/rust/src/engine/paged/file_checkpoint.rs functions: 57/58 (98.27586%)
+
+Actual WASM: 620 passed; 0 bounded child entry points ignored by direct discovery.
+Complete lines: 11068/13424 (82.44934%)
+Complete branches: 2165/2603 (83.17326%)
+Complete functions: 1403/1778 (78.90889%)
+/rust/wasm/src/engine.rs lines: 263/263 (100.00000%)
+/rust/wasm/src/engine.rs branches: 6/6 (100.00000%)
+/rust/wasm/src/engine.rs functions: 50/50 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.39s
+
+C# Debug: 2227 passed; 0 failed/skipped.
+Complete lines: 8267/8561 (96.56582%)
+Complete branches: 4513/4880 (92.47951%)
+Foundation.Data.Doublets.Cli.Engine.FileCheckpointPagedCommitLog: lines 1; branches 1
+
+C# Release: 2227 passed; 0 failed/skipped.
+Complete lines: 6344/6530 (97.15161%)
+Complete branches: 4460/4845 (92.05366%)
+Foundation.Data.Doublets.Cli.Engine.FileCheckpointPagedCommitLog: lines 1; branches 1
+JS actual native mutation cuts: [('false', 'replace', '34'), ('true', 'replace', '62'), ('true', 'repair', '12')]
+JS: {'tests': 239, 'pass': 239, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: identical72-case actual-WASM composition; conformance/48 ordinary native policies pass.
+bun: identical72-case actual-WASM composition; conformance/48 ordinary native policies pass.
+deno: identical72-case actual-WASM composition; conformance/48 ordinary native policies pass.
+PASS checkpoint pages: 48 configurations, 288 persistent writer handoffs
+PASS native compaction: 48 configurations, 288 persistent writer handoffs
+Ordinary48/288 control also passes; selected bank epochs1->6 preserve exact names/allocators, two retained revisions, pins, private reservations and branch bases.
+All native constructors acquire every fence before repair/reset; all acquired raw owners close in reverse order/root last.
+Constructor faults preserve original and every cleanup failure. Close does not flush; uncertain close retains fences; repeated close does not retry.
+Rust/C#/JS bounded real process cuts cover before/after replacement AND mirrored recovery writes/truncations/syncs.
+Each cut observes child termination before manual fence removal, then checks complete recovery, following append/flush/compaction and fresh reopening.
+All three etcd modes, strict format/Clippy, TypeScript, vector regeneration, optional-SQL, release/source/workflow checks pass.
+Whole-project100% coverage and every wider unmet issue criterion remain unfinished; no denominator is reduced.
+Truthful synchronization is assumed; finite process exits do not establish hardware power-loss durability or arbitrary root-media repair.

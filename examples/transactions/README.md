@@ -32,6 +32,17 @@ script works for either binary — pick the one you have installed:
    `--commit-mode async`) and each retention policy (`--retention
    infinite`, `--retention sized:N`, `--retention chunked:N:/path`).
 
+4. Writes an independent database into the same chunk archive directory and
+   checks that it adds archives while preserving every previous file byte for
+   byte. The two databases retain separate live journals and recovery ownership.
+
+Archive candidates are claimed with exclusive creation. Rust retries occupied
+names; C# preserves optional archive failures for a later retention attempt with
+a fresh GUID. The live journals remain the recovery authority. These demos do
+not simulate clock rollback, partial archive writes or power loss; bounded
+frozen-clock regressions cover filename reuse separately. See
+[the persistence assumptions](../../docs/ENGINE-STRATEGIES.md).
+
 ## Key flags
 
 ```text

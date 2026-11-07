@@ -1,0 +1,49 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-versions.sh
+Test-first baseline: the new JS conformance suite fails with ERR_MODULE_NOT_FOUND before production implementation.
+START 2026-10-27T12:31:19Z
+STRICT AND FOCUSED PASS 2026-10-27T12:33:19Z
+CSHARP PASS 2026-10-27T12:41:18Z
+NATIVE PASS 2026-10-27T12:57:55Z
+ACTUAL WASM PASS 2026-10-27T13:03:02Z
+ALL PASS 2026-10-27T13:03:27Z
+Independent shared cases: 46 codec, eleven merge and nine advancement vectors; 24 delivery orders and 216 state triples per runtime.
+Five selected tests pass in native Rust, C#, Node, Bun and Deno; actual WASM includes the same five Rust contracts.
+C# Debug: 2467 passed; zero failed/skipped.
+Complete lines: 9517/9826 (96.85528%).
+Complete branches: 5832/6282 (92.83668%).
+CausalVersion.cs executable lines: 100/100.
+C# Release: 2467 passed; zero failed/skipped.
+Complete lines: 7344/7545 (97.33598%).
+Complete branches: 5775/6243 (92.50360%).
+CausalVersion.cs executable lines: 74/74.
+Native Rust: 1202 passed; 22 parent-driven child entries ignored by normal harness.
+Complete lines: 17419/18304 (95.16499%).
+Complete branches: 3374/3864 (87.31884%).
+Complete functions: 2254/2417 (93.25610%).
+Complete regions: 26805/28967 (92.53633%).
+Complete instantiations: 12433/22204 (55.99442%).
+causal.rs lines: 251/253 (99.20949%).
+causal.rs branches: 80/82 (97.56098%).
+causal.rs functions: 36/37 (97.29730%).
+Actual WASM: 728 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 13395/16013 (83.65078%).
+Complete branches: 2743/3253 (84.32216%).
+Complete functions: 1672/2095 (79.80907%).
+Complete regions: 20636/25221 (81.82070%).
+Complete instantiations: 4378/7533 (58.11762%).
+causal.rs lines: 251/253 (99.20949%).
+causal.rs branches: 80/82 (97.56098%).
+causal.rs functions: 36/37 (97.29730%).
+Doctests: six passed; one existing ignored example.
+js-full: {'tests': 649, 'pass': 649, 'fail': 0, 'skipped': 0}.
+Production coverage: 100% lines, branches and functions; no reduced thresholds or exclusions.
+js-coverage: {'tests': 5, 'pass': 5, 'fail': 0, 'skipped': 0}.
+Production coverage: 100% lines, branches and functions; no reduced thresholds or exclusions.
+repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}.
+Formatting, strict native/WASM Clippy, TS declarations, source sizes, one C# changeset, dependency freshness and workflow/ShellCheck checks pass.
+Bare Rust normal dependencies contain neither serde_json nor rusqlite. The new JS codec remains a separate import.
+The component validates canonical bytes, owns results, retains concurrent update/deletion siblings and checks counters without I/O.
+Durable counter ownership/publication, Merkle comparison, bounded range transfer, ordinary links projection and safe tombstone reclamation remain unfinished.
+All full production coverage denominators remain included. Complete native/C#/linked-WASM 100% and every other unmet R1-R12 criterion remain required.
+Fresh exact-head Windows/Linux/macOS CI remains required. The PR stays draft and unmerged.

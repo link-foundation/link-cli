@@ -1,0 +1,48 @@
+Populated-history rejection contracts against archive head 7b03c07.
+Only the seven changed production source files were restored to HEAD;
+the finally block restored all fixed source bytes before after checks.
+Three malformed inputs each clear two real committed live records before
+returning an error. The process and failure summaries follow.
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.32]     Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(kind: "malformed-transition") [FAIL]
+[xUnit.net 00:00:01.37]     Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(kind: "malformed-applied") [FAIL]
+[xUnit.net 00:00:01.41]     Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(kind: "malformed-commit") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(kind: "malformed-transition") [268 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Transition { TransactionId = 731cf98e-9149-4634-9841-3343fe43b415, Sequence = 1, Timestamp = 10/25/2026 03:59:18 +00:00, Kind = Update, Before = (1: 11->12), After = (1: 31->32) }, Transition { TransactionId = 5ca9db5a-80ae-46f4-a8fc-dc1c64c72fff, Sequence = 2, Timestamp = 10/25/2026 03:59:18 +00:00, Kind = Update, Before = (1: 31->32), After = (1: 11->12) }]
+Actual:   []
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(String kind) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryValidationTests.cs:line 125
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(kind: "malformed-applied") [53 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Transition { TransactionId = bad733bc-809b-429c-a4da-74aab0a5a119, Sequence = 1, Timestamp = 10/25/2026 03:59:18 +00:00, Kind = Update, Before = (1: 11->12), After = (1: 31->32) }, Transition { TransactionId = 82ea729d-3116-49c0-8a46-95c56f7e223b, Sequence = 2, Timestamp = 10/25/2026 03:59:18 +00:00, Kind = Update, Before = (1: 31->32), After = (1: 11->12) }]
+Actual:   []
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(String kind) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryValidationTests.cs:line 125
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(kind: "malformed-commit") [43 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Transition { TransactionId = bba9d1cb-62f2-4442-a431-2f25c140b83e, Sequence = 1, Timestamp = 10/25/2026 03:59:18 +00:00, Kind = Update, Before = (1: 11->12), After = (1: 31->32) }, Transition { TransactionId = f0ccf453-ed07-4520-9715-2773dd349318, Sequence = 2, Timestamp = 10/25/2026 03:59:18 +00:00, Kind = Update, Before = (1: 31->32), After = (1: 11->12) }]
+Actual:   []
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryValidationTests.RejectBeforeReplayAndRetainAdmissionUntilRecoveryRetry(String kind) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryValidationTests.cs:line 125
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3, Duration: 397 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

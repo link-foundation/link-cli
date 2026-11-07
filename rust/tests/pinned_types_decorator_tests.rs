@@ -1,12 +1,15 @@
 use anyhow::Result;
-use link_cli::{LinkStorage, PinnedTypesAccess, PinnedTypesDecorator};
-use tempfile::NamedTempFile;
+use link_cli::{PinnedTypesAccess, PinnedTypesDecorator};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decorator_exposes_link_storage_operations_and_pinned_types() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let links = LinkStorage::new(db_path, false)?;
+    let (_db_file, links) = test_store::links()?;
     let mut decorator = PinnedTypesDecorator::from_link_storage(links);
 
     assert_eq!(vec![1, 2, 3], decorator.pinned_types(3)?);
@@ -22,11 +25,10 @@ fn decorator_exposes_link_storage_operations_and_pinned_types() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decorator_supports_triplet_deconstruction_parity() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let links = LinkStorage::new(db_path, false)?;
+    let (_db_file, links) = test_store::links()?;
     let mut decorator = PinnedTypesDecorator::from_link_storage(links);
 
     let (type_type, unicode_symbol_type, unicode_sequence_type) =
@@ -40,11 +42,10 @@ fn decorator_supports_triplet_deconstruction_parity() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decorator_rejects_unexpected_link_shape_at_reserved_address() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let links = LinkStorage::new(db_path, false)?;
+    let (_db_file, links) = test_store::links()?;
     let mut decorator = PinnedTypesDecorator::from_link_storage(links);
 
     decorator.create(1, 0);

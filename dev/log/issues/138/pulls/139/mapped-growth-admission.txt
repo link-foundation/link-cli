@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-mapped-growth-admission-before.sh
+Reproduce: bash experiments/issue-138/validate-mapped-growth-admission.sh
+Immutable 9bb985f: arithmetic overflow, layout overflow and zero-growth panic fail; ordinary zero growth passes.
+All three failures reject valid checked flushes despite a still-valid owned mapping. No impossible-size allocation is attempted.
+START 2026-10-27T11:27:57Z
+FOCUSED AND STRICT CHECKS PASS 2026-10-27T11:29:12Z
+NATIVE PASS 2026-10-27T11:45:21Z
+ACTUAL WASM PASS 2026-10-27T11:49:54Z
+ALL PASS 2026-10-27T11:50:17Z
+api-after: four generic admission, six flush, six growth and six empty/shrink controls pass; one parent-driven child entry ignored.
+default-after: four generic admission, six flush, six growth and six empty/shrink controls pass; one parent-driven child entry ignored.
+Nine ownership/growth unit controls pass, including injected mapping-after-extension and clone failures.
+Finite quota probe retains pointer, prefix and checked flush after EFBIG; owned-flush example passes.
+Native Rust: 1194 passed; 22 parent-driven child entries ignored by normal harness.
+Complete lines: 17163/18045 (95.11222%)
+Complete branches: 3294/3782 (87.09677%)
+Complete functions: 2217/2379 (93.19042%)
+Complete regions: 26406/28558 (92.46446%)
+Complete instantiations: 12362/22050 (56.06349%)
+/rust/src/storage/file_mem_grow.rs lines: 43/45 (95.55556%)
+/rust/src/storage/file_mem_grow.rs branches: 1/2 (50.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 4/4 (100.00000%)
+/rust/src/storage/file_mem.rs lines: 81/97 (83.50515%)
+/rust/src/storage/file_mem.rs branches: 6/8 (75.00000%)
+/rust/src/storage/file_mem.rs functions: 10/13 (76.92308%)
+/rust/src/storage/mapped_flush.rs lines: 82/82 (100.00000%)
+/rust/src/storage/mapped_flush.rs branches: 4/4 (100.00000%)
+/rust/src/storage/mapped_flush.rs functions: 17/17 (100.00000%)
+Actual WASM: 723 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 13144/15754 (83.43278%)
+Complete branches: 2663/3171 (83.97982%)
+Complete functions: 1636/2057 (79.53330%)
+Complete regions: 20244/24812 (81.58955%)
+Complete instantiations: 4342/7495 (57.93195%)
+/rust/src/storage/file_mem_grow.rs lines: 0/45 (0.00000%)
+/rust/src/storage/file_mem_grow.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 0/4 (0.00000%)
+/rust/src/storage/file_mem.rs lines: 0/97 (0.00000%)
+/rust/src/storage/file_mem.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem.rs functions: 0/13 (0.00000%)
+/rust/src/storage/mapped_flush.rs lines: 0/82 (0.00000%)
+/rust/src/storage/mapped_flush.rs branches: 0/2 (0.00000%)
+/rust/src/storage/mapped_flush.rs functions: 0/17 (0.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.09s
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, native/WASM strict Clippy, source sizes, changeset, dependency freshness and workflow/ShellCheck checks pass.
+Generic zero growth performs no I/O, mapping replacement, lock or allocation, calls fill once with zero initialized/new items and keeps deliberate prefix edits if fill panics.
+Arithmetic/layout overflow rejects before invalidation. Each finite generic control preserves pointer, physical length, prefix and checked flush; following growth and exact retirement of forty values pass.
+Genuine partial-shrink/generic-growth I/O failure, nonzero callback panic and shrink destructor panic remain unfinished; no physical repair or hardware power-loss claim.
+All production coverage denominators remain included. Complete native/C#/linked-WASM 100% and other unmet R1-R12 criteria remain required.
+Fresh exact-head Windows/Linux/macOS CI remains required. The PR stays draft and unmerged.

@@ -183,6 +183,11 @@ namespace Foundation.Data.Doublets.Cli
     {
         private readonly INamedTypesLinks<TLinkAddress> _named;
 
+        public QueryLimits? QueryLimits => _named.QueryLimits;
+
+        public IReadOnlySet<TLinkAddress>? ReserveQueryAllocations(Action<INamedTypesLinks<TLinkAddress>> preview)
+            => _named.ReserveQueryAllocations(preview);
+
         public UndoableLinksDecorator(INamedTypesLinks<TLinkAddress> links) : base(links)
         {
             _named = links;

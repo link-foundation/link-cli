@@ -1,0 +1,35 @@
+✔ file journal fences writers, flushes, repairs torn tails, and validates UTF-8 (40.499219ms)
+✖ tail recovery handles short filesystem reads (10.567197ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 275.190652
+
+✖ failing tests:
+
+test at js/client/test/engine-file-log.test.mjs:34:1
+✖ tail recovery handles short filesystem reads (10.567197ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '[]'
+  - '["committed"]'
+
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/engine-file-log.test.mjs:44:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '[]',
+    expected: '["committed"]',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

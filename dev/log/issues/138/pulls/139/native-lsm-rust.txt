@@ -1,0 +1,74 @@
+Native Rust physical LSM facade
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Complete sequential local validation: 2026-10-27T04:55:02Z to 05:18:14Z.
+Reproduce: bash experiments/issue-138/validate-native-lsm-rust.sh
+Build jobs 1, native debug information disabled, .NET heap 640MiB,
+actual WASM linear memory 256MiB; no cgroup OOM or killed processes.
+
+Full native: 1,138 passed, 0 failed, 21 ignored child entry points.
+Doctests: six passed, one legacy example ignored.
+Actual WASM: 698 passed, 0 failed (10+238+10+4+3+73+352+8).
+Whole native LLVM: 16,712/17,614 lines, 3,211/3,698 branches,
+2,167/2,334 functions, 25,748/27,903 regions, 12,023/21,595 instantiations.
+Whole linked WASM: 12,900/15,323 lines, 2,593/3,101 branches,
+1,615/2,012 functions, 19,861/24,157 regions, 4,281/7,400 instantiations.
+Every production denominator remains included; complete 100% stays unfinished.
+
+FileLsmJournalStore composes the existing native page devices, checkpoint WAL,
+mirrors and physical immutable LSM tables under one exclusive outer owner.
+Bounded streaming enumeration and read-only inspection validate the complete
+physical/semantic decision and historical selected tables before constructors
+can create missing files, repair mirrors, truncate suffixes or retire orphans.
+A surviving valid metadata slot/mirror suffices; corrupt evidence is retained.
+Unix opendir/readdir/closedir and Windows FindFirst/Next/FindClose have explicit
+exactly-once cleanup. Failed uncertain raw closes are cached, not retried.
+Every known handle is attempted before outer marker removal. Uncertain live
+handles retain ownership. An error after marker removal can leave a closed
+facade with its marker absent; this is distinct from a possibly live handle.
+
+The 21 focused native controls pass 408 before/after compaction cuts (140 plain,
+268 mirrored) and 730 opening cuts (252 plain, 478 mirrored). Three cleanup and
+two read-only controls verify bounded enumeration, primary-plus-cleanup errors,
+non-stealing and deferred repair. Two actual process parents drive all 408
+before/after abrupt-exit children, exit 73 without Drop, finite 30-second
+supervision, 8MiB Unix stack and 512MiB Linux address space. Parents reap before
+externally authorized fixture fence recovery, preserve acknowledged data and
+verify following edits/reservations. These are operation-boundary controls,
+not physical power-loss certification or every individual OS syscall.
+
+Ten integration cases pass all eight mirror combinations, owned atomic groups,
+Unicode/BOM/NUL, live empty values/tombstones, stale rejection, corrupt selected
+files, foreign/noncanonical names, symlinks/FIFOs/directories, missing-copy repair
+ordering and pre-I/O bounds. The first complete run exposes a fixture mistake:
+it removes the committed metadata slot rather than the empty one. Correct the
+fixture to preserve the nonempty decision, then rerun focused and full suites.
+This is not claimed as a production storage repair.
+
+Three actual Rust cluster consumers pass: direct, partitioned and epoch
+reclaiming. They use actual links/names, checkpoint interval 1, stale group
+rejection, actual reclaimed objects and compact/close/reopen. Unix namespace
+sync contributes to DurableFlush; Windows explicitly declines that capability.
+All 50 complete-store directed writer/reader/return handoffs pass across Rust,
+C#, Node, Bun and Deno in plain/mirrored modes. Every read-only reopen preserves
+SHA256 for every physical file. Each owner finishes before the next starts.
+
+Both formatters, strict all-feature/all-target native and WASM Clippy, eight
+SQL-optional configurations plus explicit SQLite opt-in, all 221 repository
+checks, source-size checks, actionlint and shellcheck pass. The native facade
+requires optional native-pages + physical-lsm; normal and WASM graphs remain
+SQLite-free. Native feature/dependency and release minor fragment are included.
+
+Logs under experiments/issue-138: native-lsm-rust-validation.log,
+native-lsm-rust-{full,doctests,wasm-full,clippy,wasm-clippy,format,optional}.log,
+native-lsm-rust-{coverage,wasm-coverage}.json,
+native-lsm-rust-consumer-{direct,partitioned,reclaiming}.log,
+native-lsm-rust-five-runtime-interop.log, native-lsm-rust-integration.log,
+native-lsm-rust-{repository,file-size,actionlint,shellcheck}.log.
+Missing-API evidence: native-lsm-rust-before.txt and local matching log.
+
+This source still requires fresh exact-head publication CI. Preceding 3dfbc74
+has eight successful workflows, including Rust Windows; C# alone retains a
+progressing child killed by an aggregate deadline. Its finite supervisor fix
+is a separate step. Legacy repair, power-loss, remaining algorithms/composition,
+whole-project coverage and remaining scaling bounds keep PR139 draft/unmerged.

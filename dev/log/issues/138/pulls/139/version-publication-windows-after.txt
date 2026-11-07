@@ -1,0 +1,22 @@
+Windows publication-preservation correction verified
+Head: 1f742c58b4cc3dd0e7b29af37ec5c3d0a7dcc315
+Run: https://github.com/link-foundation/link-cli/actions/runs/40149389469
+Created: 2026-10-25T01:07:32Z
+All C# Windows, Linux, macOS, formatting, fresh-merge and package jobs pass.
+The ten fixtures failing in run 40148211459 now pass; Windows total 1,443.
+Original line numbers below are from the preserved Windows job log, 3,593 lines.
+
+1152: Test (windows-2025)	Run tests	2026-10-25T01:10:07.7790720Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "foreign-attribution") [627 ms]
+1161: Test (windows-2025)	Run tests	2026-10-25T01:10:08.8718191Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "wrong-current") [650 ms]
+1166: Test (windows-2025)	Run tests	2026-10-25T01:10:08.8734561Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "conflicting-decisions") [915 ms]
+1184: Test (windows-2025)	Run tests	2026-10-25T01:10:10.2050534Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "unknown-branch") [639 ms]
+1188: Test (windows-2025)	Run tests	2026-10-25T01:10:10.2060164Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "applied-ahead") [693 ms]
+1211: Test (windows-2025)	Run tests	2026-10-25T01:10:11.7966896Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "multiple-intents") [862 ms]
+1212: Test (windows-2025)	Run tests	2026-10-25T01:10:11.7969142Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "missing-record") [629 ms]
+1229: Test (windows-2025)	Run tests	2026-10-25T01:10:12.9880081Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "foreign-record") [841 ms]
+1245: Test (windows-2025)	Run tests	2026-10-25T01:10:14.4818796Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "head-ahead") [614 ms]
+1385: Test (windows-2025)	Run tests	2026-10-25T01:10:26.6340275Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.SharedIntentVectorsResolveAbortsAndPreserveMalformedFiles [13 s]
+
+3559: Test (windows-2025)	Run tests	2026-10-25T01:11:36.6231918Z Test Run Successful.
+3560: Test (windows-2025)	Run tests	2026-10-25T01:11:36.6232733Z Total tests: 1443
+3561: Test (windows-2025)	Run tests	2026-10-25T01:11:36.6233095Z      Passed: 1443

@@ -1,0 +1,135 @@
+✖ live file journal repairs partial ASCII before read (12.776101ms)
+✖ live file journal repairs partial ASCII before append (10.576007ms)
+✖ live file journal repairs partial ASCII before flush (9.040352ms)
+✖ live file journal repairs partial UTF-8 before read (6.454149ms)
+✖ live file journal repairs partial UTF-8 before append (8.040959ms)
+✖ live file journal repairs partial UTF-8 before flush (8.784575ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 179.439055
+
+✖ failing tests:
+
+test at js/client/test/engine-live-tail.test.mjs:10:3
+✖ live file journal repairs partial ASCII before read (12.776101ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+      'committed',
+  +   ''
+    ]
+
+      at TestContext.<anonymous> (file://<worktree>/js/client/test/engine-live-tail.test.mjs:28:35)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'committed', '' ],
+    expected: [ 'committed' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at js/client/test/engine-live-tail.test.mjs:10:3
+✖ live file journal repairs partial ASCII before append (10.576007ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+      'committed',
+  +   'ufollowing'
+  -   'following'
+    ]
+
+      at TestContext.<anonymous> (file://<worktree>/js/client/test/engine-live-tail.test.mjs:31:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'committed', 'ufollowing' ],
+    expected: [ 'committed', 'following' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at js/client/test/engine-live-tail.test.mjs:10:3
+✖ live file journal repairs partial ASCII before flush (9.040352ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+      'committed',
+  +   ''
+    ]
+
+      at TestContext.<anonymous> (file://<worktree>/js/client/test/engine-live-tail.test.mjs:29:51)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'committed', '' ],
+    expected: [ 'committed' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at js/client/test/engine-live-tail.test.mjs:10:3
+✖ live file journal repairs partial UTF-8 before read (6.454149ms)
+  TypeError [Error]: The encoded data was not valid for encoding utf-8
+      at TextDecoder.decode (node:internal/encoding:493:28)
+      at FileCommitLog.read (file://<worktree>/js/client/src/engine-file-log.js:63:25)
+      at TestContext.<anonymous> (file://<worktree>/js/client/test/engine-live-tail.test.mjs:28:60)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    code: 'ERR_ENCODING_INVALID_ENCODED_DATA'
+  }
+
+test at js/client/test/engine-live-tail.test.mjs:10:3
+✖ live file journal repairs partial UTF-8 before append (8.040959ms)
+  TypeError [Error]: The encoded data was not valid for encoding utf-8
+      at TextDecoder.decode (node:internal/encoding:493:28)
+      at FileCommitLog.read (file://<worktree>/js/client/src/engine-file-log.js:63:25)
+      at TestContext.<anonymous> (file://<worktree>/js/client/test/engine-live-tail.test.mjs:31:39)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    code: 'ERR_ENCODING_INVALID_ENCODED_DATA'
+  }
+
+test at js/client/test/engine-live-tail.test.mjs:10:3
+✖ live file journal repairs partial UTF-8 before flush (8.784575ms)
+  TypeError [Error]: The encoded data was not valid for encoding utf-8
+      at TextDecoder.decode (node:internal/encoding:493:28)
+      at FileCommitLog.read (file://<worktree>/js/client/src/engine-file-log.js:63:25)
+      at TestContext.<anonymous> (file://<worktree>/js/client/test/engine-live-tail.test.mjs:29:76)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    code: 'ERR_ENCODING_INVALID_ENCODED_DATA'
+  }

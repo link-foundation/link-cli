@@ -4,6 +4,7 @@
 //! tests pin the behavior link-cli relies on, so an upgrade that changes it
 //! fails here.
 
+#[path = "common/options.rs"]
 mod common;
 
 use common::binary_options;
@@ -104,7 +105,8 @@ fn golden_vectors() -> impl Iterator<Item = Vec<&'static str>> {
         .map(|line| line.split('\t').collect())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn golden_documents_are_stable() {
     let mut checked = 0;
     for fields in golden_vectors().filter(|fields| fields[0] == "document") {
@@ -130,7 +132,8 @@ fn golden_documents_are_stable() {
     assert!(checked >= 80, "only {checked} document vectors");
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn golden_packets_are_stable() {
     let mut checked = 0;
     for fields in golden_vectors().filter(|fields| fields[0] == "links") {
@@ -154,7 +157,8 @@ fn golden_packets_are_stable() {
     assert!(checked >= 10, "only {checked} links vectors");
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn every_option_set_round_trips_the_corpus() {
     for text in CORPUS {
         let document = parse_document(text).unwrap();
@@ -171,7 +175,8 @@ fn every_option_set_round_trips_the_corpus() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn canonical_text_round_trips_the_corpus() {
     for text in CORPUS {
         let document = parse_document(text).unwrap();
@@ -202,7 +207,8 @@ fn canonical_text_round_trips_the_corpus() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn references_are_formatted_losslessly() {
     assert_eq!(format_reference("plain"), "plain");
     assert_eq!(format_reference("$x"), "$x");
@@ -243,7 +249,8 @@ fn references_are_formatted_losslessly() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn legacy_quoted_references_match_lossless_literals() {
     for (legacy, literal) in [("''", "~1{}"), ("'a\nb'", "~1{610a62}")] {
         assert_eq!(
@@ -253,7 +260,8 @@ fn legacy_quoted_references_match_lossless_literals() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn width_tiers_follow_the_number_of_links() {
     assert_eq!(address_tier(0, false).unwrap(), 1);
     assert_eq!(address_tier(255, false).unwrap(), 1);
@@ -278,7 +286,8 @@ fn width_tiers_follow_the_number_of_links() {
     assert_eq!(external_capacity(1), 127);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn external_references_match_platform_data_hybrid() {
     for width in [1u8, 2, 4, 8] {
         for value in [0, 1, 2, 100, external_capacity(width)] {
@@ -317,7 +326,8 @@ fn section_widths(packet: &LinksPacket) -> Vec<u8> {
         .collect()
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn uniform_widths_grow_past_256_addresses_and_packed_widths_stay_small() {
     let document = parse_document(&many_links(3)).unwrap();
     let small = encode_document(&document, BinaryLinoOptions::default()).unwrap();
@@ -349,7 +359,8 @@ fn uniform_widths_grow_past_256_addresses_and_packed_widths_stay_small() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn packed_widths_never_take_more_bytes_than_uniform_ones() {
     let mut corpus = CORPUS
         .iter()
@@ -373,7 +384,8 @@ fn packed_widths_never_take_more_bytes_than_uniform_ones() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn large_external_values_widen_only_their_section() {
     let options = BinaryLinoOptions::default()
         .with_external_references(true)
@@ -388,7 +400,8 @@ fn large_external_values_widen_only_their_section() {
     assert!(packet.link_count() > 60);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn arity_options_choose_doublets_triplets_or_any_length() {
     let document = parse_document("(a b c)\n(d e)").unwrap();
     let arities = |arity: ArityRange| {
@@ -446,7 +459,8 @@ fn arity_options_choose_doublets_triplets_or_any_length() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn arities_without_doublets_are_unencodable() {
     for arity in [
         ArityRange::exactly(3),
@@ -463,7 +477,8 @@ fn arities_without_doublets_are_unencodable() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn arity_ranges_parse_and_display() {
     for (text, range) in [
         ("2", ArityRange::DOUBLETS),
@@ -485,7 +500,8 @@ fn arity_ranges_parse_and_display() {
     assert!(ArityRange::exactly(2).is_fixed() && !ArityRange::at_least(2).is_fixed());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn reply_options_follow_the_received_packet() {
     let document = parse_document("(a b c) 70000").unwrap();
     let options = BinaryLinoOptions::default()
@@ -501,7 +517,8 @@ fn reply_options_follow_the_received_packet() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn hand_built_packets_decode() {
     // One doublet (One One) is 2^1 in unary, so `(Number 7)` is the number 2.
     let links = [(1, 1), (2, 6), (7, 0), (4, 8)]
@@ -537,7 +554,8 @@ fn hand_built_packets_decode() {
     assert_eq!(format_document(&protocol.decode(&bytes).unwrap()), "2");
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn packing_rejects_links_it_cannot_lay_out() {
     let unencodable = |links: &[(u64, Vec<Reference>)], external_references: bool| {
         assert!(
@@ -565,7 +583,8 @@ fn packing_rejects_links_it_cannot_lay_out() {
     assert!(LinksPacket::pack(false, &[(1, link(&[u64::MAX]))], true).is_ok());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn writing_rejects_sections_that_do_not_hold_their_links() {
     let section = |arity: ArityRange, width: u8, links: Vec<Vec<Reference>>| LinksPacket {
         external_references: false,
@@ -616,7 +635,8 @@ fn assert_malformed(bytes: &[u8], detail: &str) {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn malformed_packets_are_rejected() {
     // Each case names the exact problem, so none passes for another reason.
     for (bytes, detail) in [
@@ -699,7 +719,8 @@ fn malformed_packets_are_rejected() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn invalid_code_points_are_rejected() {
     // (String (0x110000)) is not a valid code point.
     let links = [
@@ -718,7 +739,8 @@ fn invalid_code_points_are_rejected() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn hostile_packets_hit_limits() {
     let limited = |bytes: &[u8], limits: DecodeLimits| {
         assert!(
@@ -815,7 +837,8 @@ impl Read for Hiccup {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn stream_failures_are_io_errors_and_interruptions_are_retried() {
     let limits = DecodeLimits::default();
     let read = |reader: &mut dyn Read| LinksPacket::read_from(reader, &limits);
@@ -834,7 +857,8 @@ fn stream_failures_are_io_errors_and_interruptions_are_retried() {
     ));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn every_short_reference_over_delimiters_round_trips() {
     let alphabet = ['\'', '"', '`', 'a', ' ', '(', ')', ':'];
     let mut stack = vec![String::new()];
@@ -857,12 +881,14 @@ fn every_short_reference_over_delimiters_round_trips() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn deeply_nested_text_parses_in_linear_time() {
     // links-notation before 0.21.3 took exponential time in the nesting depth
     // (link-foundation/links-notation#314), so one short message could stall
     // a server thread. Depth 40 took minutes there.
     let nested = |depth: usize| format!("{}a{}", "(".repeat(depth), ")".repeat(depth));
+    #[cfg(not(target_arch = "wasm32"))]
     let started = std::time::Instant::now();
     let mut link = parse_document(&nested(40)).unwrap().remove(0);
     let mut depth = 1;
@@ -875,5 +901,8 @@ fn deeply_nested_text_parses_in_linear_time() {
         parse_document(&nested(100_000)),
         Err(BinaryError::InvalidLino(_))
     ));
+    // WASM uses the runner's finite test deadline; std::time::Instant
+    // is unavailable on wasm32-unknown-unknown. Keep the same input checks.
+    #[cfg(not(target_arch = "wasm32"))]
     assert!(started.elapsed() < std::time::Duration::from_secs(10));
 }

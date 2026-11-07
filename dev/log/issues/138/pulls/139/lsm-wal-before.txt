@@ -1,0 +1,31 @@
+Physical LSM WAL missing-API controls, before production implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: 523888a302c49d8b148ab28d69acc9ad34bdf87d
+
+Actual preserved failures:
+experiments/issue-138/lsm-wal-before-rust.log:2-6
+error[E0432]: unresolved import `link_cli::engine::lsm`
+could not find `lsm` in `engine`
+
+experiments/issue-138/lsm-wal-before-csharp.log:5-6
+error CS0246: The type or namespace name 'LsmOptions' could not be found
+error CS0103: The name 'LsmWal' does not exist in the current context
+
+experiments/issue-138/lsm-wal-before-js.log:5
+ERR_MODULE_NOT_FOUND: Cannot find module js/client/src/engine-lsm-wal.js
+
+Each command completed with a nonzero status and the named API error before
+the corresponding production API existed. Saved source fixtures:
+lsm-wal-before.rs, LsmWalBeforeTests.cs, lsm-wal-before.test.mjs.
+The initial independent oracle covered 97 cases before production; 14 additional
+controls added during coverage review bring the committed fixture to 111.
+
+Reproduction from an isolated clean worktree at the baseline:
+bash /absolute/path/to/PR/experiments/issue-138/run-lsm-wal-before.sh /absolute/path/to/PR
+Provide dotnet 10 and Cargo on PATH. The driver refuses a dirty/wrong baseline;
+uses one compiler job and a 640 MiB .NET GC heap. It was packaged after the
+actual individual before commands; it is not claimed as a second baseline run.
+
+This is a missing-component reproduction, not proof of a historical persistence
+bug. The codec performs no storage I/O. Physical LSM store composition and
+every wider unmet acceptance criterion remain unfinished.

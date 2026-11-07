@@ -1,0 +1,403 @@
+Physical author-fence handoffs, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Base aae1422fd88cf09d6a9414e3544b495cd5ca63ac.
+The first baseline fails because its optional Rust recipe is absent.
+It is a missing selected API, not an existing-feature regression.
+After: two real plain/mirrored Rust -> C# -> Node -> Rust/C# handoffs pass.
+Complete active claims, retained retries, refused superseded reads/writes/
+retries and two-key publication survive reopening. Read-only operations
+preserve every file hash; ordinary data CAS preserves fence generation.
+Run: python3 experiments/issue-138/author-fence-native.py.
+The script bounds native stack/address space and JS/.NET heaps.
+Rust builds use one job, no debug info/incremental and one linker thread.
+C# Release builds use one MSBuild worker, CPU count two and a 1 GiB GC cap.
+Clippy denies warnings with every optional native_lsm recipe selected.
+The fifty-handoff five-runtime matrix is wired to CI; its new execution
+is pending. Complete suites remain in CI per maintainer feedback.
+Clean-close controls do not certify hardware power loss or bypass safety.
+Display trims trailing whitespace; digests identify original raw logs.
+
+--- author-fence-native-before.log SHA256 07e37ac306ac921c14add3f2aa4a1f317c09e49f71be3549ac92a919a7aae400 ---
+Error: Use files|chunks|reclaiming-chunks write|read|mutate|read-advanced <directory> plain|mirrored or cluster direct|partitioned|chunks|reclaiming|reclaiming-chunks
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/author-fence-native.py", line 29, in <module>
+    run('rust', 'write', directory, mirrors)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/author-fence-native.py", line 23, in run
+    subprocess.run([*commands[runtime], action, str(directory), mirrors], check=True, preexec_fn=limits,
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   env=dict(os.environ, DOTNET_GCHeapHardLimit='0x28000000', DOTNET_PROCESSOR_COUNT='2'))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/box/.pyenv/versions/3.15.0/lib/python3.15/subprocess.py", line 692, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['rust/target/debug/examples/native_lsm', 'fence', 'write', '/tmp/clink-author-fence-34t8dz3c/plain', 'plain']' returned non-zero exit status 1.
+
+--- author-fence-native-build.log SHA256 a5ba837104cdcfe8563733ce4f5bebda51d92a38d4fa8e9de09d180ba1ef6996 ---
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `dev` profile [unoptimized] target(s) in 11.68s
+
+--- author-fence-native-csharp-build.log SHA256 17da562513ed896d9ea287704a3d476023520dd13b2e6d6cb5708309f1840233 ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  ClusterExample -> /tmp/gh-issue-solver-1793187246880/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:27.21
+
+--- author-fence-native-after.log SHA256 b2c2af11acd4d31443bb844bb76bc72bd5ba6616db0452403ceff9991045472c ---
+PASS Rust author fencing native LSM write plain
+PASS C# author fencing native LSM read plain
+PASS JS author fencing native LSM mutate plain
+PASS Rust author fencing native LSM read-advanced plain
+PASS C# author fencing native LSM read-advanced plain
+PASS plain Rust -> C# -> Node -> Rust/C#; fenced reads/writes/retries preserve hashes
+PASS Rust author fencing native LSM write mirrored
+PASS C# author fencing native LSM read mirrored
+PASS JS author fencing native LSM mutate mirrored
+PASS Rust author fencing native LSM read-advanced mirrored
+PASS C# author fencing native LSM read-advanced mirrored
+PASS mirrored Rust -> C# -> Node -> Rust/C#; fenced reads/writes/retries preserve hashes
+PASS 2 focused complete-store author-fence handoffs
+
+--- author-fence-native-clippy.log SHA256 8bca2df3490ebb830a76141eea62e76be73fc9d8b207e06fafc0f308cb4e20f6 ---
+ Downloading crates ...
+  Downloaded block-buffer v0.12.1
+  Downloaded crypto-common v0.2.2
+  Downloaded cpufeatures v0.3.1
+  Downloaded hybrid-array v0.4.15
+  Downloaded sha2 v0.11.1
+  Downloaded digest v0.11.3
+  Downloaded typenum v1.20.1
+    Checking typenum v1.20.1
+    Checking hybrid-array v0.4.15
+    Checking crypto-common v0.2.2
+    Checking block-buffer v0.12.1
+    Checking digest v0.11.3
+    Checking cpufeatures v0.3.1
+    Checking sha2 v0.11.1
+    Checking link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `dev` profile [unoptimized] target(s) in 9.46s
+
+--- author-fence-native-format-verified.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-native-repository.log SHA256 90d5f7e6a1691c00cb2ca8f878e32df9bed40ca744e38ad5d869cd0ffd59cf03 ---
+
+> link-cli-web@2.4.0 test:js
+> node --test test/*.test.mjs ../csharp/scripts/*.test.mjs ../.github/scripts/*.test.mjs
+
+✔ versions compare numerically, not as text (3.791182ms)
+✔ a declared version is compared only as far as it is written (0.486838ms)
+✔ pre-releases are never the latest version (0.49885ms)
+✔ every Cargo dependency form is found, path-only ones are skipped (1.961329ms)
+✔ NuGet package references are found (0.60583ms)
+✔ npm ranges lose their operator, and locked versions come from the lock file (0.770468ms)
+✔ actions pinned to a major tag are found once per repository (0.829808ms)
+✔ runtimes and installed tools are found (1.348555ms)
+✔ actions pinned to a commit, a digest or an exact tag are found (1.168671ms)
+✔ only real updates of cargo update --dry-run count (3.935601ms)
+✔ a manifest comment links the issue that holds a dependency back (2.312244ms)
+✔ Cargo comments hold back the dependency on their line only (0.509831ms)
+✔ csproj comments hold back the package reference on their line (0.581887ms)
+✔ workflow comments hold back actions, runtimes and tools (0.598276ms)
+✔ only an open issue holds an outdated dependency back (0.437787ms)
+✔ a dropped connection to a registry is retried instead of failing the check (26.714222ms)
+✔ a lookup that keeps failing reports the network cause and the attempts (8.005534ms)
+✔ an answer a retry cannot change fails at once (0.494492ms)
+✔ retries wait longer each time and stop after the last attempt (63.619476ms)
+  Retrying the Wayback API (attempt 2 of 3) after: fetch failed: ECONNRESET
+✔ the errors section stops at the next top-level heading (2.47691ms)
+✔ a report without an errors section yields nothing (0.312402ms)
+✔ redirected links are not reported as broken (0.889789ms)
+✔ every http error is extracted exactly once (0.902393ms)
+✔ errors that the Wayback Machine cannot answer are still reported (0.420735ms)
+✔ the parsed error count matches the count lychee reports (0.298817ms)
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 503
+  Retrying the Wayback API (attempt 2 of 2) after: fetch failed: ECONNRESET
+✔ transient Wayback failures are retried before a snapshot is reported (22.981199ms)
+✔ a Wayback lookup that keeps failing is reported as failed, not as unarchived (2.403173ms)
+✔ a definite Wayback answer is not retried (1.239112ms)
+✔ only inactive or missing Codecov repositories make uploading optional (60.554357ms)
+✔ Codecov lookup failures and malformed responses do not silently disable upload checks (4.486779ms)
+✔ Cobertura totals remain visible in the summary without Codecov (0.897945ms)
+✔ missing and invalid coverage reports fail instead of publishing misleading totals (0.456401ms)
+✔ summary command finds nested Cobertura files and appends the Actions summary (82.714436ms)
+✔ csharp.yml: use an exact SDK version to avoid the broken channel redirect (2.335636ms)
+✔ docs.yml: use an exact SDK version to avoid the broken channel redirect (0.551489ms)
+✔ js-client.yml: use an exact SDK version to avoid the broken channel redirect (0.544677ms)
+✔ security.yml: use an exact SDK version to avoid the broken channel redirect (0.284421ms)
+✔ npm release validation uses the actual registry lookup result (3.573627ms)
+✔ npm release validation succeeds when published=true (30.346448ms)
+✔ npm release validation succeeds when published=false (27.391777ms)
+✔ release helper check compiles every executable, denies warnings, and propagates failures (189.755609ms)
+✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (55.541948ms)
+✔ npm trust verification fails clearly when OIDC or the registry policy is missing (4.092825ms)
+✔ there is at least one workflow to inspect (5.855843ms)
+✔ no workflow reacts to both pull_request and non-main push branches (2.156713ms)
+✔ the JavaScript unit tests are executed by a workflow (0.560375ms)
+✔ csharp.yml: every job declares timeout-minutes (1.566873ms)
+✔ csharp.yml: declares a top-level permissions block (0.388235ms)
+✔ csharp.yml: every job is covered by a concurrency group (1.252787ms)
+✔ csharp.yml: writer jobs own a never-cancelled concurrency group (1.958303ms)
+✔ csharp.yml: does not mask failures with continue-on-error (11.478112ms)
+✔ csharp.yml: crates.io trusted publishing runs only when enabled (3.213144ms)
+✔ csharp.yml: single-line if expressions do not start with ! (1.845562ms)
+✔ csharp.yml: every release_mode option is handled by a job (1.162809ms)
+✔ csharp.yml: publish steps do not silently skip on missing credentials (1.915092ms)
+✔ csharp.yml: npm lookups tell "not published" apart from a failure (1.065158ms)
+✔ csharp.yml: required choice inputs declare a default (0.908585ms)
+✔ csharp.yml: hosted runners use pinned OS labels (1.517089ms)
+✔ csharp.yml: provides init.defaultBranch to actions/checkout (0.642699ms)
+✔ dependencies.yml: every job declares timeout-minutes (0.160449ms)
+✔ dependencies.yml: declares a top-level permissions block (0.088255ms)
+✔ dependencies.yml: every job is covered by a concurrency group (0.143588ms)
+✔ dependencies.yml: writer jobs own a never-cancelled concurrency group (0.223707ms)
+✔ dependencies.yml: does not mask failures with continue-on-error (20.345222ms)
+✔ dependencies.yml: crates.io trusted publishing runs only when enabled (0.299128ms)
+✔ dependencies.yml: single-line if expressions do not start with ! (0.167924ms)
+✔ dependencies.yml: every release_mode option is handled by a job (0.106028ms)
+✔ dependencies.yml: publish steps do not silently skip on missing credentials (0.103934ms)
+✔ dependencies.yml: npm lookups tell "not published" apart from a failure (0.153256ms)
+✔ dependencies.yml: required choice inputs declare a default (0.132497ms)
+✔ dependencies.yml: hosted runners use pinned OS labels (0.23622ms)
+✔ dependencies.yml: provides init.defaultBranch to actions/checkout (0.137988ms)
+✔ docs.yml: every job declares timeout-minutes (0.49876ms)
+✔ docs.yml: declares a top-level permissions block (1.267575ms)
+✔ docs.yml: every job is covered by a concurrency group (0.738156ms)
+✔ docs.yml: writer jobs own a never-cancelled concurrency group (0.361564ms)
+✔ docs.yml: does not mask failures with continue-on-error (0.204541ms)
+✔ docs.yml: crates.io trusted publishing runs only when enabled (0.347028ms)
+✔ docs.yml: single-line if expressions do not start with ! (0.154828ms)
+✔ docs.yml: every release_mode option is handled by a job (0.100718ms)
+✔ docs.yml: publish steps do not silently skip on missing credentials (0.213068ms)
+✔ docs.yml: npm lookups tell "not published" apart from a failure (0.240048ms)
+✔ docs.yml: required choice inputs declare a default (0.115796ms)
+✔ docs.yml: hosted runners use pinned OS labels (0.211905ms)
+✔ docs.yml: provides init.defaultBranch to actions/checkout (0.142577ms)
+✔ js-client.yml: every job declares timeout-minutes (0.197338ms)
+✔ js-client.yml: declares a top-level permissions block (0.099054ms)
+✔ js-client.yml: every job is covered by a concurrency group (0.242181ms)
+✔ js-client.yml: writer jobs own a never-cancelled concurrency group (0.288067ms)
+✔ js-client.yml: does not mask failures with continue-on-error (0.181067ms)
+✔ js-client.yml: crates.io trusted publishing runs only when enabled (0.319396ms)
+✔ js-client.yml: single-line if expressions do not start with ! (2.14938ms)
+✔ js-client.yml: every release_mode option is handled by a job (0.673967ms)
+✔ js-client.yml: publish steps do not silently skip on missing credentials (0.306943ms)
+✔ js-client.yml: npm lookups tell "not published" apart from a failure (0.654571ms)
+✔ js-client.yml: required choice inputs declare a default (0.185115ms)
+✔ js-client.yml: hosted runners use pinned OS labels (1.593823ms)
+✔ js-client.yml: provides init.defaultBranch to actions/checkout (0.167082ms)
+✔ links.yml: every job declares timeout-minutes (0.143808ms)
+✔ links.yml: declares a top-level permissions block (0.080351ms)
+✔ links.yml: every job is covered by a concurrency group (0.140612ms)
+✔ links.yml: writer jobs own a never-cancelled concurrency group (0.157634ms)
+✔ links.yml: does not mask failures with continue-on-error (0.121046ms)
+✔ links.yml: crates.io trusted publishing runs only when enabled (0.19265ms)
+✔ links.yml: single-line if expressions do not start with ! (0.102851ms)
+✔ links.yml: every release_mode option is handled by a job (0.088065ms)
+✔ links.yml: publish steps do not silently skip on missing credentials (1.305986ms)
+✔ links.yml: npm lookups tell "not published" apart from a failure (0.244517ms)
+✔ links.yml: required choice inputs declare a default (0.122649ms)
+✔ links.yml: hosted runners use pinned OS labels (0.143628ms)
+✔ links.yml: provides init.defaultBranch to actions/checkout (0.15519ms)
+✔ rust.yml: every job declares timeout-minutes (0.404294ms)
+✔ rust.yml: declares a top-level permissions block (0.073577ms)
+✔ rust.yml: every job is covered by a concurrency group (0.295281ms)
+✔ rust.yml: writer jobs own a never-cancelled concurrency group (0.403623ms)
+✔ rust.yml: does not mask failures with continue-on-error (0.281155ms)
+✔ rust.yml: crates.io trusted publishing runs only when enabled (5.724148ms)
+✔ rust.yml: single-line if expressions do not start with ! (0.28923ms)
+✔ rust.yml: every release_mode option is handled by a job (0.374549ms)
+✔ rust.yml: publish steps do not silently skip on missing credentials (0.673516ms)
+✔ rust.yml: npm lookups tell "not published" apart from a failure (0.506104ms)
+✔ rust.yml: required choice inputs declare a default (0.253933ms)
+✔ rust.yml: hosted runners use pinned OS labels (0.282086ms)
+✔ rust.yml: provides init.defaultBranch to actions/checkout (0.14948ms)
+✔ security.yml: every job declares timeout-minutes (0.161752ms)
+✔ security.yml: declares a top-level permissions block (0.088335ms)
+✔ security.yml: every job is covered by a concurrency group (0.174035ms)
+✔ security.yml: writer jobs own a never-cancelled concurrency group (0.198491ms)
+✔ security.yml: does not mask failures with continue-on-error (0.180617ms)
+✔ security.yml: crates.io trusted publishing runs only when enabled (0.434641ms)
+✔ security.yml: single-line if expressions do not start with ! (0.119363ms)
+✔ security.yml: every release_mode option is handled by a job (0.086312ms)
+✔ security.yml: publish steps do not silently skip on missing credentials (0.170948ms)
+✔ security.yml: npm lookups tell "not published" apart from a failure (0.152785ms)
+✔ security.yml: required choice inputs declare a default (0.118801ms)
+✔ security.yml: hosted runners use pinned OS labels (0.138308ms)
+✔ security.yml: provides init.defaultBranch to actions/checkout (0.070562ms)
+✔ wasm.yml: every job declares timeout-minutes (0.121707ms)
+✔ wasm.yml: declares a top-level permissions block (0.135293ms)
+✔ wasm.yml: every job is covered by a concurrency group (1.389904ms)
+✔ wasm.yml: writer jobs own a never-cancelled concurrency group (0.165278ms)
+✔ wasm.yml: does not mask failures with continue-on-error (0.122919ms)
+✔ wasm.yml: crates.io trusted publishing runs only when enabled (0.161982ms)
+✔ wasm.yml: single-line if expressions do not start with ! (0.110566ms)
+✔ wasm.yml: every release_mode option is handled by a job (0.129932ms)
+✔ wasm.yml: publish steps do not silently skip on missing credentials (0.115937ms)
+✔ wasm.yml: npm lookups tell "not published" apart from a failure (0.22ms)
+✔ wasm.yml: required choice inputs declare a default (0.132928ms)
+✔ wasm.yml: hosted runners use pinned OS labels (0.142516ms)
+✔ wasm.yml: provides init.defaultBranch to actions/checkout (0.094135ms)
+✔ workflows.yml: every job declares timeout-minutes (0.202077ms)
+✔ workflows.yml: declares a top-level permissions block (0.081431ms)
+✔ workflows.yml: every job is covered by a concurrency group (0.108272ms)
+✔ workflows.yml: writer jobs own a never-cancelled concurrency group (0.134471ms)
+✔ workflows.yml: does not mask failures with continue-on-error (0.76154ms)
+✔ workflows.yml: crates.io trusted publishing runs only when enabled (0.162434ms)
+✔ workflows.yml: single-line if expressions do not start with ! (0.111498ms)
+✔ workflows.yml: every release_mode option is handled by a job (0.092683ms)
+✔ workflows.yml: publish steps do not silently skip on missing credentials (0.350413ms)
+✔ workflows.yml: npm lookups tell "not published" apart from a failure (0.157163ms)
+✔ workflows.yml: required choice inputs declare a default (0.122459ms)
+✔ workflows.yml: hosted runners use pinned OS labels (0.507887ms)
+✔ workflows.yml: provides init.defaultBranch to actions/checkout (0.107259ms)
+✔ exactly one workflow publishes GitHub Pages (0.938982ms)
+✔ only the Pages publisher uploads a Pages artifact (0.431796ms)
+✔ every clippy invocation denies warnings (4.10096ms)
+✔ the Rust and C# pipelines simulate a fresh merge on pull requests (0.7613ms)
+✔ every cargo audit invocation denies warnings (3.171405ms)
+✔ coverage uploads use OIDC and retain reports without requiring Codecov (10.53409ms)
+✔ Rust PR lint compiles release helpers without executing them (1.484249ms)
+✔ registry trust can be verified without versioning or publishing a release (5.395134ms)
+✔ Dependabot watches every directory the dependency check reads (36.648604ms)
+✔ exclusions match whole path components, not substrings (13.775167ms)
+✔ a trailing newline does not count as an extra line (6.187041ms)
+✔ CLI fails when a file exceeds the limit and passes otherwise (152.6482ms)
+✔ merge-changesets honors the requested directory and package name (127.5329ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (73.123655ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (436.230765ms)
+✔ create-github-release dry run uses tag prefix and component changelog (85.845986ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (104.796467ms)
+✔ buildNugetBadges links both badges to the exact version (1.819665ms)
+✔ buildNugetBadges URL-encodes the package id (2.136435ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.448467ms)
+✔ prependNugetBadges is a no-op without a package id (0.293568ms)
+✔ buildNugetBadges accepts multiple package ids (3.099732ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (2.222697ms)
+✔ buildReleasePayload places NuGet badges above the package footer (1.554019ms)
+✔ create-github-release dry run reports matching assets without uploading (101.744885ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (602.24666ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.642088ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.216314ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.243205ms)
+✔ classifyPushFailure separates repository rules from lost races (0.198039ms)
+✔ version-and-commit rebases and retries when another release pushed first (842.806079ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (456.081724ms)
+✔ check-release-needed decide(): changesets take the normal release path (0.515321ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.185476ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.15552ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.175338ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.168515ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (1.353004ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (187.710655ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (197.425077ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.823296ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.253534ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.602724ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.486257ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.295691ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (4.874924ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (1.777976ms)
+✔ answers a retry cannot change are not retried (2.063849ms)
+✔ buildGraph reflects create, delete, and recreate snapshots without stale nodes (3.754675ms)
+✔ language code package manifests and generated evidence stay out of the root folder (5.835906ms)
+✔ the browser-only WebAssembly wrapper opts out of crates.io publishing (0.985318ms)
+✔ JavaScript package scripts target the relocated WebAssembly crate and split script trees (0.525721ms)
+✔ WebAssembly workflow uses the JavaScript package lockfile from js (0.614607ms)
+✔ the documentation workflow deploys GitHub Pages automatically on push to main (0.840398ms)
+✔ CSharp release workflow attaches NuGet packages to GitHub Releases (0.425995ms)
+✔ CSharp release workflow includes self-healing release gates (0.465729ms)
+✔ CSharp and Rust release workflows are scheduled on every push to main (1.14196ms)
+✔ GitHub workflows avoid Node 20 action major versions that are being retired (2.599339ms)
+ℹ tests 221
+ℹ suites 0
+ℹ pass 221
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3764.373774
+
+--- author-fence-native-source-size.log SHA256 6f4e55cce0e4eb6521eb246061e8378c67db9541337d56e387544f3135da8d6e ---
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 349 C# file(s)
+Checking Rust files in rust/...
+  Found 405 Rust file(s)
+
+Checked 754 file(s) - all within the line limit
+
+
+--- author-fence-native-release-tests.log SHA256 d05158fb927cc23dacc8dd82d951173fd4c0923a802103c4801ac945f8eb12f7 ---
+✔ exclusions match whole path components, not substrings (16.106324ms)
+✔ a trailing newline does not count as an extra line (1.799226ms)
+✔ CLI fails when a file exceeds the limit and passes otherwise (156.623055ms)
+✔ merge-changesets honors the requested directory and package name (83.663585ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (81.028742ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (370.118529ms)
+✔ create-github-release dry run uses tag prefix and component changelog (71.01927ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (73.300614ms)
+✔ buildNugetBadges links both badges to the exact version (0.790995ms)
+✔ buildNugetBadges URL-encodes the package id (0.370772ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.425064ms)
+✔ prependNugetBadges is a no-op without a package id (0.730633ms)
+✔ buildNugetBadges accepts multiple package ids (0.948338ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (2.880995ms)
+✔ buildReleasePayload places NuGet badges above the package footer (1.727081ms)
+✔ create-github-release dry run reports matching assets without uploading (67.328454ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (463.879521ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.844725ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.249506ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.334815ms)
+✔ classifyPushFailure separates repository rules from lost races (0.357557ms)
+✔ version-and-commit rebases and retries when another release pushed first (743.079913ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (432.955215ms)
+✔ check-release-needed decide(): changesets take the normal release path (2.39053ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.396129ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.224018ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.203079ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.185145ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (3.025063ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (177.30183ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (171.867052ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.786386ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.212336ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.606231ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.610448ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.260907ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (4.322243ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (2.293338ms)
+✔ answers a retry cannot change are not retried (1.253189ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2950.051169
+
+--- author-fence-native-whitespace.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---

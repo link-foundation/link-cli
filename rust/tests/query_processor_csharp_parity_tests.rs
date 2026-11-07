@@ -2,16 +2,16 @@
 
 use anyhow::Result;
 use link_cli::{Link, NamedTypes, NamedTypesDecorator, QueryProcessor};
-use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
 fn with_storage(
     test: impl FnOnce(&mut NamedTypesDecorator, &QueryProcessor) -> Result<()>,
 ) -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-    let mut storage = NamedTypesDecorator::with_names_database_path(db_path, names_path, false)?;
+    let (_files, mut storage) = test_store::named()?;
     let processor = QueryProcessor::new(false).with_auto_create_missing_references(true);
     test(&mut storage, &processor)
 }
@@ -35,7 +35,8 @@ fn name_id(storage: &mut NamedTypesDecorator, name: &str) -> Result<u32> {
         .unwrap_or_else(|| panic!("{name} should exist")))
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unwrapped_create_query_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((1: 1 1))")?;
@@ -46,7 +47,8 @@ fn test_unwrapped_create_query_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_create_explicit_index_after_gap_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((3: 3 3)))")?;
@@ -57,7 +59,8 @@ fn test_create_explicit_index_after_gap_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_create_deep_nested_numeric_links_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() (((1 1) ((2 2) ((3 3) ((4 4) (5 5)))))))")?;
@@ -76,7 +79,8 @@ fn test_create_deep_nested_numeric_links_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_delete_by_source_target_pattern_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1: 1 1) (2: 2 2) (3: 1 2)))")?;
@@ -90,7 +94,8 @@ fn test_delete_by_source_target_pattern_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_delete_by_wildcard_target_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 2) (2 2)))")?;
@@ -103,7 +108,8 @@ fn test_delete_by_wildcard_target_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_delete_all_by_index_wildcard_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 2) (2 2)))")?;
@@ -115,7 +121,8 @@ fn test_delete_all_by_index_wildcard_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_swap_all_links_using_variables_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 2) (2 1)))")?;
@@ -132,7 +139,8 @@ fn test_swap_all_links_using_variables_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_no_op_variable_query_returns_matched_changes() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 1)))")?;
@@ -154,7 +162,8 @@ fn test_no_op_variable_query_returns_matched_changes() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_named_link_rename_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((child: father mother)))")?;
@@ -171,7 +180,8 @@ fn test_named_link_rename_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_delete_by_names_keeps_leaf_names_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((child: father mother)))")?;
@@ -186,7 +196,8 @@ fn test_delete_by_names_keeps_leaf_names_matches_csharp() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unknown_named_restriction_fails_without_auto_create() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((known: left right)))")?;
@@ -206,7 +217,8 @@ fn test_unknown_named_restriction_fails_without_auto_create() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_string_composite_left_child_does_not_create_extra_leaf() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((type: type type)))")?;
@@ -221,7 +233,8 @@ fn test_string_composite_left_child_does_not_create_extra_leaf() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp(
 ) -> Result<()> {
     with_storage(|storage, processor| {
@@ -243,7 +256,8 @@ fn test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(
@@ -275,7 +289,8 @@ fn test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp() -> R
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((21: 21 21)))")?;
@@ -296,7 +311,8 @@ fn test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp() -> Re
 /// upstream cascade resolvers do and what the `cascade delete of usage`
 /// scenario in `docs/case-studies/issue-100/evidence/cli-parity/run.sh`
 /// compares against C#.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_delete_cascades_to_usages_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 1)))")?;
@@ -311,7 +327,8 @@ fn test_delete_cascades_to_usages_matches_csharp() -> Result<()> {
 }
 
 /// The cascade is transitive and leaves untouched links alone.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_delete_cascade_chain_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 1)))")?;
@@ -328,7 +345,8 @@ fn test_delete_cascade_chain_matches_csharp() -> Result<()> {
 
 /// An update that would duplicate an existing link merges into it instead of
 /// creating a second copy, so the updated address disappears.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_update_into_existing_pair_merges_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 1)))")?;
@@ -348,7 +366,8 @@ fn test_update_into_existing_pair_merges_matches_csharp() -> Result<()> {
 
 /// The merge is reported the way C# reports it: the updated link is gone and
 /// the link it merged into is not reported at all.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_update_into_existing_pair_reports_merge_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((1 1))")?;
@@ -366,7 +385,8 @@ fn test_update_into_existing_pair_reports_merge_matches_csharp() -> Result<()> {
 /// rather than losing that half, as C# does since it stopped relying on the
 /// `MergeUsages` of Platform.Data.Doublets 0.18.1
 /// (<https://github.com/linksplatform/Data.Doublets/issues/515>).
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_update_into_existing_pair_repoints_usages_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((1 2) (2 1))")?;
@@ -390,7 +410,8 @@ fn test_update_into_existing_pair_repoints_usages_matches_csharp() -> Result<()>
 
 /// The link being merged away can be used by the very link it duplicates: the
 /// usage is re-pointed at the survivor, and the query then writes its own link.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_update_into_a_pair_that_uses_it_repoints_the_usage_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((1 1) (2 2))")?;
@@ -415,7 +436,8 @@ fn test_update_into_a_pair_that_uses_it_repoints_the_usage_matches_csharp() -> R
 
 /// Deleting a named link cascades through the links that use it, and the names
 /// of the survivors are untouched.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_named_delete_cascades_to_usages_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((a: a a)))")?;
@@ -432,7 +454,8 @@ fn test_named_delete_cascades_to_usages_matches_csharp() -> Result<()> {
 
 /// A single-link swap that does not collide with an existing pair keeps its
 /// address, which is the plain-update path through the uniqueness resolver.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_swap_one_link_keeps_its_address_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((1 1) (1 2)))")?;
@@ -450,7 +473,8 @@ fn test_swap_one_link_keeps_its_address_matches_csharp() -> Result<()> {
 /// A substitution variable that no restriction ever bound is *unspecified*, not
 /// a literal address: C# marks it with `links.Constants.Any` and the store turns
 /// that into null on the way in, so `() (($a $a))` creates the point `(1: 0 0)`.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unbound_substitution_variable_creates_null_point_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() (($a $a))")?;
@@ -463,7 +487,8 @@ fn test_unbound_substitution_variable_creates_null_point_matches_csharp() -> Res
 /// The same query twice finds the link it created the first time rather than
 /// creating a second one, because C#'s `SearchOrDefault` reads `any` in a lookup
 /// as a wildcard.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unbound_substitution_variable_twice_is_idempotent_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() (($a $a))")?;
@@ -475,7 +500,8 @@ fn test_unbound_substitution_variable_twice_is_idempotent_matches_csharp() -> Re
 }
 
 /// An explicit index pins the address; the unspecified halves still land as null.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unbound_substitution_variable_at_an_index_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((5: $a $a))")?;
@@ -487,7 +513,8 @@ fn test_unbound_substitution_variable_at_an_index_matches_csharp() -> Result<()>
 
 /// One specified half plus one unspecified half is a wildcard lookup, so it
 /// finds the existing `(1: 1 1)` instead of creating `(2: 1 null)` beside it.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unbound_substitution_variable_one_half_finds_existing_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((1 1))")?;
@@ -500,7 +527,8 @@ fn test_unbound_substitution_variable_one_half_finds_existing_matches_csharp() -
 
 /// `*` in a substitution is unspecified in exactly the same way a never-bound
 /// variable is.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_star_in_a_substitution_creates_null_point_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((* *))")?;
@@ -512,7 +540,8 @@ fn test_star_in_a_substitution_creates_null_point_matches_csharp() -> Result<()>
 
 /// An unspecified half of an *update* keeps the half already stored, so
 /// rewriting `(1: 1 1)` through `(1: $x $y)` leaves it exactly as it was.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_unbound_substitution_variable_in_an_update_keeps_existing_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "() ((1 1))")?;

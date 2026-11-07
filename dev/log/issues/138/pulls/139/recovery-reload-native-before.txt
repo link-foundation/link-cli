@@ -1,0 +1,22 @@
+   Compiling link-cli v1.0.9 (<repository>/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.38s
+     Running tests/transactions_recovery_fault_tests.rs (rust/target/debug/deps/transactions_recovery_fault_tests-e1cd3eb10c5f6282)
+
+running 1 test
+test live_reload_failure_retains_admission_until_recovery ... FAILED
+
+failures:
+
+---- live_reload_failure_retains_admission_until_recovery stdout ----
+
+thread 'live_reload_failure_retains_admission_until_recovery' (1308875) panicked at tests/transactions_recovery_fault_tests.rs:368:9:
+reload-before: failed reload released admission
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    live_reload_failure_retains_admission_until_recovery
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test transactions_recovery_fault_tests`

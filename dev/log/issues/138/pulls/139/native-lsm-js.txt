@@ -1,0 +1,64 @@
+Native JavaScript LSM directory composition, 2026-10-27
+PR https://github.com/link-foundation/link-cli/pull/139
+Parent published source 7baafed475fd5d54ff77e74474a5fffbb2d80e41.
+
+Reproduce complete selected checks:
+ bash experiments/issue-138/validate-native-lsm-js.sh
+Provide Node, Bun, Deno, cargo wasm target and matching wasm-bindgen on PATH.
+All builds/probes run sequentially. Finite tests use the existing 30s limits;
+children have ten fixed phase/mode cases and 4096-byte output bounds.
+
+Measured existing logs under experiments/issue-138/:
+ native-lsm-js-full.log lines637-644: 617/617 pass, zero failed/skipped/todo.
+ Lines646-692: every production JS source included, 100% lines/branches/functions;
+ new engine-file-lsm-{files,readonly,store}.js each 100%. Lines695-697: strict
+ TypeScript succeeds, including new positive/negative native entry contracts.
+ native-lsm-production-bun-full.log: 41 pass, zero fail.
+ native-lsm-production-deno-full.log: 41 passed, zero failed.
+ Every runtime runs all eight mirror combinations, read-only evidence/hash
+ preservation, missing selected images, deferred repair, bounded enumeration,
+ occupied identities, capabilities, and cached exact-once uncertain cleanup.
+ Eight finite cut groups each trace the same 67 observed compaction operations;
+ all 134 before/after cuts actually trigger per runtime. Reopen preserves every
+ acknowledged value and reservation. Unknown descriptors are externally closed
+ before explicit test recovery removes markers. This is not power-loss testing.
+ One parent reaps ten abruptly exited children per runtime before explicit marker
+ recovery, preserving groups/empty entries through open/group/flush/following/
+ compact phases for plain and fully mirrored modes.
+
+Bun/Deno first could not interpose captured named fs exports; probe logs retain
+3-pass/4-fail controls. Switching native access to the shared fs object permits
+interposition. The after probe and all full tests then pass. This is a test
+instrumentation correction, not a claimed storage corruption fix.
+
+ native-lsm-wasm-package.log lines1-4: fresh current binding build succeeds,
+ maximum child RSS 388720KiB. Jobs1/debug0, max-memory=268435456.
+ native-lsm-wasm-cap.log verifies actual generated memory: minimum19 pages,
+ maximum4096 pages, 256MiB. Build/rebind helper preserves full 11260-line log.
+ native-lsm-real-consumer-{node,bun,deno}.log each reports three passing actual
+ WASM compositions: direct, partitioned catalog/two data stores, epoch-reclaiming.
+ Actual links/name/history checkpoint consumers preserve Unicode through physical
+ compact/close/reopen, reject a stale group and perform nonzero reclamation.
+ Initial old generated package lacked exportCheckpoint; retained first log records
+ that stale artifact. A fresh current binding resolves the artifact mismatch.
+
+ native-lsm-js-optional.log: explicit native store works with SQLite loads denied.
+ native-lsm-js-lazy.log: default root/memory excludes both portable and native LSM;
+ explicit selections trip independent positive-control guards.
+ native-lsm-repository-final.log: all 221 repository checks pass after final
+ staging, including historical .fixture manifests. File-size and minor changeset
+ checks pass. native-lsm-{shellcheck,actionlint}.log both empty and successful.
+ Fresh origin/main remains an ancestor; both working and staged diffs are clean
+ of whitespace errors. No native/C# production test rerun is claimed in this JS step.
+
+Windows advertises supportsDurableFlush=false because file flushing alone does
+not establish durable namespace changes. Unix creation/retirement sync directories.
+A live/uncertain handle keeps the outer fence; raw close outcomes are cached and
+never retried. Marker removal is attempted only after all known handles close;
+an after-effect removal error can leave that marker absent with the facade closed.
+
+Native Rust/C# facade parity and complete whole-store interchange remain required.
+The latest full native/C#/actual-WASM suite and complete coverage denominators are
+checkpoint-inspect.txt; no Rust/C# production code changes in this JS step, and
+those denominators remain below 100%. Every wider unmet R1–R12 criterion remains
+active. PR139 stays draft, unmerged. Publication requires fresh exact-head CI.

@@ -2,14 +2,16 @@
 
 use link_cli::LinoLink;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_link_new() {
     let link = LinoLink::new(Some("test".to_string()));
     assert_eq!(link.id, Some("test".to_string()));
     assert!(link.values.is_none());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_link_with_values() {
     let child1 = LinoLink::new(Some("1".to_string()));
     let child2 = LinoLink::new(Some("2".to_string()));
@@ -18,7 +20,8 @@ fn test_lino_link_with_values() {
     assert_eq!(link.values_count(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_link_is_variable() {
     let var = LinoLink::new(Some("$var".to_string()));
     assert!(var.is_variable());
@@ -27,7 +30,8 @@ fn test_lino_link_is_variable() {
     assert!(!non_var.is_variable());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_link_is_wildcard() {
     let wildcard = LinoLink::new(Some("*".to_string()));
     assert!(wildcard.is_wildcard());
@@ -36,7 +40,8 @@ fn test_lino_link_is_wildcard() {
     assert!(!non_wildcard.is_wildcard());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_link_is_numeric() {
     let numeric = LinoLink::new(Some("123".to_string()));
     assert!(numeric.is_numeric());

@@ -1,0 +1,35 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact head: 283b86dba44ca59797feb1557c8d59128c8b2c87
+
+macos-26: https://github.com/link-foundation/link-cli/actions/runs/40537256041/job/122309740987
+experiments/issue-138/ci-logs/causal-merkle-rust-122309740987.log: 1399411 bytes; SHA256 7e88cb9d2d2e7f0e15e34157eb6ce7b73162e45a170816f4c1fe30f51923be95; 8417 lines.
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 26 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1201 passed, 0 failed, 17 ignored across 147 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+
+ubuntu-24.04: https://github.com/link-foundation/link-cli/actions/runs/40537256041/job/122309741199
+experiments/issue-138/ci-logs/causal-merkle-rust-122309741199.log: 1394857 bytes; SHA256 ba095ec1a44bf6f0086841b8f3124c95a5bb2874f6f38fa892380abbad3fd239; 8473 lines.
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 26 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1225 passed, 0 failed, 23 ignored across 147 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+
+windows-2025: https://github.com/link-foundation/link-cli/actions/runs/40537256041/job/122309741185
+experiments/issue-138/ci-logs/causal-merkle-rust-122309741185.log: 1364711 bytes; SHA256 8f808687c609bff605e8ce5e6eba1af1943e0e1d7cfd67d7ba6eb6fc3bddaa3f; 8459 lines.
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 25 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1198 passed, 0 failed, 17 ignored across 147 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+
+All-features includes six passing doctests and one existing ignored doctest; the separate doc command repeats them.
+Focused no-default-feature tests are recorded separately, not added to the full-suite count.
+These results cover the published Merkle implementation, not subsequent admission controls or unfinished R1-R12 criteria.
+
+All nine exact-head workflows, created 2026-10-27T16:04:15Z after publication:
+PASS Broken Link Checker: https://github.com/link-foundation/link-cli/actions/runs/40537256391
+PASS C# CI/CD Pipeline: https://github.com/link-foundation/link-cli/actions/runs/40537256191
+PASS Dependencies: https://github.com/link-foundation/link-cli/actions/runs/40537256076
+PASS Docs: https://github.com/link-foundation/link-cli/actions/runs/40537256343
+PASS JS client CI: https://github.com/link-foundation/link-cli/actions/runs/40537256248
+PASS Rust CI/CD Pipeline: https://github.com/link-foundation/link-cli/actions/runs/40537256041
+PASS Security: https://github.com/link-foundation/link-cli/actions/runs/40537255991
+PASS WebAssembly CI: https://github.com/link-foundation/link-cli/actions/runs/40537256245
+PASS Workflows: https://github.com/link-foundation/link-cli/actions/runs/40537256055

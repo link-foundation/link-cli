@@ -141,6 +141,8 @@ public sealed class LinksSession : IDisposable
     /// <summary>The subject the requests run as; the null link (0) is a guest.</summary>
     public uint Subject { get; private set; }
 
+    internal QueryLimits? QueryLimits => _host.Links.QueryLimits;
+
     /// <summary>The store as the subject sees it, when there are permissions.</summary>
     public PermissionsDecorator<uint>? View { get; }
 
@@ -161,6 +163,14 @@ public sealed class LinksSession : IDisposable
         ArgumentNullException.ThrowIfNull(document);
         lock (_host.Lock)
         {
+            try
+            {
+                QueryLimits?.Document(document);
+            }
+            catch (InvalidOperationException error)
+            {
+                return LinksServer.ErrorDocument(error.Message);
+            }
             if (document is [{ Id: "auth", Values: [var token] }])
             {
                 return Authenticate(token);
@@ -221,7 +231,7 @@ public sealed class LinksSession : IDisposable
         IReadOnlyList<LinoLink> document;
         try
         {
-            document = LinoFormat.ParseDocument(text);
+            document = LinksServer.ParseDocument(text, QueryLimits);
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {

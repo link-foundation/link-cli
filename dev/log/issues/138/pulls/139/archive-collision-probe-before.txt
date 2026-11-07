@@ -1,0 +1,16 @@
+Independent database first: exit 0
+[Transactions] Recorded Update seq=1 tx=00000192cc0914000000000000000000: (1,11,12) -> (1,21,22).
+[Transactions] Archived 1 transitions to /tmp/link-archive-collision-ko3jm23e/archive/transitions-chunk-1730000000000-00000192cc0914000000000000000001.log.
+[Transactions] Committed tx 00000192cc0914000000000000000000 (mode=Sync, transitions=1).
+transitions-chunk-1730000000000-00000192cc0914000000000000000001.log: v1|00000192cc0914000000000000000000|1|1730000000000|1|1,11,12|1,21,22
+
+
+Independent database second: exit 0
+[Transactions] Recorded Update seq=1 tx=00000192cc0914000000000000000000: (1,11,12) -> (1,31,22).
+[Transactions] Archived 1 transitions to /tmp/link-archive-collision-ko3jm23e/archive/transitions-chunk-1730000000000-00000192cc0914000000000000000001.log.
+[Transactions] Committed tx 00000192cc0914000000000000000000 (mode=Sync, transitions=1).
+transitions-chunk-1730000000000-00000192cc0914000000000000000001.log: v1|00000192cc0914000000000000000000|1|1730000000000|1|1,11,12|1,31,22
+
+
+Existing archive bytes preserved: False
+Archive files after first/second database: 1/1

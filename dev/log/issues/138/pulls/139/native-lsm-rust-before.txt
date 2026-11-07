@@ -1,0 +1,19 @@
+Native Rust LSM facade: feature reproduction before implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+Preceding published head: 6d134e8f1a62edbc167a75e80da0b02ac45cf4a2
+The initial minimum native integration target cannot import FileLsmOptions or
+FileLsmJournalStore from engine::lsm. E0432 is preserved in the local
+experiments/issue-138/native-lsm-rust-before.log. No native Rust directory facade
+exists at that head; passing generic physical-store tests does not supply one.
+
+Implement the optional native-pages + physical-lsm composition using the existing
+checkpoint inspector, physical LSM store and immutable doublets tables. Keep
+all normal/WASM production dependency graphs SQLite-free. Validate discovery,
+complete WAL and every selected historical table before creating missing files,
+repairing mirrors, truncating suffixes or retiring reserved orphan files.
+
+Finite fault controls first expose a harness mistake: eight compaction groups
+incorrectly require directory enumeration during compact, which uses already
+selected leases. Correct that assertion before running actual operation cuts.
+This is not evidence of a production regression. The opening controls separately
+exercise enumeration-open/next/close, including combined primary/cleanup errors.

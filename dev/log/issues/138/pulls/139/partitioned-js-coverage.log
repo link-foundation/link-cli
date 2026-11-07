@@ -1,0 +1,36 @@
+✔ a request whose scope expires while queued never reaches native code (0.750741ms)
+ℹ tests 89
+ℹ suites 0
+ℹ pass 89
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7926.325341
+ℹ start of coverage report
+ℹ ----------------------------------------------------------------------
+ℹ file                  | line % | branch % | funcs % | uncovered lines
+ℹ ----------------------------------------------------------------------
+ℹ js                    |        |          |         |
+ℹ  client               |        |          |         |
+ℹ   src                 |        |          |         |
+ℹ    capabilities.js    | 100.00 |   100.00 |  100.00 |
+ℹ    client.js          | 100.00 |   100.00 |  100.00 |
+ℹ    cluster.js         | 100.00 |   100.00 |  100.00 |
+ℹ    deadline.js        | 100.00 |   100.00 |  100.00 |
+ℹ    engine-file-log.js | 100.00 |   100.00 |  100.00 |
+ℹ    engine-logs.js     | 100.00 |   100.00 |  100.00 |
+ℹ    engine.js          | 100.00 |   100.00 |  100.00 |
+ℹ    errors.js          | 100.00 |   100.00 |  100.00 |
+ℹ    framing.js         | 100.00 |   100.00 |  100.00 |
+ℹ    index.js           | 100.00 |   100.00 |  100.00 |
+ℹ    lino.js            | 100.00 |   100.00 |  100.00 |
+ℹ    operations.js      | 100.00 |   100.00 |  100.00 |
+ℹ    partitioned.js     | 100.00 |   100.00 |  100.00 |
+ℹ    process.js         | 100.00 |   100.00 |  100.00 |
+ℹ    tcp.js             | 100.00 |   100.00 |  100.00 |
+ℹ    wasm.js            | 100.00 |   100.00 |  100.00 |
+ℹ ----------------------------------------------------------------------
+ℹ all files             | 100.00 |   100.00 |  100.00 |
+ℹ ----------------------------------------------------------------------
+ℹ end of coverage report

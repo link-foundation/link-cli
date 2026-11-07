@@ -1,0 +1,20 @@
+Exact-SHA CI format investigation for 652ce129a3d7f1032d25da94b2472aceb41dd49e
+Run https://github.com/link-foundation/link-cli/actions/runs/40357520919
+Created 2026-10-26T16:16:29Z, after commit; full log preserved as
+ci-logs/csharp-40357520919.log (28,227 lines).
+
+C# Linux, macOS and Windows test jobs and fresh-merge simulation all pass.
+Only Lint and Format Check fails. Lines 10328-10355 require deleting four
+indentation spaces in CheckpointPagesTests.cs:86-96,196-200,237-248;
+line 10356 requires the same in CheckpointPagedCommitLog.cs:60.
+
+Local dotnet --version was 10.0.112; CI explicitly uses SDK 10.0.403.
+The local older formatter had passed; the newer SDK formats the same-line
+nested control statements differently. Installed exact SDK 10.0.403 from the
+official builds.dotnet.microsoft.com SDK archive, applied its formatting, and
+ran dotnet format csharp --verify-no-changes successfully with that SDK.
+No formatting rule, analyzer, CI job or timeout was weakened.
+
+All 11 portable CheckpointPagesTests pass under SDK 10.0.403 with --no-build
+(the compiled executable is unchanged by these whitespace-only edits).
+Engine integration remains a separate uncommitted feature batch.

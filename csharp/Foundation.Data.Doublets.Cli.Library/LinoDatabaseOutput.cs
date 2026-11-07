@@ -1,4 +1,6 @@
+using System.Text;
 using System.Text.RegularExpressions;
+using LinoFormat = Link.Foundation.Links.Notation.Binary.LinoFormat;
 using ReferenceLiteral = Link.Foundation.Links.Notation.ReferenceLiteral;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -53,7 +55,32 @@ public static class LinoDatabaseOutput
     public static string FormatStructure(INamedTypesLinks<uint> links, uint linkId)
     {
         var visited = new HashSet<uint>();
-        return FormatStructure(links, linkId, visited);
+        var frames = new List<DoubletLink>();
+        string terminal;
+        while (true)
+        {
+            if (!links.Exists(linkId)) throw new InvalidOperationException($"Link '{linkId}' does not exist.");
+            visited.Add(linkId);
+            var link = new DoubletLink(links.GetLink(linkId));
+            frames.Add(link);
+            if (links.Exists(link.Source) && !visited.Contains(link.Source)) { linkId = link.Source; continue; }
+            terminal = FormatReference(links, link.Source);
+            break;
+        }
+        // Preserve deepest-first target/index name lookups, including errors.
+        var parts = new List<(string Index, string Target)>(frames.Count);
+        for (int index = frames.Count - 1; index >= 0; index--)
+        {
+            var link = frames[index];
+            var target = FormatReference(links, link.Target);
+            parts.Add((FormatReference(links, link.Index), target));
+        }
+        var output = new StringBuilder();
+        for (int index = parts.Count - 1; index >= 0; index--)
+            output.Append('(').Append(parts[index].Index).Append(": ");
+        output.Append(terminal);
+        foreach (var part in parts) output.Append(' ').Append(part.Target).Append(')');
+        return output.ToString();
     }
 
     public static string Namify(INamedTypesLinks<uint> namedLinks, string linksNotation)
@@ -64,39 +91,6 @@ public static class LinoDatabaseOutput
             var name = namedLinks.GetName(numberLink);
             return name is null ? match.Value : EscapeReference(name);
         });
-    }
-
-    private static string FormatStructure(INamedTypesLinks<uint> links, uint linkId, HashSet<uint> visited)
-    {
-        if (!links.Exists(linkId))
-        {
-            throw new InvalidOperationException($"Link '{linkId}' does not exist.");
-        }
-
-        if (!visited.Add(linkId))
-        {
-            return FormatReference(links, linkId);
-        }
-
-        try
-        {
-            var link = new DoubletLink(links.GetLink(linkId));
-            var source = FormatStructureSource(links, link.Source, visited);
-            var target = FormatReference(links, link.Target);
-
-            return $"({FormatReference(links, link.Index)}: {source} {target})";
-        }
-        finally
-        {
-            visited.Remove(linkId);
-        }
-    }
-
-    private static string FormatStructureSource(INamedTypesLinks<uint> links, uint linkId, HashSet<uint> visited)
-    {
-        return links.Exists(linkId) && !visited.Contains(linkId)
-            ? FormatStructure(links, linkId, visited)
-            : FormatReference(links, linkId);
     }
 
     private static string FormatReference(INamedTypesLinks<uint> links, uint link)
@@ -112,37 +106,17 @@ public static class LinoDatabaseOutput
             return string.Empty;
         }
 
-        var hasSingleQuote = reference.Contains('\'');
-        var hasDoubleQuote = reference.Contains('"');
-        if ((hasSingleQuote && hasDoubleQuote) || reference.Any(character => character < ' ' || character == '\u007f'))
+        // Mixed quotes keep their established lossless literal.
+        if (reference.Contains('\'') && reference.Contains('"'))
         {
-            // Share the notation library's lossless form for controls and mixed
-            // quotes, instead of inventing backslash escapes for literal names.
             return ReferenceLiteral.Encode(reference);
         }
 
-        var needsQuoting = uint.TryParse(reference, out _)
-            || reference.Contains(':')
-            || reference.Contains('(')
-            || reference.Contains(')')
-            || reference.Any(char.IsWhiteSpace)
-            || reference.Contains('\\')
-            || reference.Contains('`')
-            || reference.StartsWith('#')
-            || Regex.IsMatch(reference, @"^~[0-9]+\{")
-            || hasSingleQuote
-            || hasDoubleQuote;
-
-        if (hasDoubleQuote)
-        {
-            return $"'{reference}'";
-        }
-
-        if (hasSingleQuote)
-        {
-            return $"\"{reference}\"";
-        }
-
-        return needsQuoting ? $"'{reference}'" : reference;
+        // The notation decides how to delimit a name. Digits would otherwise read
+        // as an address, and a backslash keeps its established quoted form.
+        var formatted = LinoFormat.FormatReference(reference);
+        return formatted == reference && (uint.TryParse(reference, out _) || reference.Contains('\\'))
+            ? $"'{reference}'"
+            : formatted;
     }
 }

@@ -6,8 +6,12 @@
 export { LinksClient, LinksDecorator } from './client.js';
 export { UnionLinks } from './union.js';
 export { AddressTable, OffsetAddressMap, RemapLinks } from './remap.js';
+export { CacheLinks } from './cache.js';
 export { EXTERNAL_ID_NAME, ExternalIdMap, LinksExternalIds } from './external-ids.js';
 export { createWasmClient, WasmTransport } from './wasm.js';
+export { EngineClient, WasmEngine, WasmBranch } from './engine.js';
+export { MemoryCommitLog, ReplicatedCommitLog } from './engine-logs.js';
+export { TimedCommitLog, revisionAt } from './engine-timed-log.js';
 export {
   GUARANTEES,
   MAX_U32_ADDRESS,
@@ -30,6 +34,12 @@ export {
 } from './errors.js';
 export { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './framing.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
+
+export { ClusterEngine, ClusterTransaction, EtcdJournalStore } from './cluster.js';
+export { PartitionedJournalStore } from './partitioned.js';
+export { DeltaCommitLog } from './engine-delta.js';
+
+export { ReclaimingPartitionedJournalStore } from './reclaiming.js';
 export {
   ANY,
   isNotification,

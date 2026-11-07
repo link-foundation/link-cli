@@ -1,0 +1,58 @@
+Rust library coverage placeholders, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/coverage-aggregation/library-instantiations/run.sh
+One tiny library and two finite consumers assert exact values for both
+branches of each concrete type. Every official library source counter
+executes, while a zero-count generic placeholder remains. Adding the
+second concrete type changes instantiations from 2/3 to 3/4.
+Pinned compiler source documents this library/downstream behavior:
+https://github.com/rust-lang/rust/blob/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/compiler/rustc_codegen_llvm/src/coverageinfo/mapgen/unused.rs#L79
+Downloaded source SHA256 e6e8b0f92bb99446d7787c5c719f25cbe6acb6d5119211be22a6b7c7a26524f5
+The Rust v0 symbol specification defines type p as a placeholder:
+https://doc.rust-lang.org/rustc/symbol-mangling/v0.html#type
+The unchanged full focused author-guard export contains 22 executed
+entries and 16 zero-count names with placeholder provider types. Every
+executed entry covers its recorded regions. This matches the compiler
+behavior; it does not establish that unrelated uncovered code executes.
+Raw 22/38 instantiations remain reported, without exclusions or changed
+instrumentation. Whole-project coverage and wider criteria stay open.
+
+--- versions.txt; SHA256 b569b0c98ea3133c7252b4b8ea6b39b7b353813df0dd5f5c412c355691424112 ---
+rustc 1.99.0 (b940084d7 2026-09-28)
+binary: rustc
+commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+commit-date: 2026-09-28
+host: x86_64-unknown-linux-gnu
+release: 1.99.0
+LLVM version: 23.1.1
+
+--- library-instantiation-control.log; SHA256 b5cb42752e068493fd27157868be0ff6728362e99000d3a3062c025057806faa ---
+one report SHA256 7a46f41eee231b8b31c181c59f0c1f8c7fe71347d9e65180b489d12b26c4514f
+one {"branches": {"count": 2, "covered": 2, "notcovered": 0, "percent": 100}, "functions": {"count": 2, "covered": 2, "percent": 100}, "instantiations": {"count": 3, "covered": 2, "percent": 66.66666666666666}, "lines": {"count": 9, "covered": 9, "percent": 100}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 10, "covered": 10, "notcovered": 0, "percent": 100}}
+UNEXECUTED placeholder: _RINvCs2IHAl2uEYqP_19instantiation_probe6selectpEB2_
+two report SHA256 4d074b7bffdc63f1ed2b9265a6d8ac61c270b3325af2f6d61cd9b3bdab495bb7
+two {"branches": {"count": 2, "covered": 2, "notcovered": 0, "percent": 100}, "functions": {"count": 2, "covered": 2, "percent": 100}, "instantiations": {"count": 4, "covered": 3, "percent": 75}, "lines": {"count": 9, "covered": 9, "percent": 100}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 10, "covered": 10, "notcovered": 0, "percent": 100}}
+UNEXECUTED placeholder: _RINvCs2IHAl2uEYqP_19instantiation_probe6selectpEB2_
+PASS both consumers return exact values and exercise every library source counter
+Adding a concrete type retains the compiler placeholder and its zero-count instantiation
+
+--- author-fence-instantiation-classification.log; SHA256 261c40b8b722b24d9cfb0261fdd99a2f68ca0998d4107ea6befeaa8c95d7ebec ---
+Full official LLVM export: /tmp/issue-138-recovery/author-fence-native-detail-complete.json; SHA256 83ecf9d05c06d70374dc14bc961dfd1e9a461a17efa27104e85c4b5f9f453a49
+Zero-count generic placeholder: _RNCNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB6_11AuthorFencepE4read0Ba_
+Zero-count generic placeholder: _RNCNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB6_11AuthorFencepE5claim0Ba_
+Zero-count generic placeholder: _RNCNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB6_11AuthorFencepE5claims_0Ba_
+Zero-count generic placeholder: _RNvMs0_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB5_19GuardedJournalStorepE10into_storeB9_
+Zero-count generic placeholder: _RNvMs0_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB5_19GuardedJournalStorepE4keysB9_
+Zero-count generic placeholder: _RNvMs0_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB5_19GuardedJournalStorepE7currentB9_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE10into_storeB8_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE3newB8_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE4bindB8_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE4readB8_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE5admitB8_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE5claimB8_
+Zero-count generic placeholder: _RNvMs_NtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fenceINtB4_11AuthorFencepE8snapshotB8_
+Zero-count generic placeholder: _RNvXININtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fences1_0pEINtB5_19GuardedJournalStorepENtNtB7_7cluster18AtomicJournalStore16compare_exchangeB9_
+Zero-count generic placeholder: _RNvXININtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fences1_0pEINtB5_19GuardedJournalStorepENtNtB7_7cluster18AtomicJournalStore22supports_durable_flushB9_
+Zero-count generic placeholder: _RNvXININtNtCs1Vjip6Fz2BO_8link_cli6engine12author_fences1_0pEINtB5_19GuardedJournalStorepENtNtB7_7cluster18AtomicJournalStore4readB9_
+22 executed entries; 16 zero-count generic placeholders
+All executed author-guard entries cover their recorded regions; raw totals remain unchanged

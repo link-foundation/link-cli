@@ -1,0 +1,264 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-query-reservations.sh
+Additional release gates: bash experiments/issue-138/validate-query-reservation-release.sh
+START 2026-10-27T21:30:35Z
+STRICT LINT PASS 2026-10-27T21:32:19Z
+COMPLETE NATIVE PASS 2026-10-27T21:48:41Z
+COMPLETE ACTUAL WASM PASS 2026-10-27T21:54:10Z
+ALL PASS 2026-10-27T21:54:16Z
+Before: query-reservation-before.log: expected regression reproduced.
+Before: query-wide-name-before.log: expected regression reproduced.
+Before: query-bindings-before.log: expected regression reproduced.
+Before: causal-query-name-before.log: expected regression reproduced.
+Before: query-session-api-before.log: expected regression reproduced.
+Complete native: 1257 passed, zero failed, 22 helper entries ignored by the top-level harness (native parents invoke their finite children).
+Complete native production source set retained: 122 previous files, 125 current files.
+Complete native lines: 19611/20591 (95.24064%).
+Complete native branches: 3798/4320 (87.91667%).
+Complete native functions: 2507/2704 (92.71450%).
+Complete native regions: 30076/32519 (92.48747%).
+Complete native instantiations: 13644/24587 (55.49274%).
+native /rust/src/engine/query_scratch.rs lines: 111/152 (73.02632%).
+native /rust/src/engine/query_scratch.rs branches: 13/24 (54.16667%).
+native /rust/src/engine/query_scratch.rs functions: 15/31 (48.38710%).
+native /rust/src/engine/query_scratch.rs regions: 141/212 (66.50943%).
+native /rust/src/engine/query_scratch.rs instantiations: 40/134 (29.85075%).
+native /rust/src/engine/query_reservation.rs lines: 43/53 (81.13208%).
+native /rust/src/engine/query_reservation.rs branches: 6/10 (60.00000%).
+native /rust/src/engine/query_reservation.rs functions: 1/4 (25.00000%).
+native /rust/src/engine/query_reservation.rs regions: 57/74 (77.02703%).
+native /rust/src/engine/query_reservation.rs instantiations: 2/20 (10.00000%).
+native /rust/src/engine/causal_named.rs lines: 78/104 (75.00000%).
+native /rust/src/engine/causal_named.rs branches: 2/2 (100.00000%).
+native /rust/src/engine/causal_named.rs functions: 18/25 (72.00000%).
+native /rust/src/engine/causal_named.rs regions: 131/195 (67.17949%).
+native /rust/src/engine/causal_named.rs instantiations: 18/50 (36.00000%).
+native /rust/src/engine/causal_session.rs lines: 382/385 (99.22078%).
+native /rust/src/engine/causal_session.rs branches: 35/36 (97.22222%).
+native /rust/src/engine/causal_session.rs functions: 58/59 (98.30508%).
+native /rust/src/engine/causal_session.rs regions: 558/577 (96.70711%).
+native /rust/src/engine/causal_session.rs instantiations: 58/135 (42.96296%).
+native /rust/src/query_processor.rs lines: 660/715 (92.30769%).
+native /rust/src/query_processor.rs branches: 121/154 (78.57143%).
+native /rust/src/query_processor.rs functions: 47/52 (90.38462%).
+native /rust/src/query_processor.rs regions: 911/1048 (86.92748%).
+native /rust/src/query_processor.rs instantiations: 590/1511 (39.04699%).
+native /rust/src/query_processor/matching.rs lines: 218/231 (94.37229%).
+native /rust/src/query_processor/matching.rs branches: 44/56 (78.57143%).
+native /rust/src/query_processor/matching.rs functions: 14/14 (100.00000%).
+native /rust/src/query_processor/matching.rs regions: 349/392 (89.03061%).
+native /rust/src/query_processor/matching.rs instantiations: 163/526 (30.98859%).
+Complete wasm: 785 passed, zero failed, 0 helper entries ignored by the top-level harness (native parents invoke their finite children).
+Complete wasm production source set retained: 113 previous files, 116 current files.
+Complete wasm lines: 15742/18465 (85.25318%).
+Complete wasm branches: 3196/3739 (85.47740%).
+Complete wasm functions: 1954/2412 (81.01161%).
+Complete wasm regions: 24247/29113 (83.28582%).
+Complete wasm instantiations: 5192/8935 (58.10856%).
+wasm /rust/src/engine/query_scratch.rs lines: 111/152 (73.02632%).
+wasm /rust/src/engine/query_scratch.rs branches: 13/24 (54.16667%).
+wasm /rust/src/engine/query_scratch.rs functions: 15/31 (48.38710%).
+wasm /rust/src/engine/query_scratch.rs regions: 141/212 (66.50943%).
+wasm /rust/src/engine/query_scratch.rs instantiations: 39/127 (30.70866%).
+wasm /rust/src/engine/query_reservation.rs lines: 43/53 (81.13208%).
+wasm /rust/src/engine/query_reservation.rs branches: 6/10 (60.00000%).
+wasm /rust/src/engine/query_reservation.rs functions: 1/4 (25.00000%).
+wasm /rust/src/engine/query_reservation.rs regions: 57/74 (77.02703%).
+wasm /rust/src/engine/query_reservation.rs instantiations: 2/20 (10.00000%).
+wasm /rust/src/engine/causal_named.rs lines: 78/104 (75.00000%).
+wasm /rust/src/engine/causal_named.rs branches: 2/2 (100.00000%).
+wasm /rust/src/engine/causal_named.rs functions: 18/25 (72.00000%).
+wasm /rust/src/engine/causal_named.rs regions: 131/195 (67.17949%).
+wasm /rust/src/engine/causal_named.rs instantiations: 18/25 (72.00000%).
+wasm /rust/src/engine/causal_session.rs lines: 382/385 (99.22078%).
+wasm /rust/src/engine/causal_session.rs branches: 35/36 (97.22222%).
+wasm /rust/src/engine/causal_session.rs functions: 58/59 (98.30508%).
+wasm /rust/src/engine/causal_session.rs regions: 561/577 (97.22704%).
+wasm /rust/src/engine/causal_session.rs instantiations: 58/76 (76.31579%).
+wasm /rust/src/query_processor.rs lines: 657/715 (91.88811%).
+wasm /rust/src/query_processor.rs branches: 119/154 (77.27273%).
+wasm /rust/src/query_processor.rs functions: 47/52 (90.38462%).
+wasm /rust/src/query_processor.rs regions: 907/1048 (86.54580%).
+wasm /rust/src/query_processor.rs instantiations: 278/572 (48.60140%).
+wasm /rust/src/query_processor/matching.rs lines: 218/231 (94.37229%).
+wasm /rust/src/query_processor/matching.rs branches: 44/56 (78.57143%).
+wasm /rust/src/query_processor/matching.rs functions: 14/14 (100.00000%).
+wasm /rust/src/query_processor/matching.rs regions: 349/392 (89.03061%).
+wasm /rust/src/query_processor/matching.rs instantiations: 97/214 (45.32710%).
+Six doctests pass; one existing illustrative example ignored.
+The unchanged source-size checker runs on all Git-visible Rust inputs; two ignored historical checkout copies are retained outside that snapshot.
+RELEASE PASS 2026-10-27T22:03:17Z
+Rust release helper tests: 29 passed.
+Strict native/WASM all-target Clippy, both formats, rustdoc, 221 repository tests, actual Rust release helpers, locked metadata, optional-provider/source/workflow/whitespace checks pass.
+Five finite canonical-document controls reproduce reference-kind loss. This protocol boundary remains unfinished in this step.
+Bare dependency tree has no JSON/SQLite/SHA; selected causal sessions add no SQLite/SHA.
+Shared execution previews reserve actual allocation order without publishing probe rows. Rejection/rollback can leave gaps.
+An eight-thread native test verifies disjoint ordinary transaction reservations. Actual WASM runs the portable contracts.
+Causal queries retain u64::MAX with a checked u128 marker, preserve private staging until explicit-token publication, and bound input/result/binding growth.
+Existing recycling stores keep the legacy prediction fallback and its documented gaps. Preview copies rows/names and repeats query execution.
+C#/JS/protocol query parity, complete-project 100% and every wider unmet R1-R12 criterion remain unfinished; PR139 stays draft/unmerged.
+Production source rust/src/changes_simplifier.rs: 2298 bytes; SHA256 bc3b265d95d8c6c2ad06a7387baa5e37a780937f800f0df34cb2fafdd2ec4558.
+Production source rust/src/cli.rs: 25980 bytes; SHA256 a9075cb4753760ecc75f5ae5ca2d4140426da50131a58f1abf84f5a343439192.
+Production source rust/src/engine/branch.rs: 5957 bytes; SHA256 2cb6dc56112137bd62da0cef346ea6f65e97519ca713afcc9d5a2aec3edc7791.
+Production source rust/src/engine/causal.rs: 8787 bytes; SHA256 31a6ac1520d95ebf5c8a640cffa7c649457771b2eac4f3aecfa630fa9ed7bfb7.
+Production source rust/src/engine/causal_batch.rs: 15275 bytes; SHA256 fd91b135531f2c631333beeae732c9dc4479555183b4cc55561bfbcbe1fd810b.
+Production source rust/src/engine/causal_merkle.rs: 19194 bytes; SHA256 7eadb5caee24647d074859bcf151ed44e3a03d255d3f9aa0f04499a1be439f6c.
+Production source rust/src/engine/causal_named.rs: 4306 bytes; SHA256 492bfc186f0601dd079d7b39377695b5b828a5f62f8c5ea57a20118529dfcf32.
+Production source rust/src/engine/causal_projection.rs: 3065 bytes; SHA256 07d213483ff9571b4f6b9f6e92489266cac47c2cdb5e525a073ed035e0726b72.
+Production source rust/src/engine/causal_replica.rs: 13690 bytes; SHA256 de919984ef496e108f635b89699236ac7db94e70c891511e7ae52243eb7630dc.
+Production source rust/src/engine/causal_session.rs: 15773 bytes; SHA256 52d3dfaa8f01fba58dfbff1d28c7d2b0d4a9417571781a37818a33d556dd5494.
+Production source rust/src/engine/changes.rs: 4650 bytes; SHA256 63449224060160199f8f839af24151358535b2ecd9ed5e756ed35b14bbd91b61.
+Production source rust/src/engine/checkpoint.rs: 2187 bytes; SHA256 c9c8ca7588e9a874561b16c4c5351192684102cd42d1e6300873568b3abf4f97.
+Production source rust/src/engine/cluster.rs: 8771 bytes; SHA256 c91c35390d0072c5f9e37eda6e764e046be0e8e3cec53ecf145ecd2eed47f68d.
+Production source rust/src/engine/commit.rs: 3010 bytes; SHA256 40c45df1a81a33fdb6255ac98f646283aee60a7b0a3908099865b151d49cb444.
+Production source rust/src/engine/constraint_index.rs: 5301 bytes; SHA256 73356f22f5c854f8e2d68b4f815d98ec5d0e041fdf81d4eb738cbf3f2102e2d2.
+Production source rust/src/engine/delta.rs: 10104 bytes; SHA256 d1fcd4cfee1b9d41ad0aee91d903bed9fb38eb1d233106e12ee0d056c2392166.
+Production source rust/src/engine/etcd/maintenance.rs: 8535 bytes; SHA256 a24be1be548707240a87ba87e74501772239f79c6f39961e814b490243dd9ab4.
+Production source rust/src/engine/etcd.rs: 8889 bytes; SHA256 707c5c4aa461b123ba2f494a00657f70c88ee9f494bff0df5ea0cd4064da12c3.
+Production source rust/src/engine/group.rs: 6991 bytes; SHA256 1543bea7c098fce0739648ee3c081a073b4bb7363b498c9edb5b19ec69152fc1.
+Production source rust/src/engine/journal.rs: 7514 bytes; SHA256 cb591d59d39ad25c4cb9f7c00111a4c6ff3510a42309ccae4c8401eff6517925.
+Production source rust/src/engine/lsm/lease.rs: 3197 bytes; SHA256 c22af8a65502cedca79b3a0028c52fa005924a3f6b746d11bea2da25fa23d5c5.
+Production source rust/src/engine/lsm/native/device.rs: 6057 bytes; SHA256 d375af3e95d84586ac8f14ecdda4340333e679047c8859789bdedf8af5b8b989.
+Production source rust/src/engine/lsm/native/directory.rs: 8486 bytes; SHA256 80617ff63687f04f90f41c156b082dc1dc07b8af4e2f9be2d5105ede58e829e9.
+Production source rust/src/engine/lsm/native/files.rs: 12510 bytes; SHA256 670e8ffd4ef06a264a95fb12ee5c7cddd85c88630e9fc2257b414a1f133b62df.
+Production source rust/src/engine/lsm/native/mod.rs: 7284 bytes; SHA256 32994db9f8b0f0b304af8e5d434742d3aa49554415e26b41b275ed99855d2409.
+Production source rust/src/engine/lsm/native/read_only.rs: 5858 bytes; SHA256 1294b53770edef89cae7e2b1f0723309730057b22947ff814de271e709028909.
+Production source rust/src/engine/lsm/native/test_support.rs: 4008 bytes; SHA256 931ed9ec30dc94e1a85b971cb518de43fd385ddd9680d2aeff92f68a084e689a.
+Production source rust/src/engine/lsm/store.rs: 23970 bytes; SHA256 f323337e7e9376821cd363e4b07f0338033836b235d004217052f3790ffa5df3.
+Production source rust/src/engine/lsm.rs: 11430 bytes; SHA256 7a6d46983d576c0b7559e472de67d9a02725d57b6d64009358f4fe7632c16293.
+Production source rust/src/engine/maintenance.rs: 1528 bytes; SHA256 9b741b7c828b35de15ec3c96b9ec40e83df43f6eb46ad53867813dfa4371972f.
+Production source rust/src/engine/mod.rs: 14140 bytes; SHA256 230158e061ad29085cb5a01bde4f3e285acb0e331f306253cd9a984126f1bcea.
+Production source rust/src/engine/named.rs: 5907 bytes; SHA256 d9173026122236de4350e2a5299b8ab76779aa70bf07afaddc6cf8020c7388a6.
+Production source rust/src/engine/object_cache.rs: 1578 bytes; SHA256 26c08f047d1cbfd58d5e5c7aabd0a66f74a9225d0932878dcf34ce99353807ec.
+Production source rust/src/engine/paged/checkpoint.rs: 10928 bytes; SHA256 4659c9a2f4186e9654eae8c0a6c0d92e7ae73fb57daa48cf1b92385e58e1919b.
+Production source rust/src/engine/paged/checkpoint_format.rs: 2730 bytes; SHA256 f2d4601e5ff57d3cb5cfc45b78ff2378c83a301ad7ca42d6fcd192b5ef7005e9.
+Production source rust/src/engine/paged/checkpoint_inspect.rs: 3397 bytes; SHA256 0440658ba08645bf8b4a370898715cf5552898bd8b0dbd0e1014294707cbf16d.
+Production source rust/src/engine/paged/checkpoint_root.rs: 6952 bytes; SHA256 15ccd8c0f1b141f416f4569368ab128de460cd49e056113b22ff0809ca6937d7.
+Production source rust/src/engine/paged/file.rs: 11228 bytes; SHA256 341acf0239ba1a9d3e8debb45b4c676df44c279d780759b67ffbcc9c4e530dfc.
+Production source rust/src/engine/paged/file_checkpoint.rs: 11734 bytes; SHA256 d0c38432d253a8ab9922a34b26b244a31c724745e2bfd370f635a7ef9215b50d.
+Production source rust/src/engine/paged/file_events.rs: 2502 bytes; SHA256 f00b798020de7062366aea392d063a3a651d4444feb2671080fe3c05e660cac4.
+Production source rust/src/engine/paged/format.rs: 4563 bytes; SHA256 7f9e82f53745005327095bab42724ea1f8eab46665b9e3771666a8e3528b3139.
+Production source rust/src/engine/paged/mirrored.rs: 9992 bytes; SHA256 7bb1db06c89c0ac1800cf0e07be48332ab55c3d26f9ef317e2996738ae63d9c5.
+Production source rust/src/engine/paged/mod.rs: 14426 bytes; SHA256 579ee914549d0dd17c4cefa912eaeeb50a5e711a9a692062a27d73e676f8eeff.
+Production source rust/src/engine/paged/sorted_table.rs: 11667 bytes; SHA256 7b95776f5d368ae3dad94406ed5514ff48b7346bdad7b274c305603391279da7.
+Production source rust/src/engine/partitioned/chunks.rs: 4584 bytes; SHA256 691dd60640b13f713fabece2f5ad6b5530cbc8937430e90d0d59c08bc71ad216.
+Production source rust/src/engine/partitioned.rs: 9264 bytes; SHA256 edc82cf4f10f3e831c5a9f84472301f0c3e3dc19dcfc5e026981013dd85f4180.
+Production source rust/src/engine/pessimistic.rs: 1422 bytes; SHA256 3c4f13ba923a9a6b183874c52bf55e13327ccfc4d4e7949742f4c8bebaac9957.
+Production source rust/src/engine/query_reservation.rs: 2232 bytes; SHA256 e79408bb8c4ecb16b587e1cf4f296071e90cceb27e1ba14c70d65164033d7971.
+Production source rust/src/engine/query_scratch.rs: 5694 bytes; SHA256 a8a317128e0aba0af924b40a2d09ecaebe6e59b45f14cc9ea8d56ae1ad376c1a.
+Production source rust/src/engine/reclaiming/codec.rs: 7153 bytes; SHA256 3746c1ce06d8b25dd92652433769db4ba35a500accc383739a943f0e3b680c0f.
+Production source rust/src/engine/reclaiming/collector.rs: 3022 bytes; SHA256 a1317d4c62d9f8064e4ea552a0247b6b766235fc0781947f4236a706b89878b5.
+Production source rust/src/engine/reclaiming/objects.rs: 2443 bytes; SHA256 147dd41c0ca1543b2bd1a7f29a89b36949771a48567bd93340a7af050b111f7f.
+Production source rust/src/engine/reclaiming.rs: 10160 bytes; SHA256 d4ff87b34d05824ded1477c6d23fe448322d305e75ee3f917ec06a55702030fa.
+Production source rust/src/engine/replication.rs: 4428 bytes; SHA256 1c25fe108b9b6ccfee793c25a6939284ecbde59c9008ec72fd179fb787d3a5c0.
+Production source rust/src/engine/rows.rs: 5702 bytes; SHA256 534d2efd64c35b6886ef6ab29f7d7703df2001e75fc451c001e1467819f80c55.
+Production source rust/src/engine/sorted_runs.rs: 3926 bytes; SHA256 1a3a4d03cc3b96d0bf0aa30ee1b935bc070c4152773dea050d686fd7c0088360.
+Production source rust/src/engine/sqlite.rs: 11599 bytes; SHA256 6e6cce74dc72246f2ae8b52a74a9efa55aecfaadcd743443a98cda083c87d8d2.
+Production source rust/src/engine/transaction.rs: 11265 bytes; SHA256 e151d130468e8f776a6f3c873315eecdfad6d3a695acd100b8ba47d1729ac32d.
+Production source rust/src/engine/validation.rs: 655 bytes; SHA256 bc8f00449776e2cce5303fc2958dfe5cff9f899acd3e1567b61ce0fc8ce9a31f.
+Production source rust/src/error.rs: 2720 bytes; SHA256 ad1ba0f34266a91061c1ec9e64567dd61c77685a32abaaeba12323b48c21d43a.
+Production source rust/src/hybrid_reference.rs: 1305 bytes; SHA256 d046eb9575fbc06bb50ad44676427ccc0f24c633d356d48e290420587723d7aa.
+Production source rust/src/indexed_links.rs: 4869 bytes; SHA256 1df3d4c132e3696def6cbc3850435faebc6cca71f3060999f087fb7d67d23f4c.
+Production source rust/src/link.rs: 2619 bytes; SHA256 1766522662e8372e29348b6d0b5f23f563c45c94763587a5122fefaa97fca858.
+Production source rust/src/link_reference_validator.rs: 15426 bytes; SHA256 62692d6dd0a5d1d5ad76b3e37d367d2c7f7f682a44bb163180b22d0a5f608665.
+Production source rust/src/link_storage.rs: 32663 bytes; SHA256 4eae71757aa6cb5525d1454d6840792ee56e85e3b4b214434faffc7d7afa153d.
+Production source rust/src/link_storage_doublets.rs: 11483 bytes; SHA256 d3feef533f2ff99eb4d594116b17a199e03fac39623aea6a038af04c9b55d53c.
+Production source rust/src/lino_database_input.rs: 5439 bytes; SHA256 5a5b9d79d3f666f571ff37c9f147b0ab5e55f8989329dd19e1caec8f08098a7b.
+Production source rust/src/lino_link.rs: 1840 bytes; SHA256 2405a06a9f9025735ea7bcf875e42ff2c0773ec03f1360eebb19cd331f541380.
+Production source rust/src/main.rs: 17625 bytes; SHA256 76e7d8291ee507aec7c0fa5aac5e4a27f7b9aaec713f11ba016bddaf94680526.
+Production source rust/src/named_links.rs: 1848 bytes; SHA256 34e83a70999963a2e2af843e4f58366d9f8d70193d8dd313a48951d06e566e0a.
+Production source rust/src/named_type_links.rs: 18455 bytes; SHA256 92a803453338294c9d55862fa342bbb3539273cd5768b22f8be4f52bb3597f0d.
+Production source rust/src/named_types.rs: 10414 bytes; SHA256 b7bdf487be5aa928e737d34d64c435071153a73b6c027fc5a704a8d95129cf6e.
+Production source rust/src/parser.rs: 1894 bytes; SHA256 7e59c9c502594dc06fee3f57be3316f47332c14e6dc22658a48fe16db5753c21.
+Production source rust/src/persistent_transformations.rs: 23851 bytes; SHA256 e2c260009d9fb599471fb0eb4fc9c59b70d7b84337ed6a14a613db45613997e9.
+Production source rust/src/pinned_types.rs: 4995 bytes; SHA256 f57fea7ce9916bbd801154dcaa9996b58f5fddfa761ef866c8a84b35a7efd6bb.
+Production source rust/src/protocol/archive.rs: 6019 bytes; SHA256 316777f12b1c85b50d30fc060591b0bd6d128d7740490de0bb8ea5e595273ba8.
+Production source rust/src/protocol/client.rs: 1784 bytes; SHA256 2ebf18fd0b31b38dea47c0627eb52a8e77b75a8cb4ab25f19d8e0344001f6a37.
+Production source rust/src/protocol/error.rs: 1831 bytes; SHA256 6c2ff55214fede31ed2d6df9b73a4cef3ded46fb544d0031852f3527666074cb.
+Production source rust/src/protocol/links_operations.rs: 16283 bytes; SHA256 013c32ed4175a8130033f2ca3e96d4bf1afa19bc4e816d02f19f451772921381.
+Production source rust/src/protocol/protocols.rs: 11293 bytes; SHA256 a16fe09c61213e7b41c8fb2c0f36984dad0964339be2130cf356678aa94123b4.
+Production source rust/src/protocol/remote_links.rs: 10751 bytes; SHA256 a5d75bfcff39c127bb9278cbd6fd54dd9a8c1b558896ca0051c43e1e200232b4.
+Production source rust/src/protocol/server.rs: 10872 bytes; SHA256 de6cc347d28b1042a9a4997a0b81a85c8eb37989fd761ec0c88f64ecacf6bc1b.
+Production source rust/src/query_options.rs: 1126 bytes; SHA256 bed349309149b0cad40b6bcd87386c8a863faa4f936318277b8b13afb1c14eb6.
+Production source rust/src/query_parser.rs: 5823 bytes; SHA256 f1a0662aa7053c0bc5fe841dc739480176d053260eaa8fc58c5decc428b3956f.
+Production source rust/src/query_processor/matching.rs: 10155 bytes; SHA256 696d700c2656c21e7b89cff243e748e2ffb999fb83304aade06675af51ecd862.
+Production source rust/src/query_processor/mutations.rs: 16367 bytes; SHA256 414935562a1244ca84d438e56dacee7d22f2ba427626e3adf8607af15bc34aec.
+Production source rust/src/query_processor.rs: 33131 bytes; SHA256 0f161e694111cc61f7e862ba252aa2ac6f5e6f2d088b33ffeaf7cbc756b27b05.
+Production source rust/src/query_processor_substitution.rs: 3622 bytes; SHA256 595818bc7d5f5801fb29ef037c821682a9099083575de7c6601517b20547454b.
+Production source rust/src/query_types.rs: 1322 bytes; SHA256 2cb060c58a10a6f511efce20777522c66fb85989adc413b30994e258b4231049.
+Production source rust/src/sequences/address_to_raw_number_converter.rs: 305 bytes; SHA256 9e0bf099267ac5ec7a0a10e431501a101527287cad03b2418cca57c0ade51c34.
+Production source rust/src/sequences/balanced_variant_converter.rs: 1091 bytes; SHA256 49a2d0e3433eee582b5ba4dc8a9cf2a23bbf7004fe5213990987c4f5fdfc1293.
+Production source rust/src/sequences/caching_converter_decorator.rs: 1125 bytes; SHA256 003d496d1d5f4bb9609c80e50b7cfffe4a97945025e3f4b29395a22baa76a047.
+Production source rust/src/sequences/char_to_unicode_symbol_converter.rs: 796 bytes; SHA256 0c26ee305afa36640b6a1e8a06a8e9caf411dac81718db60df45291c6316eafe.
+Production source rust/src/sequences/default_stack.rs: 557 bytes; SHA256 cb53288c623bac5a537b77f17012a0998e6693b0d7929a2d4838db39fcdc8b88.
+Production source rust/src/sequences/raw_number_to_address_converter.rs: 345 bytes; SHA256 c4b42ebaecff3f091ac89172c31bee3822b59bac8bb5b903b14c183f86a04d71.
+Production source rust/src/sequences/right_sequence_walker.rs: 2115 bytes; SHA256 a2e18a8bc40150607d57d92de1a0579d653d8d8fe0f7c88ecbd801c0fc911abb.
+Production source rust/src/sequences/string_to_unicode_sequence_converter.rs: 1311 bytes; SHA256 e446d9b2a150bd189c0a2ff7319159d2867df720e08b056825c60d7adf1583e0.
+Production source rust/src/sequences/target_matcher.rs: 468 bytes; SHA256 50d1146d4fec5108c2187ede80c6f6dbf7f4fb34227467a9e7771102e1d7f7ce.
+Production source rust/src/sequences/unicode_sequence_to_string_converter.rs: 1757 bytes; SHA256 a65f9622c468906e5bb5c03ae998ca6e5ebc5a65638ab7d45ec74281a25d0b17.
+Production source rust/src/sequences/unicode_symbol_to_char_converter.rs: 1160 bytes; SHA256 1d360c96187bb2a37c3038eb9896ea074761e7567f37a07ab3bf936612b45f3c.
+Production source rust/src/storage/decorator_impls.rs: 8711 bytes; SHA256 ddd17fef862aaad918f77e221d4b38a51fc580b47ae90b459b8b8adf2a6df79e.
+Production source rust/src/storage/doublets_storage.rs: 18332 bytes; SHA256 1c4a65983b0934ac5dd6b3dee25e57b8ff135bcf2cf9cebde818483cb8ca97f5.
+Production source rust/src/storage/file_mem.rs: 11828 bytes; SHA256 37ed2be97281142b7428f400d89bc1aa97017bfa532743f7722fbbd29c407814.
+Production source rust/src/storage/file_mem_grow.rs: 4039 bytes; SHA256 104ecd107809ecf1d692f93d368720420ce8a5a92a58fa9eba83d4703e4e2a17.
+Production source rust/src/storage/lock.rs: 3910 bytes; SHA256 ac52ec4daf17a865cb6f49cac468cb85fcab5a07a8ec9e7e1ad6c00a786f6a7c.
+Production source rust/src/storage/mapped_flush.rs: 4998 bytes; SHA256 84006351300ac5f0c262555867090fc8911858eb7d12e3c1656e74368477511b.
+Production source rust/src/storage/traits.rs: 11339 bytes; SHA256 d51fbd4c9086b419348b553a6618c8364fda8d3047e4a900f09d32a23f1fc1cc.
+Production source rust/src/structure_format.rs: 1747 bytes; SHA256 b84519291b9cad88d2e7fcde96ca018706383947afc8ba43022268a268ba8b04.
+Production source rust/src/text_storage_format.rs: 2369 bytes; SHA256 fdd73824c226a6475f79ce7e573496a631cdf5f36ac72ec459a1ae0ee59bf710.
+Production source rust/src/transactions/commit.rs: 2621 bytes; SHA256 d959ef338104635a2eaba8fb57c74482c20f80d44b75930e5fc8bed4ecc50a7e.
+Production source rust/src/transactions/journal_validation.rs: 6103 bytes; SHA256 16fbcd2f36bbb6f3380c465587084f89b727610fc749a78a77675ab1fee6b6e5.
+Production source rust/src/transactions/log.rs: 10794 bytes; SHA256 595e15c9ac919a36139122f0759aabcdc1dfbdc6c0212532ead8c4dadfb5c696.
+Production source rust/src/transactions/mod.rs: 30720 bytes; SHA256 06e7177099d8ac4078ee576a36fc55a053eab12a4553660f02ef5e71437edf03.
+Production source rust/src/transactions/names.rs: 4132 bytes; SHA256 cdd3b97eee83021af834f8650a1c3e806ff2e3d04b8c4da86cc350babc3bafe6.
+Production source rust/src/transactions/record.rs: 6341 bytes; SHA256 f15177639714d3ad82d5383a6a0c192412ab6c01e82245c5e14b94a5f553cdc1.
+Production source rust/src/transactions/recording.rs: 10287 bytes; SHA256 7833f27038fcc6b4129b310f9910afdb9829d0651e1566c065709d75b72a99f7.
+Production source rust/src/transactions/recovery.rs: 21602 bytes; SHA256 21d540390f6e8fdea74bb553c126125957de106e3d585e9cea40e32bb4fa34fa.
+Production source rust/src/transactions/row_undo.rs: 8264 bytes; SHA256 28ed553914d65834ee4b5ed44e65a9f7db583727653c1d7ea6f60df957098150.
+Production source rust/src/transactions/types.rs: 9938 bytes; SHA256 aefb2383d2aa1fc4764f5a31fc1940e148fbafb445ca3e3b5f622486e5b0a540.
+Production source rust/src/transactions/undo_image.rs: 4223 bytes; SHA256 eac10bdda93e48343afa6d9614a35a4943bf94e24412235a66ad03f0401075ac.
+Production source rust/src/transactions/version_replay.rs: 2177 bytes; SHA256 c8420c015d49b4e93aa8546778a87318ce48b1f2dcbcc5602c68e78e6789518b.
+Production source rust/src/unicode_string_storage.rs: 16790 bytes; SHA256 ccc21b5caa3fed1a1d4a1b37471150624cf1e769f77ff69b3408a4b1ea4f131a.
+Production source rust/src/version_control/mod.rs: 32707 bytes; SHA256 446bd03052a455124913c4136c5b84b377319963d2c9c9d8a8217ef61f885a40.
+Production source rust/src/version_control/movement.rs: 13545 bytes; SHA256 ce9eb4e47774cc6a61b65859c52d7c5a499afe4567d915dd3f64fd123e24ef1d.
+Production source rust/src/version_control/publication.rs: 7478 bytes; SHA256 a285fbaf0216b63c888d48da2e6cd3e71f0d6b2aadfaba818aad0b474a5ccb45.
+Production source rust/wasm/src/causal_session.rs: 7016 bytes; SHA256 2908a3dda6ee0b067ba51285a1bf5038b1273f908ec3ba675097b8739d578a54.
+Production source rust/wasm/src/engine.rs: 14197 bytes; SHA256 885276b75b17b9aa37c66ead934d76974d1afd01bf245fba5386a5de65ba2b9e.
+Production source rust/wasm/src/engine_log.rs: 6402 bytes; SHA256 fb37c7867b6c550e5be063e8804466a9a52c6b7d962b884c8a3967cc61bd1e2d.
+Production source rust/wasm/src/lib.rs: 10934 bytes; SHA256 fca1b1c8fe2c386b5ae967f72e8a23e87570e4107e10fa6ab17faa653dbe553b.
+experiments/issue-138/causal-query-name-before.log: 1316 bytes; SHA256 fcfb6e7afdeb98fc031263c56bdf2d174c66beb9d89f58eb6a76bfa701961111.
+experiments/issue-138/causal-session-coverage-native.json: 21638159 bytes; SHA256 469581797be1deae6cbac136b93a1643cf3d3b45dea2ab50acddaa36f66132f5.
+experiments/issue-138/causal-session-coverage-wasm.json: 25375883 bytes; SHA256 143e9cd01e04011f10c1b8ca446b9e3c467a9e69f749bbe53eaff9ef1eba5d41.
+experiments/issue-138/query-bindings-before.log: 910 bytes; SHA256 9fadca85cab518e154651ff46ba2526be36eb3f491220cb24ae0242080b060ff.
+experiments/issue-138/query-document-kinds.log: 664 bytes; SHA256 8c85abbf396b75259bdeeaeadeec7826eff3d9460adbc3551f5cf3bf0d4c2a2c.
+experiments/issue-138/query-reservation-bare-dependencies.log: 3537 bytes; SHA256 9847ae68cfbd570f0347e10e502aceb8cd065f088aa050c5571ba0ff665798b1.
+experiments/issue-138/query-reservation-before.log: 1081 bytes; SHA256 42fc90688b363bd7258e4c053b4c418cc71ab44d31049136d3924ffde924943c.
+experiments/issue-138/query-reservation-changeset.log: 20479 bytes; SHA256 a593b0aed387cae821b92fcfe22ab9d633b7081252f802727b0f011574ae5e0d.
+experiments/issue-138/query-reservation-clippy.log: 132 bytes; SHA256 07bb72df477e4d47f63728feab6979a78e5ae5d6200eaeddf363a9f7ec5e5c8d.
+experiments/issue-138/query-reservation-docs.log: 304 bytes; SHA256 6a43656b0739295bc75ab7ce1254820eee739b1444a5d6be68416b8b13d5c396.
+experiments/issue-138/query-reservation-doctests.log: 904 bytes; SHA256 96adfa1e7a384d09351a3234bd8b4dc4201ba6338f46fb288011fb77c7776087.
+experiments/issue-138/query-reservation-driver.log: 184 bytes; SHA256 0ae4d30488c30df14cc4d52245b66c2cc2ac202396bf77674e20c709ddd7a977.
+experiments/issue-138/query-reservation-format.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/query-reservation-native-coverage.json: 23741252 bytes; SHA256 3126cc6b09011849ae270e5b06989784f6f93c903e8f58067ebfdd27f53fbc04.
+experiments/issue-138/query-reservation-native-full.log: 597420 bytes; SHA256 0fda567b985df997a4a8cad2ed8113f9ba9b4f907c96ce4ff04de515f1f1d5f9.
+experiments/issue-138/query-reservation-native-metadata.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/query-reservation-release-compile.log: 208530 bytes; SHA256 a88e04f3814989b54e1b7b07a75da05071fd1e55e38f857b9b1b5745c01dffdf.
+experiments/issue-138/query-reservation-release-driver.log: 34 bytes; SHA256 a6533872095dd89226b1b23b178788f495334e0924a54c56d7ce5bb1fe56561a.
+experiments/issue-138/query-reservation-release-shellcheck.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/query-reservation-release-tests.log: 75130 bytes; SHA256 4da8e6a22e5c662d59d13e15fbf083a44c934e087dcf19206426450b8dd556a4.
+experiments/issue-138/query-reservation-repository.log: 18478 bytes; SHA256 c6a5e66b43b70b3b0079c98689849305c56ab728ac3a474d1fce209a2ba9c34b.
+experiments/issue-138/query-reservation-rust-source-size-archive-before.log: 30432 bytes; SHA256 a557c593ecee42e373cc55b0de6fe943944bb0e31bbba6e48cb99ca514c98959.
+experiments/issue-138/query-reservation-rust-source-size.log: 15035 bytes; SHA256 3dc31d246f8274dc21a106cd3bf9480496374f89b0e122da651b45981cbf210e.
+experiments/issue-138/query-reservation-rust-source-snapshot.json: 73021 bytes; SHA256 e85a3cd0de23240057c6b97b4e921d019a3dabc042ab63c31d681c96b3af6904.
+experiments/issue-138/query-reservation-selected-dependencies.log: 3691 bytes; SHA256 1a9c9195cd8fa1e3356101a069b1878267f3610652d9cca0d5cf2ba486e2c124.
+experiments/issue-138/query-reservation-source-size.log: 205 bytes; SHA256 0002077fca2107488765877d8cb810c0983728d1b97f7b962ea04aa7770e83f9.
+experiments/issue-138/query-reservation-sqlite-optional.log: 445 bytes; SHA256 5592678d0bb36f770c5f905477684a4aba00c6fae2db721df8449b5ac66daf1c.
+experiments/issue-138/query-reservation-wasm-clippy.log: 1136 bytes; SHA256 47f55630720fe503f03e92b084c813d244f25a06bde016424f279e51a6754792.
+experiments/issue-138/query-reservation-wasm-coverage.json: 26612291 bytes; SHA256 841a9ae5a8e1123717b0812676786068d0f25c9380b39852bba53579c198f9d0.
+experiments/issue-138/query-reservation-wasm-full.log: 70427 bytes; SHA256 3982f78d05891a83cafaa5ea279c948195238f53af59f42fe46fc6df88cd1e69.
+experiments/issue-138/query-reservation-wasm-host-clippy.log: 60 bytes; SHA256 e7a0e788c2f011df0653279f56cd58dcca091a34d28573a86e1b886eaa34b4d9.
+experiments/issue-138/query-reservation-wasm-metadata.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/query-reservation-whitespace.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/query-reservation-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/query-session-api-before.log: 1335 bytes; SHA256 092c7bf53b1a9d2b8eeebcd39ac931959ec588382a1a0cf5a62faf3ec6200435.
+experiments/issue-138/query-wide-name-before.log: 931 bytes; SHA256 b6a75ffcc480cdd9d93477fbd900e36e0a0df310e78b9e1a3032043767f0af95.

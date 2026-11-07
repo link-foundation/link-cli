@@ -1,0 +1,16 @@
+Logical checkpoints through physical delta codecs: exact-head CI; PR https://github.com/link-foundation/link-cli/pull/139
+Head: 68fa923f92ff08f34acfaae6130b65c9533c5e2d
+All nine workflows completed successfully. Native Rust and C# Linux/macOS/Windows matrices pass.
+Broken Link Checker: success; created 2026-10-26T14:35:14Z; updated 2026-10-26T14:35:24Z; https://github.com/link-foundation/link-cli/actions/runs/40340971126
+C# CI/CD Pipeline: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:44:22Z; https://github.com/link-foundation/link-cli/actions/runs/40340970468
+Dependencies: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:35:45Z; https://github.com/link-foundation/link-cli/actions/runs/40340970500
+Docs: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:37:45Z; https://github.com/link-foundation/link-cli/actions/runs/40340970571
+JS client CI: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:39:57Z; https://github.com/link-foundation/link-cli/actions/runs/40340970547
+Rust CI/CD Pipeline: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:45:27Z; https://github.com/link-foundation/link-cli/actions/runs/40340970426
+Security: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:40:25Z; https://github.com/link-foundation/link-cli/actions/runs/40340970395
+WebAssembly CI: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:44:53Z; https://github.com/link-foundation/link-cli/actions/runs/40340970455
+Workflows: success; created 2026-10-26T14:35:13Z; updated 2026-10-26T14:35:36Z; https://github.com/link-foundation/link-cli/actions/runs/40340970736
+
+This validates the committed codec correction and complete selected checkpoint/delta/replica tests.
+The following persisted-checkpoint example extension requires its own exact-head CI.
+Local atomic journal replacement, object reclamation, whole-project coverage and all wider open acceptance criteria remain unfinished.

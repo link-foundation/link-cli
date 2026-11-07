@@ -1,0 +1,87 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Base: 8d2ecdfde4757d6cfed219b99aa518707c5fadb0
+Reproductions: journal-chunks-before.txt; the Rust/C# selected APIs were missing
+and JS wrote blob1 rather than chunks1. A separate sparse-array control failed
+before dense admission was added. No production change precedes those controls.
+
+Selected behavior: optional bounded append-only immutable chunks in Rust/C#/JS.
+Keep whole-journal defaults, existing blob1 bytes and constructor signatures.
+Cache selection remains independent. All update admission precedes staging;
+all selected manifest validation precedes data reads. Full actual contents are
+compared during staging even if a verified read cache contains that object.
+One catalog CAS retains read-only dependencies; unknown writes are not replayed.
+Empty live journals have no objects. Existing collectors reject chunks1 before
+any deletion. Epoch-fenced chunk reclamation is a separate unfinished step.
+
+Reproduce sequentially within the 2.92GiB container budget:
+  bash experiments/issue-138/validate-journal-chunks.sh
+  (cd js/client && npm test && npm run typecheck)
+  bun test js/client/test/partitioned-chunks.test.mjs --timeout 30000
+  deno test --allow-all js/client/test/partitioned-chunks.test.mjs
+  python3 experiments/issue-138/model-chunked-journal.py
+  python3 experiments/issue-138/build-chunk-vectors.py /tmp/chunks-vectors.json
+  cmp docs/protocol/chunked-journal-vectors.json /tmp/chunks-vectors.json
+
+Full validation: 2026-10-27T05:52:27Z through 06:26:06Z, exit zero.
+Strict native/WASM Clippy and formatting pass; SDK10.0.403 whole-solution
+formatting passes. Native LLVM execution passes 1,146 tests, zero failures,
+21 child entries driven by their bounded parents. Six doctests pass; one legacy
+example remains ignored. Eight actual WASM binaries pass 706 tests:
+10 + 246 + 10 + 4 + 3 + 73 + 352 + 8, none ignored.
+Both complete C# Debug and Release configurations pass 2,429 tests, none skipped.
+
+All 626 Node tests pass with enforced 100% production lines/branches/functions;
+every production module is included. Eight selected controls pass in Bun and
+Deno. Strict TypeScript, all 221 repository checks, 645 source-size checks,
+actionlint with ShellCheck, driver shellcheck and the single minor changeset
+validation pass. Native and linked-WASM Clippy treat warnings as errors.
+
+Whole native LLVM coverage, including every production denominator:
+  lines 16,853/17,756; branches 3,262/3,752; functions 2,179/2,346;
+  regions 25,968/28,125; instantiations 12,052/21,632.
+Whole linked-WASM coverage:
+  lines 13,041/15,465; branches 2,644/3,155; functions 1,627/2,024;
+  regions 20,081/24,379; instantiations 4,310/7,425.
+C# Debug: lines 9,357/9,683; branches 5,653/6,102.
+C# Release: lines 7,224/7,442; branches 5,597/6,063.
+Complete native/C#/linked-WASM 100% remains unfinished. No files are excluded.
+
+Four real Rust/C# native cluster consumers and all four actual-WASM compositions
+in Node/Bun/Deno pass. All 50 whole-journal and 50 chunked complete-store handoffs
+pass across Rust/C#/Node/Bun/Deno, plain and mirrored; read-only reopen preserves
+every physical file hash. Chunk writers/readers use different selected limits,
+Unicode/BOM/NUL and live-empty values, preserve owned snapshots, reject stale
+groups and accept following edits. The actual WASM conformance adapter passes
+eight applicable cases per runtime; its four process/server cases explicitly
+skip because the adapter has no server process. Optional SQL checks pass in all
+three languages, including eight native/WASM graphs and explicit SQLite opt-in.
+
+The finite payload example uses the actual Rust WASM engine, two shards,
+16 retained revisions and unchanged provider-seam counters across Node/Bun/Deno.
+Data written/read bytes; data read requests; catalog written bytes:
+  whole: 16,530 / 31,086; 94; 1,038
+  two-record chunks: 2,958 / 31,086; 304; 3,924
+  two-record chunks with cache: 2,958 / 19,232; 206; 3,924
+  four-record chunks with cache: 4,922 / 20,940; 142; 2,372
+All four perform 16 catalog CAS calls and 32 data writes, retaining 32 objects.
+These count UTF-8 record payload bytes only: no keys, framing, transport,
+physical I/O, durability, latency or throughput claim. CI preserves complete
+JSON and compares it across all three runtimes. Fresh staging and engine replay
+remain linear; catalog metadata increases with chunks. There is no automatic
+collection, bounded replay, multi-catalog atomicity or throughput claim here.
+
+Logs: experiments/issue-138/partitioned-chunks-*.log, *-coverage.json and
+*-results/**/coverage.cobertura.xml. Full coverage WASM modules are explicitly
+capped at 256MiB. A separate consumer-only rerun also passes, 06:26:19Z through
+06:28:57Z, after adding and verifying the explicit 4,096-page / 256MiB maximum
+on the fresh example binding. It repeats every actual consumer, all 100
+handoffs, byte-identical payload JSON, conformance and optional-SQL checks.
+The initial example binding lacked that explicit maximum; no production source
+changes were needed. The reproducible full driver now invokes the capped
+consumer driver. partitioned-chunks-bounded-consumers.log records exit zero.
+Compilers are sequential, jobs1/debug0 and .NET640MiB; finite probes retain
+their own bounds. No cgroup OOM or OOM kill occurs.
+
+Preceding published head 8d2ecdf has all nine workflows green; see
+native-lsm-rust-ci-after.txt. This new source still requires fresh exact-head CI.
+Every wider unmet R1–R12 criterion remains required; keep PR139 draft/unmerged.

@@ -1,0 +1,28 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 3dfbc7420033bf8b5ac9ab643add02d142c8d474
+C# run created 2026-10-27T05:02:02Z:
+https://github.com/link-foundation/link-cli/actions/runs/40453004895
+Full downloaded log: experiments/issue-138/ci-logs/csharp-40453004895.log
+
+Windows alone fails one of 2,412 cases (2,411 pass); other C# jobs pass.
+Lines 28797-28828 identify movement-exit/current-before/False, pid1480,
+TimeoutException after 15.1068917s from the parent's aggregate deadline.
+The retained phases, relative to movement-start, reach row-created 5.312s,
+original-named 9.812s and changed-named 14.640s. Work continues through distinct
+persistence operations until the deadline. This establishes an aggregate
+supervision problem, not the lower-level cause of Windows filesystem latency.
+Summary at 30714-30717. Eight other workflows on this exact head pass.
+
+New parser controls first fail CS0246 for the absent FinitePhaseWatch API:
+experiments/issue-138/csharp-phase-watch-before.log.
+The actual finite progress child separately fails on the original helper:
+experiments/issue-138/csharp-phase-progress-before.log. It emits ready and two
+completed operation phases, then the aggregate 500ms deadline kills/reaps it
+at 575.6ms despite more finite progress being scheduled inside the idle bound.
+No production persistence behavior is changed by this test harness correction.
+
+Keep the 15-second idle bound, admit only complete consecutive phases 1..64,
+reject repeated/regressing/gapped/noncanonical/oversized/partial phases,
+drain bounded diagnostics and kill/reap before fixture cleanup. No timer
+heartbeat renewals or unbounded children are allowed. Full local and fresh
+exact-head Windows validation are required before claiming this fix verified.

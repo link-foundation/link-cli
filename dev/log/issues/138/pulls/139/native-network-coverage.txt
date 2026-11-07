@@ -1,0 +1,20 @@
+Native network coverage validation, 2026-10-24
+Rust 1.99.0 / LLVM 23.1.1, cargo-llvm-cov 0.9.1
+RUSTC_BOOTSTRAP=1 CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --branch --json
+416 passed, 0 failed, 2 ignored subprocess entry points
+Lines: 8283 / 9509 = 87.11%
+Branches: 1287 / 1708 = 75.35%
+Functions: 1105 / 1326 = 83.33%
+
+.NET 10, coverlet 10.1.0
+DOTNET_GCHeapHardLimit=0x28000000 dotnet test csharp/Foundation.Data.Doublets.Cli.Tests --disable-build-servers -m:1 --collect:"XPlat Code Coverage"
+620 passed, 0 failed, 0 skipped
+Lines: 5621 / 6313 = 89.03%
+Branches: 2366 / 2938 = 80.53%
+ClusterEngine/ClusterTransaction/ClusterShardSession/PartitionedJournalStore: 100% lines and branches
+EtcdJournalStore: 98.87% lines, 100% branches
+
+Native/WASM Clippy: warnings denied, passed
+.NET formatting: passed
+Workflow policy tests: 168 passed
+No coverage exclusions were added. Project-wide 100% remains unmet.

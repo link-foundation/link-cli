@@ -10,6 +10,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 
@@ -42,6 +43,7 @@ enum Job {
         connection: u64,
         id: Option<String>,
     },
+    Shutdown,
 }
 
 struct Subscription {
@@ -56,8 +58,29 @@ struct Subscription {
     last: String,
 }
 
+/// Stops a running [`GraphqlServer::serve`] from another thread.
+#[derive(Clone)]
+pub struct GraphqlShutdown {
+    jobs: Sender<Job>,
+    stopping: Arc<AtomicBool>,
+    address: SocketAddr,
+}
+
+impl GraphqlShutdown {
+    /// Asks the server to stop; `serve` returns after the current request.
+    pub fn shutdown(&self) {
+        self.stopping.store(true, Ordering::SeqCst);
+        let _ = self.jobs.send(Job::Shutdown);
+        // Wake the accept loop so it notices the flag.
+        let _ = TcpStream::connect(self.address);
+    }
+}
+
 pub struct GraphqlServer {
     listener: TcpListener,
+    jobs: Sender<Job>,
+    inbox: Receiver<Job>,
+    stopping: Arc<AtomicBool>,
 }
 
 fn request_parts(body: &Json) -> (String, Option<String>, Json) {
@@ -75,8 +98,12 @@ fn request_parts(body: &Json) -> (String, Option<String>, Json) {
 
 impl GraphqlServer {
     pub fn bind(address: &str) -> Result<Self> {
+        let (jobs, inbox) = channel();
         Ok(Self {
             listener: TcpListener::bind(address)?,
+            jobs,
+            inbox,
+            stopping: Arc::new(AtomicBool::new(false)),
         })
     }
 
@@ -84,15 +111,31 @@ impl GraphqlServer {
         Ok(self.listener.local_addr()?)
     }
 
-    /// Serves until the process stops.
+    /// A handle that stops [`serve`](Self::serve).
+    pub fn shutdown_handle(&self) -> Result<GraphqlShutdown> {
+        Ok(GraphqlShutdown {
+            jobs: self.jobs.clone(),
+            stopping: Arc::clone(&self.stopping),
+            address: self.local_addr()?,
+        })
+    }
+
+    /// Serves until a [`GraphqlShutdown`] stops the server or the process ends.
     pub fn serve(self, store: &mut DeepStore, settings: Settings) -> Result<()> {
-        let (jobs, inbox) = channel();
+        let Self {
+            listener,
+            jobs,
+            inbox,
+            stopping,
+        } = self;
         let settings = Arc::new(settings);
         let thread_settings = Arc::clone(&settings);
-        let listener = self.listener;
         std::thread::spawn(move || {
             let mut next = 0;
             for stream in listener.incoming().flatten() {
+                if stopping.load(Ordering::SeqCst) {
+                    return;
+                }
                 next += 1;
                 let (jobs, settings, connection) =
                     (jobs.clone(), Arc::clone(&thread_settings), next);
@@ -165,6 +208,7 @@ fn run_jobs(store: &mut DeepStore, settings: &Settings, inbox: Receiver<Job>) {
                     refresh(store, settings, &mut subscriptions);
                 }
             }
+            Job::Shutdown => return,
             Job::Stop { connection, id } => subscriptions.retain(|subscription| {
                 subscription.connection != connection
                     || id.as_ref().is_some_and(|id| *id != subscription.id)

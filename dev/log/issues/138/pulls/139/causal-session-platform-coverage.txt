@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: e9efb156bbfc02fcf6c69b87c80b73a82a2fa470
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40583237272
+
+linux: https://github.com/link-foundation/link-cli/actions/runs/40583237272/job/122469286340
+Successful job: 2026-10-27T21:09:37Z through 2026-10-27T21:12:13Z.
+ff0aab3c-8c21-40a5-9c02-3c1ebb3cb7fd/coverage.json: 1914509 bytes; SHA256 4894239d5680c07e1f9e50cd6db07127d3d15ffbfad0deed68caf1aef8d348a2.
+ff0aab3c-8c21-40a5-9c02-3c1ebb3cb7fd/coverage.cobertura.xml: 2363305 bytes; SHA256 ed49e6e616c4a0ef13bdea763881245212d257bdb076ae0857ad2bd1354bcee5.
+Complete lines: 7868/8069 (97.50899%).
+Complete branches: 6545/7007 (93.40659%).
+CausalBatch.cs: 188/188 compiled branches, including methods without source lines.
+CausalMerkle.cs: 246/246 compiled branches, including methods without source lines.
+CausalProjection.cs: 42/42 compiled branches, including methods without source lines.
+CausalReplica.cs: 182/182 compiled branches, including methods without source lines.
+CausalSession.cs: 106/106 compiled branches, including methods without source lines.
+CausalVersion.cs: 138/138 compiled branches, including methods without source lines.
+
+macos: https://github.com/link-foundation/link-cli/actions/runs/40583237272/job/122469286369
+Successful job: 2026-10-27T21:04:42Z through 2026-10-27T21:08:53Z.
+aae0b574-fd3e-47f8-9438-bfe94ca43113/coverage.json: 1914610 bytes; SHA256 56e756404e8e80defec2da82207f5f2818ca9f0bb8ea08370ee64f2bd41a899d.
+aae0b574-fd3e-47f8-9438-bfe94ca43113/coverage.cobertura.xml: 2363310 bytes; SHA256 b0afb03cd24cc8d043c7335da29745a3bf322d338b608699055d8106311e8999.
+Complete lines: 7863/8069 (97.44702%).
+Complete branches: 6540/7007 (93.33524%).
+CausalBatch.cs: 188/188 compiled branches, including methods without source lines.
+CausalMerkle.cs: 246/246 compiled branches, including methods without source lines.
+CausalProjection.cs: 42/42 compiled branches, including methods without source lines.
+CausalReplica.cs: 182/182 compiled branches, including methods without source lines.
+CausalSession.cs: 106/106 compiled branches, including methods without source lines.
+CausalVersion.cs: 138/138 compiled branches, including methods without source lines.
+
+windows: https://github.com/link-foundation/link-cli/actions/runs/40583237272/job/122469286352
+Successful job: 2026-10-27T21:07:15Z through 2026-10-27T21:17:48Z.
+60523f10-17a5-455e-8fbe-cc2c003c26fe/coverage.json: 1986529 bytes; SHA256 7e8804552d75b51179d2efc66fa8f16ad06d02e60a44907ea06f7bc64e18a472.
+60523f10-17a5-455e-8fbe-cc2c003c26fe/coverage.cobertura.xml: 2406753 bytes; SHA256 81fe18c7770225bc4db3bd4cf7a38322680d0a90cc8b55d3896e37c31334c6c0.
+Complete lines: 7854/8069 (97.33548%).
+Complete branches: 6525/7007 (93.12116%).
+CausalBatch.cs: 188/188 compiled branches, including methods without source lines.
+CausalMerkle.cs: 246/246 compiled branches, including methods without source lines.
+CausalProjection.cs: 42/42 compiled branches, including methods without source lines.
+CausalReplica.cs: 182/182 compiled branches, including methods without source lines.
+CausalSession.cs: 106/106 compiled branches, including methods without source lines.
+CausalVersion.cs: 138/138 compiled branches, including methods without source lines.
+
+All three independent platform archives retain raw JSON and Cobertura XML.
+Every compiled branch in all six causal components is visited.
+Whole-project coverage and every wider unfinished R1-R12 criterion remain active.
+Later commits require fresh exact-head CI; PR139 remains draft and unmerged.
+experiments/issue-138/causal-session-head-artifacts.json: 2886 bytes; SHA256 c0517efdaae64f3adbe0afcc18e5c2cd6c9deda10a1979e4b81de6e794eb3b85.
+experiments/issue-138/causal-session-head-jobs.json: 18815 bytes; SHA256 9799fb322f9385db14430975fd6c98d1608a22bfe456cd6430b1854043203ed3.
+experiments/issue-138/ci-logs/causal-session-head-12770419971.zip: 296099 bytes; SHA256 1d33fdf906a5e8f29383fab2c5348497ebd7dc032990e768672f9ff0d8a16b36.
+experiments/issue-138/ci-logs/causal-session-head-12770474226.zip: 296149 bytes; SHA256 632e70c725b00cab76ca23da0b52e5d0008d035f8f7700b76efa6df857c8f551.
+experiments/issue-138/ci-logs/causal-session-head-12772051522.zip: 297018 bytes; SHA256 fb45be1e4ebf5b45927ca6bc2f50d215720fca5d8922f3ebecacd0dc5a382208.

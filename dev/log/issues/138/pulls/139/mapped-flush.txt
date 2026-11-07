@@ -1,0 +1,49 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-mapped-flush.sh
+START 2026-10-27T08:49:51Z
+FOCUSED AND STRICT CHECKS PASS 2026-10-27T08:51:01Z
+NATIVE PASS 2026-10-27T09:07:55Z
+ACTUAL WASM PASS 2026-10-27T09:12:59Z
+ALL PASS 2026-10-27T09:13:25Z
+Immutable 7e9799a baseline lacks both ownership APIs; original pre-implementation diagnostics retained.
+Independent current-allocation assertion also first rejects the draft's tail-only flush range.
+api-after: 6 passed, zero failed/ignored.
+unit-after: 6 passed, zero failed/ignored.
+default-after: 6 passed, zero failed/ignored.
+Runnable adoption example passes; retired handles reject use after closing their owned file.
+Native Rust: 1175 passed; 21 parent-driven child entries ignored by normal harness.
+Complete lines: 17080/17958 (95.11081%)
+Complete branches: 3288/3774 (87.12242%)
+Complete functions: 2210/2372 (93.17032%)
+Complete regions: 26285/28420 (92.48768%)
+Complete instantiations: 12218/21855 (55.90483%)
+/rust/src/storage/mapped_flush.rs lines: 66/66 (100.00000%)
+/rust/src/storage/mapped_flush.rs branches: 4/4 (100.00000%)
+/rust/src/storage/mapped_flush.rs functions: 14/14 (100.00000%)
+/rust/src/storage/file_mem.rs lines: 57/71 (80.28169%)
+/rust/src/storage/file_mem.rs branches: 1/2 (50.00000%)
+/rust/src/storage/file_mem.rs functions: 10/13 (76.92308%)
+/rust/src/storage/doublets_storage.rs lines: 228/264 (86.36364%)
+/rust/src/storage/doublets_storage.rs branches: 10/16 (62.50000%)
+/rust/src/storage/doublets_storage.rs functions: 36/47 (76.59574%)
+Actual WASM: 723 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 13144/15667 (83.89609%)
+Complete branches: 2663/3171 (83.97982%)
+Complete functions: 1636/2050 (79.80488%)
+Complete regions: 20244/24674 (82.04588%)
+Complete instantiations: 4342/7488 (57.98611%)
+/rust/src/storage/mapped_flush.rs lines: 0/66 (0.00000%)
+/rust/src/storage/mapped_flush.rs branches: 0/2 (0.00000%)
+/rust/src/storage/mapped_flush.rs functions: 0/14 (0.00000%)
+/rust/src/storage/file_mem.rs lines: 0/71 (0.00000%)
+/rust/src/storage/file_mem.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem.rs functions: 0/13 (0.00000%)
+/rust/src/storage/doublets_storage.rs lines: 0/264 (0.00000%)
+/rust/src/storage/doublets_storage.rs branches: 0/0 (0.00000%)
+/rust/src/storage/doublets_storage.rs functions: 0/47 (0.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.52s
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, native/WASM strict Clippy, source-size, changeset, dependency freshness and workflow/ShellCheck checks pass.
+Platform ordering is source-established and tested with syscall mocks; native Windows execution requires exact-head CI.
+No production coverage denominator is excluded. Complete native/C#/linked-WASM 100% remains unfinished.
+No claim of upstream failed-resize repair, legacy torn-page repair or hardware power-loss verification.

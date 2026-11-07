@@ -1,0 +1,10 @@
+[package]
+name = "native-lsm-before"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+link-cli = { path = "../native-lsm-baseline/rust", default-features = false, features = ["native-pages", "physical-lsm"] }
+tempfile = "3.27.0"
+[[test]]
+name = "native_lsm_before"
+path = "../native-lsm-before.rs"

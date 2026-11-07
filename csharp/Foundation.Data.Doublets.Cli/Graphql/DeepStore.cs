@@ -335,7 +335,8 @@ public sealed class DeepStore
         var address = PartAddress(owner, "link_id");
         if (_policy is not null && !Admin)
         {
-            var judge = new TripletsPermissionsDecorator<uint>(_triplets, _policy, () => subject);
+            // The subject's own view, which remembers the points it created.
+            var judge = (TripletsPermissionsDecorator<uint>)View(subject);
             if (!_triplets.Exists(address) || !judge.CanWrite(_triplets.GetLink(address)!))
             {
                 throw new InvalidOperationException($"Forbidden: {subject} may not write the value of {owner}.");

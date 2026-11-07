@@ -1,0 +1,63 @@
+Native C# physical LSM facade; https://github.com/link-foundation/link-cli/pull/139
+
+Complete sequential validation: 2026-10-27T03:49:21Z through 03:59:22Z.
+Reproduce: bash experiments/issue-138/validate-native-lsm-csharp.sh
+DOTNET_GCHeapHardLimit=0x28000000; sequential builds with -m:1.
+
+Full Debug: 2409 passed, 0 failed/skipped; 3m30s; 03:54:07Z.
+Full Release: 2409 passed, 0 failed/skipped; 3m26s; 03:58:26Z.
+Whole-project coverage, with every production denominator retained:
+ Debug: 9280/9606 lines; 5559/6004 branches.
+ Release: 7167/7385 lines; 5505/5965 branches.
+These totals remain below the issue's complete 100% requirement.
+
+The 34 new native cases cover all eight independent mirror modes, owned groups,
+empty values/tombstones, stale CAS, foreground compaction, following commits,
+namespace reservations, corrupt selected files and uncommitted WAL suffixes.
+Read-only discovery validates every selected binding before any missing-image
+creation, mirror repair, suffix truncation or orphan retirement. Surviving-copy
+controls first expose a new reader exception bug; native-lsm-csharp-before.txt
+preserves the failure and actual correction.
+
+Eight finite compaction slices inject both sides of 62 actual FileStream/native
+namespace operations: 124 cuts total on Linux. Operations include create, write,
+truncate, file sync, close, delete and directory sync. Each error actually triggers;
+the old owner is fenced, all test handles close before external marker recovery,
+acknowledged versions reopen exactly, and later table IDs exceed reservations.
+These are operation-boundary probes, not every individual OS syscall or power cut.
+
+Ten actual abrupt children execute two mirror configurations and five phases.
+Each uses a 96MiB GC heap bound, finite 30-second supervision, exact phase output
+and exit 73 without Dispose. The parent reaps it before external marker recovery;
+acknowledged data, positive empty generations and following edits reopen exactly.
+Unknown child/outer close and enumeration cleanup errors retain the fence and
+are cached without unsafe raw handle retries. Every other known close is attempted.
+
+Three actual C# cluster consumers pass: direct, partitioned and epoch reclaiming.
+Each uses native files for real links, Unicode names, checkpointed journals, stale
+group rejection and compact/close/reopen. Reclamation actually deletes retired
+objects. Windows deliberately advertises no durable namespace guarantee.
+
+Complete-store interop: 32 passing writer/reader/return handoffs across C#, Node,
+Bun and Deno, in plain and fully mirrored modes. Every handoff verifies owned
+versions, Unicode/BOM/NUL payloads, live empty values, tombstones, buffered groups,
+stale rejection, mutation, flush/compaction, revival and exact return generations.
+Read-only reopen preserves SHA256 for every file in both directions. Every
+process finishes before the next owner; no marker stealing is used in interop.
+Rust native facade and the complete five-runtime matrix remain unfinished.
+
+dotnet format --no-restore --verify-no-changes passes; example Release build has
+0 warnings/errors. Core dependency inspection finds no SQLite provider. All 221 final staged repository checks pass, with source size, minor changeset,
+actionlint and shellcheck gates. Fresh origin/main remains an ancestor.
+
+Preserved logs (under experiments/issue-138/): native-lsm-csharp-validation.log,
+native-lsm-csharp-{Debug,Release}-full.log, native-lsm-csharp-discovery-after.log,
+native-lsm-csharp-focused-after.log, native-lsm-csharp-interop.log,
+native-lsm-csharp-consumer-{direct,partitioned,reclaiming}.log,
+native-lsm-csharp-example-build.log, native-lsm-csharp-format-check.log and
+native-lsm-csharp-optional.log. Coverage lives in separate final configuration
+results directories; the failed pre-fix Debug report is preserved separately.
+
+All nine workflows pass on preceding JS facade head 39a551d; native-lsm-js-ci.txt
+records URLs/timestamps. This new source needs fresh exact-head CI. Keep PR139
+draft and unmerged while wider R1-R12 requirements and coverage remain unmet.

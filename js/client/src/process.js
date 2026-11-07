@@ -150,6 +150,9 @@ export async function startServer({
         ),
       );
     });
+    // The banner belongs to an untrusted child. Validate it while startup
+    // still owns failure cleanup, so a malformed address cannot leak a process.
+    parseAddress(address);
   } catch (error) {
     if (child.exitCode === null && child.signalCode === null && child.pid !== undefined) {
       child.kill('SIGKILL');
@@ -160,7 +163,6 @@ export async function startServer({
   // Keep draining stdout so a chatty server never blocks on a full pipe.
   child.stdout.resume();
   child.stderr.off('data', onStderr);
-  parseAddress(address);
   return new ServerProcess(child, address, exited, stderr);
 }
 

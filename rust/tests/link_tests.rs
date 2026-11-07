@@ -2,7 +2,8 @@
 
 use link_cli::{DoubletsLink, Link};
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_link_creation() {
     let link = Link::new(1, 2, 3);
     assert_eq!(link.index, 1);
@@ -10,7 +11,8 @@ fn test_link_creation() {
     assert_eq!(link.target, 3);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_link_is_null() {
     let null_link = Link::default();
     assert!(null_link.is_null());
@@ -19,7 +21,8 @@ fn test_link_is_null() {
     assert!(!non_null_link.is_null());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_link_is_full_point() {
     let point = Link::new(1, 1, 1);
     assert!(point.is_full_point());
@@ -28,13 +31,15 @@ fn test_link_is_full_point() {
     assert!(!non_point.is_full_point());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_link_format() {
     let link = Link::new(1, 2, 3);
     assert_eq!(link.format(), "(1 2 3)");
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_link_round_trips_through_doublets_link() {
     let platform_link = DoubletsLink::new(1, 2, 3);
     let local_link = Link::from(platform_link);

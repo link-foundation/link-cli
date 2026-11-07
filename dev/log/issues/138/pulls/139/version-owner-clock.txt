@@ -1,0 +1,53 @@
+Known-commit checkpoint owners and actual-WASM legacy contracts (R1/R3/R7/R8)
+
+Before: eleven real-filesystem Rust version cases have ten failures and one
+Commit control (version-commit-rust-before-all.log). Moving only the data
+folder fails a checkpoint after the separately persisted journal commit;
+cleanup restores the directory before assertions and repeats the fault once.
+
+Nine generic Rust regressions first all fail (commit-checkpoint-rust-before.log).
+The final shared native/actual-WASM matrix executes 108 schedules: six phases
+before/after data flush, applied marker and final log flush; explicit and
+automatic transactions; three cleanup and six write entry points. Retry must
+finish the same commit, admit no later write and preserve a following edit
+when reopened from separately persisted data and journal images. The normal
+checkpoint remains O(changes), without a whole-log scan or pending-batch clone.
+
+Version owners retain admission until checkpoint and branch publication finish.
+Eleven real-filesystem cases verify repeated errors, cleanup through Commit,
+Rollback and Save, eight write entry points, exact head/tag/main/topic rows,
+applied markers and a following reopened transaction. Existing immutable
+transition markers are reused during publication retry.
+
+Both C# named-write cases first fail (version-name-fence-csharp-before.log).
+The corrected fence and all 48 existing mapped phase/cleanup controls pass.
+Two public recovery regressions per native language first fail; both recovery
+layers now reject an open owner before clearing any live state. The shared
+Rust recovery contracts also run in actual WASM.
+
+Two actual-WASM clock regressions first panic in std::time::SystemTime::now
+with "time not implemented on this platform" (portable-clock-wasm-before.log,
+lines 14583-14706). web-time 1.1.0 preserves native std semantics and uses the
+JavaScript wall clock in browser/Node WASM. Shared contracts verify Unix
+milliseconds, distinct in-process ids, commit/rollback, delimiter/Unicode
+branch/tag metadata and exact checkout rows. Twelve existing ordinary
+transaction contracts and eleven history contracts now run unchanged on both
+targets, with native file stores and WASM memory stores. Filesystem-only reopen
+and archive cases remain native; no assertion was removed.
+
+Full C# Debug and Release: 994 tests pass each, zero skips.
+Full native Rust: 595 standard tests and the custom stdout harness pass;
+four child entry points remain ignored by the ordinary harness.
+Actual WASM: all 315 tests pass; wrapper lines/functions/reported branches
+remain 100%. Strict Clippy on both targets, .NET/Rust formatting and release
+metadata validation pass. No coverage exclusions or source-union totals added.
+Debug: 6,115/6,608 lines (92.54%); 2,794/3,200 branches (87.31%).
+Release: 4,634/4,934 lines (93.92%); 2,773/3,181 branches (87.17%).
+Native Rust: 9,440/10,284 lines (91.79%), 1,558/1,906 branches (81.74%), 1,260/1,405 functions (89.68%)
+Complete linked WASM: 6,540/9,893 lines (66.11%), 1,083/1,611 branches (67.23%), 900/1,389 functions (64.79%)
+
+Complete project coverage remains below the required 100%. Abrupt exit between
+legacy journal commit and version-sidecar publication is a separate unfinished
+audit. These cleanup tests do not establish power-loss atomicity. The C# generic
+checkpoint lifecycle is separately under investigation; the Rust retry change
+does not imply that C# already has that guarantee.

@@ -1,0 +1,15 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published baseline: dec6cb7590faac1f17f711552e0b0f954fc469b7.
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40491222901
+All three full platform test jobs pass 2460 tests. Each collects XPlat Code Coverage.
+Artifact API: gh api repos/link-foundation/link-cli/actions/runs/40491222901/artifacts --paginate
+Only csharp-coverage (artifact 12728209085) is retained, besides the unrelated NuGet package.
+Complete archive downloaded via authenticated gh api; 125920 bytes, valid ZIP.
+Actual SHA256 matches GitHub artifact digest: 061ff8997408c62fc0c0d2918f630f38ec56276688138aa5f071d1b92271d97a.
+Its full Linux Release report contains 7270/7471 lines and 5643/6105 branches.
+Unchanged csharp.yml:301/307/312 gates coverage setup/summary/retention to Linux.
+Windows/macOS therefore have no retained report or coverage summary from this successful run.
+Correction must retain their existing complete reports separately and preserve Linux/Codecov behavior.
+No test, source, denominator or coverage threshold is removed. Full 100% remains unfinished.
+Reproduce: python3 experiments/issue-138/summarize-csharp-platform-coverage.py 40491222901 dec6cb7590faac1f17f711552e0b0f954fc469b7 --expected-tests 2460
+Actual immutable verification exits 1: missing csharp-coverage-macos-26 and csharp-coverage-windows-2025.

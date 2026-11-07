@@ -1,0 +1,38 @@
+Durable checkout and branch movement: published-head CI
+Head: d4cb43c6b2fd766e8c7b09992cd7ce2f82a90e30
+Commit: 2026-10-25T02:44:29+00:00
+Push: approximately 2026-10-25T02:44:30Z
+All nine runs were created after the commit/push and match its exact SHA.
+
+Broken Link Checker: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:44:47Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609764
+C# CI/CD Pipeline: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:50:20Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609789
+Dependencies: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:45:09Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609751
+Docs: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:46:44Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609758
+JS client CI: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:47:11Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609749
+Rust CI/CD Pipeline: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:53:32Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609787
+Security: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:49:22Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609745
+WebAssembly CI: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:51:40Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609802
+Workflows: success
+  Created: 2026-10-25T02:44:35Z; updated: 2026-10-25T02:44:55Z
+  https://github.com/link-foundation/link-cli/actions/runs/40155609770
+
+Windows/Linux/macOS native tests, fresh-merge checks, package builds, strict
+lint, release metadata, JS/TypeScript and actual-WASM coverage all pass.
+This verifies the movement batch; broader requirements remain open. Later
+code needs new exact-head CI. No movement workflow failed.

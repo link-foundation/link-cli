@@ -1,0 +1,16 @@
+Persisted-checkpoint example control before extension; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline: 68fa923f92ff08f34acfaae6130b65c9533c5e2d
+The new --checkpoint-fixture selector was ignored by all three old examples.
+This demonstrates a missing integration example, not a production engine/page defect.
+The finite control expects revision 40 and allocator gaps before following writes.
+
+Rust exit 0
+Native pages group: 0 -> 2 revisions/rows; pinned predecessor and exact prior names verified
+C# exit 0
+Native pages group: 0 -> 2 revisions/rows; pinned predecessor and exact prior names verified
+JS exit 0
+Native pages group: 0 -> 2 revisions/rows; pinned predecessor and exact prior names verified
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1792987800525/experiments/issue-138/verify-checkpoint-paged-entrypoints.py", line 26, in <module>
+    raise AssertionError('Checkpoint seed was not verified by: ' + ', '.join(failed))
+AssertionError: Checkpoint seed was not verified by: Rust, C#, JS

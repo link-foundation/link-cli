@@ -122,6 +122,11 @@ impl PinnedTypesDecorator {
         self.links.update(id, source, target)
     }
 
+    /// See [`LinkStorage::update_raw`](crate::LinkStorage::update_raw).
+    pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        self.links.update_raw(id, source, target)
+    }
+
     /// [`Self::update`], reporting every change the decorator stack made.
     ///
     /// See [`LinkStorage::update_observed`](crate::LinkStorage::update_observed).

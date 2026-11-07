@@ -42,7 +42,7 @@ impl UnicodeSequenceToStringConverter {
         };
         let code_units = self
             .sequence_walker
-            .walk(links, sequence_link.source)
+            .try_walk(links, sequence_link.source)?
             .into_iter()
             .map(|symbol| self.unicode_symbol_to_char_converter.convert(links, symbol))
             .collect::<Result<Vec<_>>>()?;

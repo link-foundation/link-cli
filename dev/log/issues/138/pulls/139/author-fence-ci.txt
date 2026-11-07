@@ -1,0 +1,78 @@
+Initial author fencing: exact-head CI evidence, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: aae1422fd88cf09d6a9414e3544b495cd5ca63ac
+Eight workflows pass; Dependencies fails on a newly published action.
+This head precedes physical fence handoffs, ASCII admission and additional
+C# contracts. Those later changes require their own exact-head CI.
+
+Broken Link Checker: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279225
+C# CI/CD Pipeline: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279522
+Dependencies: failure; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279431
+Docs: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279370
+JS client CI: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279214
+Rust CI/CD Pipeline: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279315
+Security: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279339
+WebAssembly CI: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279543
+Workflows: success; created 2026-10-28T13:38:24Z; https://github.com/link-foundation/link-cli/actions/runs/40698279555
+
+Raw logs are retained locally. SHA256 and one-based selected line references follow.
+
+experiments/issue-138/ci-logs/js-40698279214.log: SHA256 474bec91a08e959d77a625b59a2168a94d71da8c43688e9a699722a13f24c13b
+1103: Unit tests and types	Unit tests and complete production coverage	2026-10-28T13:39:43.0014645Z ℹ tests 717
+1122: Unit tests and types	Unit tests and complete production coverage	2026-10-28T13:39:43.0042652Z ℹ  engine-author-fence.js           | 100.00 |   100.00 |  100.00 |
+8374: Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-10-28T13:50:45.8604966Z PASS real etcd author fencing: 2 native claim ports, actual WASM staging, stale preparation refusal, burned suffix, continuing counter and unchanged fence generation
+8391: Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-10-28T13:50:51.5043856Z PASS real etcd author fencing: 2 native claim ports, actual WASM staging, stale preparation refusal, burned suffix, continuing counter and unchanged fence generation
+
+experiments/issue-138/ci-logs/csharp-40698279522.log: SHA256 611678b54ec0aa1de042720f0cad3f3c6503e57d180f9e4d654e9d1d0719cf9f
+20912: Test (windows-2025)	Run tests	2026-10-28T13:50:31.9661937Z Total tests: 2630
+20913: Test (windows-2025)	Run tests	2026-10-28T13:50:31.9662190Z      Passed: 2630
+27138: Test (ubuntu-24.04)	Run tests	2026-10-28T13:41:51.8264945Z Total tests: 2630
+27139: Test (ubuntu-24.04)	Run tests	2026-10-28T13:41:51.8265658Z      Passed: 2630
+33714: Test (macos-26)	Run tests	2026-10-28T13:44:22.1857810Z Total tests: 2630
+33715: Test (macos-26)	Run tests	2026-10-28T13:44:22.1900650Z      Passed: 2630
+
+experiments/issue-138/ci-logs/wasm-40698279543.log: SHA256 401144fd581040ac39ce0a62a048153733c14e87277a4b4c4b49c18d7979ec38
+801: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:19.0442971Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.08s
+811: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:20.7880392Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.12s
+1164: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:43.6215152Z test result: ok. 347 passed; 0 failed; 0 ignored; 0 filtered out; finished in 19.81s
+1180: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:45.3395550Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.07s
+1190: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:47.0001789Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.05s
+1199: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:48.6748925Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.06s
+1278: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:43:51.1943971Z test result: ok. 73 passed; 0 failed; 0 ignored; 0 filtered out; finished in 1.31s
+1644: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:45:14.4145420Z test result: ok. 360 passed; 0 failed; 0 ignored; 0 filtered out; finished in 80.94s
+1658: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:45:16.1248162Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.07s
+
+experiments/issue-138/ci-logs/rust-40698279315.log: SHA256 082469f4236c8530deaf7ad08e1b08260491c0238bbd2986d1e4940d097efde3
+46217: Test (windows-2025)	Run tests	2026-10-28T14:07:15.1394066Z test a_stopped_server_executes_nothing ... ok
+
+experiments/issue-138/ci-logs/dependencies-40698279431.log: SHA256 c196bf1d6593f9fd831d5034891a10b0472872a645527ee924fff39f23218c44
+202: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4059672Z | .github/workflows/security.yml | taiki-e/install-action | v2.87.33 | v2.88.0 |
+
+Complete C# artifacts, independently downloaded and digest verified:
+PR: https://github.com/link-foundation/link-cli/pull/139
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40698279522
+Exact head: aae1422fd88cf09d6a9414e3544b495cd5ca63ac; created 2026-10-28T13:38:24Z
+ubuntu-24.04: 2630 tests pass, platform summary present; artifact 12820792136, verified SHA256 184a605a95a3b445ee32eac598a64fa6f45f2886b2a904061cbfa917cce702f7.
+Complete ubuntu-24.04 lines: 8470/8685 (97.52447%).
+Complete ubuntu-24.04 branches: 7202/7709 (93.42327%).
+windows-2025: 2630 tests pass, platform summary present; artifact 12820479269, verified SHA256 0cf758a99a621bc11f2f96ee364e09e1c66225031722a6a0bd442c58f0abea50.
+Complete windows-2025 lines: 8456/8685 (97.36327%).
+Complete windows-2025 branches: 7182/7709 (93.16383%).
+macos-26: 2630 tests pass, platform summary present; artifact 12821006234, verified SHA256 bc476fa6ade9a808325aa7012581b60eb94bc5a5cfff69dff20ba775401a6c17.
+Complete macos-26 lines: 8465/8685 (97.46690%).
+Complete macos-26 branches: 7197/7709 (93.35841%).
+All three existing full reports are retained; Linux artifact name and Codecov behavior are preserved.
+No platform percentages are added or treated as newly achieved 100% coverage.
+Complete native/C#/linked-WASM coverage and all other unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged.
+
+Actual-WASM total: 819 tests in nine measured binaries. JavaScript: 717.
+C# complete suites: 2630 per platform, all three passing.
+Both real-etcd configurations pass public native claims and actual-WASM
+staging, stale prepared-publication refusal, burned suffixes and continuing counters.
+Rust Windows now passes the exact stopped-server test that previously failed
+with Winsock 10055. No socket retry, skip or timeout change was made. This
+passing control does not identify the previous OS resource shortage.
+Dependencies rejected v2.87.33 after v2.88.0 was published. The reviewed
+refresh is recorded in install-action-refresh.txt and needs fresh CI.
+Whole native/C#/linked-WASM 100% and wider unmet R1-R12 criteria remain
+unfinished. PR139 stays draft and unmerged.

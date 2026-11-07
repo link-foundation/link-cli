@@ -1,0 +1,161 @@
+Fallible allocation composition: preserved pre-fix regressions
+PR: https://github.com/link-foundation/link-cli/pull/139
+Production baseline: a1f12fec0e27b7bad8f7d6ba88405f6dc953c5c4
+The new tests were added before changing production code. Both test targets exited 101.
+Targets: fallible_composition_file_tests and fallible_composition_tests.
+Reproduce with cargo test --manifest-path rust/Cargo.toml --all-features --test <target>.
+Finite temporary filesystem fixtures block their own journal path with a directory.
+Result-returning methods must return Err rather than unwind through an infallible bridge.
+The portable adapter fails before its selected allocation and counts wrong bridge dispatches.
+The later test revisions add successful/no-op and cleanup/reopening controls.
+C# exception propagation is a passing control; no C# production defect is claimed.
+
+Original complete filesystem log (10 failures):
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 7.57s
+     Running tests/fallible_composition_file_tests.rs (rust/target/debug/deps/fallible_composition_file_tests-835a2da7e6f72350)
+
+running 10 tests
+test trigger_transaction_query_returns_io_error ... FAILED
+test trigger_transaction_ensure_returns_io_error ... FAILED
+test trigger_transaction_create_returns_io_error ... FAILED
+test planner_transaction_allocation_returns_io_error ... FAILED
+test planner_version_allocation_returns_io_error ... FAILED
+test trigger_version_create_returns_io_error ... FAILED
+test trigger_version_ensure_returns_io_error ... FAILED
+test trigger_version_query_returns_io_error ... FAILED
+test trigger_transaction_schema_returns_io_error ... FAILED
+test trigger_version_schema_returns_io_error ... FAILED
+
+failures:
+
+---- trigger_transaction_query_returns_io_error stdout ----
+
+thread 'trigger_transaction_query_returns_io_error' (347597) panicked at src/named_type_links.rs:336:14:
+TransactionsDecorator::ensure_created failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpWwARM0/log: Is a directory (os error 21)")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'trigger_transaction_query_returns_io_error' (347597) panicked at tests/fallible_composition_file_tests.rs:45:5:
+query must return its journal error, got Err(Any { .. })
+
+---- trigger_transaction_ensure_returns_io_error stdout ----
+
+thread 'trigger_transaction_ensure_returns_io_error' (347596) panicked at src/named_type_links.rs:336:14:
+TransactionsDecorator::ensure_created failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpr2m3D5/log: Is a directory (os error 21)")
+
+thread 'trigger_transaction_ensure_returns_io_error' (347596) panicked at tests/fallible_composition_file_tests.rs:45:5:
+ensure must return its journal error, got Err(Any { .. })
+
+---- trigger_transaction_create_returns_io_error stdout ----
+
+thread 'trigger_transaction_create_returns_io_error' (347595) panicked at src/named_type_links.rs:331:14:
+TransactionsDecorator::create failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpB9K41z/log: Is a directory (os error 21)")
+
+thread 'trigger_transaction_create_returns_io_error' (347595) panicked at tests/fallible_composition_file_tests.rs:45:5:
+create must return its journal error, got Err(Any { .. })
+
+---- planner_transaction_allocation_returns_io_error stdout ----
+
+thread 'planner_transaction_allocation_returns_io_error' (347593) panicked at src/named_type_links.rs:331:14:
+TransactionsDecorator::create failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpAARPiM/log: Is a directory (os error 21)")
+
+thread 'planner_transaction_allocation_returns_io_error' (347593) panicked at tests/fallible_composition_file_tests.rs:45:5:
+planner must return its journal error, got Err(Any { .. })
+
+---- planner_version_allocation_returns_io_error stdout ----
+
+thread 'planner_version_allocation_returns_io_error' (347594) panicked at src/named_type_links.rs:417:14:
+VersionControlDecorator::create failed in NamedTypeLinks bridge: Storage error: Failed to replace database: /tmp/.tmpGqIg44/log: Is a directory (os error 21)
+
+thread 'planner_version_allocation_returns_io_error' (347594) panicked at tests/fallible_composition_file_tests.rs:45:5:
+planner must return its journal error, got Err(Any { .. })
+
+---- trigger_version_create_returns_io_error stdout ----
+
+thread 'trigger_version_create_returns_io_error' (347599) panicked at src/named_type_links.rs:417:14:
+VersionControlDecorator::create failed in NamedTypeLinks bridge: Storage error: Failed to replace database: /tmp/.tmprOpsf8/log: Is a directory (os error 21)
+
+thread 'trigger_version_create_returns_io_error' (347599) panicked at tests/fallible_composition_file_tests.rs:45:5:
+create must return its journal error, got Err(Any { .. })
+
+---- trigger_version_ensure_returns_io_error stdout ----
+
+thread 'trigger_version_ensure_returns_io_error' (347600) panicked at src/version_control/mod.rs:306:14:
+VersionControlDecorator::ensure_created failed: Storage error: Failed to replace database: /tmp/.tmpSVey7v/log: Is a directory (os error 21)
+
+thread 'trigger_version_ensure_returns_io_error' (347600) panicked at tests/fallible_composition_file_tests.rs:45:5:
+ensure must return its journal error, got Err(Any { .. })
+
+---- trigger_version_query_returns_io_error stdout ----
+
+thread 'trigger_version_query_returns_io_error' (347601) panicked at src/version_control/mod.rs:306:14:
+VersionControlDecorator::ensure_created failed: Storage error: Failed to replace database: /tmp/.tmpEQRyeu/log: Is a directory (os error 21)
+
+thread 'trigger_version_query_returns_io_error' (347601) panicked at tests/fallible_composition_file_tests.rs:45:5:
+query must return its journal error, got Err(Any { .. })
+
+---- trigger_transaction_schema_returns_io_error stdout ----
+
+thread 'trigger_transaction_schema_returns_io_error' (347598) panicked at src/named_type_links.rs:375:14:
+TransactionsDecorator::get_or_create failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpSpNh9P/log: Is a directory (os error 21)")
+
+thread 'trigger_transaction_schema_returns_io_error' (347598) panicked at tests/fallible_composition_file_tests.rs:45:5:
+schema must return its journal error, got Err(Any { .. })
+
+---- trigger_version_schema_returns_io_error stdout ----
+
+thread 'trigger_version_schema_returns_io_error' (347602) panicked at src/named_type_links.rs:458:14:
+VersionControlDecorator::get_or_create failed in NamedTypeLinks bridge: Storage error: Failed to replace database: /tmp/.tmpJGmunz/log: Is a directory (os error 21)
+
+thread 'trigger_version_schema_returns_io_error' (347602) panicked at tests/fallible_composition_file_tests.rs:45:5:
+schema must return its journal error, got Err(Any { .. })
+
+
+failures:
+    planner_transaction_allocation_returns_io_error
+    planner_version_allocation_returns_io_error
+    trigger_transaction_create_returns_io_error
+    trigger_transaction_ensure_returns_io_error
+    trigger_transaction_query_returns_io_error
+    trigger_transaction_schema_returns_io_error
+    trigger_version_create_returns_io_error
+    trigger_version_ensure_returns_io_error
+    trigger_version_query_returns_io_error
+    trigger_version_schema_returns_io_error
+
+test result: FAILED. 0 passed; 10 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.54s
+
+error: test failed, to rerun pass `--test fallible_composition_file_tests`
+
+Original complete portable log (2 failures):
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.93s
+     Running tests/fallible_composition_tests.rs (rust/target/debug/deps/fallible_composition_tests-8f154e90573ad6d0)
+
+running 2 tests
+test trigger_allocation_faults_return_before_effects_and_allow_following_edits ... FAILED
+test trigger_bookkeeping_propagates_each_allocation_fault_and_retry_is_idempotent ... FAILED
+
+failures:
+
+---- trigger_allocation_faults_return_before_effects_and_allow_following_edits stdout ----
+
+thread 'trigger_allocation_faults_return_before_effects_and_allow_following_edits' (347794) panicked at tests/fallible_composition_tests.rs:76:9:
+create: must return allocation fault
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- trigger_bookkeeping_propagates_each_allocation_fault_and_retry_is_idempotent stdout ----
+
+thread 'trigger_bookkeeping_propagates_each_allocation_fault_and_retry_is_idempotent' (347795) panicked at tests/fallible_composition_tests.rs:107:9:
+assertion `left == right` failed
+  left: 5
+ right: 0
+
+
+failures:
+    trigger_allocation_faults_return_before_effects_and_allow_following_edits
+    trigger_bookkeeping_propagates_each_allocation_fault_and_retry_is_idempotent
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--test fallible_composition_tests`

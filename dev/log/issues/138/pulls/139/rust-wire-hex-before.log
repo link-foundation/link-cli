@@ -1,0 +1,22 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.79s
+     Running unittests src/lib.rs (rust/target/debug/deps/link_cli-8250cd9d0fe285bf)
+
+running 1 test
+test engine::journal::tests::portable_wire_vectors ... FAILED
+
+failures:
+
+---- engine::journal::tests::portable_wire_vectors stdout ----
+
+thread 'engine::journal::tests::portable_wire_vectors' (65901) panicked at src/engine/journal.rs:154:13:
+accepted engine1|1|2|1,0,0,+a|a8bdbf46b1901d80
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    engine::journal::tests::portable_wire_vectors
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`
