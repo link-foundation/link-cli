@@ -293,3 +293,23 @@ fn a_matched_triplet_the_substitution_leaves_out_is_deleted() -> Result<()> {
     assert!(triplets.is_triplet(88));
     Ok(())
 }
+
+#[test]
+fn a_side_may_be_one_pattern_and_the_sides_may_be_two_links() -> Result<()> {
+    // One pattern with an index stands for a list of one.
+    let changes = process_triplets_query(&mut seeded()?, "((6: * * *) (6: 5 0 0))")?;
+    assert_eq!(changes.len(), 1, "{changes:?}");
+    // The two sides may also be separate links of the document.
+    let changes = process_triplets_query(&mut seeded()?, "((6: * * *))\n((6: 5 0 0))")?;
+    assert_eq!(changes.len(), 1, "{changes:?}");
+    Ok(())
+}
+
+#[test]
+fn a_part_named_by_nothing_is_refused() -> Result<()> {
+    let error = process_triplets_query(&mut seeded()?, "() ((9: nameless 0 0))")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("nameless"), "{error}");
+    Ok(())
+}

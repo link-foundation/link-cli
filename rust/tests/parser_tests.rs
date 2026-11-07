@@ -81,3 +81,12 @@ fn test_parse_links_notation_backtick_unicode_identifier() {
     assert_eq!(values[0].id, Some("источник".to_string()));
     assert_eq!(values[1].id, Some("цель".to_string()));
 }
+
+#[test]
+fn the_default_parser_is_the_new_one() {
+    let (default, new) = (Parser::default(), Parser::new());
+    assert_eq!(
+        format!("{:?}", default.parse("(1 2)").unwrap()),
+        format!("{:?}", new.parse("(1 2)").unwrap())
+    );
+}

@@ -1,6 +1,8 @@
 //! Refusals and rare forms of the LiNo import and of external ids.
 
-use link_cli::{import_lino_text, LinkStorage, LinksExternalIds, NamedTypeLinks};
+use link_cli::{
+    import_lino_text, GenericTransition, LinkError, LinkStorage, LinksExternalIds, NamedTypeLinks,
+};
 
 fn store() -> LinkStorage {
     LinkStorage::in_memory(false)
@@ -70,4 +72,26 @@ fn only_the_scheme_the_table_holds_answers() {
     storage.set_name(other, "isbn");
     assert_eq!(isbn.id_of(&mut storage, link).unwrap(), None);
     assert_eq!(isbn.find(&mut storage, "x").unwrap(), None);
+}
+
+#[test]
+fn a_journal_entry_whose_doublet_is_not_three_numbers_is_malformed() {
+    let parse = GenericTransition::<u32>::parse;
+    for entry in [
+        "v1|1|1|1|0|1,1|1,1,1",
+        "v1|1|1|1|0|1,1,1|1,1,1,1",
+        "v1|1|1|1|0|x,1,1|1,1,1",
+    ] {
+        assert!(
+            matches!(parse(entry), Err(LinkError::InvalidFormat(_))),
+            "{entry}"
+        );
+        assert!(GenericTransition::<u32>::try_parse(entry).is_none());
+    }
+    // A wider address stays distinct: recovery must not skip such a log.
+    assert!(matches!(
+        parse("v1|1|1|1|0|99999999999,1,1|1,1,1"),
+        Err(LinkError::AddressOutOfRange(_))
+    ));
+    assert!(parse("v1|1|1|1|0|1,1,1|1,1,1").is_ok());
 }

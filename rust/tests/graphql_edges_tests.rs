@@ -1,6 +1,6 @@
 //! Rare forms of a `where`, of a table and of a guest.
 
-use link_cli::graphql::plan::{render, Plan};
+use link_cli::graphql::plan::{render, Plan, Position};
 use link_cli::graphql::tables::{columns, compare, passes, relation};
 use link_cli::graphql::{execute, Auth, DeepStore, Json, Settings};
 use link_cli::NamedTypesDecorator;
@@ -113,14 +113,7 @@ fn rows_without_a_value_order_as_postgres_orders_nulls() {
     };
     let mut ids = |order: &str| {
         let query = format!("query {{ links(order_by: {order}) {{ id }} }}");
-        let reply = execute(
-            &mut store,
-            &settings,
-            &query,
-            None,
-            &Json::Null,
-            admin.clone(),
-        );
+        let reply = execute(&mut store, &settings, &query, None, &Json::Null, admin);
         reply.0.write()
     };
     for (direction, expected) in [
@@ -158,14 +151,7 @@ fn a_mutation_whose_where_cannot_match_changes_nothing() {
         admin: true,
     };
     let mutation = "mutation { delete_links(where: { id: { _in: [] } }) { affected_rows } }";
-    let reply = execute(
-        &mut store,
-        &settings,
-        mutation,
-        None,
-        &Json::Null,
-        admin.clone(),
-    );
+    let reply = execute(&mut store, &settings, mutation, None, &Json::Null, admin);
     assert_eq!(
         reply.0.write(),
         r#"{"data":{"delete_links":{"affected_rows":0}}}"#
@@ -179,4 +165,30 @@ fn a_mutation_whose_where_cannot_match_changes_nothing() {
         admin,
     );
     assert_eq!(reply.0.write(), r#"{"data":{"links":[{"id":1}]}}"#);
+}
+
+#[test]
+fn a_row_without_a_type_reads_as_type_zero_and_absent_value_rows_are_refused() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut links = NamedTypesDecorator::new(dir.path().join("db.links"), false)
+        .unwrap()
+        .with_indexed_lookups();
+    let mut store = DeepStore::open(&mut links, None).unwrap();
+
+    let id = store.create_link(0, None, 0, 0, 0).unwrap();
+    let address = store.triplet_of(id).unwrap();
+    let triplet = store.view(0, |view| view.get_triplet(address)).unwrap();
+    let row = store.row_of(&triplet).unwrap();
+    assert_eq!((row.id, row.type_id, row.from_id, row.to_id), (id, 0, 0, 0));
+
+    // Type zero has an address of its own, other positions and ids do not.
+    assert_eq!(store.address(Position::Type, 0), Some(triplet.type_id));
+    assert_eq!(store.address(Position::Other, 0), None);
+
+    for error in [
+        store.update_value(0, 999_999, Json::Null),
+        store.delete_value(0, 999_999),
+    ] {
+        assert!(error.unwrap_err().to_string().contains("No value row"));
+    }
 }

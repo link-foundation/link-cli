@@ -191,6 +191,10 @@ fn named_links_facade_matches_csharp_named_links_role() -> Result<()> {
 
     assert_eq!(Some(link), named_links.get_by_name("FacadeName")?);
     assert_eq!(Some("FacadeName".to_string()), named_links.get_name(link)?);
+
+    named_links.remove_name(link)?;
+    assert_eq!(None, named_links.get_by_name("FacadeName")?);
+    assert_eq!(None, named_links.get_name(link)?);
     Ok(())
 }
 
