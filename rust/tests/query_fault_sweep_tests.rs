@@ -132,6 +132,13 @@ const QUERIES: &[&str] = &[
     "((($i: 1 $t)) ())",
     "(((* * *)) ())",
     "(id: (2: 1 2)) ((2: 1 2))",
+    // Names read while resolving the parts of either side.
+    "((first)) ((first))",
+    "(((1: first 3))) ((1: first 3))",
+    "((first: first 3)) ((first: first 3))",
+    "(((1: 1 1)) ((nested: (first 3) (1 first))))",
+    "(((1: 1 1)) ((1: 1 1) (fresh: first first)))",
+    "((($i: first $t)) (($i: $t first)))",
 ];
 
 fn processor() -> QueryProcessor {
