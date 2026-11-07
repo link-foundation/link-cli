@@ -615,10 +615,6 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         private void SetOuter(TLinkAddress index, TLinkAddress source, TLinkAddress target)
         {
-            if (Stored(index) is { } link && link.Source == source && link.Target == target)
-            {
-                return;
-            }
             var existing = _links.SearchOrDefault(source, target);
             if (existing != Null && existing != index)
             {
