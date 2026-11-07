@@ -427,3 +427,18 @@ fn names_need_the_right_to_write() -> Result<()> {
     assert_eq!(None, NamedTypeLinks::get_name(&mut w.links, v["note"])?);
     Ok(())
 }
+
+#[test]
+fn writes_at_the_null_link_are_not_found_and_change_nothing() -> Result<()> {
+    let mut w = World::new(false)?;
+    let (t, v) = (w.t.clone(), w.v.clone());
+    let before = all(&mut w.links);
+    let mut view = w.as_(v["alice"]);
+    assert_eq!(
+        Some("not-found"),
+        error_of(view.update(0, t["Note"], v["note"]))
+    );
+    assert_eq!(Some("not-found"), error_of(view.delete(0)));
+    assert_eq!(before, all(&mut w.links));
+    Ok(())
+}
