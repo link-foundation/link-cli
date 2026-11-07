@@ -23,18 +23,13 @@ namespace Foundation.Data.Doublets.Cli
             var outerLink = parsedLinks[0];
             var outerLinkValues = outerLink.Values;
 
-            if (outerLinkValues?.Count < 2)
+            if (outerLinkValues is not { Count: >= 2 })
             {
                 return;
             }
 
             var @null = links.Constants.Null;
             var any = links.Constants.Any;
-
-            if (outerLinkValues == null)
-            {
-                return;
-            }
 
             var restrictionLink = outerLinkValues[0];
             var substitutionLink = outerLinkValues[1];

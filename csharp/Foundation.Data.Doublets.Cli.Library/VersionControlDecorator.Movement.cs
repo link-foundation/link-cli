@@ -65,8 +65,8 @@ public partial class VersionControlDecorator
                 {
                     TransitionKind.Create => record.Before.Index == 0 && record.After.Index != 0,
                     TransitionKind.Update => record.NameOnly || (record.Before.Index != 0 && record.Before.Index == record.After.Index),
-                    TransitionKind.Delete => record.Before.Index != 0 && record.After.Index == 0,
-                    _ => false,
+                    // JournalRecord.TryParse refused every other kind.
+                    _ => record.Before.Index != 0 && record.After.Index == 0,
                 };
                 if (!valid) return false;
                 result.Add(record);
