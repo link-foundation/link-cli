@@ -236,6 +236,14 @@ test('options are checked and never reach the core', async () => {
   engine.resumeBranch([], 'record', { ...pessimistic, lockWaitMs: 1 });
 });
 
+test('options that are not an object reach the core unchanged so it can refuse them', () => {
+  const binding = fakeBinding();
+  for (const options of [[], ['optimistic']]) {
+    new WasmEngine(binding, options);
+    assert.deepEqual(binding.coreOptions, options);
+  }
+});
+
 test('sessions built before lock waiting refuse it', () => {
   assert.throws(
     () => new EngineClient({ commit() {}, rollback() {}, request() {} }, { lockWaits: {} }),

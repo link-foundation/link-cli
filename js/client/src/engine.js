@@ -14,8 +14,10 @@ function capabilities(journal) {
   return { durableFlush: durable, persistent: durable };
 }
 /** Splits what the Rust core reads from what this client implements on top of it. */
-function selected({ lockWaitMs, ...core }, journal) {
-  if (lockWaitMs === undefined) return { text: JSON.stringify(core), ...capabilities(journal) };
+function selected(options, journal) {
+  const { lockWaitMs, ...core } = options;
+  // Unchanged text keeps the core's refusal of options that are not an object.
+  if (lockWaitMs === undefined) return { text: JSON.stringify(options), ...capabilities(journal) };
   if (core.concurrency !== 'pessimistic')
     throw new TypeError('lock waiting requires pessimistic concurrency');
   if (!Number.isFinite(lockWaitMs) || lockWaitMs < 0)
