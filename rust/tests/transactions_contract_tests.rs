@@ -345,3 +345,26 @@ fn rollback_restores_duplicate_rows_exactly() {
     tx.rollback().unwrap();
     assert_eq!(rows(&tx), expected, "restored image");
 }
+
+/// The update itself merges rows that become equal. Rolling that back has to
+/// bring the merged row back with its own values.
+#[test]
+fn rollback_brings_a_merged_row_back() {
+    let mut tx = GenericTransactionsDecorator::new(
+        LinkStorage::in_memory(false),
+        MemoryLog::default(),
+        LogRetentionPolicy::Infinite,
+        CommitMode::Sync,
+        false,
+    )
+    .unwrap();
+    tx.create(10, 20).unwrap();
+    tx.create(30, 40).unwrap();
+    let expected = tx.all().into_iter().copied().collect::<Vec<_>>();
+
+    tx.begin_transaction().unwrap();
+    tx.update(2, 10, 20).unwrap();
+    assert_eq!(tx.all().len(), 1, "the update merges the rows");
+    tx.rollback().unwrap();
+    assert_eq!(tx.all().into_iter().copied().collect::<Vec<_>>(), expected);
+}
