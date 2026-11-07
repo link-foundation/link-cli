@@ -385,11 +385,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         return RunWrite(h => _inner.Delete(restriction, h), handler);
     }
 
-    private static Link<TLinkAddress> LinkOrEmpty(IList<TLinkAddress>? raw)
-    {
-        return raw is null ? default : new Link<TLinkAddress>(raw);
-    }
-
     private static TLinkAddress NullHandler(IList<TLinkAddress>? before, IList<TLinkAddress>? after) => TLinkAddress.Zero;
 
     // INamedTypes forwarding ------------------------------------------------
