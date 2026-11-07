@@ -1,5 +1,9 @@
+Pessimistic sessions (R2/R5/R7/R11) can now wait a selected bounded time and refuse
+a write that closes a cycle, in Rust, C# and actual-WASM JS; the default fail-fast
+path carries no wait state. docs/ENGINE-PESSIMISTIC.md records costs and limits.
+
 Session savepoints (R2/R5/R7/R11) now exist in Rust, C#, actual-WASM JS and on
-each cluster shard. Eight shared behaviors cover restored rows, nesting, foreign
+each cluster shard. Shared behaviors cover restored rows, nesting, foreign
 and closed refusals, empty commits, conflict scope, retained read validation,
 retained ownership and read committed. docs/ENGINE-SAVEPOINTS.md records costs
 and limits. Generic mapped quota and mapping-limit failures now keep the view,

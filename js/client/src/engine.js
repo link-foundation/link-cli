@@ -3,7 +3,8 @@
 import { LinksClient } from './client.js';
 import { WasmTransport, canTransferHandle, transferHandle } from './wasm.js';
 import { toAddress } from './operations.js';
-import { ConnectionClosedError, LinksError } from './errors.js';
+import { ConnectionClosedError, LinksError, UnsupportedError } from './errors.js';
+import { LockWaits } from './engine-lock-wait.js';
 
 const nativeHandle = Symbol('native engine handle');
 const sessionOwners = new WeakMap();
@@ -11,12 +12,28 @@ function capabilities(journal) {
   const durable = !Array.isArray(journal) && journal.supportsDurableFlush === true;
   return { durableFlush: durable, persistent: durable };
 }
+/** Splits what the Rust core reads from what this client implements on top of it. */
+function selected({ lockWaitMs, ...core }, journal) {
+  if (lockWaitMs === undefined) return { text: JSON.stringify(core), ...capabilities(journal) };
+  if (core.concurrency !== 'pessimistic')
+    throw new TypeError('lock waiting requires pessimistic concurrency');
+  if (!Number.isFinite(lockWaitMs) || lockWaitMs < 0)
+    throw new TypeError('lockWaitMs must be a non-negative number of milliseconds');
+  return {
+    text: JSON.stringify(core),
+    ...capabilities(journal),
+    lockWaits: new LockWaits(lockWaitMs),
+  };
+}
 
 /** An isolated LinksClient session. Close rolls back an uncommitted session. */
 export class EngineClient extends LinksClient {
-  constructor(session, { durableFlush = false, persistent = false } = {}) {
+  #lockWaits;
+  constructor(session, { durableFlush = false, persistent = false, lockWaits } = {}) {
     if (typeof session?.commit !== 'function' || typeof session?.rollback !== 'function')
       throw new TypeError('expected a staged engine session with commit and rollback');
+    if (lockWaits && typeof session.takeWriteBlocker !== 'function')
+      throw new UnsupportedError('this WebAssembly session cannot wait for write addresses');
     super(
       new WasmTransport(session, {
         owned: true,
@@ -30,14 +47,22 @@ export class EngineClient extends LinksClient {
           crashConsistency: durableFlush,
           duplicateLinks: true,
         },
+        waiter: lockWaits && ((...request) => lockWaits.request(...request)),
       }),
     );
+    this.#lockWaits = lockWaits;
+  }
+  #ending(outcome) {
+    return this.#lockWaits ? outcome.finally(() => this.#lockWaits.wakeAll()) : outcome;
   }
   commit() {
-    return this.transport.control('commit');
+    return this.#ending(this.transport.control('commit'));
   }
   rollback() {
-    return this.transport.control('rollback');
+    return this.#ending(this.transport.control('rollback'));
+  }
+  close() {
+    return this.#ending(super.close());
   }
   /** Remembers the staged writes; resolves to a token for this session. */
   savepoint() {
@@ -65,10 +90,11 @@ export class WasmEngine {
     }
     if (typeof binding?.StagedEngine !== 'function')
       throw new TypeError('build clink-wasm with StagedEngine support');
-    this.#capabilities = capabilities(journal);
+    const { text, ...chosen } = selected(options, journal);
+    this.#capabilities = chosen;
     this.#native = Array.isArray(journal)
-      ? new binding.StagedEngine(JSON.stringify(options), JSON.stringify(journal))
-      : binding.StagedEngine.withLog(JSON.stringify(options), journal);
+      ? new binding.StagedEngine(text, JSON.stringify(journal))
+      : binding.StagedEngine.withLog(text, journal);
   }
   #check() {
     if (this.#closed)
@@ -114,23 +140,24 @@ export class WasmEngine {
     } finally {
       for (const handle of handles) handle.free();
       group.free();
+      this.#capabilities.lockWaits?.wakeAll();
     }
   }
   fork(options = {}, journal = []) {
     this.#check();
-    const selected = capabilities(journal);
+    const { text, ...chosen } = selected(options, journal);
     const branch = Array.isArray(journal)
-      ? this.#native.fork(JSON.stringify(options), JSON.stringify(journal))
-      : this.#native.forkWithLog(JSON.stringify(options), journal);
-    return new WasmBranch(branch, selected);
+      ? this.#native.fork(text, JSON.stringify(journal))
+      : this.#native.forkWithLog(text, journal);
+    return new WasmBranch(branch, chosen);
   }
   resumeBranch(journal, mergeBaseRecord, options = {}) {
     this.#check();
-    const selected = capabilities(journal);
+    const { text, ...chosen } = selected(options, journal);
     const branch = Array.isArray(journal)
-      ? this.#native.resume(JSON.stringify(options), JSON.stringify(journal), mergeBaseRecord)
-      : this.#native.resumeWithLog(JSON.stringify(options), journal, mergeBaseRecord);
-    return new WasmBranch(branch, selected);
+      ? this.#native.resume(text, JSON.stringify(journal), mergeBaseRecord)
+      : this.#native.resumeWithLog(text, journal, mergeBaseRecord);
+    return new WasmBranch(branch, chosen);
   }
   snapshot(revision) {
     this.#check();

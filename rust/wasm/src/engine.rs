@@ -49,6 +49,7 @@ pub(crate) fn options(text: &str) -> Result<EngineOptions, String> {
             Some("sorted-runs") => StateStructure::SortedRuns,
             _ => return Err("unknown state structure".into()),
         },
+        lock_wait: None,
         concurrency: match parsed.concurrency.as_deref() {
             None | Some("optimistic") => ConcurrencyControl::Optimistic,
             Some("exclusive") => ConcurrencyControl::Exclusive,
@@ -314,6 +315,14 @@ impl StagedSession {
     }
     pub fn rollback(&mut self) {
         self.inner.rollback();
+    }
+    #[wasm_bindgen(js_name = writeOwner)]
+    pub fn write_owner(&self) -> Option<u64> {
+        self.inner.write_owner()
+    }
+    #[wasm_bindgen(js_name = takeWriteBlocker)]
+    pub fn take_write_blocker(&mut self) -> Option<u64> {
+        self.inner.take_write_blocker()
     }
     pub fn savepoint(&mut self) -> Result<u64, String> {
         let savepoint = self.inner.savepoint().map_err(|e| e.to_string())?;

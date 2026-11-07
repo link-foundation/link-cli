@@ -29,10 +29,24 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
     }
     fn acquire_write(&mut self, id: T) -> Result<(), LinkError> {
         if let Some(locks) = &mut self.locks {
-            let mut state = self.engine.lock()?;
+            let state = self.engine.lock()?;
+            let mut state = locks.wait_turn(state, id)?;
             locks.acquire(&mut state, id, self.base.revision)?;
         }
         Ok(())
+    }
+    /// Identifies this session's write ownership while it lasts. `None` unless
+    /// the engine selected pessimistic concurrency.
+    pub fn write_owner(&self) -> Option<u64> {
+        self.locks.as_ref().map(|locks| locks.token() as u64)
+    }
+    /// The owner that refused this session's last write, once. Lets a caller that
+    /// cannot block, such as JavaScript on one thread, wait and detect cycles itself.
+    pub fn take_write_blocker(&mut self) -> Option<u64> {
+        self.locks
+            .as_mut()?
+            .take_blocker()
+            .map(|owner| owner as u64)
     }
     fn row(&self, id: T) -> Option<Row<T>> {
         if !self.closed {
@@ -229,6 +243,10 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
         self.check_open()?;
         let id = {
             let mut state = self.engine.lock()?;
+            // A fresh address has no owner; a reserved one may have been picked explicitly.
+            if let (Some(locks), Some(id)) = (&mut self.locks, self.reserved.front().copied()) {
+                state = locks.wait_turn(state, id)?;
+            }
             let (id, next) = if let Some(id) = self.reserved.front().copied() {
                 (id, state.next)
             } else {
@@ -268,6 +286,9 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
                 .try_into()
                 .map_err(|_| error("address conversion failed"))?;
             let mut state = self.engine.lock()?;
+            if let Some(locks) = &mut self.locks {
+                state = locks.wait_turn(state, id)?;
+            }
             let next = state.next.max(
                 address
                     .checked_add(1)

@@ -25,7 +25,7 @@ async function savepointConformance(binding) {
     await session.rollbackTo(savepoint);
     assert.equal(await session.count(), 1n);
     // The discarded address stays retired and the savepoint stays usable.
-    assert.equal(await session.create(0n, 0n), dropped + 1n);
+    assert.equal((await session.create(0n, 0n)).index, dropped.index + 1n);
     await session.rollbackTo(savepoint);
     await session.releaseSavepoint(savepoint);
     await assert.rejects(session.rollbackTo(savepoint), /unknown savepoint/);
@@ -33,13 +33,66 @@ async function savepointConformance(binding) {
     const { rows } = engine.snapshot();
     assert.deepEqual(
       rows.map((row) => row.index),
-      [kept],
+      [kept.index],
     );
     await assert.rejects(session.savepoint(), /closed/);
   } finally {
     await session.close();
     engine.close();
   }
+}
+
+async function lockWaitConformance(binding) {
+  const options = { concurrency: 'pessimistic', isolation: 'snapshot', lockWaitMs: 60_000 };
+  const engine = new WasmEngine(binding, options);
+  const seed = engine.begin();
+  const first = await seed.create(0n, 0n);
+  const second = await seed.create(0n, 0n);
+  await seed.commit();
+  await seed.close();
+  const a = engine.begin();
+  const b = engine.begin();
+  try {
+    await a.setName(first.index, 'a');
+    await b.setName(second.index, 'b');
+    // Queued behind nothing else, so it waits for a's address without blocking this test.
+    const waiting = a.setName(second.index, 'a2');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await assert.rejects(b.setName(first.index, 'b2'), /deadlock/);
+    assert.equal(await b.getName(second.index), 'b');
+    await b.rollback();
+    await waiting;
+    await a.commit();
+    assert.deepEqual(
+      engine.snapshot().rows.map((row) => row.name),
+      ['a', 'a2'],
+    );
+    const stale = engine.begin();
+    const owner = engine.begin();
+    await owner.setName(first.index, 'owner');
+    const refused = assert.rejects(stale.setName(first.index, 'stale'), /conflict/);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await owner.commit();
+    await refused;
+    await stale.close();
+    await owner.close();
+  } finally {
+    await a.close();
+    await b.close();
+    engine.close();
+  }
+  const short = new WasmEngine(binding, { ...options, lockWaitMs: 5 });
+  const seeded = short.begin();
+  const link = await seeded.create(0n, 0n);
+  await seeded.commit();
+  await seeded.close();
+  const holder = short.begin();
+  const busy = short.begin();
+  await holder.setName(link.index, 'held');
+  await assert.rejects(busy.setName(link.index, 'late'), /busy/);
+  await holder.close();
+  await busy.close();
+  short.close();
 }
 
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
@@ -52,6 +105,7 @@ export async function engineConformance(binding) {
   await groupCommitConformance(binding);
   await pessimisticConformance(binding);
   await savepointConformance(binding);
+  await lockWaitConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();
   const observer = engine.begin();

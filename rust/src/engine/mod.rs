@@ -103,7 +103,8 @@ pub enum ConcurrencyControl {
     Optimistic,
     /// A second transaction fails immediately rather than blocking indefinitely.
     Exclusive,
-    /// Reserve written addresses until session end; competing writes fail fast.
+    /// Reserve written addresses until session end; competing writes fail fast
+    /// unless `lock_wait` is selected.
     Pessimistic,
 }
 
@@ -149,6 +150,9 @@ pub struct EngineOptions {
     pub state_structure: StateStructure,
     pub revision_encoding: RevisionEncoding,
     pub concurrency: ConcurrencyControl,
+    /// How long a pessimistic write waits for another session's address, instead
+    /// of failing at once. Native only: a wasm32 thread cannot wait for another.
+    pub lock_wait: Option<std::time::Duration>,
     pub isolation: IsolationLevel,
     pub serializable_validation: SerializableValidation,
     pub history: HistoryPolicy,
@@ -204,6 +208,7 @@ struct State<T, L> {
     history: BTreeMap<u64, (Snapshot<T>, u128)>,
     changed: BTreeMap<T, u64>,
     write_owners: BTreeMap<T, Arc<()>>,
+    lock_waits: Option<pessimistic::LockWaits>,
     next: u128,
     committed_next: u128,
     active: usize,
@@ -236,6 +241,9 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         {
             return Err(error("read-set validation requires serializable isolation"));
         }
+        if options.lock_wait.is_some() && options.concurrency != ConcurrencyControl::Pessimistic {
+            return Err(error("lock waiting requires pessimistic concurrency"));
+        }
         if options.require_durable_flush && !log.supports_durable_flush() {
             return Err(error("selected log does not support durable flush"));
         }
@@ -251,6 +259,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             history: BTreeMap::new(),
             changed: BTreeMap::new(),
             write_owners: BTreeMap::new(),
+            lock_waits: options.lock_wait.map(pessimistic::LockWaits::new),
             next: 1,
             committed_next: 1,
             active: 0,

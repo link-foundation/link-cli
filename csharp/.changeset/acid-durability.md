@@ -407,3 +407,6 @@ permission and undo sessions. Keep original-query envelopes observable by
 subscriptions.
 
 Update Platform.Data.Doublets to 1.0.0 and Link.Foundation.Links.Notation to 0.31.1.
+
+Add optional `EngineOptions.LockWait`: a pessimistic write waits a bounded time for
+another session's address and refuses a wait that would close a cycle.

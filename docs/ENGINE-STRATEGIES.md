@@ -15,7 +15,7 @@ transaction algorithm.
 | Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
 | Undo part of a transaction | Call `savepoint` on any session | Restore staged rows and keep the session open; costs O(staged writes) only when taken. See [semantics and limits](ENGINE-SAVEPOINTS.md). |
-| Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
+| Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately, or wait a selected bounded time with deadlock refusal. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed logical revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Physical page WAL | Staged engine + optional SQLite log, require durable flush | SQLite supplies WAL/FULL and checkpoints; one engine owns its connection and cache. [Providers, maintenance, costs and examples](ENGINE-SQLITE.md). |
 | Bounded time travel | Set Rust `HistoryPolicy::Last(n)`, C# `HistoryLimit = n`, JS `history: n` | Retain up to n revisions including current. Active sessions and previously returned snapshots pin their versions independently. |
@@ -59,7 +59,8 @@ drop/dispose, and completed attempts release admission. A session belongs to
 one caller; share engine handles between threads instead of sharing a session.
 
 Optional [pessimistic point writes](ENGINE-PESSIMISTIC.md) reserve written addresses
-and reject competing writes before staging. Independent addresses remain concurrent;
+and reject competing writes before staging, at once or after a selected bounded
+wait. Independent addresses remain concurrent;
 isolation and serializable validation remain separately selected. Cluster engines
 reject this local-only strategy.
 
@@ -390,7 +391,7 @@ matter for a large or frequently written database.
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
-| RocksDB pessimistic transactions | Pessimistic point writes + selected isolation | Immediate busy errors, engine-local ownership and snapshot validation; no waiting, deadlock detector, range locks, LSM tree or performance equivalence. |
+| RocksDB pessimistic transactions | Pessimistic point writes + selected isolation | Immediate busy errors or selected bounded waiting with deadlock refusal, engine-local ownership and snapshot validation; no range locks, LSM tree or performance equivalence. |
 | InnoDB synchronous redo/group commit | Durable staged journal + opt-in independent-session group commit | Shared flush with separate revisions; optional SQLite supplies its pager/WAL. No InnoDB buffer pool, automatic grouping scheduler or doublewrite repair. Shared state and change encoding independently reduce localized copy/serialization costs. |
 | MongoDB durable write concern | Synchronous durable replica acknowledgements + outcome discovery | No MongoDB election/oplog protocol, tagged concerns or causal replica reads. A lost acknowledgement can follow a committed write. |
 | Cassandra ordinary quorum writes | Fixed-primary synchronous replica log | No leaderless writes, timestamp reconciliation, hints or anti-entropy. Counting replicas does not provide these guarantees. |

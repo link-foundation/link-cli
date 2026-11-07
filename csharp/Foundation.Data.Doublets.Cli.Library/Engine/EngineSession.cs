@@ -58,6 +58,8 @@ public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             CheckOpen();
             T reserved = T.Zero;
             var fromReservation = _reserved?.TryPeek(out reserved) == true;
+            // A fresh address has no owner; a reserved one may have been picked explicitly.
+            if (fromReservation) _locks?.WaitTurn(_engine, reserved);
             T id = fromReservation ? reserved : T.CreateChecked(_engine.Next);
             if (fromReservation && Row(id) is not null) throw new InvalidOperationException("Reserved query address already exists.");
             var next = _engine.NextAfter(BigInteger.CreateChecked(id));
@@ -76,6 +78,7 @@ public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             if (id == T.Zero) throw new ArgumentOutOfRangeException(nameof(id));
             if (Row(id) is null)
             {
+                _locks?.WaitTurn(_engine, id);
                 var next = _engine.NextAfter(BigInteger.CreateChecked(id));
                 _locks?.Acquire(_engine, id, _base.Revision);
                 _engine.Next = next;

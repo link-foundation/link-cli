@@ -66,3 +66,11 @@ Session and cluster-shard savepoints were added next, as a competitor feature th
 none of the earlier strategies covered. [The semantics, costs and limits](../../ENGINE-SAVEPOINTS.md)
 follow the SQLite and PostgreSQL documents. The MySQL page could not be checked, so
 InnoDB is not compared.
+
+## Lock waiting
+
+Pessimistic sessions can now wait a bounded time and refuse a wait that would close
+a cycle, closing the gap the strategy table recorded against RocksDB and InnoDB.
+[Semantics, costs and limits](../../ENGINE-PESSIMISTIC.md#bounded-waiting-and-deadlock-refusal)
+are documented with the competitor pages they were checked against. JavaScript waits
+in the client because its single thread cannot block in the Rust core.

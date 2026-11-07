@@ -58,6 +58,8 @@ public sealed partial class LinksEngine<T>
             // unknown. Keep the old Current for other read-committed sessions.
             Active = working.Active;
             WriteOwners = working.WriteOwners;
+            // Waiters resume when this gate is left, and record their edges again if they still wait.
+            if (LockEdges is { } edges) { edges.Clear(); Monitor.PulseAll(Gate); }
             var records = memory.Read();
             try
             {

@@ -28,6 +28,10 @@ public sealed record EngineOptions
     public ConstraintValidation ConstraintValidation { get; init; } = ConstraintValidation.Scan;
     public bool RequireDurableFlush { get; init; }
     public Action<string>? Trace { get; init; }
+    /// <summary>With pessimistic concurrency, how long a write waits for another
+    /// session's address before answering busy; a wait that would close a cycle is
+    /// refused at once. Null, the default, answers busy without waiting.</summary>
+    public TimeSpan? LockWait { get; init; }
 }
 
 public readonly record struct EngineRow<T>(Link<T> Link, string? Name)
@@ -63,6 +67,8 @@ public sealed partial class LinksEngine<T>
     internal EngineSnapshot<T> Current;
     internal Dictionary<T, ulong>? Changed;
     internal Dictionary<T, object>? WriteOwners;
+    // Waiter to owner. Created by the first wait, so other engines carry nothing.
+    internal Dictionary<object, object>? LockEdges;
     internal BigInteger Next = BigInteger.One;
     internal BigInteger CommittedNext = BigInteger.One;
     internal int Active;
@@ -81,8 +87,11 @@ public sealed partial class LinksEngine<T>
             || !Enum.IsDefined(Options.RevisionEncoding)
             || !Enum.IsDefined(Options.ConstraintValidation)
             || (Options.SerializableValidation == SerializableValidation.ReadSet && Options.Isolation != IsolationLevel.Serializable)
-            || Options.Constraints.Any(c => !Enum.IsDefined(c)))
+            || Options.Constraints.Any(c => !Enum.IsDefined(c))
+            || Options.LockWait < TimeSpan.Zero)
             throw new ArgumentException("Invalid engine strategy.", nameof(options));
+        if (Options.LockWait is not null && Options.Concurrency != ConcurrencyControl.Pessimistic)
+            throw new ArgumentException("Lock waiting requires pessimistic concurrency.", nameof(options));
         if (Options.RequireDurableFlush && !log.SupportsDurableFlush)
             throw new ArgumentException("Selected log does not support durable flush.", nameof(log));
         // Freeze caller-owned collections before using them as policy.

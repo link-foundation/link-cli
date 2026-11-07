@@ -47,6 +47,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             history: state.history.clone(),
             changed: state.changed.clone(),
             write_owners: state.write_owners.clone(),
+            lock_waits: None,
             next: state.next,
             committed_next: state.committed_next,
             active: state.active,
@@ -69,6 +70,9 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         // if the physical log fails after writing an unknown prefix.
         state.active = working.active;
         state.write_owners = working.write_owners;
+        if let Some(waits) = &mut state.lock_waits {
+            waits.wake_all();
+        }
         let persisted = (|| {
             for record in &working.log.entries {
                 state.log.append_log_entry(record)?;

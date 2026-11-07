@@ -8,6 +8,9 @@ export interface EngineOptions {
   /** Logical journal records; independent of the physical delta decorator. */
   revisionEncoding?: 'snapshot' | 'changes';
   concurrency?: 'optimistic' | 'exclusive' | 'pessimistic';
+  /** With pessimistic concurrency, how long a request waits for another session's
+   * write address before answering busy; a wait closing a cycle is refused at once. */
+  lockWaitMs?: number;
   isolation?: 'read-committed' | 'snapshot' | 'serializable';
   /** Serializable point dependencies; scans conservatively validate the revision. */
   serializableValidation?: 'revision' | 'read-set';

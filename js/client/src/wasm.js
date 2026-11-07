@@ -34,6 +34,7 @@ export class WasmTransport {
   #reserved = false;
   #closing = false;
   #tail = Promise.resolve();
+  #waiter;
 
   constructor(
     clink,
@@ -42,6 +43,7 @@ export class WasmTransport {
       maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES,
       maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES,
       capabilities,
+      waiter,
     } = {},
   ) {
     if (!clink || typeof clink.request !== 'function') {
@@ -51,6 +53,7 @@ export class WasmTransport {
     }
     this.#clink = clink;
     this.#owned = owned;
+    this.#waiter = waiter;
     this.maxRequestBytes = maxRequestBytes;
     this.maxReplyBytes = maxReplyBytes;
     this.capabilities = wasmCapabilities({
@@ -81,7 +84,10 @@ export class WasmTransport {
       if (late) throw late;
       this.stats.requests += 1;
       this.stats.bytesSent += size;
-      const reply = this.#clink.request(text);
+      if (this.#waiter) return this.#waiter(this.#clink, text, scope).then(received);
+      return received(this.#clink.request(text));
+    };
+    const received = (reply) => {
       const replySize = encoder.encode(reply).length;
       this.stats.bytesReceived += replySize;
       if (replySize > this.maxReplyBytes) {
