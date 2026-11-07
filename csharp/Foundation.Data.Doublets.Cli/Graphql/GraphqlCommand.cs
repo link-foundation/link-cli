@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.CommandLine;
 using System.Net;
 using System.Text;
@@ -62,29 +61,11 @@ public sealed class GraphqlCommand
         var (host, port) = LinksServer.ParseEndPoint(address);
         var bound = IPAddress.TryParse(host, out var parsedHost) ? parsedHost : Dns.GetHostAddresses(host).First();
         using var server = new GraphqlServer(new IPEndPoint(bound, port));
-        void StopOnInterrupt(object? _, ConsoleCancelEventArgs eventArgs)
-        {
-            eventArgs.Cancel = true;
-            server.Stop();
-        }
-        Console.CancelKeyPress += StopOnInterrupt;
-        // A service manager or a container asks with SIGTERM rather than Ctrl+C.
-        using var stopOnTerminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, signal =>
-        {
-            signal.Cancel = true;
-            server.Stop();
-        });
-        try
-        {
-            Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");
-            Console.Out.Flush();
-            started?.Invoke(server);
-            server.Serve(store, settings);
-        }
-        finally
-        {
-            Console.CancelKeyPress -= StopOnInterrupt;
-        }
+        using var stopSignals = new StopSignals(server.Stop);
+        Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");
+        Console.Out.Flush();
+        started?.Invoke(server);
+        server.Serve(store, settings);
         return 0;
     }
 }
