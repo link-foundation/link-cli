@@ -84,7 +84,10 @@ fn test_parse_links_notation_backtick_unicode_identifier() {
 
 #[test]
 fn the_default_parser_is_the_new_one() {
-    let (default, new) = (Parser::default(), Parser::new());
+    fn made<T: Default>() -> T {
+        T::default()
+    }
+    let (default, new) = (made::<Parser>(), Parser::new());
     assert_eq!(
         format!("{:?}", default.parse("(1 2)").unwrap()),
         format!("{:?}", new.parse("(1 2)").unwrap())
