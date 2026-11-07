@@ -254,10 +254,6 @@ namespace Foundation.Data.Doublets.Cli
                     {
                         intendedFinalStates[after.Index] = after;
                     }
-                    else if (before.Index != T.Zero && after.Index == T.Zero)
-                    {
-                        intendedFinalStates[before.Index] = default(LinkParts<T>);
-                    }
                 }
 
                 var unexpectedDeletions = new List<LinkParts<T>>();
@@ -344,11 +340,6 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     if (finalIntendedStates.TryGetValue(deletedLink.Index, out var intendedLink))
                     {
-                        if (intendedLink.Index == T.Zero)
-                        {
-                            TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Link #{deletedLink.Index} was intended-deletion => skip restore.");
-                            continue;
-                        }
                         if (!links.Exists(intendedLink.Index))
                         {
                             TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Recreating link #{deletedLink.Index} => was unexpected deletion.");
@@ -458,19 +449,11 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     if (before.Source != after.Source || before.Target != after.Target)
                     {
-                        if (before.Index == after.Index)
-                        {
-                            TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Updating link in-place => ID={before.Index}");
-                            EnsureAddress(links, after.Index, options);
-                            links.Update(before, after, (beforeState, afterState) =>
-                                options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
-                        }
-                        else
-                        {
-                            TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Removing old link => ID={before.Index} then creating new => ID={after.Index}.");
-                            RemoveLinks(links, before, options);
-                            CreateOrUpdateLink(links, after, options);
-                        }
+                        // Operations pair a before and an after only by the same index.
+                        TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Updating link in-place => ID={before.Index}");
+                        EnsureAddress(links, after.Index, options);
+                        links.Update(before, after, (beforeState, afterState) =>
+                            options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
                     }
                     else
                     {

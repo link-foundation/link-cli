@@ -126,22 +126,6 @@ namespace Foundation.Data.Doublets.Cli
                 parsedValue = links.Constants.Any;
                 return true;
             }
-            else if (id.EndsWith(":"))
-            {
-                var trimmed = id.TrimEnd(':');
-                if (TryParseAddress(trimmed, out T linkId))
-                {
-                    parsedValue = linkId;
-                    return true;
-                }
-                // Try to resolve as string alias
-                var aliasId = links.GetByName(QueryParser.Name(trimmed));
-                if (aliasId != links.Constants.Null)
-                {
-                    parsedValue = aliasId;
-                    return true;
-                }
-            }
             else if (TryParseAddress(id, out T linkVal))
             {
                 parsedValue = linkVal;

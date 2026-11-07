@@ -1,6 +1,5 @@
-// Edges of the mixed query processors that ordinary queries do not reach: references
-// that carry an address suffix, moves onto a link already in place and bindings that
-// disagree.
+// Edges of the mixed query processors that ordinary queries do not reach: quoted
+// references, moves onto a link already in place and bindings that disagree.
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
@@ -108,6 +107,27 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             });
 
         [Theory]
+        // A substitution without an index goes to a link with those parts, if there is one.
+        [InlineData("(((2: 1 2)) ((1 1)))", "1:1>1")]
+        [InlineData("(((2: 1 2)) ((1 2)))", "1:1>1 2:1>2")]
+        [InlineData("(((1: 1 1) (2: 1 2)) ((1 2)))", "1:1>2")]
+        [InlineData("(((1: 1 1) (2: 1 2)) ((2 2)))", "1:2>2")]
+        [InlineData("(((1: 1 1) (2: 1 2)) ((1: 1 1)))", "1:1>1")]
+        // A nested pattern whose index is not the link it reaches matches nothing.
+        [InlineData("(((2: (2: 1 1) 2)) ((2: 2 2)))", "1:1>1 2:1>2")]
+        // A variable that nothing bound takes no address of its own.
+        [InlineData("(((1: 1 1)) (($new: 1 2)))", "1:1>2")]
+        // Moving to a free address, and onto a link the same query deleted.
+        [InlineData("(((1: 1 1)) ((3: 1 1)))", "3:1>1")]
+        [InlineData("(((2: 1 2)) ((3: 2 2)))", "1:1>1 3:2>2")]
+        [InlineData("(((2: 1 2)) ((1: 2 2)))", "1:2>2")]
+        [InlineData("(((2: 1 2)) (()))", "1:1>1")]
+        public void ExplicitAddressesAndPartsDecideWhereARowEndsUp(string query, string expected)
+        {
+            Assert.Equal(expected, After(true, OneAndItsTarget, query));
+        }
+
+        [Theory]
         [InlineData("(('1:' 1 1))")]
         [InlineData("(('nope:' 1 2))")]
         public void AQuotedAddressSuffixIsNotAReferenceUnlessCreated(string restriction) =>
@@ -121,11 +141,9 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             });
 
         [Theory]
-        // The suffix is read as the address before it.
+        // A quoted reference is a name, and no link has it, so the row is matched by its parts.
         [InlineData("(() ((1: 1 1) (2: 1 2)))", "((('1:' 1 1)) ((1: 2 2)))", "1:2>2")]
-        // No link has the name before the suffix, so the row is matched by parts alone.
         [InlineData("(() ((1: 1 1) (2: 1 2)))", "((('nope:' 1 2)) ((2: 2 2)))", "2:2>2")]
-        // The name before the suffix is the link it names.
         [InlineData("(() ((n: n n)))", "((('n:' 1 1)) ((1: 1 1)))", "1:1>1")]
         // In a substitution the quoted text names a new point link.
         [InlineData("(() ((1: 1 1) (2: 1 2)))", "(((2: 1 2)) ((2: '1:' 2)))", "1:1>1 2:3>2 3:3>3")]
