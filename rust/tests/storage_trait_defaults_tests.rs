@@ -10,6 +10,7 @@ struct TinyStore {
     next: u64,
     fail_create: bool,
     hide_after_update: bool,
+    rewrite_on_ensure: bool,
 }
 impl LinksStorage<u64> for TinyStore {
     fn create_link(&mut self, source: u64, target: u64) -> Result<u64, LinkError> {
@@ -23,6 +24,9 @@ impl LinksStorage<u64> for TinyStore {
     }
     fn ensure_link_created(&mut self, id: u64) -> Result<u64, LinkError> {
         self.next = self.next.max(id);
+        if self.rewrite_on_ensure {
+            self.rows.insert(1, GenericLink::new(1, 9, 9));
+        }
         self.rows.entry(id).or_insert(GenericLink::new(id, 0, 0));
         Ok(id)
     }
@@ -190,4 +194,44 @@ fn filesystem_revision_distinguishes_missing_present_changed_and_invalid_paths()
         StorageRevision::of("invalid\0path"),
         Err(LinkError::Io(_))
     ));
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn observing_a_placeholder_also_reports_a_row_the_backend_changed_on_the_way() {
+    let mut store = TinyStore::default();
+    store.create_link(2, 3).unwrap();
+    store.rewrite_on_ensure = true;
+    let mut seen = Vec::new();
+    store
+        .ensure_link_created_observed(4, &mut |before, after| seen.push((before, after)))
+        .unwrap();
+    assert_eq!(
+        seen,
+        vec![
+            (GenericLink::new(1, 2, 3), GenericLink::new(1, 9, 9)),
+            (GenericLink::null(), GenericLink::new(4, 0, 0)),
+        ]
+    );
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_store_without_names_refuses_to_name_a_link() {
+    let mut store = TinyStore::default();
+    assert_eq!(store.capture_names().unwrap(), None);
+    assert!(matches!(
+        store.set_link_name(1, Some("name")),
+        Err(LinkError::StorageError(_))
+    ));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_lock_creates_the_directory_it_lives_in() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("missing").join("deep").join("a.lock");
+    let lock = link_cli::FileLock::acquire(&path, link_cli::LockMode::Shared).unwrap();
+    assert_eq!(lock.mode(), link_cli::LockMode::Shared);
+    assert!(path.exists());
 }
