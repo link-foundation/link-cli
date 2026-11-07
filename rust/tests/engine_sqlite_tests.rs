@@ -197,6 +197,31 @@ fn foreign_schema_sequence_holes_and_invalid_utf8_are_rejected() {
     }
 }
 #[test]
+fn records_another_writer_damaged_are_refused_when_read() {
+    let directory = tempfile::tempdir().unwrap();
+    for (name, sequence, record) in [
+        ("hole", 2, b"late".as_slice()),
+        ("break", 1, b"two\nlines".as_slice()),
+    ] {
+        let path = directory.path().join(format!("{name}.db"));
+        let mut log = open(&path);
+        Connection::open(&path)
+            .unwrap()
+            .execute(
+                "INSERT INTO link_cli_log VALUES (?1, ?2)",
+                params![sequence, record],
+            )
+            .unwrap();
+        let refusal = log.read_log_entries().unwrap_err().to_string();
+        let expected = if name == "hole" {
+            "contiguous"
+        } else {
+            "physical line break"
+        };
+        assert!(refusal.contains(expected), "{refusal}");
+    }
+}
+#[test]
 fn engine_groups_and_pins_reopen_across_maps_and_encodings() {
     for structure in [StateStructure::Flat, StateStructure::Shared] {
         for encoding in [RevisionEncoding::Snapshot, RevisionEncoding::Changes] {

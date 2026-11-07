@@ -253,6 +253,18 @@ fn unreadable_copies_stale_decisions_and_changed_sources_are_checked() -> Result
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_log_whose_metadata_no_copy_can_read_is_refused_rather_than_treated_as_new() {
+    let pair = Pair::new([fixture("twoGroups").0, fixture("twoGroups").0]);
+    for device in &pair.devices {
+        device.faults.borrow_mut().metadata = true;
+    }
+    let refusal = pair.open().err().unwrap().to_string();
+    assert!(refusal.contains("both mirror metadata copies are unreadable"));
+    assert!(pair.trace.borrow().calls.is_empty());
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn every_tail_cleanup_failure_fences_until_both_devices_reopen() -> Result<(), LinkError> {
     let (healthy, records) = fixture("twoGroups");
     let mut extra = healthy.clone();

@@ -148,10 +148,6 @@ pub(crate) fn parse_for<T: crate::query_address::QueryAddress>(
 fn single_reference(link: &LiNo<String>) -> &str {
     match link {
         LiNo::Ref(value) => value,
-        LiNo::Link {
-            id: Some(value), ..
-        } => value,
-        LiNo::Link { values, .. } if values.len() == 1 => single_reference(&values[0]),
-        _ => "",
+        LiNo::Link { values, .. } => values.first().map_or("", single_reference),
     }
 }
