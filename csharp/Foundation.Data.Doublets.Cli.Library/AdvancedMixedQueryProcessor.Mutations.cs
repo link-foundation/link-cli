@@ -123,22 +123,6 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static LinkParts<T> ConvertToDoubletLink(INamedTypesLinks<T> links, LinoLink linoLink, T defaultValue)
-        {
-            T index = defaultValue;
-            T source = defaultValue;
-            T target = defaultValue;
-            TryParseLinkId(linoLink.Id, links, ref index);
-            if (linoLink.Values?.Count == 2)
-            {
-                var sourceLink = linoLink.Values[0];
-                TryParseLinkId(sourceLink.Id, links, ref source);
-                var targetLink = linoLink.Values[1];
-                TryParseLinkId(targetLink.Id, links, ref target);
-            }
-            return new LinkParts<T>(index, source, target);
-        }
-
         private static bool TryParseLinkId(string? id, INamedTypesLinks<T> links, ref T parsedValue)
         {
             if (string.IsNullOrEmpty(id)) return false;
