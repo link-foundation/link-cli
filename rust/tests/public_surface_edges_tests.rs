@@ -12,8 +12,8 @@ use doublets::Links;
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::protocol::LinksSessions;
 use link_cli::{
-    ensure_point, lock_file_path, DoubletsStorage, FileLock, Link, LinkStorage, LinksStorage, LockMode,
-    NamedTypeLinks, TypesDecorator,
+    ensure_point, lock_file_path, DoubletsStorage, FileLock, Link, LinkStorage, LinksStorage,
+    LockMode, NamedTypeLinks, TypesDecorator,
 };
 use tempfile::TempDir;
 
@@ -122,7 +122,9 @@ fn a_type_store_passes_every_write_to_the_store_below() -> Result<()> {
         observed.push((before.index, after.index));
     })?;
     assert_eq!(removed.index, named);
-    assert!(observed.iter().any(|(before, after)| *before == named && *after == 0));
+    assert!(observed
+        .iter()
+        .any(|(before, after)| *before == named && *after == 0));
     Ok(())
 }
 
@@ -182,7 +184,8 @@ fn sessions_answer_about_themselves() -> Result<()> {
     assert_eq!(plain.created(plain_session), Some(&HashSet::new()));
     assert_eq!(plain.into_inner().all().len(), 0);
 
-    let triplets = LinksSessions::<LinkStorage>::new(LinkStorage::in_memory(false)).with_triplets()?;
+    let triplets =
+        LinksSessions::<LinkStorage>::new(LinkStorage::in_memory(false)).with_triplets()?;
     assert!(triplets.has_triplets());
     let mut triplets = triplets;
     let first = triplets.ensure_triplets()?;

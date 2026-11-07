@@ -27,7 +27,9 @@ fn a_query_with_nothing_to_do_changes_nothing() -> Result<()> {
     assert!(processor().process_query(&mut storage, "")?.is_empty());
     // A single link with fewer than two values holds no substitution.
     assert!(processor().process_query(&mut storage, "(1)")?.is_empty());
-    assert!(processor().process_query(&mut storage, "(() ())")?.is_empty());
+    assert!(processor()
+        .process_query(&mut storage, "(() ())")?
+        .is_empty());
     assert!(rows(&storage).is_empty());
     Ok(())
 }

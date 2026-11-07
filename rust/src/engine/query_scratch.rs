@@ -165,3 +165,86 @@ impl<T: QueryAddress> NamedTypeLinks<T> for QueryScratch<T> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scratch(next: u128, last: u128) -> QueryScratch<u32> {
+        QueryScratch {
+            rows: BTreeMap::new(),
+            next,
+            last,
+            reserved: VecDeque::new(),
+            allocated: Vec::new(),
+            fresh_range: None,
+            limits: None,
+        }
+    }
+
+    #[test]
+    fn the_panicking_writes_are_the_checked_ones() {
+        let mut scratch = scratch(1, 10);
+        let made = scratch.create(0, 0);
+        assert_eq!(made, 1);
+        assert_eq!(scratch.ensure_created(5), 5);
+        assert_eq!(scratch.next, 6);
+        let pair = scratch.get_or_create(5, 5);
+        assert_eq!(scratch.get_or_create(5, 5), pair);
+    }
+
+    #[test]
+    fn a_name_is_set_and_removed_only_on_a_row() {
+        let mut scratch = scratch(1, 10);
+        let made = scratch.create(0, 0);
+        scratch.set_name(made, "name").unwrap();
+        assert_eq!(scratch.get_by_name("name").unwrap(), Some(made));
+        scratch.remove_name(made).unwrap();
+        assert_eq!(scratch.get_name(made).unwrap(), None);
+        assert!(scratch.remove_name(9).is_err());
+    }
+
+    #[test]
+    fn the_address_space_and_the_reservation_bound_what_is_made() {
+        let mut full = scratch(3, 2);
+        assert!(full.try_create(0, 0).is_err());
+        let mut taken = scratch(1, 10);
+        taken.reserved.push_back(4);
+        taken.rows.insert(
+            4,
+            Row {
+                link: GenericLink::new(4, 0, 0),
+                name: None,
+            },
+        );
+        assert!(taken.try_create(0, 0).is_err());
+
+        let mut ranged = scratch(1, 10);
+        assert!(ranged.try_ensure_created(0).is_err());
+        assert!(ranged.try_ensure_created(u32::MAX).is_err());
+        ranged.fresh_range = Some((5, 6, BTreeSet::from([2])));
+        assert!(ranged.try_ensure_created(9).is_err());
+        // A retained version outside the range is allowed and does not move the
+        // allocator when its row is already there.
+        ranged.rows.insert(
+            2,
+            Row {
+                link: GenericLink::new(2, 0, 0),
+                name: None,
+            },
+        );
+        ranged.next = 2;
+        assert_eq!(ranged.try_ensure_created(2).unwrap(), 2);
+        assert_eq!(ranged.next, 2);
+        // An address of the fresh range moves it even with a row present.
+        ranged.rows.insert(
+            6,
+            Row {
+                link: GenericLink::new(6, 0, 0),
+                name: None,
+            },
+        );
+        assert_eq!(ranged.try_ensure_created(6).unwrap(), 6);
+        assert_eq!(ranged.next, 7);
+    }
+}
