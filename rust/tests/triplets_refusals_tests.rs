@@ -44,7 +44,7 @@ fn a_restriction_longer_than_a_triplet_matches_nothing() {
     let part = restriction_of_query(TripletQuery::by_from(3));
     assert!(matches_triplet(&triplet, &part));
     let mut long = part.clone();
-    long.push(part[0].clone());
+    long.push(part[0]);
     assert!(!matches_triplet(&triplet, &long));
 }
 
