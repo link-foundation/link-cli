@@ -8,7 +8,7 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class GraphqlTests
 {
-    private static string Vectors(string name)
+    internal static string Vectors(string name)
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {

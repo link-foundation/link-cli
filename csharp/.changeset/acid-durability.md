@@ -415,3 +415,7 @@ Add `LinksEngine.Backup`, which copies a consistent cut to an empty commit log w
 commits continue, flushes it and verifies it by reading it back. It can target any
 retained revision for a point-in-time copy. `ExportCheckpoint(revision)` returns the
 same records.
+
+A GraphQL subject can write a value on a link it has just created. `insert_links_one` with a nested
+value used to answer `Forbidden` under a permission policy, because the check on the value's owner
+built a new permissions view that did not know what the subject had created.

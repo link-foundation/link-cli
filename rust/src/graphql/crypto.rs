@@ -192,6 +192,36 @@ pub fn verify_token(secret: &[u8], token: &str, now: u64) -> Result<u64> {
 mod tests {
     use super::*;
 
+    fn token_with(secret: &[u8], header: &str, claims: &str) -> String {
+        let signed = format!(
+            "{}.{}",
+            base64url(header.as_bytes()),
+            base64url(claims.as_bytes())
+        );
+        let signature = base64url(&hmac_sha256(secret, signed.as_bytes()));
+        format!("{signed}.{signature}")
+    }
+
+    #[test]
+    fn tokens_are_refused_for_their_algorithm_expiry_and_subject() {
+        let hs256 = r#"{"alg":"HS256"}"#;
+        let refused = |token: String| verify_token(b"k", &token, 100).unwrap_err().to_string();
+        let none = token_with(b"k", r#"{"alg":"none"}"#, "{}");
+        assert!(refused(none).contains("only HS256"));
+        let expired = token_with(b"k", hs256, r#"{"exp":100}"#);
+        assert!(refused(expired).contains("JWTExpired"));
+        let nobody = token_with(b"k", hs256, r#"{"exp":101}"#);
+        assert!(refused(nobody).contains("no x-hasura-user-id"));
+        let named = token_with(
+            b"k",
+            hs256,
+            r#"{"https://hasura.io/jwt/claims":{"x-hasura-user-id":"not a number"}}"#,
+        );
+        assert!(refused(named).contains("no x-hasura-user-id"));
+        assert!(refused(token_with(b"other", hs256, "{}")).contains("JWSInvalidSignature"));
+        assert!(refused("a.b".to_string()).contains("malformed"));
+    }
+
     #[test]
     fn sha1_and_the_handshake_match_rfc_6455() {
         assert_eq!(
