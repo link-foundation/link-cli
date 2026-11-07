@@ -1,6 +1,9 @@
 //! The GraphQL server as a client meets it: over sockets, with tokens, across
 //! a restart. `csharp/Foundation.Data.Doublets.Cli.Tests` has the same cases.
 
+#[path = "common/stop_server.rs"]
+mod stop_server;
+
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 use std::path::PathBuf;
@@ -112,8 +115,7 @@ impl Server {
 
 impl Drop for Server {
     fn drop(&mut self) {
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        stop_server::terminate(&mut self.child);
     }
 }
 
@@ -380,4 +382,21 @@ fn the_embedded_schema_is_the_recorded_one() {
         recorded == embedded,
         "src/graphql/introspection.json differs from docs"
     );
+}
+
+#[cfg(unix)]
+#[test]
+fn a_termination_signal_ends_the_server_and_a_restart_serves_the_data() {
+    let db = database("signal");
+    let mut server = Server::start(&db, &[]);
+    let (_, guest) = server.guest();
+    let status = stop_server::terminate(&mut server.child).expect("the server should stop");
+    assert!(status.success(), "{status:?}");
+    drop(server);
+
+    let restarted = Server::start(&db, &[]);
+    let answer = restarted.post(&format!(
+        "query {{ links(where: {{ id: {{ _eq: {guest} }} }}) {{ id }} }}"
+    ));
+    assert_eq!(ids(&answer, "links"), vec![guest]);
 }

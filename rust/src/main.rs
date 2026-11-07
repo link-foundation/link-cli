@@ -658,6 +658,8 @@ where
     };
     let settings = Settings::new(secret, cli.graphql_admin_secret.clone());
     let server = GraphqlServer::bind(address)?;
+    let stop = server.shutdown_handle()?;
+    ctrlc::set_handler(move || stop.shutdown())?;
     println!("clink GraphQL server listening on {}", server.local_addr()?);
     std::io::Write::flush(&mut std::io::stdout())?;
     server.serve(&mut store, settings)?;
@@ -712,6 +714,8 @@ where
         }),
     };
     let server = LinksServer::bind(address, options)?;
+    let stop = server.shutdown_handle()?;
+    ctrlc::set_handler(move || stop.shutdown())?;
     print_banner(&server)?;
     server.serve_sessions(&mut sessions)?;
     drop(sessions);

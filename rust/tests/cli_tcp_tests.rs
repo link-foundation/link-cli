@@ -1,5 +1,8 @@
 //! `clink --serve` and `clink --connect` end to end (issue #105).
 
+#[path = "common/stop_server.rs"]
+mod stop_server;
+
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::protocol::ArityRange;
 use std::io::{BufRead, BufReader};
@@ -100,8 +103,7 @@ impl Server {
 
 impl Drop for Server {
     fn drop(&mut self) {
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        stop_server::terminate(&mut self.child);
     }
 }
 
@@ -209,4 +211,18 @@ fn serve_rejects_a_query() {
         .output()
         .unwrap();
     assert!(!output.status.success());
+}
+
+#[cfg(unix)]
+#[test]
+fn a_termination_signal_ends_the_server_cleanly_and_keeps_its_data() {
+    let directory = TempDir::new().unwrap();
+    let mut server = Server::start(&directory, &[]);
+    assert_eq!(server.stdout(&["() ((1 1))"]), "() ((1: 1 1))\n");
+
+    let status = stop_server::terminate(&mut server.child).expect("the server should stop");
+    assert!(status.success(), "{status:?}");
+
+    let restarted = Server::start(&directory, &[]);
+    assert_eq!(restarted.stdout(&[]), "(1: 1 1)\n");
 }

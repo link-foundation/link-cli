@@ -14,12 +14,14 @@ use std::thread;
 use std::time::{Duration, Instant};
 use tempfile::{tempdir, tempfile};
 
+#[path = "common/stop_server.rs"]
+mod stop_server;
+
 struct Reap(Child);
 
 impl Drop for Reap {
     fn drop(&mut self) {
-        let _ = self.0.kill();
-        let _ = self.0.wait();
+        stop_server::terminate(&mut self.0);
     }
 }
 
