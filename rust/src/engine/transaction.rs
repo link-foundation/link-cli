@@ -6,13 +6,16 @@ use crate::{GenericLink, LinkError, LinksStorage, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::{collections::BTreeMap, sync::Mutex};
 
+/// Private writes by address; `None` removes the row.
+pub(super) type StagedWrites<T> = BTreeMap<T, Option<Row<T>>>;
+
 /// An isolated write set with the same raw LinksStorage API as other backends.
 /// Dropping or rolling back discards the write set; allocation may leave gaps.
 pub struct EngineTransaction<T: LinkReference, L: TransitionLogStore> {
     pub(super) engine: Engine<T, L>,
     pub(super) base: Snapshot<T>,
-    pub(super) writes: BTreeMap<T, Option<Row<T>>>,
-    pub(super) savepoints: Vec<(u64, BTreeMap<T, Option<Row<T>>>)>,
+    pub(super) writes: StagedWrites<T>,
+    pub(super) savepoints: Vec<(u64, StagedWrites<T>)>,
     pub(super) reserved: std::collections::VecDeque<T>,
     pub(super) closed: bool,
     pub(super) isolation: IsolationLevel,
