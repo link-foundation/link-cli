@@ -429,7 +429,8 @@ an incremental chain reopens at any revision it holds and a copy can end just be
 refused restore leaves the destination unchanged.
 
 A permissions view now answers a write to an absent link with `Link not found`, the same answer a
-hidden link gets, instead of passing it to the memory store, whose unchecked read could end the process.
+hidden link gets, instead of passing it to the memory store, whose unchecked read could end the process. A write at
+the null link gets that answer too, instead of skipping the permission checks.
 
 `LinksEngine.CompactJournalAfter` compacts once a selected number of commits have landed, and the
 optional `BackgroundCompaction<T>` calls it periodically on its own thread and reports the first failure.
