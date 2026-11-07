@@ -387,14 +387,16 @@ comparison. Neither compacts history. Replication catch-up compares prefixes
 and copies missing logical records.
 Optional [caller-selected group commit](ENGINE-GROUP-COMMIT.md) shares one flush
 across independent sessions while buffering their selected logical records.
-There is no automatic grouping scheduler or background compaction. These limits
+There is no automatic grouping scheduler. [Automatic compaction](ENGINE-CHECKPOINTS.md#automatic-compaction)
+is optional and takes the commit lock while it replaces the journal. These limits
 matter for a large or frequently written database.
 
 | Competitor configuration | Closest available configuration | Material difference |
 | --- | --- | --- |
 | SQLite WAL with synchronous commit | Optional SQLite log + staged engine, selected isolation | Reuses SQLite page WAL/FULL and checkpointing; logical links revisions still replay the retained journal. No SQL planner or independent-engine MVCC/performance equivalence. |
 | SQLite / PostgreSQL savepoints | [Session savepoints](ENGINE-SAVEPOINTS.md) | Same stack behavior with tokens instead of names; a cluster savepoint covers one shard. |
-| SQLite online backup / RocksDB BackupEngine / PostgreSQL base backup and PITR | [Online backup](ENGINE-BACKUP.md) | One consistent cut with commits continuing and a retained-revision target; not incremental, no stored backup set, no arbitrary WAL replay. |
+| SQLite online backup / RocksDB BackupEngine / PostgreSQL base backup and PITR | [Online backup](ENGINE-BACKUP.md) | One consistent cut with commits continuing, incremental chains and restore to a revision number the chain holds; no managed backup set and no timestamp target. |
+| SQLite `wal_autocheckpoint` / Redis `auto-aof-rewrite` / etcd `auto-compaction` | [Automatic compaction](ENGINE-CHECKPOINTS.md#automatic-compaction) | A commit-count threshold, on a worker or timer the caller starts; no size or age trigger, and the replacement runs under the commit lock rather than beside commits. |
 | PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |

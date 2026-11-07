@@ -8,6 +8,8 @@
 pub mod address_allocator;
 #[cfg(feature = "author-fencing")]
 pub mod author_fence;
+#[cfg(not(target_arch = "wasm32"))]
+mod background_compaction;
 #[cfg(test)]
 mod boundary_tests;
 mod branch;
@@ -66,6 +68,8 @@ use doublets::data::LinkReference;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+#[cfg(not(target_arch = "wasm32"))]
+pub use background_compaction::BackgroundCompaction;
 pub use branch::Branch;
 pub use checkpoint::restore_backup;
 pub use delta::DeltaLog;
@@ -214,6 +218,8 @@ struct State<T, L> {
     committed_next: u128,
     active: usize,
     poisoned: bool,
+    /// The revision the last compaction published, for `compact_journal_after`.
+    compacted_revision: u64,
     options: EngineOptions,
     constraint_index: Option<constraint_index::ConstraintIndex<T>>,
 }
@@ -265,6 +271,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             committed_next: 1,
             active: 0,
             poisoned: false,
+            compacted_revision: 0,
             options,
             constraint_index: None,
             log,

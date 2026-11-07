@@ -52,7 +52,8 @@ APIs, or explicitly compact through a replacement-capable local page journal.
 Rust `engine.compact_journal()`, C# `engine.CompactJournal()` and JS
 `engine.compactJournal()` retain the commit lock through construction and atomic
 publication. Default logs reject this optional operation without mutation.
-Select the portable two-bank log and optionally wrap it with physical delta
+[Automatic compaction](#automatic-compaction) calls the same publication once
+enough commits have landed. Select the portable two-bank log and optionally wrap it with physical delta
 compression; its [protocol and costs](protocol/checkpoint-pages.md) describe
 ownership, synchronization and uncertain-outcome fencing. The
 [72-configuration example](../examples/journal-checkpoints/compact.mjs) runs on
@@ -73,3 +74,30 @@ It does not remove full-snapshot checkpoint cost, catalogue contention or the
 need for safe object retention. Durability still depends on the selected atomic
 store and truthful synchronization; logical checkpoints do not certify physical
 power-loss behavior.
+
+## Automatic compaction
+
+Nothing compacts unless you ask, so an engine that does not select this pays
+nothing. There are two levels:
+
+| | Rust | C# | JS |
+| --- | --- | --- | --- |
+| Compact if due | `engine.compact_journal_after(commits)` | `engine.CompactJournalAfter(commits)` | `engine.compactJournalAfter(commits)` |
+| Check periodically | `BackgroundCompaction::start(engine, commits, period)` | `new BackgroundCompaction<T>(engine, commits, period)` | `engine.compactEvery({ commits, periodMs })` |
+
+- **The threshold counts revisions** since the last compaction by this owner. The
+  first check after opening counts from revision 0, so a journal left long by an
+  earlier owner is compacted early. A check that is not due returns false and
+  does not touch the log.
+- **A wrong selection shows at once.** A log that cannot be replaced is refused
+  even when nothing is due, and a zero count or period is refused before a worker
+  starts.
+- **Commits wait for a pass that compacts**, because replacement holds the commit
+  lock. A pass that is not due only reads the revision. Rust and C# run passes on
+  their own thread. JS has one thread here, so a timer pass delays other work on it.
+- **A failure stops the worker.** Stopping reports it: Rust `stop()` returns it,
+  C# `Stop()` and JS `stop()` throw it. Dropping or disposing the handle discards
+  it. As with a manual compaction, a failed replacement fences the engine until
+  reopen, because the published journal is then unknown.
+- **Retention is unchanged.** Compaction writes the retained history, so select a
+  bounded history if the journal should shrink to less than every revision.

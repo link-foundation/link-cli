@@ -220,6 +220,13 @@ impl StagedEngine {
             .compact_journal()
             .map_err(|cause| cause.to_string())
     }
+    /// Publish a checkpoint once this many revisions have landed since the last one.
+    #[wasm_bindgen(js_name = compactJournalAfter)]
+    pub fn compact_journal_after(&self, commits: u64) -> Result<bool, String> {
+        self.inner
+            .compact_journal_after(commits)
+            .map_err(|cause| cause.to_string())
+    }
     /// Historical rows use decimal addresses, avoiding JS number precision loss.
     pub fn snapshot(&self, revision: Option<u64>) -> Result<String, String> {
         let snapshot = match revision {

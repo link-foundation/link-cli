@@ -205,6 +205,8 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   using engine = new WasmEngine(binding, options, log);
   const checkpoint: string[] = engine.exportCheckpoint(); void checkpoint;
   const changed: boolean = engine.compactJournal(); void changed;
+  const due: boolean = engine.compactJournalAfter(2n); void due;
+  engine.compactEvery({ commits: 2, periodMs: 1000 }).stop();
   const replaceable = new DeltaCommitLog(new MemoryCommitLog());
   const supported: boolean = replaceable.supportsReplacement; void supported;
   const replaced: boolean = replaceable.replace(checkpoint); void replaced;

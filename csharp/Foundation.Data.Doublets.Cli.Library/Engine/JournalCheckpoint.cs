@@ -164,15 +164,38 @@ public sealed partial class LinksEngine<T>
     }
     /// <summary>Publish retained committed snapshots through an optional atomic
     /// replacement log. An unknown outcome fences this owner until reopen.</summary>
-    public bool CompactJournal()
+    // The revision the last compaction published, for CompactJournalAfter.
+    private ulong _compactedRevision;
+
+    public bool CompactJournal() => CompactJournalWhen(_ => true);
+
+    /// <summary>Compact once at least <paramref name="commits"/> revisions have
+    /// landed since the last compaction by this owner, and otherwise do nothing and
+    /// return false. A log that cannot be replaced is refused either way. The first
+    /// call after opening counts from revision 0, which also compacts a journal
+    /// left long by an earlier owner.</summary>
+    public bool CompactJournalAfter(ulong commits)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(commits);
+        return CompactJournalWhen(landed => landed >= commits);
+    }
+
+    private bool CompactJournalWhen(Func<ulong, bool> due)
     {
         lock (Gate)
         {
             CheckReady();
             if (_log is not IReplaceableCommitLog { SupportsReplacement: true } replacement)
                 throw new NotSupportedException("Selected log does not support journal replacement.");
+            var revision = Current.Revision;
+            if (!due(revision - _compactedRevision)) return false;
             var records = CheckpointLocked();
-            try { return replacement.Replace(records); }
+            try
+            {
+                var changed = replacement.Replace(records);
+                _compactedRevision = revision;
+                return changed;
+            }
             catch { Poisoned = true; throw; }
         }
     }

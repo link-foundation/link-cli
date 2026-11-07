@@ -210,6 +210,43 @@ export class WasmEngine {
     this.#check();
     return this.#native.compactJournal();
   }
+  /** Compacts once this many revisions have landed since the last compaction by
+   * this owner, and otherwise returns false. A log that cannot be replaced is
+   * refused either way. The first call after opening counts from revision 0. */
+  compactJournalAfter(commits) {
+    this.#check();
+    return this.#native.compactJournalAfter(toAddress(commits, 'commits'));
+  }
+  /** Calls compactJournalAfter every periodMs until stop(). JavaScript has one
+   * thread here, so each pass that compacts delays other work on it. The timer does
+   * not keep the process alive and ends with the engine. The first failure ends it,
+   * and stop() throws that failure. */
+  compactEvery({ commits, periodMs }) {
+    this.#check();
+    const count = toAddress(commits, 'commits');
+    if (count === 0n) throw new TypeError('compaction needs at least one commit');
+    if (!Number.isFinite(periodMs) || periodMs <= 0)
+      throw new TypeError('periodMs must be a positive number of milliseconds');
+    // Nothing is due yet at this distance; this only checks the selection.
+    this.#native.compactJournalAfter(0xffffffffffffffffn);
+    let failure;
+    const timer = setInterval(() => {
+      if (this.#closed) return clearInterval(timer);
+      try {
+        this.#native.compactJournalAfter(count);
+      } catch (cause) {
+        failure = { cause };
+        clearInterval(timer);
+      }
+    }, periodMs);
+    timer.unref?.();
+    return {
+      stop() {
+        clearInterval(timer);
+        if (failure) throw failure.cause;
+      },
+    };
+  }
   /** Existing sessions own independent handles; close each to release them. */
   close() {
     if (!this.#closed) {

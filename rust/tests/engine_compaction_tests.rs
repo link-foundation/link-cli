@@ -539,3 +539,54 @@ mod contracts {
         }
     }
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn threshold_compaction_waits_for_the_selected_number_of_commits() {
+    let engine = Engine::<u32, _>::open(ReplacingLog::default(), EngineOptions::default()).unwrap();
+    let commit = || {
+        let mut tx = engine.begin().unwrap();
+        link_cli::LinksStorage::create_link(&mut tx, 0, 0).unwrap();
+        tx.commit().unwrap();
+    };
+    assert!(engine.compact_journal_after(0).is_err());
+    commit();
+    assert!(!engine.compact_journal_after(2).unwrap());
+    commit();
+    assert!(engine.compact_journal_after(2).unwrap());
+    // The count restarts at the compacted revision, after a manual compaction too.
+    assert!(!engine.compact_journal_after(1).unwrap());
+    commit();
+    assert!(engine.compact_journal().unwrap());
+    assert!(!engine.compact_journal_after(1).unwrap());
+    commit();
+    assert!(engine.compact_journal_after(1).unwrap());
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn threshold_compaction_refuses_an_unreplaceable_log_before_anything_is_due() {
+    struct Fixed(MemoryLog);
+    impl TransitionLogStore for Fixed {
+        fn flush_log(&mut self) -> Result<(), LinkError> {
+            self.0.flush_log()
+        }
+        fn append_log_entry(&mut self, row: &str) -> Result<(), LinkError> {
+            self.0.append_log_entry(row)
+        }
+        fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
+            self.0.read_log_entries()
+        }
+    }
+    impl ReplaceableTransitionLogStore for Fixed {
+        fn supports_replacement(&self) -> bool {
+            false
+        }
+        fn replace_log_entries(&mut self, _: &[String]) -> Result<bool, LinkError> {
+            unreachable!("the engine checks the capability first")
+        }
+    }
+    let engine =
+        Engine::<u32, _>::open(Fixed(MemoryLog::default()), EngineOptions::default()).unwrap();
+    assert!(engine.compact_journal_after(u64::MAX).is_err());
+}

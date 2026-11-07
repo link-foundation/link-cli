@@ -422,7 +422,8 @@ both false by default. It acquires every selected raw owner before repair and
 closes them root last. Keep both persisted modes when reopening; conversion
 requires a separate destination. See [native selection and costs](../../docs/ENGINE-NATIVE-CHECKPOINTS.md).
 
-With a replacement-capable log, call `engine.compactJournal()` to publish retained
+With a replacement-capable log, call `engine.compactJournal()`, `engine.compactJournalAfter(commits)` or the timer
+`engine.compactEvery({ commits, periodMs })` to publish retained
 committed snapshots while holding the engine commit lock. It returns false for
 an identical journal and preserves pending work and pinned history. An uncertain
 publication fences the engine until reopening. `DeltaCommitLog` forwards this

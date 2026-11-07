@@ -68,6 +68,7 @@ export interface StagedEngineLike {
   backup(destination: CommitLog, revision?: bigint): bigint;
   backupIncremental(destination: CommitLog): bigint;
   compactJournal(): boolean;
+  compactJournalAfter(commits: bigint): boolean;
   fork(options: string, journal: string): StagedBranchLike;
   forkWithLog(options: string, log: CommitLog): StagedBranchLike;
   resume(options: string, journal: string, base: string): StagedBranchLike;
@@ -129,6 +130,10 @@ export class WasmEngine {
   ): bigint;
   /** Publish under the commit lock. Unknown outcomes require reopening. */
   compactJournal(): boolean;
+  /** Compact once this many revisions have landed since the last compaction. */
+  compactJournalAfter(commits: AddressInput): boolean;
+  /** Call compactJournalAfter on a timer until stop(), which throws the first failure. */
+  compactEvery(schedule: { commits: AddressInput; periodMs: number }): { stop(): void };
   close(): void;
   [Symbol.dispose](): void;
 }

@@ -115,6 +115,64 @@ async function restoreBackupConformance(binding) {
   }
 }
 
+class ReplaceableMemoryLog extends MemoryCommitLog {
+  replaced = 0;
+  #records;
+  get supportsReplacement() {
+    return true;
+  }
+  replace(records) {
+    this.replaced += 1;
+    this.#records = [...records];
+    return true;
+  }
+  read() {
+    return this.#records ? JSON.stringify(this.#records) : super.read();
+  }
+  append(record) {
+    if (this.#records) this.#records.push(record);
+    else super.append(record);
+  }
+}
+
+async function thresholdCompactionConformance(binding) {
+  const log = new ReplaceableMemoryLog();
+  const engine = new WasmEngine(binding, {}, log);
+  const commit = async () => {
+    const tx = engine.begin();
+    await tx.create(0n, 0n);
+    await tx.commit();
+    await tx.close();
+  };
+  try {
+    assert.throws(() => engine.compactJournalAfter(0n), /at least one commit/);
+    await commit();
+    assert.equal(engine.compactJournalAfter(2n), false);
+    assert.equal(log.replaced, 0);
+    await commit();
+    assert.equal(engine.compactJournalAfter(2n), true);
+    assert.equal(log.replaced, 1);
+    assert.equal(engine.compactJournalAfter(1n), false);
+    const worker = engine.compactEvery({ commits: 1n, periodMs: 1 });
+    await commit();
+    await new Promise((resolve) => {
+      const wait = () => (log.replaced > 1 ? resolve() : setTimeout(wait, 1));
+      wait();
+    });
+    worker.stop();
+    const reopened = new WasmEngine(binding, {}, log);
+    assert.equal(reopened.snapshot().revision, 3n);
+    assert.equal(reopened.snapshot().rows.length, 3);
+    reopened.close();
+  } finally {
+    engine.close();
+  }
+  const fixed = new WasmEngine(binding);
+  assert.throws(() => fixed.compactJournalAfter(9n), /does not support/);
+  assert.throws(() => fixed.compactEvery({ commits: 9n, periodMs: 1 }), /does not support/);
+  fixed.close();
+}
+
 async function backupConformance(binding) {
   const options = { history: 'all' };
   const engine = new WasmEngine(binding, options);
@@ -256,6 +314,7 @@ export async function engineConformance(binding) {
   await backupConformance(binding);
   await incrementalBackupConformance(binding);
   await restoreBackupConformance(binding);
+  await thresholdCompactionConformance(binding);
   await lockWaitConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();

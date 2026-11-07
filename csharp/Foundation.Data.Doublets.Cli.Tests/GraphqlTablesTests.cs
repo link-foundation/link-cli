@@ -222,7 +222,8 @@ public sealed class GraphqlTablesTests
                 {
                     answer = Ask(server.LocalEndpoint);
                     server.Stop();
-                }) { IsBackground = true };
+                })
+                { IsBackground = true };
                 client.Start();
             });
             client!.Join();

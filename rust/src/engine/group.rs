@@ -52,6 +52,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             committed_next: state.committed_next,
             active: state.active,
             poisoned: false,
+            compacted_revision: state.compacted_revision,
             options,
             constraint_index: state.constraint_index.clone(),
         };

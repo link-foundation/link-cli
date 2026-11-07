@@ -230,13 +230,35 @@ impl<T: LinkReference, L: ReplaceableTransitionLogStore> Engine<T, L> {
     /// records return false. Any replacement error fences this owner until reopen.
     /// Unsupported capability leaves the engine available for ordinary commits.
     pub fn compact_journal(&self) -> Result<bool, LinkError> {
+        self.compact_journal_when(|_| true)
+    }
+    /// Compact once at least `commits` revisions have landed since the last
+    /// compaction by this owner, and otherwise do nothing and return false. A log
+    /// that cannot be replaced is refused either way, so a wrong selection shows at
+    /// once. The first call after opening counts from revision 0, which also
+    /// compacts a journal left long by an earlier owner. See
+    /// `docs/ENGINE-CHECKPOINTS.md`.
+    pub fn compact_journal_after(&self, commits: u64) -> Result<bool, LinkError> {
+        if commits == 0 {
+            return Err(error("compaction needs at least one commit"));
+        }
+        self.compact_journal_when(|landed| landed >= commits)
+    }
+    fn compact_journal_when(&self, due: impl FnOnce(u64) -> bool) -> Result<bool, LinkError> {
         let mut state = self.lock()?;
         if !state.log.supports_replacement() {
             return Err(error("selected log does not support journal replacement"));
         }
+        let revision = state.current.revision;
+        if !due(revision - state.compacted_revision) {
+            return Ok(false);
+        }
         let entries = records(&state);
         match state.log.replace_log_entries(&entries) {
-            Ok(changed) => Ok(changed),
+            Ok(changed) => {
+                state.compacted_revision = revision;
+                Ok(changed)
+            }
             Err(cause) => {
                 state.poisoned = true;
                 Err(cause)
