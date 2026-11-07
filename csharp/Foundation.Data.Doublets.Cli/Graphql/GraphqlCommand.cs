@@ -39,8 +39,8 @@ public sealed class GraphqlCommand
 
     public bool Enabled(ParseResult parsed) => parsed.GetValue(_enabled);
 
-    /// <summary>Loads the packages, binds and serves until Ctrl+C.</summary>
-    public int Run(ParseResult parsed, string address, INamedTypesLinks<uint> links, PermissionPolicy<uint>? policy)
+    /// <summary>Loads the packages, binds and serves until Ctrl+C, or until <paramref name="started"/>'s server is stopped.</summary>
+    public int Run(ParseResult parsed, string address, INamedTypesLinks<uint> links, PermissionPolicy<uint>? policy, Action<GraphqlServer>? started = null)
     {
         var store = new DeepStore(links, policy);
         foreach (var file in parsed.GetValue(_packages) ?? [])
@@ -68,6 +68,7 @@ public sealed class GraphqlCommand
         };
         Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");
         Console.Out.Flush();
+        started?.Invoke(server);
         server.Serve(store, settings);
         return 0;
     }

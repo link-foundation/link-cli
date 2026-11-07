@@ -82,6 +82,51 @@ public class GraphqlJsonTests
         Assert.Equal("null", Json.Float(double.PositiveInfinity).Write());
     }
 
+    [Theory]
+    [InlineData(1e30, "1000000000000000000000000000000")]
+    [InlineData(-1e30, "-1000000000000000000000000000000")]
+    [InlineData(1.5e-7, "0.00000015")]
+    [InlineData(1e-7, "0.0000001")]
+    [InlineData(1.2345678901234567e15, "1234567890123456.8")]
+    [InlineData(1.5e20, "150000000000000000000")]
+    public void FloatsAreWrittenWithoutAnExponent(double value, string written) =>
+        Assert.Equal(written, Json.Float(value).Write());
+
+    [Theory]
+    [InlineData(double.NaN, 0L)]
+    [InlineData(1e30, long.MaxValue)]
+    [InlineData(9223372036854775808.0, long.MaxValue)]
+    [InlineData(-1e30, long.MinValue)]
+    [InlineData(-9223372036854775808.0, long.MinValue)]
+    [InlineData(2.9, 2L)]
+    [InlineData(-2.9, -2L)]
+    public void FloatsSaturateAtTheEndsOfTheRange(double value, long expected) =>
+        Assert.Equal(expected, Json.Saturate(value));
+
+    [Theory]
+    [InlineData("null", "null", true)]
+    [InlineData("true", "true", true)]
+    [InlineData("true", "false", false)]
+    [InlineData("1", "1", true)]
+    [InlineData("1", "2", false)]
+    [InlineData("1", "1.0", false)]
+    [InlineData("1.5", "1.5", true)]
+    [InlineData("1.5", "2.5", false)]
+    [InlineData("\"a\"", "\"a\"", true)]
+    [InlineData("\"a\"", "\"b\"", false)]
+    [InlineData("[1,2]", "[1,2]", true)]
+    [InlineData("[1,2]", "[1]", false)]
+    [InlineData("[1,2]", "[1,3]", false)]
+    [InlineData("{\"a\":1}", "{\"a\":1}", true)]
+    [InlineData("{\"a\":1}", "{\"a\":1,\"b\":2}", false)]
+    [InlineData("{\"a\":1}", "{\"b\":1}", false)]
+    [InlineData("{\"a\":1}", "{\"a\":2}", false)]
+    public void SamenessIsStructural(string left, string right, bool same)
+    {
+        Assert.Equal(same, Json.Same(Json.Parse(left), Json.Parse(right)));
+        Assert.Equal(same, Json.Same(Json.Parse(right), Json.Parse(left)));
+    }
+
     [Fact]
     public void ControlCharactersAreEscapedWhenWritten()
     {
