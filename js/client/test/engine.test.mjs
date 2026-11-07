@@ -93,6 +93,7 @@ test('ordinary wasm stores cannot be sent transaction controls', async () => {
 
 test('engine wrapper preserves decimal addresses and passes explicit policies', () => {
   let freed = 0;
+  const backups = [];
   class Native {
     constructor(options, journal) {
       assert.equal(options, '{"isolation":"snapshot"}');
@@ -101,8 +102,12 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
     journal() {
       return '["record"]';
     }
-    exportCheckpoint() {
-      return '["checkpoint"]';
+    exportCheckpoint(revision) {
+      return revision === undefined ? '["checkpoint"]' : `["checkpoint ${revision}"]`;
+    }
+    backup(destination, revision) {
+      backups.push([destination, revision]);
+      return 4n;
     }
     snapshot(revision) {
       assert.equal(revision, 10n);
@@ -119,12 +124,21 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
   assert.equal(engine.snapshot('10').rows[0].index, 4294967295n);
   assert.deepEqual(engine.journal(), ['record']);
   assert.deepEqual(engine.exportCheckpoint(), ['checkpoint']);
+  assert.deepEqual(engine.exportCheckpoint('3'), ['checkpoint 3']);
+  const destination = {};
+  assert.equal(engine.backup(destination), 4n);
+  assert.equal(engine.backup(destination, { revision: 3 }), 4n);
+  assert.deepEqual(backups, [
+    [destination, undefined],
+    [destination, 3n],
+  ]);
   assert.ok(engine.begin() instanceof EngineClient);
   engine.close();
   engine.close();
   assert.equal(freed, 1);
   assert.throws(() => engine.begin(), /closed/);
   assert.throws(() => engine.exportCheckpoint(), /closed/);
+  assert.throws(() => engine.backup(destination), /closed/);
   assert.throws(() => new WasmEngine({}), /StagedEngine/);
 });
 

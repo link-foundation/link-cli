@@ -74,3 +74,11 @@ a cycle, closing the gap the strategy table recorded against RocksDB and InnoDB.
 [Semantics, costs and limits](../../ENGINE-PESSIMISTIC.md#bounded-waiting-and-deadlock-refusal)
 are documented with the competitor pages they were checked against. JavaScript waits
 in the client because its single thread cannot block in the Rust core.
+
+## Online backup
+
+A running engine can now be copied to an empty log, for the current or any retained
+revision, with commits continuing during the copy. [Guarantees, costs and
+limits](../../ENGINE-BACKUP.md) are compared with the SQLite, RocksDB and PostgreSQL
+pages. The logic is in the Rust core, so WebAssembly shares it and JavaScript is a thin
+wrapper. Incremental copies and archived-WAL replay are not implemented.

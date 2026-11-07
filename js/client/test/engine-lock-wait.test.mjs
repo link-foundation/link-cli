@@ -97,7 +97,8 @@ function fakeBinding() {
 const pessimistic = { concurrency: 'pessimistic' };
 const open = (lockWaitMs, binding = fakeBinding()) =>
   new WasmEngine(binding, { ...pessimistic, lockWaitMs });
-const write = (session, address, scope) => session.request([{ id: 'set', values: [String(address)] }], scope);
+const write = (session, address, scope) =>
+  session.request([{ id: 'set', values: [String(address)] }], scope);
 const tick = (ms = 5) => new Promise((resolve) => setTimeout(resolve, ms));
 
 test('a request waits for the owner to roll back and then runs', async () => {
@@ -169,7 +170,8 @@ test('the request that closes a cycle is refused and the other continues', async
   await tick();
   await assert.rejects(
     write(c, 1),
-    (error) => error instanceof LinksError && /deadlock/.test(error.message) && error.outcome === 'failed',
+    (error) =>
+      error instanceof LinksError && /deadlock/.test(error.message) && error.outcome === 'failed',
   );
   await c.rollback();
   await second;
@@ -186,7 +188,10 @@ test('a wait ends with the scope of its request', async () => {
   const waiting = write(waiter, 1, { signal: controller.signal });
   await tick();
   controller.abort();
-  await assert.rejects(waiting, (error) => error instanceof AbortError && error.outcome === 'not-sent');
+  await assert.rejects(
+    waiting,
+    (error) => error instanceof AbortError && error.outcome === 'not-sent',
+  );
   await assert.rejects(write(waiter, 1, { timeout: 5 }), DeadlineExceededError);
   // The owner's end wakes nobody now, and later work on the same session proceeds.
   await owner.rollback();

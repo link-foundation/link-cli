@@ -178,10 +178,18 @@ impl StagedEngine {
     }
     /// Export retained committed snapshots without publishing or rewriting a log.
     #[wasm_bindgen(js_name = exportCheckpoint)]
-    pub fn export_checkpoint(&self) -> Result<String, String> {
+    pub fn export_checkpoint(&self, revision: Option<u64>) -> Result<String, String> {
+        match revision {
+            Some(revision) => self.inner.export_checkpoint_at(revision),
+            None => self.inner.export_checkpoint(),
+        }
+        .map(|entries| serde_json::to_string(&entries).expect("strings serialize"))
+        .map_err(|e| e.to_string())
+    }
+    /// Copy a consistent cut to an empty log; commits continue during log calls.
+    pub fn backup(&self, log: JsCommitLog, revision: Option<u64>) -> Result<u64, String> {
         self.inner
-            .export_checkpoint()
-            .map(|entries| serde_json::to_string(&entries).expect("strings serialize"))
+            .backup_to(&mut BindingLog::External(log), revision)
             .map_err(|e| e.to_string())
     }
     /// Publish a checkpoint through the optional atomic replacement capability.

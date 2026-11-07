@@ -42,6 +42,81 @@ async function savepointConformance(binding) {
   }
 }
 
+async function backupConformance(binding) {
+  const options = { history: 'all' };
+  const engine = new WasmEngine(binding, options);
+  try {
+    for (const name of ['first', 'second']) {
+      const tx = engine.begin();
+      const row = name === 'first' ? await tx.create(0n, 0n) : { index: 1n };
+      await tx.setName(row.index, name);
+      await tx.commit();
+      await tx.close();
+    }
+    const log = new MemoryCommitLog();
+    assert.equal(engine.backup(log), 2n);
+    const restored = new WasmEngine(binding, options, log);
+    assert.equal(restored.snapshot().revision, 2n);
+    assert.equal(restored.snapshot().rows[0].name, 'second');
+    assert.equal(restored.snapshot(1n).rows[0].name, 'first');
+    restored.close();
+
+    const pointInTime = new MemoryCommitLog();
+    assert.equal(engine.backup(pointInTime, { revision: 1n }), 1n);
+    const earlier = new WasmEngine(binding, options, pointInTime);
+    assert.equal(earlier.snapshot().rows[0].name, 'first');
+    earlier.close();
+    assert.equal(engine.exportCheckpoint(1n).length, 2);
+    assert.equal(engine.exportCheckpoint().length, 3);
+
+    assert.throws(() => engine.backup(new MemoryCommitLog(), { revision: 9n }), /not retained/);
+    assert.throws(() => engine.backup(log), /must be empty/);
+
+    // A failing destination surfaces and leaves the engine writable.
+    const destination = (overrides) => ({
+      supportsDurableFlush: false,
+      read: () => '[]',
+      append() {},
+      flush() {},
+      ...overrides,
+    });
+    assert.throws(
+      () =>
+        engine.backup(
+          destination({
+            append() {
+              throw 'append failed';
+            },
+          }),
+        ),
+      /append failed/,
+    );
+    assert.throws(() => engine.backup(destination({})), /verification failed/);
+    // A log may use the engine: this would not return if the commit lock were held.
+    const copy = new MemoryCommitLog();
+    const seen = [];
+    assert.equal(
+      engine.backup(
+        destination({
+          read: () => copy.read(),
+          append(record) {
+            seen.push(engine.snapshot().revision);
+            copy.append(record);
+          },
+        }),
+      ),
+      2n,
+    );
+    assert.deepEqual(seen, [2n, 2n, 2n]);
+    const writing = engine.begin();
+    await writing.setName(1n, 'after');
+    assert.equal(await writing.commit(), 3n);
+    await writing.close();
+  } finally {
+    engine.close();
+  }
+}
+
 async function lockWaitConformance(binding) {
   const options = { concurrency: 'pessimistic', isolation: 'snapshot', lockWaitMs: 60_000 };
   const engine = new WasmEngine(binding, options);
@@ -105,6 +180,7 @@ export async function engineConformance(binding) {
   await groupCommitConformance(binding);
   await pessimisticConformance(binding);
   await savepointConformance(binding);
+  await backupConformance(binding);
   await lockWaitConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();

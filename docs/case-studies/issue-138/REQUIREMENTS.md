@@ -1,3 +1,8 @@
+Online backup (R2/R5/R7/R11) copies a consistent cut of the current or a retained
+revision to an empty log while commits continue, in Rust, C# and actual-WASM JS.
+It is not incremental and has no WAL archive. docs/ENGINE-BACKUP.md records costs
+and limits.
+
 Pessimistic sessions (R2/R5/R7/R11) can now wait a selected bounded time and refuse
 a write that closes a cycle, in Rust, C# and actual-WASM JS; the default fail-fast
 path carries no wait state. docs/ENGINE-PESSIMISTIC.md records costs and limits.

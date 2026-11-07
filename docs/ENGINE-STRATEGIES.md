@@ -15,6 +15,7 @@ transaction algorithm.
 | Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
 | Undo part of a transaction | Call `savepoint` on any session | Restore staged rows and keep the session open; costs O(staged writes) only when taken. See [semantics and limits](ENGINE-SAVEPOINTS.md). |
+| Copy a running engine | Call `backup_to` / `Backup` / `backup` with an empty log | Consistent cut of the current or a retained revision, copied outside the commit mutex and verified by read-back; pays nothing unless called. See [guarantees and limits](ENGINE-BACKUP.md). |
 | Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately, or wait a selected bounded time with deadlock refusal. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed logical revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Physical page WAL | Staged engine + optional SQLite log, require durable flush | SQLite supplies WAL/FULL and checkpoints; one engine owns its connection and cache. [Providers, maintenance, costs and examples](ENGINE-SQLITE.md). |
@@ -387,6 +388,7 @@ matter for a large or frequently written database.
 | --- | --- | --- |
 | SQLite WAL with synchronous commit | Optional SQLite log + staged engine, selected isolation | Reuses SQLite page WAL/FULL and checkpointing; logical links revisions still replay the retained journal. No SQL planner or independent-engine MVCC/performance equivalence. |
 | SQLite / PostgreSQL savepoints | [Session savepoints](ENGINE-SAVEPOINTS.md) | Same stack behavior with tokens instead of names; a cluster savepoint covers one shard. |
+| SQLite online backup / RocksDB BackupEngine / PostgreSQL base backup and PITR | [Online backup](ENGINE-BACKUP.md) | One consistent cut with commits continuing and a retained-revision target; not incremental, no stored backup set, no arbitrary WAL replay. |
 | PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |

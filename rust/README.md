@@ -341,6 +341,7 @@ written addresses and immediately reject competing writes. Isolation and history
 remain independent options. See [ownership, retry rules and costs](../docs/ENGINE-PESSIMISTIC.md).
 
 Any session can undo part of its work with [savepoints](../docs/ENGINE-SAVEPOINTS.md).
+A running engine can be copied to an empty log with [online backup](../docs/ENGINE-BACKUP.md).
 
 Legacy version sidecars preserve delimiter text, Unicode, NUL and newline in
 branch, parent and tag names. New branch markers use a versioned encoding and

@@ -410,3 +410,8 @@ Update Platform.Data.Doublets to 1.0.0 and Link.Foundation.Links.Notation to 0.3
 
 Add optional `EngineOptions.LockWait`: a pessimistic write waits a bounded time for
 another session's address and refuses a wait that would close a cycle.
+
+Add `LinksEngine.Backup`, which copies a consistent cut to an empty commit log while
+commits continue, flushes it and verifies it by reading it back. It can target any
+retained revision for a point-in-time copy. `ExportCheckpoint(revision)` returns the
+same records.

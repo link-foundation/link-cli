@@ -352,6 +352,7 @@ existing isolation and history options. See [point-write ownership, retry rules
 and costs](../docs/ENGINE-PESSIMISTIC.md).
 
 Any session can undo part of its work with [savepoints](../docs/ENGINE-SAVEPOINTS.md).
+A running engine can be copied to an empty log with [online backup](../docs/ENGINE-BACKUP.md).
 
 `TransactionsDecorator` borrows its data and journal stores. Finish foreground
 operations, dispose the decorator, then dispose those stores. `Shutdown()` and

@@ -8,6 +8,7 @@ import { LockWaits } from './engine-lock-wait.js';
 
 const nativeHandle = Symbol('native engine handle');
 const sessionOwners = new WeakMap();
+const optionalAddress = (revision) => (revision === undefined ? undefined : toAddress(revision));
 function capabilities(journal) {
   const durable = !Array.isArray(journal) && journal.supportsDurableFlush === true;
   return { durableFlush: durable, persistent: durable };
@@ -161,9 +162,7 @@ export class WasmEngine {
   }
   snapshot(revision) {
     this.#check();
-    const value = JSON.parse(
-      this.#native.snapshot(revision === undefined ? undefined : toAddress(revision)),
-    );
+    const value = JSON.parse(this.#native.snapshot(optionalAddress(revision)));
     return {
       revision: BigInt(value.revision),
       rows: value.rows.map((row) => ({
@@ -178,10 +177,17 @@ export class WasmEngine {
     this.#check();
     return JSON.parse(this.#native.journal());
   }
-  /** Independent retained snapshots; caller owns publication and durability. */
-  exportCheckpoint() {
+  /** Independent retained snapshots, optionally only up to one retained revision.
+   * The caller owns publication and durability. */
+  exportCheckpoint(revision) {
     this.#check();
-    return JSON.parse(this.#native.exportCheckpoint());
+    return JSON.parse(this.#native.exportCheckpoint(optionalAddress(revision)));
+  }
+  /** Copies a consistent cut to an empty log and verifies it, then returns the
+   * revision it ends at. Commits continue while the log is called. */
+  backup(destination, { revision } = {}) {
+    this.#check();
+    return this.#native.backup(destination, optionalAddress(revision));
   }
   /** Atomically publish under the commit lock; an unknown outcome requires reopen. */
   compactJournal() {
