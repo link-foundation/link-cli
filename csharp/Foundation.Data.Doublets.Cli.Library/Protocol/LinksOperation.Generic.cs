@@ -237,8 +237,6 @@ public abstract record LinksOperation<T>
         {
             Count operation => operation.Restriction.Parts.OfType<T>(),
             Each operation => operation.Restriction.Parts.OfType<T>(),
-            Subscribe operation => operation.Restriction.Parts.OfType<T>(),
-            Unsubscribe operation => [operation.Subscription],
             Create operation => [operation.Source, operation.Target],
             Update operation => [operation.Index, operation.Source, operation.Target],
             Delete operation => [operation.Index],
