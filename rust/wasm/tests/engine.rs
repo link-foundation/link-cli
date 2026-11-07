@@ -137,7 +137,7 @@ fn checkpoint_exports_retained_snapshots_without_log_effects_and_rejects_poison(
         tx.commit().unwrap();
     }
     let original = engine.journal().unwrap();
-    let exported = engine.export_checkpoint().unwrap();
+    let exported = engine.export_checkpoint(None).unwrap();
     assert_eq!(
         serde_json::from_str::<Vec<String>>(&exported)
             .unwrap()
@@ -153,7 +153,7 @@ fn checkpoint_exports_retained_snapshots_without_log_effects_and_rejects_poison(
     let mut tx = engine.begin().unwrap();
     tx.request("(create: (0 0))");
     assert!(tx.commit().is_err());
-    assert!(engine.export_checkpoint().is_err());
+    assert!(engine.export_checkpoint(None).is_err());
 }
 
 #[wasm_bindgen_test]
@@ -370,4 +370,42 @@ fn read_set_validation_allows_points_and_protects_dependencies_and_scans() {
         .iter()
         .any(|r| r["index"] == "3"));
     assert!(missing.commit().unwrap_err().contains("read"));
+}
+
+#[wasm_bindgen_test]
+fn backup_and_checkpoint_accept_a_retained_revision() {
+    let source = make_test_log("ok");
+    let engine = StagedEngine::with_log(r#"{"history":"all"}"#, source.unchecked_into()).unwrap();
+    for _ in 0..2 {
+        let mut tx = engine.begin().unwrap();
+        assert!(!tx.request("(create: (0 0))").contains("error:"));
+        tx.commit().unwrap();
+    }
+    assert_eq!(
+        serde_json::from_str::<Vec<String>>(&engine.export_checkpoint(Some(1)).unwrap())
+            .unwrap()
+            .len(),
+        2
+    );
+    assert!(engine.export_checkpoint(Some(9)).is_err());
+
+    assert_eq!(
+        engine
+            .backup(make_test_log("ok").unchecked_into(), None)
+            .unwrap(),
+        2
+    );
+    let earlier = make_test_log("ok");
+    assert_eq!(
+        engine
+            .backup(earlier.clone().unchecked_into(), Some(1))
+            .unwrap(),
+        1
+    );
+    let reopened =
+        StagedEngine::with_log(r#"{"history":"all"}"#, earlier.unchecked_into()).unwrap();
+    assert_eq!(snapshot(&reopened, None), snapshot(&engine, Some(1)));
+    assert!(engine
+        .backup(make_test_log("append-string").unchecked_into(), None)
+        .is_err());
 }

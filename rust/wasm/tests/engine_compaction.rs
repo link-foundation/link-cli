@@ -88,7 +88,7 @@ fn external_log_gets_string_arrays_and_synchronous_boolean_results() {
         assert_eq!(commit(&engine), revision);
     }
     let before = value(&engine);
-    let expected = engine.export_checkpoint().unwrap();
+    let expected = engine.export_checkpoint(None).unwrap();
     assert!(engine.compact_journal().unwrap());
     assert!(!engine.compact_journal().unwrap());
     assert_eq!(engine.journal().unwrap(), expected);
@@ -119,7 +119,7 @@ fn thrown_and_invalid_acknowledgements_fence_binding_and_pending_sessions() {
         assert!(engine.compact_journal().is_err());
         assert!(engine.snapshot(None).is_err());
         assert!(engine.begin().is_err());
-        assert!(engine.export_checkpoint().is_err());
+        assert!(engine.export_checkpoint(None).is_err());
         assert!(pending.commit().is_err());
         assert_eq!(compact_calls(&raw), calls);
         drop(pending);
