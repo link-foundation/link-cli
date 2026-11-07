@@ -146,3 +146,18 @@ fn replacing_a_mapped_owner_rejects_its_retired_barrier_before_revision_publicat
     );
     Ok(())
 }
+
+#[test]
+fn a_store_without_a_path_has_no_lock_and_sees_no_other_writer() -> Result<()> {
+    let mapped = PersistentFileMapped::<LinkPart<u32>>::new(tempfile::tempfile()?)?;
+    let storage = DoubletsStorage::wrap(Store::<u32, _>::new(mapped)?);
+    assert!(storage.held_lock().is_none());
+    assert!(!storage.has_external_changes()?);
+    for refusal in [storage.lock_shared().err(), storage.lock_exclusive().err()] {
+        assert!(refusal
+            .unwrap()
+            .to_string()
+            .contains("not backed by a known file"));
+    }
+    Ok(())
+}

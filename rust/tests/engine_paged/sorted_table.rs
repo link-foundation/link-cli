@@ -293,3 +293,29 @@ fn sorted_mirrored_table_repairs_only_after_complete_validation() {
     assert_eq!(first.0.borrow().live, a);
     assert_eq!(second.0.borrow().live, b);
 }
+#[test]
+fn a_sorted_table_refuses_bounds_and_rows_outside_its_admission() {
+    for (max_keys, max_bytes, expected) in [
+        (0, 1024, "admission bounds"),
+        (65_537, 1024, "admission bounds"),
+        (8, 0, "admission bounds"),
+        (8, 67_108_865, "admission bounds"),
+        (8, 4, "byte limit"),
+    ] {
+        let refused = SortedJournalTable::create(
+            Device::default(),
+            &rows(),
+            SortedTableOptions {
+                max_keys,
+                max_bytes,
+            },
+        )
+        .err()
+        .unwrap()
+        .to_string();
+        assert!(
+            refused.contains(expected),
+            "{max_keys} {max_bytes}: {refused}"
+        );
+    }
+}

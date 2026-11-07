@@ -356,3 +356,49 @@ mod contract;
 mod mirror;
 #[path = "common/lsm_selection.rs"]
 mod selection;
+
+#[test]
+fn the_store_refuses_a_namespace_outside_its_bounds() {
+    for max_namespace_entries in [1, 65_537] {
+        let harness = Harness::new();
+        let refused = PhysicalLsmJournalStore::open(
+            harness.wal().unwrap(),
+            harness.tables.clone(),
+            LsmStoreOptions {
+                max_namespace_entries,
+                ..options()
+            },
+        );
+        assert!(refused
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("namespace bounds"));
+    }
+}
+
+#[test]
+fn a_group_the_checkpoint_leaves_no_room_for_is_refused_and_changes_nothing() {
+    let harness = Harness::new();
+    let mut narrow = options();
+    narrow.limits.max_wal_bytes = 1024;
+    narrow.limits.buffer_bytes = 4096;
+    narrow.limits.buffer_keys = 8;
+    let mut store =
+        PhysicalLsmJournalStore::open(harness.wal().unwrap(), harness.tables.clone(), narrow)
+            .unwrap();
+    put(&mut store, "a", vec!["x".repeat(490)]).unwrap();
+    let refused = put(&mut store, "b", vec!["y".repeat(490)]).unwrap_err();
+    assert!(
+        refused.to_string().contains("exceed WAL admission"),
+        "{refused}"
+    );
+    assert_eq!(
+        store.read(&["b".into()]).unwrap()[0],
+        JournalVersion::default()
+    );
+    assert_eq!(
+        store.read(&["a".into()]).unwrap()[0].entries,
+        vec!["x".repeat(490)]
+    );
+}
