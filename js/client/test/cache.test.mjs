@@ -117,7 +117,11 @@ test('every read and write sees what came due as gone', async () => {
     await cache.setName(index, 'a');
     time.now += 5;
     await read(cache, index);
-    assert.equal(memory.links.has(index) && (await memory.getByName('a')) === index, false, `${read}`);
+    assert.equal(
+      memory.links.has(index) && (await memory.getByName('a')) === index,
+      false,
+      `${read}`,
+    );
   }
 });
 
@@ -280,7 +284,10 @@ test('updating moves what a link uses', async () => {
   const user = await cache.create(old.index, old.index);
   await cache.update(user.index, fresh.index, 6n);
   await cache.create(4n, 4n);
-  assert.deepEqual(await sources(cache), [fresh.index, 2n, 4n].sort((a, b) => (a < b ? -1 : 1)));
+  assert.deepEqual(
+    await sources(cache),
+    [fresh.index, 2n, 4n].sort((a, b) => (a < b ? -1 : 1)),
+  );
 });
 
 test('a link two others use is held until both are gone', async () => {
@@ -387,10 +394,7 @@ test('calls run in turn and a failure does not stop the next', async () => {
   const failing = new Failing(new MemoryLinks());
   const { cache } = world({ maxLinks: 1 }, failing);
   failing.failure = new RemoteError('refused');
-  const [refused, made] = await Promise.allSettled([
-    cache.create(1n, 1n),
-    cache.create(2n, 2n),
-  ]);
+  const [refused, made] = await Promise.allSettled([cache.create(1n, 1n), cache.create(2n, 2n)]);
   assert.equal(refused.status, 'rejected');
   assert.equal(made.status, 'fulfilled');
   const [other, count] = await Promise.all([cache.create(3n, 3n), cache.count()]);

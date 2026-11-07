@@ -36,6 +36,21 @@ public sealed class CacheLinksDecoratorTests
     private static List<uint> Sorted(params uint[] addresses) => addresses.OrderBy(address => address).ToList();
 
     [Fact]
+    public void ALinkToItselfOrToNothingKeepsWhatItNamesEvictable()
+    {
+        using var world = new Harness(new CacheOptions(MaxLinks: 3));
+        var other = world.Make(1, 1);
+        var toItself = world.Make(2, 2);
+        world.Cache.Update(new[] { toItself }, new[] { toItself, other, toItself }, null);
+        var toNothing = world.Make(3, 3);
+        world.Cache.Update(new[] { toNothing }, new[] { toNothing, other, 0u }, null);
+
+        // The two name `other`, so it stays. They name nothing else, so the older one goes.
+        var fresh = world.Make(4, 4);
+        Assert.Equal(Sorted(other, toNothing, fresh), world.Addresses());
+    }
+
+    [Fact]
     public void TheDocumentedExampleWorks()
     {
         using var stores = new Stores();
