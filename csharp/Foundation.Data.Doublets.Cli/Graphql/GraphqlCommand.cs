@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.CommandLine;
 using System.Net;
 using System.Text;
@@ -67,6 +68,12 @@ public sealed class GraphqlCommand
             server.Stop();
         }
         Console.CancelKeyPress += StopOnInterrupt;
+        // A service manager or a container asks with SIGTERM rather than Ctrl+C.
+        using var stopOnTerminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, signal =>
+        {
+            signal.Cancel = true;
+            server.Stop();
+        });
         try
         {
             Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");

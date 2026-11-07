@@ -638,6 +638,9 @@ C# and Rust servers and clients work with each other: see
 [`examples/tcp/`](examples/tcp) and
 [docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
 
+Ctrl+C or `SIGTERM` stops a server gracefully: it closes the store and exits
+with status 0, so it can run under a service manager or in a container.
+
 ### Serving triplets
 
 `--triplets` makes a server read every request as

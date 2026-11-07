@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
 using Foundation.Data.Doublets.Cli.Graphql;
@@ -707,6 +708,12 @@ rootCommand.SetAction(
               server.Shutdown();
           }
           Console.CancelKeyPress += StopOnInterrupt;
+          // A service manager or a container asks with SIGTERM rather than Ctrl+C.
+          using var stopOnTerminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, signal =>
+          {
+              signal.Cancel = true;
+              server.Shutdown();
+          });
           try
           {
               Console.WriteLine($"clink server listening on {server.LocalEndPoint}");

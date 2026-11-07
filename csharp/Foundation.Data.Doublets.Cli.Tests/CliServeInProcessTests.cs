@@ -8,6 +8,8 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 [Collection("Diagnostic console")]
 public sealed class CliServeInProcessTests : IDisposable
 {
+    private const int SigInt = 2;
+    private const int SigTerm = 15;
     private readonly string _directory = Directory.CreateTempSubdirectory("cli-serve-").FullName;
 
     [DllImport("libc", EntryPoint = "kill", SetLastError = true)]
@@ -56,10 +58,12 @@ public sealed class CliServeInProcessTests : IDisposable
     }
 
     [Theory(Timeout = 60000)]
-    [InlineData("--protocol", "text")]
-    [InlineData("--protocol", "binary")]
-    [InlineData("--graphql", "")]
-    public async Task AnInterruptStopsTheServerAndLeavesTheProcessAlone(string option, string value)
+    [InlineData("--protocol", "text", SigInt)]
+    [InlineData("--protocol", "binary", SigInt)]
+    [InlineData("--graphql", "", SigInt)]
+    [InlineData("--protocol", "text", SigTerm)]
+    [InlineData("--graphql", "", SigTerm)]
+    public async Task AStopSignalStopsTheServerAndLeavesTheProcessAlone(string option, string value, int signal)
     {
         // Windows delivers console events only to a console, not to one process.
         if (OperatingSystem.IsWindows()) return;
@@ -78,7 +82,7 @@ public sealed class CliServeInProcessTests : IDisposable
                 await Task.Delay(10);
             Assert.False(serving.IsCompleted, output.ToString());
 
-            Assert.Equal(0, Kill(Environment.ProcessId, 2));
+            Assert.Equal(0, Kill(Environment.ProcessId, signal));
             Assert.Equal(0, await serving);
         }
         finally
