@@ -113,4 +113,81 @@ public class LibraryEdgeTests
             Assert.Null(table.Authenticate("forged"));
         });
     }
+
+    [Theory]
+    [InlineData("read", PermissionAccess.Read)]
+    [InlineData("write", PermissionAccess.Write)]
+    [InlineData("reference", PermissionAccess.Reference)]
+    public void AccessNamesParse(string name, PermissionAccess access)
+    {
+        Assert.Equal(access, PermissionPolicy<uint>.ParseAccess(name));
+    }
+
+    [Fact]
+    public void AnUnknownAccessIsRefusedAndAPolicyExposesItsStores()
+    {
+        Assert.Throws<ArgumentException>(() => PermissionPolicy<uint>.ParseAccess("own"));
+        PermissionsDecoratorTests.WithWorld(w =>
+        {
+            Assert.NotNull(w.Policy.Rules);
+            Assert.NotNull(w.Policy.Types);
+        });
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("single")]
+    public void ATriggerQueryNeedsBothHalves(string query)
+    {
+        Assert.Throws<ArgumentException>(() => PersistentTransformationDecorator.PersistentTransformationQuery.Parse(query));
+    }
+
+    [Fact]
+    public void ATriggerQueryMayGiveItsHalvesAsTwoLinks()
+    {
+        var query = PersistentTransformationDecorator.PersistentTransformationQuery.Parse("(a)\n(c d)");
+        Assert.Contains('a', query.Condition);
+        Assert.Contains('c', query.Substitution);
+    }
+
+    [Fact]
+    public void AUnionPlacesAnUnclaimedAddressInItsPrimaryAndHasNoNameForAnAbsentLink()
+    {
+        using var stores = new UnionAndRemapLinksTests.Stores();
+        var local = stores.New();
+        var union = new UnionLinksDecorator<uint>(local, stores.New());
+        union.EnsureCreated(7u);
+        Assert.True(local.Exists(7u));
+        Assert.Null(union.GetName(99u));
+    }
+
+    [Fact]
+    public void ACallerOwnedStoreHasNoFlushOfItsOwn()
+    {
+        using var stores = new UnionAndRemapLinksTests.Stores();
+        var links = stores.New();
+        Assert.False(links.SupportsDurableFlush);
+        Assert.Throws<InvalidOperationException>(links.Flush);
+        var untyped = (System.Collections.IEnumerable)links;
+        Assert.NotNull(untyped.GetEnumerator());
+    }
+
+    [Fact]
+    public void NamedLinksCanWrapACallerOwnedStore()
+    {
+        using var stores = new UnionAndRemapLinksTests.Stores();
+        var names = Path.GetTempFileName();
+        try
+        {
+            var links = new NamedLinksDecorator<uint>(stores.New(), names);
+            var link = links.CreateAndUpdate(0u, 0u);
+            links.SetName(link, "kept");
+            Assert.Equal(link, links.GetByName("kept"));
+            links.Dispose();
+        }
+        finally
+        {
+            File.Delete(names);
+        }
+    }
 }
