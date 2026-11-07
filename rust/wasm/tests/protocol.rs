@@ -4,6 +4,9 @@
 #[path = "../../tests/cli_argument_contract_tests.rs"]
 mod cli_arguments;
 
+#[path = "../../tests/cache_links_tests.rs"]
+mod cache_links;
+
 #[path = "../../tests/changes_simplifier_tests.rs"]
 mod changes_simplifier;
 

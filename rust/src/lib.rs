@@ -29,6 +29,7 @@
 //! - `triplets` - Triplets `(index: type from to)` stored in doublets, with substitution and LiNo
 //! - `transactions`, `version_control` - Reversible transitions, branches and tags
 //! - `union_links` - Many networks seen as one, the first member shadowing the rest
+//! - `cache_links` - A store as a cache: links that expire and bounded capacity
 //! - `remap_links` - A network under other addresses: an offset or a table
 //! - `external_ids` - The ids of other systems (UUIDs, URLs) bound to links
 //! - `graphql` - A Hasura-compatible GraphQL server for the Deep standard
@@ -42,6 +43,7 @@
 //! implements the trait and slots in anywhere, including under
 //! [`QueryProcessor`], which never learns what is beneath it.
 
+pub mod cache_links;
 pub mod changes_simplifier;
 pub mod cli;
 mod diagnostics;
@@ -92,6 +94,7 @@ pub mod version_control;
 pub use doublets;
 
 // Re-export main types for easy access
+pub use cache_links::{CacheLinks, CacheOptions};
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
 pub use external_ids::{LinksExternalIds, EXTERNAL_ID_NAME};
