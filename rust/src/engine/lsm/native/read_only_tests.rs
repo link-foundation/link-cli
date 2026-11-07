@@ -53,3 +53,15 @@ fn native_discovery_metadata_allocation_and_page_reads_are_fixed_size() {
         reader.close().unwrap();
     }
 }
+
+#[test]
+fn the_validation_wal_reads_its_records_and_refuses_every_write() {
+    let mut wal = ReadOnlyWal(vec!["record".into()]);
+    assert!(!wal.supports_durable_flush());
+    assert!(wal.supports_replacement());
+    assert_eq!(wal.read_log_entries().unwrap(), ["record"]);
+    assert!(wal.append_log_entry("other").is_err());
+    assert!(wal.flush_log().is_err());
+    assert!(wal.replace_log_entries(&[]).is_err());
+    assert_eq!(wal.read_log_entries().unwrap(), ["record"]);
+}

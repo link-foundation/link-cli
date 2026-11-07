@@ -337,3 +337,14 @@ fn panicked_coordinator_rejects_new_groups_and_pending_publication() {
         .contains("poisoned"));
     assert!(group.commit().unwrap_err().to_string().contains("poisoned"));
 }
+
+#[test]
+fn a_query_on_a_shard_session_reserves_through_that_shard() {
+    let engine = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
+    let mut tx = engine.begin(&["a"]).unwrap();
+    link_cli::QueryProcessor::new(false)
+        .process_query(tx.shard("a").unwrap(), "(() ((1 1)))")
+        .unwrap();
+    assert_eq!(tx.shard("a").unwrap().links_count(), 1);
+    tx.commit().unwrap();
+}

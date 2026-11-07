@@ -363,3 +363,40 @@ fn snapshot(vc: &VersionControlDecorator) -> Vec<Link> {
     links.sort_by_key(|link| (link.index, link.source, link.target));
     links
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_sidecar_name_stays_beside_a_database_given_without_a_directory() {
+    assert_eq!(
+        std::path::PathBuf::from("db.versioncontrol.links"),
+        VersionControlDecorator::make_version_control_database_filename("db.links")
+    );
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_branch_needs_a_name_and_a_fork_point_and_a_switch_a_known_branch() {
+    let (mut vc, _guard) = make_vc();
+    let names = |vc: &VersionControlDecorator| vc.list_branches().len();
+    assert!(vc.branch("  ", None).is_err());
+    assert!(vc.branch("negative", Some(-1)).is_err());
+    assert!(vc.switch_branch("absent").is_err());
+    assert_eq!(1, names(&vc));
+    assert_eq!(DEFAULT_BRANCH_NAME, vc.current_branch());
+    let _ = vc.branches_store();
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn committing_after_the_store_rolled_back_publishes_nothing() -> Result<()> {
+    let (mut vc, _guard) = make_vc();
+    let head = vc.list_branches()[0].head;
+    let _ = vc.begin_transaction()?;
+    let _ = vc.create(0, 0);
+    vc.transactions_mut().rollback()?;
+    vc.commit()?;
+    assert_eq!(head, vc.list_branches()[0].head);
+    vc.begin_transaction()?;
+    vc.rollback()?;
+    Ok(())
+}

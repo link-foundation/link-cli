@@ -291,3 +291,95 @@ impl<D: PageDevice> PageDevice for Borrowed<'_, D> {
         self.0.truncate_data(length)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Answers by index, so a forward to anything else would be seen.
+    #[derive(Default)]
+    struct Echo {
+        calls: Vec<&'static str>,
+    }
+    impl PageDevice for Echo {
+        fn metadata_flags(&self) -> u32 {
+            7
+        }
+        fn supports_durable_flush(&self) -> bool {
+            true
+        }
+        fn new_database_id(&mut self) -> Result<[u8; 16], LinkError> {
+            Ok([9; 16])
+        }
+        fn data_length(&mut self) -> Result<u64, LinkError> {
+            Ok(11)
+        }
+        fn read_metadata(&mut self, slot: usize) -> Result<Option<Vec<u8>>, LinkError> {
+            Ok(Some(vec![slot as u8]))
+        }
+        fn write_metadata(&mut self, _: usize, _: &[u8; 128]) -> Result<(), LinkError> {
+            self.calls.push("write_metadata");
+            Ok(())
+        }
+        fn sync_metadata(&mut self, _: usize) -> Result<(), LinkError> {
+            self.calls.push("sync_metadata");
+            Ok(())
+        }
+        fn read_page(&mut self, index: u64) -> Result<[u8; PAGE_SIZE], LinkError> {
+            Ok([index as u8; PAGE_SIZE])
+        }
+        fn read_checked_page(
+            &mut self,
+            index: u64,
+            expected: u64,
+        ) -> Result<[u8; PAGE_SIZE], LinkError> {
+            Ok([(index + expected) as u8; PAGE_SIZE])
+        }
+        fn complete_recovery(&mut self) -> Result<(), LinkError> {
+            self.calls.push("complete_recovery");
+            Ok(())
+        }
+        fn write_page(&mut self, _: u64, _: &[u8; PAGE_SIZE]) -> Result<(), LinkError> {
+            self.calls.push("write_page");
+            Ok(())
+        }
+        fn sync_data(&mut self) -> Result<(), LinkError> {
+            self.calls.push("sync_data");
+            Ok(())
+        }
+        fn truncate_data(&mut self, _: u64) -> Result<(), LinkError> {
+            self.calls.push("truncate_data");
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn a_borrowed_device_forwards_every_operation() {
+        let mut device = Echo::default();
+        let mut borrowed = Borrowed(&mut device);
+        assert_eq!(borrowed.metadata_flags(), 7);
+        assert!(borrowed.supports_durable_flush());
+        assert_eq!(borrowed.new_database_id().unwrap(), [9; 16]);
+        assert_eq!(borrowed.data_length().unwrap(), 11);
+        assert_eq!(borrowed.read_metadata(1).unwrap(), Some(vec![1]));
+        assert_eq!(borrowed.read_page(2).unwrap(), [2; PAGE_SIZE]);
+        assert_eq!(borrowed.read_checked_page(2, 3).unwrap(), [5; PAGE_SIZE]);
+        borrowed.write_metadata(0, &[0; 128]).unwrap();
+        borrowed.sync_metadata(0).unwrap();
+        borrowed.complete_recovery().unwrap();
+        borrowed.write_page(0, &[0; PAGE_SIZE]).unwrap();
+        borrowed.sync_data().unwrap();
+        borrowed.truncate_data(0).unwrap();
+        assert_eq!(
+            device.calls,
+            [
+                "write_metadata",
+                "sync_metadata",
+                "complete_recovery",
+                "write_page",
+                "sync_data",
+                "truncate_data"
+            ]
+        );
+    }
+}
