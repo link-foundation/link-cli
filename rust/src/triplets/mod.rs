@@ -597,15 +597,11 @@ fn set_outer<L: NamedTypeLinks + ?Sized>(
     source: u32,
     target: u32,
 ) -> Result<()> {
-    if let Some(link) = stored(links, index) {
-        if link.source == source && link.target == target {
-            return Ok(());
-        }
-    }
-    if let Some(existing) = links.search(source, target) {
-        if existing != index {
-            bail!("The doublet ({source} {target}) is already {existing}: triplet {index} would be merged into it.");
-        }
+    if let Some(existing) = links
+        .search(source, target)
+        .filter(|&existing| existing != index)
+    {
+        bail!("The doublet ({source} {target}) is already {existing}: triplet {index} would be merged into it.");
     }
     links.update(index, source, target)?;
     Ok(())

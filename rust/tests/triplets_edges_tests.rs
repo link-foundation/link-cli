@@ -112,6 +112,20 @@ fn a_doublet_the_encoding_does_not_know_is_foreign() -> Result<()> {
 }
 
 #[test]
+fn a_doublet_pointing_back_through_a_marker_or_nothing_is_foreign() -> Result<()> {
+    let mut links = store()?;
+    let markers = links.triplet_markers();
+    let kind = links.create_triplet_point()?;
+    for marker in [markers.nothing, 0] {
+        let link = links.create(kind, kind);
+        let back = links.create(marker, link);
+        links.update(link, kind, back)?;
+        assert_eq!(links.role_of(link), Some(DoubletRole::Foreign), "{marker}");
+    }
+    Ok(())
+}
+
+#[test]
 fn a_query_by_type_or_parts_leaves_out_what_is_not_a_triplet() -> Result<()> {
     let mut links = store()?;
     let markers = links.triplet_markers();
