@@ -88,8 +88,6 @@ public sealed class LinoProtocolException : Exception
 
     internal static LinoProtocolException Limit(string detail) => new(LinoProtocolErrorKind.LimitExceeded, detail);
 
-    internal static LinoProtocolException Unencodable(string detail) => new(LinoProtocolErrorKind.Unencodable, detail);
-
     private static string Describe(LinoProtocolErrorKind kind) => kind switch
     {
         LinoProtocolErrorKind.Io => "I/O error",
