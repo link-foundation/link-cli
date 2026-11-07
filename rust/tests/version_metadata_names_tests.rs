@@ -159,3 +159,65 @@ fn shared_legacy_tag_vectors_recover_entire_names() -> Result<()> {
     }
     Ok(())
 }
+
+/// Runs `edit` over the version metadata of a repository with one commit.
+fn reopened_after(edit: impl FnOnce(&mut NamedTypesDecorator) -> Result<()>) -> Result<i64> {
+    let directory = tempfile::tempdir()?;
+    let mut vc = open(directory.path())?;
+    vc.create_and_update(11, 12)?;
+    let head = vc.current_sequence();
+    vc.save()?;
+    drop(vc);
+    {
+        let mut metadata =
+            NamedTypesDecorator::new(directory.path().join("branches.links"), false)?;
+        edit(&mut metadata)?;
+        metadata.save()?;
+    }
+    let reopened = open(directory.path())?;
+    assert_eq!(reopened.current_branch(), "main");
+    assert!(reopened.list_branches().iter().any(|b| b.name == "main"));
+    assert_eq!(reopened.current_sequence(), head);
+    Ok(head)
+}
+
+fn remove_marker(metadata: &mut NamedTypesDecorator, prefix: &str) -> Result<()> {
+    let indexes: Vec<u32> = metadata.all().iter().map(|link| link.index).collect();
+    for index in indexes {
+        if metadata
+            .get_name(index)?
+            .is_some_and(|name| name.starts_with(prefix))
+        {
+            metadata.remove_name(index)?;
+            return Ok(());
+        }
+    }
+    panic!("no marker starts with {prefix}");
+}
+
+#[test]
+fn a_lost_current_branch_marker_is_written_again() -> Result<()> {
+    reopened_after(|metadata| remove_marker(metadata, "__vc:current="))?;
+    Ok(())
+}
+
+#[test]
+fn a_lost_default_branch_marker_keeps_the_transitions_it_owned() -> Result<()> {
+    reopened_after(|metadata| remove_marker(metadata, "__vc:branch:"))?;
+    Ok(())
+}
+
+#[test]
+fn a_transition_marker_that_cannot_be_read_is_ignored_while_nothing_moves() -> Result<()> {
+    reopened_after(|metadata| {
+        for (index, name) in [
+            (40, "__vc:trans:not-a-number:branch=main"),
+            (41, "__vc:trans:no-branch-here"),
+        ] {
+            metadata.ensure_created(index);
+            metadata.set_name(index, name)?;
+        }
+        Ok(())
+    })?;
+    Ok(())
+}
