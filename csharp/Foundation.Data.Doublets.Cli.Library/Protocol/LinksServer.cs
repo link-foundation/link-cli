@@ -597,14 +597,6 @@ public sealed partial class LinksServer : IDisposable
         return ExecuteRequestCore(links, document, autoCreateMissingReferences, null, changed);
     }
 
-    // `(index: source target)`, naming every reference that has a name.
-    private static LinoLink LinkLino(INamedTypesLinks<uint> links, DoubletLink link) =>
-        LinoFormat.Link(ReferenceName(links, link.Index), new List<LinoLink>
-        {
-            LinoFormat.Reference(ReferenceName(links, link.Source)),
-            LinoFormat.Reference(ReferenceName(links, link.Target)),
-        });
-
     internal static string ReferenceName(INamedTypesLinks<uint> links, uint id) =>
         links.GetName(id) ?? id.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
