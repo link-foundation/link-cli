@@ -52,13 +52,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         lock (_lock)
         {
             RequireVersionReplayLocked();
-            _replaying = true;
-            try
-            {
-                if (undo) TryRevertRecord(transition);
-                else TryApplyRecord(transition);
-            }
-            finally { _replaying = false; }
+            if (undo) TryRevertRecord(transition);
+            else TryApplyRecord(transition);
         }
     }
 

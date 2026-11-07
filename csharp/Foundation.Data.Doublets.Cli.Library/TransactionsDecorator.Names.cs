@@ -90,9 +90,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         {
             EnsureReplayAllowedLocked();
             if (!record.IsValid()) throw new InvalidDataException("Invalid name state in transaction record.");
-            _replaying = true;
-            try { if (undo) TryRevertRecord(record); else TryApplyRecord(record); }
-            finally { _replaying = false; }
+            if (undo) TryRevertRecord(record);
+            else TryApplyRecord(record);
         }
     }
 

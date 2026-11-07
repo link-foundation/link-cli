@@ -65,21 +65,13 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             if (transaction.IsRolledBack) return;
             // A failed undo or persistence step must preserve the abort decision.
             transaction.MarkRollbackOnly();
-            _replaying = true;
-            try
+            if (transaction.Image is not null) RestoreImage(transaction.Image);
+            else
             {
-                if (transaction.Image is not null) RestoreImage(transaction.Image);
-                else
+                foreach (var transition in transaction.Records.AsEnumerable().Reverse())
                 {
-                    foreach (var transition in transaction.Records.AsEnumerable().Reverse())
-                    {
-                        TryRevertRecord(transition);
-                    }
+                    TryRevertRecord(transition);
                 }
-            }
-            finally
-            {
-                _replaying = false;
             }
             _flushData();
             WriteMarker(RollbackMarkerPrefix + transaction.Id.ToString("N"));

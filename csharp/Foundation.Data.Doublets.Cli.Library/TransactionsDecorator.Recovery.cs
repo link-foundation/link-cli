@@ -62,60 +62,52 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         }
         var pendingTxIds = _log.Where(record => !_committed.Contains(record.TransactionId) && !_rolledBack.Contains(record.TransactionId))
             .Select(record => record.TransactionId).Concat(images.Select(image => image.Owner)).Distinct().ToList();
-        _replaying = true;
-        try
+        if (images.Length != 0)
         {
-            if (images.Length != 0)
+            var imaged = images.Select(image => image.Owner).ToHashSet();
+            var records = _log.AsEnumerable().Reverse().Where(record => !_committed.Contains(record.TransactionId)
+                && !_rolledBack.Contains(record.TransactionId) && !imaged.Contains(record.TransactionId)).ToArray();
+            var next = 0;
+            // Equal-base pending owners are rejected before any mutation.
+            foreach (var image in images.OrderBy(image => image.Base).Reverse())
             {
-                var imaged = images.Select(image => image.Owner).ToHashSet();
-                var records = _log.AsEnumerable().Reverse().Where(record => !_committed.Contains(record.TransactionId)
-                    && !_rolledBack.Contains(record.TransactionId) && !imaged.Contains(record.TransactionId)).ToArray();
-                var next = 0;
-                // Equal-base pending owners are rejected before any mutation.
-                foreach (var image in images.OrderBy(image => image.Base).Reverse())
-                {
-                    while (next < records.Length && records[next].Sequence > image.Base) TryRevertRecord(records[next++]);
-                    RestoreImage(image);
-                }
-                while (next < records.Length) TryRevertRecord(records[next++]);
+                while (next < records.Length && records[next].Sequence > image.Base) TryRevertRecord(records[next++]);
+                RestoreImage(image);
             }
-            for (var index = replayFrom; index < _log.Count; index++)
-            {
-                var transition = _log[index];
-                if (!_committed.Contains(transition.TransactionId)) continue;
-                TryApplyRecord(transition);
-            }
-
-            // Auto-rollback transitions written but never committed and never
-            // rolled back: this is the crash-mid-transaction case (R10).
-            foreach (var transition in _log.OrderByDescending(t => t.Sequence))
-            {
-                if (images.Length != 0) break;
-                if (_committed.Contains(transition.TransactionId)) continue;
-                if (_rolledBack.Contains(transition.TransactionId)) continue;
-                TryRevertRecord(transition);
-            }
-
-            // Mark recovered-but-incomplete transactions as rolled back so
-            // we don't try to revert them on the next open.
-            _flushData();
-            // Keep the first gap as a restart anchor until both the later
-            // redo and pending undo are durable. Marking it sooner could
-            // make an interrupted recovery skip the newer committed state.
-            for (var index = replayFrom; index < _log.Count; index++)
-            {
-                var transition = _log[index];
-                if (_committed.Contains(transition.TransactionId)) MarkApplied(transition);
-            }
-            foreach (var txId in pendingTxIds)
-            {
-                _rolledBack.Add(txId);
-                WriteMarker(RollbackMarkerPrefix + txId.ToString("N"));
-            }
+            while (next < records.Length) TryRevertRecord(records[next++]);
         }
-        finally
+        for (var index = replayFrom; index < _log.Count; index++)
         {
-            _replaying = false;
+            var transition = _log[index];
+            if (!_committed.Contains(transition.TransactionId)) continue;
+            TryApplyRecord(transition);
+        }
+
+        // Auto-rollback transitions written but never committed and never
+        // rolled back: this is the crash-mid-transaction case (R10).
+        foreach (var transition in _log.OrderByDescending(t => t.Sequence))
+        {
+            if (images.Length != 0) break;
+            if (_committed.Contains(transition.TransactionId)) continue;
+            if (_rolledBack.Contains(transition.TransactionId)) continue;
+            TryRevertRecord(transition);
+        }
+
+        // Mark recovered-but-incomplete transactions as rolled back so
+        // we don't try to revert them on the next open.
+        _flushData();
+        // Keep the first gap as a restart anchor until both the later
+        // redo and pending undo are durable. Marking it sooner could
+        // make an interrupted recovery skip the newer committed state.
+        for (var index = replayFrom; index < _log.Count; index++)
+        {
+            var transition = _log[index];
+            if (_committed.Contains(transition.TransactionId)) MarkApplied(transition);
+        }
+        foreach (var txId in pendingTxIds)
+        {
+            _rolledBack.Add(txId);
+            WriteMarker(RollbackMarkerPrefix + txId.ToString("N"));
         }
         _flushLog();
     }

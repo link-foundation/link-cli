@@ -253,7 +253,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     private long _sequenceCounter;
     private long _appliedSequence;
     private bool _disposed;
-    private bool _replaying;
     private LogRetentionPolicy _retentionPolicy;
     private CommitMode _commitMode;
 
@@ -385,8 +384,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         return RunWrite(h => _inner.Delete(restriction, h), handler);
     }
 
-    private static TLinkAddress NullHandler(IList<TLinkAddress>? before, IList<TLinkAddress>? after) => TLinkAddress.Zero;
-
     // INamedTypes forwarding ------------------------------------------------
 
     public virtual string? GetName(TLinkAddress link) => _inner.GetName(link);
@@ -497,15 +494,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_lock)
         {
             EnsureReplayAllowedLocked();
-            _replaying = true;
-            try
-            {
-                TryRevertTransition(transition);
-            }
-            finally
-            {
-                _replaying = false;
-            }
+            TryRevertTransition(transition);
         }
     }
 
@@ -522,15 +511,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_lock)
         {
             EnsureReplayAllowedLocked();
-            _replaying = true;
-            try
-            {
-                TryApplyTransition(transition);
-            }
-            finally
-            {
-                _replaying = false;
-            }
+            TryApplyTransition(transition);
         }
     }
 

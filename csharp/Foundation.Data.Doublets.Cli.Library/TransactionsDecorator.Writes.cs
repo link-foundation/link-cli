@@ -16,7 +16,6 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         lock (_lock)
         {
             EnsureWriteAllowedLocked();
-            if (_replaying) return innerCall(userHandler ?? NullHandler);
             if (_sequenceCounter == long.MaxValue)
                 throw new InvalidOperationException("Transaction sequence space is exhausted.");
             namesBefore = _inner.CaptureNames();
