@@ -29,10 +29,10 @@ fn a_query_needs_both_of_its_parts() {
 
 #[test]
 fn a_sidecar_that_cannot_open_is_an_error() {
-    // No platform opens a path below a regular file.
-    let file = tempfile::NamedTempFile::new().unwrap();
-    let path = file.path().join("triggers.links");
-    assert!(TriggerStore::sidecar(path.to_str().unwrap(), false).is_err());
+    // A store opens lazily, so an absent file is no error. A path below a
+    // regular file reads as absent on Windows; a directory is refused everywhere.
+    let directory = tempfile::tempdir().unwrap();
+    assert!(TriggerStore::sidecar(directory.path(), false).is_err());
 }
 
 #[test]
