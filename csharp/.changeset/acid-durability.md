@@ -445,3 +445,5 @@ Fixed: a stopped `--serve` or GraphQL server no longer leaves its interrupt hand
 An update naming only one part of a link, such as `((1: 1 1)) ((1: 2 *))`, keeps the stored value of the other part instead of merging the link into another one.
 
 A served database now stops gracefully on `SIGTERM` as well as on Ctrl+C, as the Rust server already did, instead of being killed with status 143.
+
+Added: `CacheLinksDecorator` keeps a store as a cache: links can expire (`Expire`, `Persist`, `TimeToLive`, a default time to live and `PurgeExpired`), and `MaxLinks` keeps the store to a size by evicting the links used least recently that nothing else uses, refusing the write when every link is in use. See `docs/ENGINE-CACHE.md`.
