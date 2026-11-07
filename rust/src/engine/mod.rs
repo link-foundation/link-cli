@@ -60,6 +60,7 @@ mod shared_cost_tests;
 mod sorted_runs;
 #[cfg(all(feature = "sqlite", not(target_arch = "wasm32")))]
 pub mod sqlite;
+mod timed_log;
 mod transaction;
 mod validation;
 
@@ -77,6 +78,7 @@ pub use group::GroupCommitOutcome;
 pub use journal::MemoryLog;
 use rows::Rows;
 pub use savepoint::Savepoint;
+pub use timed_log::{revision_at, TimedLog};
 pub use transaction::EngineTransaction;
 pub use validation::SerializableValidation;
 

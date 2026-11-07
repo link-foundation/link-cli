@@ -35,6 +35,18 @@ export class MemoryCommitLog implements CommitLog {
   append(record: string): void;
   flush(): void;
 }
+/** Records `revision|unix milliseconds` in a second log for every appended record. */
+export class TimedCommitLog implements CommitLog {
+  constructor(inner: CommitLog, timeline: CommitLog, options?: { clock?: () => number });
+  readonly supportsDurableFlush: boolean;
+  readonly supportsReplacement: boolean;
+  replace(records: readonly string[]): boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+/** The latest revision written by `time`; refuses a time before the first timestamp. */
+export function revisionAt(timeline: CommitLog, time: Date | number): bigint;
 export class DeltaCommitLog implements CommitLog {
   constructor(inner: CommitLog, options?: { checkpointInterval?: number });
   readonly supportsDurableFlush: boolean;

@@ -171,8 +171,8 @@ const engine = new WasmEngine(binding, options, destination);
 
 Limits:
 
-- **Revisions, not time.** Records carry no timestamp, so a restore names a revision. To
-  find one, restore a candidate and look at its rows.
+- **Time needs a timeline.** Records carry no timestamp, so a restore names a revision.
+  To name a time, keep a [timeline](#restoring-to-a-time) from before that time.
 - **What the archive holds.** A bounded history starts the archive at a checkpoint, and
   earlier revisions cannot be reached. To reach everything, start the archive with
   history `all`.
@@ -183,6 +183,55 @@ Limits:
   the destination validates each revision against the constraints you select.
 - **One log.** The archive is read into memory in full, and only one engine's journal
   can be restored. A cluster has no combined cut.
+
+
+## Restoring to a time
+
+`TimedLog` (Rust), `TimedCommitLog` (C#, JS) is an optional decorator over any journal.
+For every record it appends `revision|unix milliseconds` to a second log, the timeline.
+Records are unchanged, so an engine or an archive never needs to know about it, and it
+can be removed at any time. The cost is one more append and flush per commit.
+
+```rust
+let log = TimedLog::new(journal, timeline)?;
+let engine = Engine::<u32, _>::open(log, options)?;
+// Later, with the timeline and any archive that holds the revision:
+let revision = revision_at(&mut timeline, unix_milliseconds)?;
+restore_backup::<u32, _, _>(&mut archive, &mut destination, Some(revision))?;
+```
+
+```csharp
+var engine = new LinksEngine<uint>(new TimedCommitLog(journal, timeline), options);
+var revision = TimedCommitLog.RevisionAt(timeline, unixMilliseconds);
+LinksEngine<uint>.RestoreBackup(archive, destination, revision);
+```
+
+```js
+const engine = new WasmEngine(binding, options, new TimedCommitLog(journal, timeline));
+const revision = revisionAt(timeline, new Date('2026-11-07T10:00:00Z'));
+WasmEngine.restoreBackup(binding, archive, destination, { revision });
+```
+
+| Situation | Result |
+| --- | --- |
+| A revision was written by that time | The latest such revision. The restore itself is the one above, so all its refusals apply. |
+| The time is before the first timestamp | "no revision was written by that time": the state then is not known. |
+| The clock steps back | The latest time is repeated, so a timeline never runs backwards, also across a reopen. |
+| A crash lost a timestamp but not its record | That commit is not found, so a restore picks the revision before it. |
+| A crash lost a record that was timestamped, and the revision is written again | The later write replaces what the lost revision and its successors claimed. |
+| Compaction or bounded history dropped the revision | The timeline still names it and the restore refuses it with "revision is not in the backup". |
+| A timeline record does not parse | Opening the decorator and `revision_at` refuse it rather than guess. |
+| Appending to the timeline fails | The commit fails as for any journal failure, though the record may already be in the journal. |
+
+Limits:
+
+- **The clock is trusted.** Times come from one writer's clock, or from one you pass in.
+  Nothing corrects clock skew, and times from two writers are not comparable.
+- **Commit time is the moment of the append.** A timestamp is taken when the record is
+  written, not when its transaction started, and has millisecond resolution. Two commits
+  in one millisecond resolve to the later one.
+- **Only what it saw.** Revisions from before the decorator was added have no timestamp.
+  Timelines are never trimmed; they grow by a short line per commit.
 
 ## Compared with other engines
 
@@ -197,5 +246,5 @@ Checked on 2026-11-07 against each project's documentation.
 To get close to these with what exists today:
 
 - **Keep several backups:** use one destination per backup and delete old ones yourself.
-- **Reach many points in time:** keep one archive with `backup_incremental_to` and [restore it to a revision](#restore-to-a-revision), or select history `all` or a bound and copy any retained revision.
+- **Reach many points in time:** keep one archive with `backup_incremental_to` and [restore it to a revision](#restore-to-a-revision) or, with a timeline, [to a time](#restoring-to-a-time), or select history `all` or a bound and copy any retained revision.
 - **Continuous copy to other logs:** add a [replicated log](ENGINE-STRATEGIES.md) as well. This is replication, and it also copies mistakes.

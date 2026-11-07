@@ -7,6 +7,8 @@ import {
   MemoryCommitLog,
   ReplicatedCommitLog,
   DeltaCommitLog,
+  TimedCommitLog,
+  revisionAt,
 } from '../../src/index.js';
 import { groupCommitConformance } from './group-commit.mjs';
 import { sharedStateConformance } from './shared-state.mjs';
@@ -82,6 +84,34 @@ async function incrementalBackupConformance(binding) {
   }
 }
 
+async function timedRestoreConformance(binding) {
+  let now = 0;
+  const [journal, timeline] = [new MemoryCommitLog(), new MemoryCommitLog()];
+  const log = new TimedCommitLog(journal, timeline, { clock: () => now });
+  const engine = new WasmEngine(binding, {}, log);
+  try {
+    for (const [time, name] of [
+      [100, 'first'],
+      [200, 'second'],
+    ]) {
+      now = time;
+      const tx = engine.begin();
+      if (name === 'first') await tx.create(0n, 0n);
+      await tx.setName(1n, name);
+      await tx.commit();
+      await tx.close();
+    }
+  } finally {
+    engine.close();
+  }
+  const copy = new MemoryCommitLog();
+  const revision = revisionAt(timeline, 199);
+  assert.equal(WasmEngine.restoreBackup(binding, journal, copy, { revision }), 1n);
+  const restored = new WasmEngine(binding, {}, copy);
+  assert.equal(restored.snapshot().rows[0].name, 'first');
+  restored.close();
+}
+
 async function restoreBackupConformance(binding) {
   const engine = new WasmEngine(binding, { history: 'all' });
   try {
@@ -110,6 +140,7 @@ async function restoreBackupConformance(binding) {
       /not in the backup/,
     );
     assert.deepEqual(JSON.parse(refused.read()), []);
+    await timedRestoreConformance(binding);
   } finally {
     engine.close();
   }

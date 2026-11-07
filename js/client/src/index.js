@@ -10,6 +10,7 @@ export { EXTERNAL_ID_NAME, ExternalIdMap, LinksExternalIds } from './external-id
 export { createWasmClient, WasmTransport } from './wasm.js';
 export { EngineClient, WasmEngine, WasmBranch } from './engine.js';
 export { MemoryCommitLog, ReplicatedCommitLog } from './engine-logs.js';
+export { TimedCommitLog, revisionAt } from './engine-timed-log.js';
 export {
   GUARANTEES,
   MAX_U32_ADDRESS,

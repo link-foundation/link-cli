@@ -436,3 +436,8 @@ the null link gets that answer too, instead of skipping the permission checks.
 optional `BackgroundCompaction<T>` calls it periodically on its own thread and reports the first failure.
 
 Fixed: stopping the GraphQL server can no longer crash the process. A stop arriving between the accept loop's check and its accept raised an unhandled error on a background thread.
+
+Added `TimedCommitLog` and `TimedCommitLog.RevisionAt`: an optional log decorator that records when each revision was
+written, so `LinksEngine.RestoreBackup` can restore to a time.
+
+Fixed: a stopped `--serve` or GraphQL server no longer leaves its interrupt handler registered in the process.
