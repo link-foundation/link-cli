@@ -739,17 +739,10 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
         all_indices.dedup();
 
         for index in all_indices {
-            match (
-                restriction_by_index.get(&index),
-                substitution_by_index.get(&index),
-            ) {
-                (Some(before), Some(after)) => {
-                    operations.push((Some(before.clone()), Some(after.clone())));
-                }
-                (Some(before), None) => operations.push((Some(before.clone()), None)),
-                (None, Some(after)) => operations.push((None, Some(after.clone()))),
-                (None, None) => {}
-            }
+            operations.push((
+                restriction_by_index.get(&index).cloned(),
+                substitution_by_index.get(&index).cloned(),
+            ));
         }
 
         operations.extend(
@@ -790,17 +783,15 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
             (Some(before), Some(after)) => {
                 if before.index == after.index && storage.exists(before.index) {
                     let stored = storage.get_link(before.index).unwrap();
-                    if stored.source != after.source || stored.target != after.target {
+                    // A part the query left open keeps its value: the wildcard
+                    // marker is not a reference a link can hold.
+                    let source = Self::resolve_unspecified(after.source, stored.source);
+                    let target = Self::resolve_unspecified(after.target, stored.target);
+                    if stored.source != source || stored.target != target {
                         // A merge into a duplicate deletes `before.index`;
                         // `restore_unexpected_deletions` puts it back when the
                         // query asked for it, exactly as the C# processor does.
-                        self.update_observed(
-                            storage,
-                            before.index,
-                            after.source,
-                            after.target,
-                            changes,
-                        )?;
+                        self.update_observed(storage, before.index, source, target, changes)?;
                     } else {
                         changes.push((Some(stored), Some(stored)));
                     }

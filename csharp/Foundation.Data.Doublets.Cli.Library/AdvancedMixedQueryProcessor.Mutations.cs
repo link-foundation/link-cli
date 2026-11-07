@@ -42,6 +42,7 @@ namespace Foundation.Data.Doublets.Cli
             if (linkDefinition.Index != nullConstant)
             {
                 // update existing link
+                linkDefinition = KeepOpenParts(links, linkDefinition, options);
                 EnsureAddress(links, linkDefinition.Index, options);
                 var existingLinkRecord = links.GetLink(linkDefinition.Index);
                 var existingDoublet = new LinkParts<T>(existingLinkRecord);
@@ -214,6 +215,7 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 // We have an index => ensure created or updated
+                link = KeepOpenParts(links, link, options);
                 EnsureAddress(links, link.Index, options);
                 var stored = links.GetLink(link.Index);
                 var storedD = new LinkParts<T>(stored);
@@ -298,6 +300,8 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         private static void ApplyCompositeUpdate(INamedTypesLinks<T> links, T id, T source, T target, Options options)
         {
+            var wanted = KeepOpenParts(links, new LinkParts<T>(id, source, target), options);
+            (source, target) = (wanted.Source, wanted.Target);
             var stored = new LinkParts<T>(links.GetLink(id));
             if (stored.Source == source && stored.Target == target)
             {
@@ -306,6 +310,25 @@ namespace Foundation.Data.Doublets.Cli
             }
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link ID={id} => Source={source}, Target={target}");
             links.Update(new LinkParts<T>(id, links.Constants.Any, links.Constants.Any), new LinkParts<T>(id, source, target), ReportChanges(links, options));
+        }
+
+        /// <summary>
+        /// A part the query left open keeps its stored value: the wildcard marker is not a
+        /// reference a link can hold, and a search for it would merge the link into another.
+        /// </summary>
+        private static LinkParts<T> KeepOpenParts(INamedTypesLinks<T> links, LinkParts<T> link, Options options)
+        {
+            var any = links.Constants.Any;
+            if (link.Source != any && link.Target != any)
+            {
+                return link;
+            }
+            EnsureAddress(links, link.Index, options);
+            var stored = new LinkParts<T>(links.GetLink(link.Index));
+            return new LinkParts<T>(
+                link.Index,
+                link.Source == any ? stored.Source : link.Source,
+                link.Target == any ? stored.Target : link.Target);
         }
 
         private static WriteHandler<T> ReportChanges(INamedTypesLinks<T> links, Options options) =>

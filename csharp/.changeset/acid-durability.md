@@ -441,3 +441,5 @@ Added `TimedCommitLog` and `TimedCommitLog.RevisionAt`: an optional log decorato
 written, so `LinksEngine.RestoreBackup` can restore to a time.
 
 Fixed: a stopped `--serve` or GraphQL server no longer leaves its interrupt handler registered in the process.
+
+An update naming only one part of a link, such as `((1: 1 1)) ((1: 2 *))`, keeps the stored value of the other part instead of merging the link into another one.

@@ -447,12 +447,13 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 else if (before.Index != T.Zero && after.Index != T.Zero)
                 {
-                    if (before.Source != after.Source || before.Target != after.Target)
+                    var wanted = KeepOpenParts(links, after, options);
+                    if (before.Source != wanted.Source || before.Target != wanted.Target)
                     {
                         // Operations pair a before and an after only by the same index.
                         TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Updating link in-place => ID={before.Index}");
-                        EnsureAddress(links, after.Index, options);
-                        links.Update(before, after, (beforeState, afterState) =>
+                        EnsureAddress(links, wanted.Index, options);
+                        links.Update(before, wanted, (beforeState, afterState) =>
                             options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
                     }
                     else
