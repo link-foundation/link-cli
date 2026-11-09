@@ -61,14 +61,17 @@ public class EngineJournalRecoveryTests
         {
             var entries = Journal(3, encoding);
             for (int record = 0; record < entries.Count; record++)
-                for (int position = 0; position < entries[record].Length; position++)
+                // Every bit that keeps the ASCII record ASCII, including the one
+                // that only changes the case of a checksum letter.
+                for (int flip = 0; flip < entries[record].Length * 7; flip++)
                 {
+                    int position = flip / 7, mask = 1 << (flip % 7);
                     var damaged = entries.ToArray();
                     var chars = damaged[record].ToCharArray();
-                    chars[position] = (char)(chars[position] ^ 1);
+                    chars[position] = (char)(chars[position] ^ mask);
                     damaged[record] = new string(chars);
                     var check = EngineJournal<ulong>.Check(damaged);
-                    Assert.False(check.IsIntact, $"{encoding} flip at {record}:{position} went unnoticed");
+                    Assert.False(check.IsIntact, $"{encoding} flip {mask:x2} at {record}:{position} went unnoticed");
                     Assert.Equal(record, check.Damage!.Record);
                     Assert.Equal((record, (ulong)record, entries.Count - record), (check.ValidRecords, check.Revision, check.DiscardedRecords));
                     var recovery = EngineJournal<ulong>.Recover(new[] { damaged });

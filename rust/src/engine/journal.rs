@@ -84,10 +84,9 @@ pub(super) fn checked_text(entry: &str) -> Result<&str, LinkError> {
     let (text, hash) = entry
         .rsplit_once('|')
         .ok_or_else(|| error("missing journal checksum"))?;
-    if hash.len() != 16
-        || !hash.bytes().all(|byte| byte.is_ascii_hexdigit())
-        || u64::from_str_radix(hash, 16).ok() != Some(checksum(text))
-    {
+    // Only the exact lowercase form the encoder writes: a parser that accepted
+    // `B` for `b` would let a flip of the case bit pass unnoticed.
+    if hash != format!("{:016x}", checksum(text)) {
         return Err(error("journal checksum mismatch"));
     }
     Ok(text)

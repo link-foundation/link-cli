@@ -54,15 +54,23 @@ export async function journalRecoveryConformance(binding) {
     const intact = WasmEngine.checkJournal(binding, entries);
     assert.deepEqual(intact, { validRecords: 3, totalRecords: 3, revision: 3n, damage: null });
     for (let record = 0; record < entries.length; record++) {
-      for (let position = 0; position < entries[record].length; position++) {
+      // Every bit that keeps the ASCII record ASCII, including the one that
+      // only changes the case of a checksum letter.
+      for (let flip = 0; flip < entries[record].length * 7; flip++) {
+        const position = Math.floor(flip / 7);
+        const mask = 1 << (flip % 7);
         const damaged = [...entries];
         const text = damaged[record];
         damaged[record] =
           text.slice(0, position) +
-          String.fromCharCode(text.charCodeAt(position) ^ 1) +
+          String.fromCharCode(text.charCodeAt(position) ^ mask) +
           text.slice(position + 1);
         const check = WasmEngine.checkJournal(binding, damaged);
-        assert.equal(check.damage?.record, record, `${revisionEncoding} ${record}:${position}`);
+        assert.equal(
+          check.damage?.record,
+          record,
+          `${revisionEncoding} flip ${mask} at ${record}:${position}`,
+        );
         assert.equal(check.validRecords, record);
         assert.equal(check.revision, BigInt(record));
         const recovery = WasmEngine.recoverJournal(binding, [damaged]);

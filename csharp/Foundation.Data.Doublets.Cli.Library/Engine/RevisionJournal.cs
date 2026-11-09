@@ -35,7 +35,9 @@ internal static class RevisionJournal<T>
         if (separator < 0 || record.Length - separator != 17 || !record[(separator + 1)..].All(char.IsAsciiHexDigit))
             throw new FormatException("Missing or invalid checksum.");
         string text = record[..separator];
-        if (ulong.Parse(record[(separator + 1)..], NumberStyles.HexNumber, CultureInfo.InvariantCulture) != Checksum(text))
+        // Only the exact lowercase form the encoder writes: accepting `B` for `b`
+        // would let a flip of the case bit pass unnoticed.
+        if (!record.AsSpan(separator + 1).SequenceEqual(Checksum(text).ToString("x16", CultureInfo.InvariantCulture)))
             throw new FormatException("Checksum mismatch.");
         return text;
     }

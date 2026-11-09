@@ -48,14 +48,18 @@ fn damage_anywhere_keeps_exactly_the_records_before_it() {
     for encoding in [RevisionEncoding::Snapshot, RevisionEncoding::Changes] {
         let entries = journal(3, encoding);
         for record in 0..entries.len() {
-            for position in 0..entries[record].len() {
+            // Every bit that keeps the ASCII record valid UTF-8, including the
+            // one that only changes the case of a checksum letter.
+            let flips = (0..entries[record].len())
+                .flat_map(|position| (0..7).map(move |bit| (position, 1u8 << bit)));
+            for (position, mask) in flips {
                 let mut damaged = entries.clone();
                 let mut bytes = damaged[record].clone().into_bytes();
-                bytes[position] ^= 0x01;
+                bytes[position] ^= mask;
                 damaged[record] = String::from_utf8(bytes).unwrap();
                 let check = check_journal::<u64>(&damaged, &EngineOptions::default());
                 let damage = check.damage.as_ref().unwrap_or_else(|| {
-                    panic!("{encoding:?} flip at {record}:{position} went unnoticed")
+                    panic!("{encoding:?} flip {mask:#04x} at {record}:{position} went unnoticed")
                 });
                 assert_eq!(damage.record, record);
                 assert_eq!(check.valid_records, record);
