@@ -79,6 +79,12 @@ checking their observed addresses, including missing rows. Scans and name search
 still check the whole revision. It requires serializable isolation; default
 revision validation is unchanged. See [configuration and tradeoffs](ENGINE-VALIDATION.md).
 
+Every interleaving of small two-session workloads (lost update, read skew,
+write skew, scans, locked reads, disjoint writes) is run under each concurrency
+and isolation pair in Rust, C# and WASM, and checked against every serial order
+of the committed sessions: what a level prevents never appears, and what it
+allows does appear. See [how this compares with other databases' testing](case-studies/issue-138/ACID-TESTING-RESEARCH.md).
+
 There are no dirty reads or dirty writes between sessions of the same engine.
 These properties do not apply to independent writers or direct mutation of an
 adapter behind the engine. Retry conflicts with a **new** session. A failed
@@ -424,6 +430,7 @@ matter for a large or frequently written database.
 | Iceberg optimistic metadata publication | PartitionedJournalStore | Immutable journal objects plus atomic pointer CAS; different data/wire formats, full journal transfers, no manifest tree or garbage collector. |
 
 See [the pinned source study](case-studies/issue-138/RESEARCH.md),
+[how other databases provide and test ACID under concurrency](case-studies/issue-138/ACID-TESTING-RESEARCH.md),
 [acceptance inventory](case-studies/issue-138/REQUIREMENTS.md), and
 [portable revision vectors](protocol/engine-revision-vectors.json). Tests and
 coverage evidence must be read at their measured scope; neither a passing suite

@@ -1,5 +1,13 @@
 # Strategy research (2026-10-24)
 
+## Concurrent writes and ACID testing in other databases (2026-11-09)
+
+[ACID-TESTING-RESEARCH.md](ACID-TESTING-RESEARCH.md) maps how SQLite,
+PostgreSQL, InnoDB, RocksDB, MongoDB, Redis, etcd and FoundationDB handle
+concurrent writes to the options here, and compares how they test crashes, I/O
+errors, damaged files, isolation and consensus with this project's tests,
+listing what is still not tested.
+
 ## Native shadow-page candidate (2026-10-26)
 
 The latest feedback requires native implementations independently of the
