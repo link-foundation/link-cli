@@ -30,12 +30,12 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@secretlint/secretlint-rule-preset-recommend": "^13.1.0",
-    "@vitejs/plugin-react": "^6.2.1",
+    "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^10.14.0",
     "globals": "^17.14.0",
     "prettier": "^3.9.10",
     "secretlint": "^13.1.0",
-    "vite": "^8.3.6",
+    "vite": "^8.3.7",
     "vite-plugin-wasm": "^3.6.0"
   }
 }
