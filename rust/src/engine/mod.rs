@@ -52,6 +52,7 @@ mod pessimistic;
 mod query_reservation;
 mod query_scratch;
 pub mod reclaiming;
+pub mod recovery;
 pub mod replication;
 mod rows;
 mod savepoint;
@@ -260,43 +261,9 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             return Err(error("history limit must be positive"));
         }
         let entries = log.read_log_entries()?;
-        let mut state = State {
-            current: Snapshot {
-                revision: 0,
-                rows: Arc::new(Rows::new(options.state_structure)),
-            },
-            history: BTreeMap::new(),
-            changed: BTreeMap::new(),
-            write_owners: BTreeMap::new(),
-            lock_waits: options.lock_wait.map(pessimistic::LockWaits::new),
-            next: 1,
-            committed_next: 1,
-            active: 0,
-            poisoned: false,
-            compacted_revision: 0,
-            options,
-            constraint_index: None,
-            log,
-        };
-        state.retain();
-        for (index, entry) in entries.into_iter().enumerate() {
-            let (snapshot, next) = if index == 0 && entry.starts_with("engine3|") {
-                let decoded = journal::decode_checkpoint(&entry, state.options.state_structure)?;
-                state.history.clear();
-                decoded
-            } else {
-                journal::decode_after(
-                    &entry,
-                    &state.current,
-                    state.next,
-                    state.options.state_structure,
-                )?
-            };
-            state.validate(&snapshot.rows)?;
-            state.next = next;
-            state.committed_next = next;
-            state.current = snapshot;
-            state.retain();
+        let mut state = State::empty(log, options);
+        for (index, entry) in entries.iter().enumerate() {
+            state.replay(index, entry)?;
         }
         // No transaction predates open, so recovered rows need no conflict
         // generations. Track only changes made while a session can be stale.
@@ -386,6 +353,51 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
 }
 
 impl<T: LinkReference, L> State<T, L> {
+    /// Revision zero, before any record is replayed.
+    fn empty(log: L, options: EngineOptions) -> Self {
+        let mut state = State {
+            current: Snapshot {
+                revision: 0,
+                rows: Arc::new(Rows::new(options.state_structure)),
+            },
+            history: BTreeMap::new(),
+            changed: BTreeMap::new(),
+            write_owners: BTreeMap::new(),
+            lock_waits: options.lock_wait.map(pessimistic::LockWaits::new),
+            next: 1,
+            committed_next: 1,
+            active: 0,
+            poisoned: false,
+            compacted_revision: 0,
+            options,
+            constraint_index: None,
+            log,
+        };
+        state.retain();
+        state
+    }
+    /// Apply one recovered record with every rule `Engine::open` enforces.
+    /// Only a first record may be an engine3 checkpoint.
+    fn replay(&mut self, index: usize, entry: &str) -> Result<(), LinkError> {
+        let (snapshot, next) = if index == 0 && entry.starts_with("engine3|") {
+            let decoded = journal::decode_checkpoint(entry, self.options.state_structure)?;
+            self.history.clear();
+            decoded
+        } else {
+            journal::decode_after(
+                entry,
+                &self.current,
+                self.next,
+                self.options.state_structure,
+            )?
+        };
+        self.validate(&snapshot.rows)?;
+        self.next = next;
+        self.committed_next = next;
+        self.current = snapshot;
+        self.retain();
+        Ok(())
+    }
     fn retain(&mut self) {
         match self.options.history {
             HistoryPolicy::None => {}
