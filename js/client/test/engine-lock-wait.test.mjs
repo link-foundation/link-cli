@@ -56,7 +56,8 @@ function fakeBinding() {
         throw 'busy: another transaction owns this write address';
       }
       owners.set(address, this.owner);
-      return Uint32Array.of(index, index, index);
+      // Address 9 stands for a missing link: reserved, but nothing to read.
+      return index === 9 ? undefined : Uint32Array.of(index, index, index);
     }
     end() {
       this.closed = true;
@@ -301,4 +302,7 @@ test('a lock for update refuses at its limit, on a cycle and without waiting', a
   await owner.lockForUpdate(1);
   await assert.rejects(immediate.begin().lockForUpdate(1), LinksError);
   await assert.rejects(owner.lockForUpdate(2 ** 32), /32 bits/);
+  // A missing address resolves to undefined and is still reserved.
+  assert.equal(await owner.lockForUpdate(9), undefined);
+  await assert.rejects(immediate.begin().lockForUpdate(9), LinksError);
 });
