@@ -17,7 +17,16 @@ import { DEFAULT_MAX_MESSAGE_BYTES } from './framing.js';
 const encoder = new TextEncoder();
 // Internal ownership protocol for staged group commits. These symbols are not
 // exported by the client package's public entry point.
-const controls = new Set(['commit', 'rollback', 'savepoint', 'rollbackTo', 'releaseSavepoint']);
+const controls = new Set([
+  'commit',
+  'rollback',
+  'savepoint',
+  'rollbackTo',
+  'releaseSavepoint',
+  'lockForUpdate',
+]);
+// Controls that may wait for a write address, like a write request.
+const waitingControls = new Set(['lockForUpdate']);
 export const canTransferHandle = Symbol('can transfer wasm handle');
 export const transferHandle = Symbol('transfer wasm handle');
 
@@ -84,7 +93,8 @@ export class WasmTransport {
       if (late) throw late;
       this.stats.requests += 1;
       this.stats.bytesSent += size;
-      if (this.#waiter) return this.#waiter(this.#clink, text, scope).then(received);
+      if (this.#waiter)
+        return this.#waiter(this.#clink, () => this.#clink.request(text), scope).then(received);
       return received(this.#clink.request(text));
     };
     const received = (reply) => {
@@ -123,9 +133,8 @@ export class WasmTransport {
       if (!controls.has(method) || typeof this.#clink[method] !== 'function') {
         throw new UnsupportedError('this WebAssembly store has no transaction control');
       }
-      try {
-        return this.#clink[method](...values);
-      } catch (cause) {
+      const failed = (cause) => {
+        if (cause instanceof LinksError) throw cause;
         throw new LinksError(String(cause), {
           outcome:
             method === 'commit' && String(cause).includes('indeterminate commit')
@@ -133,6 +142,14 @@ export class WasmTransport {
               : 'failed',
           cause,
         });
+      };
+      const call = () => this.#clink[method](...values);
+      if (this.#waiter && waitingControls.has(method))
+        return this.#waiter(this.#clink, call, {}).catch(failed);
+      try {
+        return call();
+      } catch (cause) {
+        return failed(cause);
       }
     });
   }

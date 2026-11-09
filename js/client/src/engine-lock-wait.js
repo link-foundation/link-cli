@@ -56,8 +56,9 @@ export class LockWaits {
     });
   }
 
-  /** Answers like `session.request`, except that a refused request runs again. */
-  async request(session, text, scope) {
+  /** Answers like `attempt()`, a request or a lock on `session`, except that a
+   * refused attempt runs again. A thrown refusal is thrown once waiting ends. */
+  async request(session, attempt, scope) {
     const waiter = session.writeOwner();
     const started = Date.now();
     for (;;) {
@@ -66,13 +67,23 @@ export class LockWaits {
         savepoint = session.savepoint();
       } catch {
         // A closed session has nothing to wait for and answers on its own.
-        return session.request(text);
+        return attempt();
       }
-      const reply = session.request(text);
+      let reply;
+      let failure;
+      try {
+        reply = attempt();
+      } catch (error) {
+        failure = { error };
+      }
+      const answer = () => {
+        if (failure) throw failure.error;
+        return reply;
+      };
       const holder = session.takeWriteBlocker();
       if (holder === undefined) {
         session.releaseSavepoint(savepoint);
-        return reply;
+        return answer();
       }
       // A request of several writes may have staged some before it was refused.
       session.rollbackTo(savepoint);
@@ -84,7 +95,7 @@ export class LockWaits {
         );
       }
       const remainingMs = this.#limitMs - (Date.now() - started);
-      if (remainingMs <= 0) return reply;
+      if (remainingMs <= 0) return answer();
       const late = scopeError(scope, 'not-sent');
       if (late) throw late;
       await this.#wait(waiter, holder, remainingMs, scope);

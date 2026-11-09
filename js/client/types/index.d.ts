@@ -70,6 +70,7 @@ export interface StagedSessionLike extends ClinkLike {
   savepoint?(): bigint;
   rollbackTo?(savepoint: bigint): void;
   releaseSavepoint?(savepoint: bigint): void;
+  lockForUpdate?(index: number): Uint32Array | undefined;
 }
 export interface StagedEngineLike {
   begin(): StagedSessionLike;
@@ -110,6 +111,14 @@ export class EngineClient extends LinksClient {
   /** Restores staged writes only: reads stay validated and addresses stay retired. */
   rollbackTo(savepoint: bigint): Promise<void>;
   releaseSavepoint(savepoint: bigint): Promise<void>;
+  /**
+   * Reads a link and reserves its address until the session ends, like SQL
+   * `SELECT ... FOR UPDATE`. Needs `concurrency: 'pessimistic'`. Undefined for
+   * a missing address, which is reserved all the same.
+   */
+  lockForUpdate(
+    index: bigint | number | string,
+  ): Promise<{ index: bigint; source: bigint; target: bigint } | undefined>;
 }
 /** A savepoint covers this shard only, not the containing group. */
 export interface ClusterShardClient extends LinksClient {
@@ -561,6 +570,7 @@ export class WasmTransport implements Transport {
   control(method: 'rollback'): Promise<void>;
   control(method: 'savepoint'): Promise<bigint>;
   control(method: 'rollbackTo' | 'releaseSavepoint', savepoint: bigint): Promise<void>;
+  control(method: 'lockForUpdate', index: number): Promise<Uint32Array | undefined>;
   close(): Promise<void>;
 }
 export function createWasmClient(clink: ClinkLike, options?: WasmOptions): LinksClient;

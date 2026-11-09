@@ -352,3 +352,20 @@ fn an_unknown_journal_outcome_ends_a_wait_with_the_reopen_error() {
         assert!(begun.elapsed() < LONG, "the waiter stayed until its limit");
     }
 }
+
+#[test]
+fn a_lock_for_update_waits_for_the_owner_and_then_reads_its_row() {
+    let db = waiting(LONG);
+    let mut owner = db.begin().unwrap();
+    owner.lock_for_update(1).unwrap();
+    let waiter = write_in_thread(&db, |session| {
+        let row = session.lock_for_update(1)?.unwrap();
+        session
+            .update_link(1, row.source + 1, row.target)
+            .map(|_| ())
+    });
+    assert!(!waiter.is_finished());
+    owner.rollback();
+    waiter.join().unwrap().unwrap();
+    assert_eq!(db.snapshot().unwrap().get(1).unwrap().link.source, 1);
+}

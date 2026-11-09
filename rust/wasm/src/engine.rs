@@ -389,6 +389,15 @@ impl StagedSession {
     pub fn rollback(&mut self) {
         self.inner.rollback();
     }
+    /// `SELECT ... FOR UPDATE`: `[index, source, target]`, or undefined for a
+    /// missing address, which is reserved all the same.
+    #[wasm_bindgen(js_name = lockForUpdate)]
+    pub fn lock_for_update(&mut self, index: u32) -> Result<Option<Vec<u32>>, String> {
+        self.inner
+            .lock_for_update(index)
+            .map(|row| row.map(|link| vec![link.index, link.source, link.target]))
+            .map_err(|e| e.to_string())
+    }
     #[wasm_bindgen(js_name = writeOwner)]
     pub fn write_owner(&self) -> Option<u64> {
         self.inner.write_owner()

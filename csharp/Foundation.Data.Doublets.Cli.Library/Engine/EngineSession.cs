@@ -89,6 +89,23 @@ public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         }
     }
     public Link<T>? GetLink(T id) { lock (_engine.Gate) return Row(id)?.Link; }
+    /// <summary>Reads a link and reserves its address for this session, like SQL
+    /// <c>SELECT ... FOR UPDATE</c>. Another session's write or lock of the address
+    /// is then refused (or waits, with <see cref="EngineOptions.LockWait"/>) until
+    /// this session ends, so a read-modify-write cannot be overtaken. A missing
+    /// address is reserved too, which keeps other sessions from creating it.
+    /// Throws "Busy" while another session owns the address, and "Conflict" when
+    /// the link changed after this session began. Needs pessimistic concurrency.</summary>
+    public Link<T>? LockForUpdate(T id)
+    {
+        lock (_engine.Gate)
+        {
+            CheckOpen();
+            if (_locks is null) throw new InvalidOperationException("Lock for update requires pessimistic concurrency.");
+            _locks.Acquire(_engine, id, _base.Revision);
+            return Row(id)?.Link;
+        }
+    }
     public Link<T> UpdateLink(T id, T source, T target)
     {
         lock (_engine.Gate)

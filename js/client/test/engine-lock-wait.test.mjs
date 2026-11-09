@@ -47,6 +47,17 @@ function fakeBinding() {
       }
       return `(count: (${this.writes.length}))`;
     }
+    lockForUpdate(index) {
+      if (this.closed) throw 'transaction is closed';
+      const address = String(index);
+      const owner = owners.get(address);
+      if (owner !== undefined && owner !== this.owner) {
+        this.blocker = owner;
+        throw 'busy: another transaction owns this write address';
+      }
+      owners.set(address, this.owner);
+      return Uint32Array.of(index, index, index);
+    }
     end() {
       this.closed = true;
       for (const [address, owner] of owners) if (owner === this.owner) owners.delete(address);
@@ -249,4 +260,45 @@ test('sessions built before lock waiting refuse it', () => {
     () => new EngineClient({ commit() {}, rollback() {}, request() {} }, { lockWaits: {} }),
     UnsupportedError,
   );
+});
+
+test('a lock for update waits like a write and resolves to the locked link', async () => {
+  const engine = open(60_000);
+  const owner = engine.begin();
+  const waiter = engine.begin();
+  assert.deepEqual(await owner.lockForUpdate(1), { index: 1n, source: 1n, target: 1n });
+  let locked;
+  const waiting = waiter.lockForUpdate(1n).then((link) => (locked = link));
+  await tick();
+  assert.equal(locked, undefined);
+  // The waiter holds nothing yet, so the owner's write is not a cycle.
+  await write(owner, 1);
+  await owner.rollback();
+  await waiting;
+  assert.deepEqual(locked, { index: 1n, source: 1n, target: 1n });
+});
+
+test('a lock for update refuses at its limit, on a cycle and without waiting', async () => {
+  const short = open(5);
+  const holder = short.begin();
+  await holder.lockForUpdate(1);
+  await assert.rejects(
+    short.begin().lockForUpdate(1),
+    (error) =>
+      error instanceof LinksError && /busy/.test(error.message) && error.outcome === 'failed',
+  );
+  const engine = open(60_000);
+  const [a, b] = [engine.begin(), engine.begin()];
+  await a.lockForUpdate(1);
+  await b.lockForUpdate(2);
+  const first = a.lockForUpdate(2);
+  await tick();
+  await assert.rejects(b.lockForUpdate(1), /deadlock/);
+  await b.rollback();
+  await first;
+  const immediate = new WasmEngine(fakeBinding(), pessimistic);
+  const owner = immediate.begin();
+  await owner.lockForUpdate(1);
+  await assert.rejects(immediate.begin().lockForUpdate(1), LinksError);
+  await assert.rejects(owner.lockForUpdate(2 ** 32), /32 bits/);
 });

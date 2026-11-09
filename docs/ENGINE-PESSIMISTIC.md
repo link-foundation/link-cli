@@ -30,7 +30,8 @@ including a delete/recreate that restores an identical row. A stale write fails
 with `conflict` before staging. Read committed continues to refresh reads, while
 its writes retain the existing begin-revision conflict rule. Snapshot reads
 remain repeatable. Serializable validation independently selects whole-revision
-or point-read checks; write locks alone do not prevent write skew. A scan still
+or point-read checks; write locks alone do not prevent write skew, so
+[lock the rows a decision reads](#locking-the-rows-a-decision-reads). A scan still
 checks the whole revision under serializable read-set validation.
 
 Every commit attempt closes the session. Success, validation/constraint failure,
@@ -61,6 +62,56 @@ This implementation adds no RocksDB dependency or copied implementation, LSM tre
 range locks or distributed lock recovery.
 [Savepoints](ENGINE-SAVEPOINTS.md) keep point-write ownership until the session ends.
 See the [source observations](case-studies/issue-138/RESEARCH.md).
+
+## Locking the rows a decision reads
+
+Write locks alone do not stop write skew. Two doctors are on call, and each
+session checks that the other is still on call before taking itself off.
+Under snapshot isolation both checks pass, the two writes touch different
+addresses, and both commit, which leaves nobody on call. The tests
+`write_locks_alone_let_write_skew_commit` (Rust) and
+`WriteLocksAloneLetWriteSkewCommit` (C#) show this.
+
+SQL databases answer this with `SELECT ... FOR UPDATE`. Here, a pessimistic
+session reads and reserves an address in one call:
+
+| Surface | Call | Returns |
+| --- | --- | --- |
+| Rust | `session.lock_for_update(id)` | `Result<Option<GenericLink<T>>, LinkError>` |
+| C# | `session.LockForUpdate(id)` | `Link<T>?` |
+| JS/TS using actual WASM | `await session.lockForUpdate(index)` | `{ index, source, target }` as BigInts, or `undefined` |
+
+The call reserves the address exactly as a write does, and keeps it until the
+session ends:
+
+- Another session's write or lock of that address is refused with `busy`, or
+  waits under [bounded waiting](#bounded-waiting-and-deadlock-refusal).
+- A link changed since this session began is refused with `conflict`. The
+  session never acts on a row that is already stale.
+- A missing address is reserved as well, and the call returns none. No other
+  session can create that address meanwhile, which is the point lock behind a
+  gap lock.
+- It records the read under serializable read-set validation.
+- It stages nothing, so a session that only locks commits no revision.
+- It needs pessimistic concurrency and an open session. Otherwise it fails
+  with "lock for update requires pessimistic concurrency" or "transaction is
+  closed".
+
+If both doctors lock both rows before deciding, the second session is refused
+(`locking_the_rows_read_refuses_write_skew`,
+`LockingTheRowsReadRefusesWriteSkew` and the JS conformance suite).
+
+There is no shared lock, so this has no counterpart to `FOR SHARE`. Two
+sessions that only read the same row and lock it exclude each other. To
+check reads without excluding other readers, select serializable
+[read-set validation](ENGINE-VALIDATION.md) instead: it refuses the later
+commit at its end rather than the competing read at its start.
+
+| Engine | Row lock for a read | Here |
+| --- | --- | --- |
+| [PostgreSQL](https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE) | `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, `FOR KEY SHARE`; `NOWAIT` and `SKIP LOCKED` | One exclusive mode. Without a wait limit it answers at once, like `NOWAIT`. There is no `SKIP LOCKED`. |
+| [InnoDB](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html) | `FOR UPDATE`, `FOR SHARE`, with next-key and gap locks | One exclusive mode, on a single address. A missing address is reserved, but no range is. |
+| [RocksDB](https://github.com/facebook/rocksdb/blob/main/include/rocksdb/utilities/transaction.h) | `GetForUpdate`, exclusive or shared | One exclusive mode. |
 
 ## Bounded waiting and deadlock refusal
 

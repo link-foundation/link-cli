@@ -38,6 +38,21 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         }
         Ok(())
     }
+    /// Reads a link and reserves its address for this session, like SQL
+    /// `SELECT ... FOR UPDATE`. Another session's write or lock of the address
+    /// is then refused (or waits, with `lock_wait`) until this session ends, so
+    /// a read-modify-write cannot be overtaken. A missing address is reserved
+    /// too, which keeps other sessions from creating it. Refused with `busy`
+    /// while another session owns the address, and with `conflict` when the
+    /// link changed after this session began. Needs pessimistic concurrency.
+    pub fn lock_for_update(&mut self, id: T) -> Result<Option<GenericLink<T>>, LinkError> {
+        self.check_open()?;
+        if self.locks.is_none() {
+            return Err(error("lock for update requires pessimistic concurrency"));
+        }
+        self.acquire_write(id)?;
+        Ok(self.row(id).map(|row| row.link))
+    }
     /// Identifies this session's write ownership while it lasts. `None` unless
     /// the engine selected pessimistic concurrency.
     pub fn write_owner(&self) -> Option<u64> {

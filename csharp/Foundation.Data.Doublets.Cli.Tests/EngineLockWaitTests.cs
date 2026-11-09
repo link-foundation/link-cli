@@ -223,4 +223,19 @@ public class EngineLockWaitTests
         var refused = await Assert.ThrowsAsync<InvalidOperationException>(() => write);
         Assert.Contains("reopen", refused.Message);
     }
+    [Fact]
+    public async Task ALockForUpdateWaitsForTheOwnerAndThenReadsItsRow()
+    {
+        var db = Waiting(Long);
+        var owner = db.Begin();
+        owner.LockForUpdate(1);
+        using var waiter = db.Begin();
+        var locked = await Blocked(() => waiter.LockForUpdate(1));
+        Assert.False(locked.IsCompleted);
+        owner.Rollback();
+        var row = (await locked)!.Value;
+        waiter.UpdateLink(1, row.Source + 1, row.Target);
+        waiter.Commit();
+        Assert.Equal(1u, db.Snapshot().Rows[1].Link.Source);
+    }
 }

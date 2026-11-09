@@ -218,4 +218,58 @@ public class PessimisticEngineTests
         Assert.Null(recovered.Snapshot().Rows[2].Name);
         using var retry = recovered.Begin(); retry.SetName(1, "retry"); retry.Commit();
     }
+    // Two on-call doctors, links 1 and 2, each n:n:1 while on call. Each session
+    // checks that both are on call and takes one off.
+    private static LinksEngine<uint> OnCall()
+    {
+        var engine = Seeded();
+        using var seed = engine.Begin(); seed.UpdateLink(1, 1, 1); seed.UpdateLink(2, 2, 1); seed.Commit();
+        return engine;
+    }
+    private static void TakeOffCall(EngineSession<uint> session, uint doctor, bool lockReads)
+    {
+        foreach (var id in new uint[] { 1, 2 })
+            Assert.Equal(1u, (lockReads ? session.LockForUpdate(id) : session.GetLink(id))!.Value.Target);
+        session.UpdateLink(doctor, doctor, 0);
+    }
+    private static int OnCallCount(LinksEngine<uint> engine) =>
+        new uint[] { 1, 2 }.Count(id => engine.Snapshot().Rows[id].Link.Target == 1);
+    [Fact]
+    public void WriteLocksAloneLetWriteSkewCommit()
+    {
+        var engine = OnCall(); using var first = engine.Begin(); using var second = engine.Begin();
+        TakeOffCall(first, 1, false); TakeOffCall(second, 2, false); first.Commit(); second.Commit();
+        Assert.Equal(0, OnCallCount(engine)); // The anomaly this test documents.
+    }
+    [Fact]
+    public void LockingTheRowsReadRefusesWriteSkew()
+    {
+        var engine = OnCall(); using var first = engine.Begin(); using var second = engine.Begin();
+        TakeOffCall(first, 1, true); Busy(() => TakeOffCall(second, 2, true));
+        first.Commit(); second.Rollback();
+        using var retry = engine.Begin(); Assert.Equal(0u, retry.LockForUpdate(1)!.Value.Target); retry.Rollback();
+        Assert.Equal(1, OnCallCount(engine));
+    }
+    [Fact]
+    public void ALockForUpdateReservesUntilTheSessionEndsAndRefusesStaleRows()
+    {
+        var engine = Seeded(); using var owner = engine.Begin(); using var stale = engine.Begin();
+        Assert.Equal(0u, owner.LockForUpdate(1)!.Value.Source); Assert.NotNull(owner.LockForUpdate(1));
+        Busy(() => stale.UpdateLink(1, 1, 1)); Busy(() => stale.LockForUpdate(1));
+        Assert.Null(owner.LockForUpdate(7)); Busy(() => stale.EnsureCreated(7));
+        owner.UpdateLink(1, 1, 1); owner.Commit();
+        Assert.StartsWith("Conflict", Assert.Throws<InvalidOperationException>(() => stale.LockForUpdate(1)).Message);
+        Assert.Equal(7u, stale.EnsureCreated(7)); stale.Commit();
+        Assert.Equal(1u, engine.Snapshot().Rows[1].Link.Source);
+    }
+    [Theory]
+    [InlineData(ConcurrencyControl.Optimistic)]
+    [InlineData(ConcurrencyControl.Exclusive)]
+    public void LockForUpdateRequiresPessimisticConcurrencyAndAnOpenSession(ConcurrencyControl concurrency)
+    {
+        var engine = Seeded(Options with { Concurrency = concurrency }); using var session = engine.Begin();
+        Assert.Contains("pessimistic concurrency", Assert.Throws<InvalidOperationException>(() => session.LockForUpdate(1)).Message);
+        var pessimistic = Seeded(); using var closed = pessimistic.Begin(); closed.Rollback();
+        Assert.Contains("closed", Assert.Throws<InvalidOperationException>(() => closed.LockForUpdate(1)).Message);
+    }
 }

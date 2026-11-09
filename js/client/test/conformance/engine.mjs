@@ -333,6 +333,81 @@ async function lockWaitConformance(binding) {
   short.close();
 }
 
+/** `SELECT ... FOR UPDATE` on the compiled engine: locking the rows a check
+ * reads refuses the write skew that write locks alone let commit. */
+async function lockForUpdateConformance(binding) {
+  const engine = new WasmEngine(binding, { concurrency: 'pessimistic', isolation: 'snapshot' });
+  const sessions = [];
+  const begin = () => {
+    const session = engine.begin();
+    sessions.push(session);
+    return session;
+  };
+  try {
+    const seed = begin();
+    const one = await seed.create(0n, 0n);
+    const two = await seed.create(0n, 0n);
+    await seed.update(one.index, one.index, 1n);
+    await seed.update(two.index, two.index, 1n);
+    await seed.commit();
+    const takeOffCall = async (session, doctor) => {
+      for (const index of [one.index, two.index])
+        assert.equal((await session.lockForUpdate(index)).target, 1n);
+      await session.update(doctor, doctor, 0n);
+    };
+    const first = begin();
+    const second = begin();
+    await takeOffCall(first, one.index);
+    await assert.rejects(takeOffCall(second, two.index), /busy/);
+    await first.commit();
+    await second.rollback();
+    assert.deepEqual(
+      engine.snapshot().rows.map((row) => row.target),
+      [0n, 1n],
+    );
+    const stale = begin();
+    const owner = begin();
+    assert.equal(await owner.lockForUpdate(9n), undefined);
+    await assert.rejects(stale.lockForUpdate(9n), /busy/);
+    await owner.update(two.index, two.index, 0n);
+    await owner.commit();
+    await assert.rejects(stale.lockForUpdate(two.index), /conflict/);
+    const optimistic = new WasmEngine(binding, {});
+    const refused = optimistic.begin();
+    try {
+      await assert.rejects(refused.lockForUpdate(1n), /pessimistic concurrency/);
+    } finally {
+      await refused.close();
+      optimistic.close();
+    }
+  } finally {
+    for (const session of sessions) await session.close();
+    engine.close();
+  }
+  const waiting = new WasmEngine(binding, {
+    concurrency: 'pessimistic',
+    isolation: 'snapshot',
+    lockWaitMs: 60_000,
+  });
+  try {
+    const seed = waiting.begin();
+    const link = await seed.create(0n, 0n);
+    await seed.commit();
+    await seed.close();
+    const owner = waiting.begin();
+    const waiter = waiting.begin();
+    await owner.lockForUpdate(link.index);
+    const locked = waiter.lockForUpdate(link.index);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await owner.rollback();
+    assert.deepEqual(await locked, { index: link.index, source: 0n, target: 0n });
+    await waiter.close();
+    await owner.close();
+  } finally {
+    waiting.close();
+  }
+}
+
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
   await causalSessionConformance(binding);
@@ -348,6 +423,7 @@ export async function engineConformance(binding) {
   await restoreBackupConformance(binding);
   await thresholdCompactionConformance(binding);
   await lockWaitConformance(binding);
+  await lockForUpdateConformance(binding);
   await journalRecoveryConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();

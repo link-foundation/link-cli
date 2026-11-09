@@ -403,3 +403,115 @@ fn journal_failures_close_sessions_and_reopening_discovers_the_recorded_outcome(
         retry.commit().unwrap();
     }
 }
+
+/// Two on-call doctors, links 1 and 2, each `n:n:1` while on call. Each session
+/// checks that both are on call and takes one off: under snapshot isolation the
+/// sessions see the same snapshot, write different links and both commit.
+fn take_off_call(
+    session: &mut link_cli::engine::EngineTransaction<u32, MemoryLog>,
+    doctor: u32,
+    lock_reads: bool,
+) -> Result<(), link_cli::LinkError> {
+    for id in [1, 2] {
+        let row = if lock_reads {
+            session.lock_for_update(id)?
+        } else {
+            session.get_link(id)
+        };
+        assert_eq!(row.unwrap().target, 1, "both doctors are on call");
+    }
+    session.update_link(doctor, doctor, 0).map(|_| ())
+}
+fn on_call() -> Engine<u32, MemoryLog> {
+    let db = seeded(options());
+    let mut seed = db.begin().unwrap();
+    seed.update_link(1, 1, 1).unwrap();
+    seed.update_link(2, 2, 1).unwrap();
+    seed.commit().unwrap();
+    db
+}
+fn on_call_count(db: &Engine<u32, MemoryLog>) -> usize {
+    let snapshot = db.snapshot().unwrap();
+    [1, 2]
+        .into_iter()
+        .filter(|id| snapshot.get(*id).unwrap().link.target == 1)
+        .count()
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn write_locks_alone_let_write_skew_commit() {
+    let db = on_call();
+    let mut first = db.begin().unwrap();
+    let mut second = db.begin().unwrap();
+    take_off_call(&mut first, 1, false).unwrap();
+    take_off_call(&mut second, 2, false).unwrap();
+    first.commit().unwrap();
+    second.commit().unwrap();
+    assert_eq!(on_call_count(&db), 0, "the anomaly this test documents");
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn locking_the_rows_read_refuses_write_skew() {
+    let db = on_call();
+    let mut first = db.begin().unwrap();
+    let mut second = db.begin().unwrap();
+    take_off_call(&mut first, 1, true).unwrap();
+    busy(take_off_call(&mut second, 2, true));
+    first.commit().unwrap();
+    second.rollback();
+    // The retry sees the committed change and keeps one doctor on call.
+    let mut retry = db.begin().unwrap();
+    assert_eq!(retry.lock_for_update(1).unwrap().unwrap().target, 0);
+    retry.rollback();
+    assert_eq!(on_call_count(&db), 1);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_lock_for_update_reserves_until_the_session_ends_and_refuses_stale_rows() {
+    let db = seeded(options());
+    let mut owner = db.begin().unwrap();
+    let mut stale = db.begin().unwrap();
+    assert_eq!(owner.lock_for_update(1).unwrap().unwrap().source, 0);
+    // Locking twice, then writing, stays with the owner.
+    assert!(owner.lock_for_update(1).unwrap().is_some());
+    busy(stale.update_link(1, 1, 1));
+    busy(stale.lock_for_update(1));
+    // A missing address is reserved too: nobody else can create it.
+    assert_eq!(owner.lock_for_update(7).unwrap(), None);
+    busy(stale.ensure_link_created(7));
+    // The owner may write what it locked.
+    owner.update_link(1, 1, 1).unwrap();
+    owner.commit().unwrap();
+    // The stale session began before that commit, so its lock is a conflict.
+    let refused = stale.lock_for_update(1).unwrap_err().to_string();
+    assert!(refused.contains("conflict"), "{refused}");
+    // Address 7 was released without being created.
+    assert_eq!(stale.ensure_link_created(7).unwrap(), 7);
+    stale.commit().unwrap();
+    assert_eq!(db.snapshot().unwrap().get(1).unwrap().link.source, 1);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn lock_for_update_requires_pessimistic_concurrency_and_an_open_session() {
+    for concurrency in [
+        ConcurrencyControl::Optimistic,
+        ConcurrencyControl::Exclusive,
+    ] {
+        let db = seeded(EngineOptions {
+            concurrency,
+            ..options()
+        });
+        let mut session = db.begin().unwrap();
+        let refused = session.lock_for_update(1).unwrap_err().to_string();
+        assert!(refused.contains("pessimistic concurrency"), "{refused}");
+    }
+    let db = seeded(options());
+    let mut session = db.begin().unwrap();
+    session.rollback();
+    let refused = session.lock_for_update(1).unwrap_err().to_string();
+    assert!(refused.contains("closed"), "{refused}");
+}

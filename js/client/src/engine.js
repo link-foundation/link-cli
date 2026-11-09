@@ -3,7 +3,12 @@
 import { LinksClient } from './client.js';
 import { WasmTransport, canTransferHandle, transferHandle } from './wasm.js';
 import { toAddress } from './operations.js';
-import { ConnectionClosedError, LinksError, UnsupportedError } from './errors.js';
+import {
+  AddressRangeError,
+  ConnectionClosedError,
+  LinksError,
+  UnsupportedError,
+} from './errors.js';
 import { LockWaits } from './engine-lock-wait.js';
 
 const nativeHandle = Symbol('native engine handle');
@@ -75,6 +80,23 @@ export class EngineClient extends LinksClient {
   }
   close() {
     return this.#ending(super.close());
+  }
+  /**
+   * Reads a link and reserves its address until this session ends, like SQL
+   * `SELECT ... FOR UPDATE`; needs `concurrency: 'pessimistic'`. Resolves to
+   * `{ index, source, target }`, or undefined for a missing address, which is
+   * reserved all the same. Rejects with `busy` while another session owns the
+   * address (after `lockWaitMs`, when selected) and with `conflict` when the
+   * link changed after this session began.
+   */
+  async lockForUpdate(index) {
+    const address = toAddress(index, 'index');
+    if (address > 0xffff_ffffn)
+      throw new AddressRangeError(`index must fit in 32 bits, got ${address}`);
+    const row = await this.transport.control('lockForUpdate', Number(address));
+    if (row === undefined) return undefined;
+    const [linkIndex, source, target] = Array.from(row, BigInt);
+    return { index: linkIndex, source, target };
   }
   /** Remembers the staged writes; resolves to a token for this session. */
   savepoint() {
