@@ -14,6 +14,7 @@ import { groupCommitConformance } from './group-commit.mjs';
 import { sharedStateConformance } from './shared-state.mjs';
 import { changeRecordConformance } from './change-records.mjs';
 import { constraintIndexConformance } from './constraint-index.mjs';
+import { journalRecoveryConformance } from './journal-recovery.mjs';
 
 async function savepointConformance(binding) {
   const engine = new WasmEngine(binding, { isolation: 'snapshot' });
@@ -347,6 +348,7 @@ export async function engineConformance(binding) {
   await restoreBackupConformance(binding);
   await thresholdCompactionConformance(binding);
   await lockWaitConformance(binding);
+  await journalRecoveryConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();
   const observer = engine.begin();
@@ -586,7 +588,7 @@ export async function engineConformance(binding) {
   await conflictGenerationSchedules(binding);
   await readSetSchedules(binding);
   console.log(
-    'ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen, delta journals',
+    'ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen, delta journals, damaged-journal check and repair',
   );
 }
 

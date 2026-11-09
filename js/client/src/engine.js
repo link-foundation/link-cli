@@ -29,6 +29,15 @@ function selected(options, journal) {
   };
 }
 
+function journalCheck(check) {
+  return {
+    validRecords: check.validRecords,
+    totalRecords: check.totalRecords,
+    revision: BigInt(check.revision),
+    damage: check.damage,
+  };
+}
+
 /** An isolated LinksClient session. Close rolls back an uncommitted session. */
 export class EngineClient extends LinksClient {
   #lockWaits;
@@ -204,6 +213,31 @@ export class WasmEngine {
     if (typeof binding?.StagedEngine?.restoreBackup !== 'function')
       throw new TypeError('build clink-wasm with restoreBackup support');
     return binding.StagedEngine.restoreBackup(source, destination, optionalAddress(revision));
+  }
+  /** The longest prefix of `journal` that opening would replay, and the first
+   * damaged record. Never throws for damage: it is part of the report. */
+  static checkJournal(binding, journal, options = {}) {
+    if (typeof binding?.StagedEngine?.checkJournal !== 'function')
+      throw new TypeError('build clink-wasm with checkJournal support');
+    const { text } = selected(options, []);
+    return journalCheck(
+      JSON.parse(binding.StagedEngine.checkJournal(text, JSON.stringify(journal))),
+    );
+  }
+  /** The longest valid prefix among copies of one journal (the damaged primary
+   * first, then replicas, mirrors or a restored backup). Copies whose valid
+   * prefixes disagree are refused rather than guessed between. */
+  static recoverJournal(binding, copies, options = {}) {
+    if (typeof binding?.StagedEngine?.recoverJournal !== 'function')
+      throw new TypeError('build clink-wasm with recoverJournal support');
+    const { text } = selected(options, []);
+    const recovery = JSON.parse(binding.StagedEngine.recoverJournal(text, JSON.stringify(copies)));
+    return {
+      entries: recovery.entries,
+      source: recovery.source,
+      revision: BigInt(recovery.revision),
+      checks: recovery.checks.map(journalCheck),
+    };
   }
   /** Atomically publish under the commit lock; an unknown outcome requires reopen. */
   compactJournal() {

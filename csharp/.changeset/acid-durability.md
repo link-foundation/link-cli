@@ -447,3 +447,5 @@ An update naming only one part of a link, such as `((1: 1 1)) ((1: 2 *))`, keeps
 A served database now stops gracefully on `SIGTERM` as well as on Ctrl+C, as the Rust server already did, instead of being killed with status 143.
 
 Added: `CacheLinksDecorator` keeps a store as a cache: links can expire (`Expire`, `Persist`, `TimeToLive`, a default time to live and `PurgeExpired`), and `MaxLinks` keeps the store to a size by evicting the links used least recently that nothing else uses, refusing the write when every link is in use. See `docs/ENGINE-CACHE.md`.
+
+Added: `EngineJournal<T>` checks and repairs a damaged engine journal. `Check` reports the longest prefix that `LinksEngine` would replay and the first damaged record; `Recover` picks the longest valid prefix among the journal and its replicas, mirrors or backups and refuses copies that disagree; `RepairFile` keeps the original bytes in `<path>.damaged-<n>`, writes the repaired journal beside it, flushes it and renames it over the path, and refuses to run while a writer holds the journal lock. See `docs/ENGINE-RECOVERY.md`.

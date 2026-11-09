@@ -1,7 +1,7 @@
 //! JS uses the native engine through WASM, rather than reimplementing isolation.
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
-    restore_backup, Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine,
+    recovery, restore_backup, Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine,
     EngineOptions, EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
     RevisionEncoding, Savepoint, SerializableValidation, StateStructure,
 };
@@ -91,6 +91,18 @@ pub(crate) fn options(text: &str) -> Result<EngineOptions, String> {
             .collect::<Result<_, String>>()?,
         trace: parsed.trace,
         require_durable_flush: parsed.require_durable_flush,
+    })
+}
+
+fn check_json(check: &recovery::JournalCheck) -> serde_json::Value {
+    serde_json::json!({
+        "validRecords": check.valid_records,
+        "totalRecords": check.total_records,
+        "revision": check.revision.to_string(),
+        "damage": check.damage.as_ref().map(|damage| serde_json::json!({
+            "record": damage.record,
+            "reason": damage.reason,
+        })),
     })
 }
 
@@ -212,6 +224,31 @@ impl StagedEngine {
             revision,
         )
         .map_err(|e| e.to_string())
+    }
+    /// Report the longest prefix of a journal that opening would replay and
+    /// the first damaged record, as JSON; see `engine::recovery::check_journal`.
+    #[wasm_bindgen(js_name = checkJournal)]
+    pub fn check_journal(options_json: &str, journal_json: &str) -> Result<String, String> {
+        let entries: Vec<String> =
+            serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        let check = recovery::check_journal::<u32>(&entries, &options(options_json)?);
+        Ok(check_json(&check).to_string())
+    }
+    /// Pick the longest valid prefix among copies of one journal (a JSON array
+    /// of journals), refusing copies that diverge; see `recover_journal`.
+    #[wasm_bindgen(js_name = recoverJournal)]
+    pub fn recover_journal(options_json: &str, copies_json: &str) -> Result<String, String> {
+        let copies: Vec<Vec<String>> =
+            serde_json::from_str(copies_json).map_err(|error| error.to_string())?;
+        let recovery = recovery::recover_journal::<u32>(&copies, &options(options_json)?)
+            .map_err(|error| error.to_string())?;
+        Ok(serde_json::json!({
+            "entries": recovery.entries,
+            "source": recovery.source,
+            "revision": recovery.revision.to_string(),
+            "checks": recovery.checks.iter().map(check_json).collect::<Vec<_>>(),
+        })
+        .to_string())
     }
     /// Publish a checkpoint through the optional atomic replacement capability.
     #[wasm_bindgen(js_name = compactJournal)]
@@ -438,5 +475,48 @@ mod tests {
         ] {
             assert!(StagedEngine::new(text, "[]").is_err(), "{text}");
         }
+    }
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    fn journals_are_checked_and_recovered_from_copies() {
+        let engine = StagedEngine::new("{}", "[]").unwrap();
+        for _ in 0..3 {
+            let mut tx = engine.begin().unwrap();
+            tx.request("(create: (0 0))");
+            tx.commit().unwrap();
+        }
+        let entries: Vec<String> = serde_json::from_str(&engine.journal().unwrap()).unwrap();
+        let intact: serde_json::Value = serde_json::from_str(
+            &StagedEngine::check_journal("{}", &serde_json::to_string(&entries).unwrap()).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(intact["validRecords"], 3);
+        assert_eq!(intact["revision"], "3");
+        assert!(intact["damage"].is_null());
+        let mut damaged = entries.clone();
+        damaged[1].push('x');
+        let check: serde_json::Value = serde_json::from_str(
+            &StagedEngine::check_journal("{}", &serde_json::to_string(&damaged).unwrap()).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(check["validRecords"], 1);
+        assert_eq!(check["totalRecords"], 3);
+        assert_eq!(check["damage"]["record"], 1);
+        let copies = serde_json::json!([damaged, entries]).to_string();
+        let recovery: serde_json::Value =
+            serde_json::from_str(&StagedEngine::recover_journal("{}", &copies).unwrap()).unwrap();
+        assert_eq!(recovery["source"], 1);
+        assert_eq!(recovery["revision"], "3");
+        assert_eq!(recovery["entries"], serde_json::json!(entries));
+        assert_eq!(recovery["checks"][0]["validRecords"], 1);
+        let reopened = StagedEngine::new("{}", &recovery["entries"].to_string()).unwrap();
+        assert_eq!(reopened.begin().unwrap().count(), 3);
+        assert!(StagedEngine::recover_journal("{}", "[]")
+            .unwrap_err()
+            .contains("at least one copy"));
+        assert!(StagedEngine::check_journal("{}", "{").is_err());
+        assert!(StagedEngine::check_journal("[]", "[]").is_err());
+        assert!(StagedEngine::recover_journal("{}", "[1]").is_err());
+        assert!(StagedEngine::recover_journal("[]", "[]").is_err());
     }
 }

@@ -117,6 +117,22 @@ export interface ClusterShardClient extends LinksClient {
   rollbackTo(savepoint: bigint): Promise<void>;
   releaseSavepoint(savepoint: bigint): Promise<void>;
 }
+export interface JournalCheck {
+  /** Records that replay, counted from the first: the valid prefix. */
+  validRecords: number;
+  totalRecords: number;
+  /** Revision after the valid prefix. */
+  revision: bigint;
+  /** Null when every record replays. */
+  damage: { record: number; reason: string } | null;
+}
+export interface JournalRecovery {
+  entries: string[];
+  /** Index of the copy that supplied `entries`; the first wins a tie. */
+  source: number;
+  revision: bigint;
+  checks: JournalCheck[];
+}
 export class WasmEngine {
   constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
   begin(): EngineClient;
@@ -140,6 +156,10 @@ export class WasmEngine {
     destination: CommitLog,
     options?: { revision?: AddressInput },
   ): bigint;
+  /** The longest prefix opening would replay and the first damaged record. */
+  static checkJournal(binding: object, journal: string[], options?: EngineOptions): JournalCheck;
+  /** The longest valid prefix among copies; copies that disagree are refused. */
+  static recoverJournal(binding: object, copies: string[][], options?: EngineOptions): JournalRecovery;
   /** Publish under the commit lock. Unknown outcomes require reopening. */
   compactJournal(): boolean;
   /** Compact once this many revisions have landed since the last compaction. */

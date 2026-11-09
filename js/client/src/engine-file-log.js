@@ -9,12 +9,27 @@ import {
   fsyncSync,
   mkdirSync,
   rmdirSync,
+  readFileSync,
+  renameSync,
 } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 
 const decode = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const lenient = new TextDecoder('utf-8', { fatal: false, ignoreBOM: true });
 const encode = new TextEncoder();
+
+function syncDirectory(directory) {
+  // POSIX directory sync establishes a name before it is relied on.
+  if (process.platform !== 'win32') {
+    const dir = openSync(directory, 'r');
+    try {
+      fsyncSync(dir);
+    } finally {
+      closeSync(dir);
+    }
+  }
+}
 
 function readExactly(fd, bytes, length, position) {
   let offset = 0;
@@ -44,15 +59,7 @@ export class FileCommitLog {
     try {
       this.#fd = openSync(path, 'a+');
       this.#repairTail();
-      // POSIX directory sync establishes a new journal's name before commits.
-      if (process.platform !== 'win32') {
-        const dir = openSync(directory, 'r');
-        try {
-          fsyncSync(dir);
-        } finally {
-          closeSync(dir);
-        }
-      }
+      syncDirectory(directory);
     } catch (error) {
       if (this.#fd !== undefined) closeSync(this.#fd);
       rmdirSync(this.#lock);
@@ -133,5 +140,100 @@ export class FileCommitLog {
   }
   [Symbol.dispose]() {
     this.close();
+  }
+}
+
+function readBytes(path) {
+  try {
+    return readFileSync(path);
+  } catch (error) {
+    if (error?.code === 'ENOENT') return new Uint8Array(0);
+    throw error;
+  }
+}
+
+function lines(bytes) {
+  const records = [];
+  let start = 0;
+  for (let index = bytes.indexOf(10); index !== -1; index = bytes.indexOf(10, start)) {
+    if (index > start) records.push(lenient.decode(bytes.subarray(start, index)));
+    start = index + 1;
+  }
+  return records;
+}
+
+function writeAll(fd, bytes) {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const count = writeSync(fd, bytes, offset, bytes.length - offset);
+    if (count === 0) throw new Error('journal write made no progress');
+    offset += count;
+  }
+  fsyncSync(fd);
+}
+
+/** Complete lines of a file journal as `FileCommitLog` reads them, tolerating
+ * damage it would reject: invalid UTF-8 becomes U+FFFD (so the checksum flags
+ * that record), blank lines are skipped, a torn final line is ignored and a
+ * missing file is empty. */
+export function readJournalFileLossy(path) {
+  return lines(readBytes(path));
+}
+
+/** Rebuild the journal at `path` from the longest valid prefix among it and
+ * `copies`. `recover(journals)` picks that prefix, normally
+ * `(journals) => WasmEngine.recoverJournal(binding, journals, options)`, which
+ * keeps this adapter free of the WebAssembly module. The original bytes are
+ * first copied to `<path>.damaged-<n>`; the replacement is flushed, then renamed
+ * over `path`. Takes the writer lock of `FileCommitLog`, so it fails while an
+ * engine owns the journal; a crashed owner's lock must be removed after fencing
+ * it, as for reopening. Copies are only read. */
+export function repairJournalFile(path, recover, { copies = [] } = {}) {
+  if (typeof recover !== 'function') throw new TypeError('recover must be a function');
+  path = resolve(path);
+  const lock = path + '.writer';
+  try {
+    mkdirSync(lock);
+  } catch (error) {
+    if (error?.code === 'EEXIST') throw new Error('journal writer is busy', { cause: error });
+    throw error;
+  }
+  try {
+    const original = readBytes(path);
+    const recovery = recover([lines(original), ...copies.map(readJournalFileLossy)]);
+    const repaired = encode.encode(recovery.entries.map((entry) => entry + '\n').join(''));
+    if (repaired.length === original.length && repaired.every((byte, i) => byte === original[i]))
+      return { recovery, changed: false, preserved: null };
+    let preserved = null;
+    if (original.length > 0) {
+      for (let attempt = 1; preserved === null; attempt++) {
+        const target = `${path}.damaged-${attempt}`;
+        let fd;
+        try {
+          fd = openSync(target, 'wx');
+        } catch (error) {
+          if (error?.code === 'EEXIST') continue;
+          throw error;
+        }
+        try {
+          writeAll(fd, original);
+        } finally {
+          closeSync(fd);
+        }
+        preserved = target;
+      }
+    }
+    const temporary = path + '.repair';
+    const fd = openSync(temporary, 'w');
+    try {
+      writeAll(fd, repaired);
+    } finally {
+      closeSync(fd);
+    }
+    renameSync(temporary, path);
+    syncDirectory(dirname(path));
+    return { recovery, changed: true, preserved };
+  } finally {
+    rmdirSync(lock);
   }
 }

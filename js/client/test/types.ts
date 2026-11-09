@@ -156,7 +156,7 @@ async function main(links: Links) {
 }
 
 import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog, type EngineOptions, type StagedEngineLike, type CommitLog } from '../types/index.js';
-import { FileCommitLog } from '../types/engine-file-log.js';
+import { FileCommitLog, readJournalFileLossy, repairJournalFile } from '../types/engine-file-log.js';
 import { FileCheckpointPagedCommitLog } from '../types/engine-file-checkpoint-pages.js';
 function nativeCheckpointTypes(path: string) {
   using log = new FileCheckpointPagedCommitLog(path, { mirroredBanks: true, mirroredRoot: true, maxPages: 64 });
@@ -213,6 +213,11 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   const checkpoint: string[] = engine.exportCheckpoint(); void checkpoint;
   const changed: boolean = engine.compactJournal(); void changed;
   const due: boolean = engine.compactJournalAfter(2n); void due;
+  const check = WasmEngine.checkJournal(binding, readJournalFileLossy('journal'), options);
+  const firstDamaged: number | undefined = check.damage?.record; const intactRevision: bigint = check.revision;
+  const repair = repairJournalFile('journal', (journals) => WasmEngine.recoverJournal(binding, journals), { copies: ['replica'] });
+  const preserved: string | null = repair.preserved; const source: number = repair.recovery.source;
+  void [firstDamaged, intactRevision, preserved, source, repair.changed];
   engine.compactEvery({ commits: 2, periodMs: 1000 }).stop();
   const replaceable = new DeltaCommitLog(new MemoryCommitLog());
   const supported: boolean = replaceable.supportsReplacement; void supported;
