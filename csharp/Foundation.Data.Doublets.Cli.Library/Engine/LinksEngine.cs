@@ -101,19 +101,26 @@ public sealed partial class LinksEngine<T>
         bool first = true;
         foreach (var record in log.Read())
         {
-            bool checkpoint = first && record.StartsWith("engine3|", StringComparison.Ordinal);
-            var (snapshot, next) = checkpoint ? RevisionJournal<T>.DecodeCheckpoint(record, Options.StateStructure)
-                : RevisionJournal<T>.DecodeAfter(record, Current, Next, Options.StateStructure);
-            if (checkpoint) _history.Clear();
+            Replay(record, first);
             first = false;
-            Validate(snapshot.Rows);
-            Current = snapshot;
-            Next = next;
-            CommittedNext = next;
-            Retain();
         }
         // No session predates open; recovered rows need no conflict generations.
         ConstraintIndex = global::Foundation.Data.Doublets.Cli.Engine.ConstraintIndex<T>.Build(Options, Current.Rows);
+    }
+
+    /// <summary>Apply one journal record during open, or for <see cref="EngineJournal{T}.Check"/>.
+    /// Only a first record may be an engine3 checkpoint.</summary>
+    internal void Replay(string record, bool first)
+    {
+        bool checkpoint = first && record.StartsWith("engine3|", StringComparison.Ordinal);
+        var (snapshot, next) = checkpoint ? RevisionJournal<T>.DecodeCheckpoint(record, Options.StateStructure)
+            : RevisionJournal<T>.DecodeAfter(record, Current, Next, Options.StateStructure);
+        if (checkpoint) _history.Clear();
+        Validate(snapshot.Rows);
+        Current = snapshot;
+        Next = next;
+        CommittedNext = next;
+        Retain();
     }
 
     internal void CheckReady()
