@@ -1,0 +1,297 @@
+name: Crash tests
+
+# Issue #138: start the engine in a Docker container, kill it with SIGKILL at
+# random moments, damage its files on purpose and repair them, then check that
+# no acknowledged commit was lost or torn. One job per language runs the same
+# driver (.github/scripts/docker-crash.mjs) against that language's writer on
+# the runner's Docker daemon; the docker-in-docker job runs the driver itself
+# inside a docker:dind container, so the test does not depend on the runner
+# having Docker set up. Each run prints its seed; replay a failure with
+#   node .github/scripts/docker-crash.mjs --target <language> --seed <seed>
+on:
+  # Only main on push: PR branches are covered by the pull_request trigger
+  # (issue #96).
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/crash.yml'
+      - '.github/scripts/docker-crash*'
+      - 'rust/src/**'
+      - 'rust/examples/engine_crash_writer.rs'
+      - 'rust/Cargo.*'
+      - 'rust/wasm/**'
+      - 'csharp/Foundation.Data.Doublets.Cli.Library/**'
+      - 'examples/engine-crash-csharp/**'
+      - 'js/client/src/**'
+      - 'js/client/examples/engine-crash-writer.mjs'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/crash.yml'
+      - '.github/scripts/docker-crash*'
+      - 'rust/src/**'
+      - 'rust/examples/engine_crash_writer.rs'
+      - 'rust/Cargo.*'
+      - 'rust/wasm/**'
+      - 'csharp/Foundation.Data.Doublets.Cli.Library/**'
+      - 'examples/engine-crash-csharp/**'
+      - 'js/client/src/**'
+      - 'js/client/examples/engine-crash-writer.mjs'
+  schedule:
+    # New seeds every week, so the random kill points keep moving.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'Replay this seed (empty: a new one per job)'
+        required: false
+        type: string
+      rounds:
+        description: 'Kills before the damage phases'
+        required: false
+        default: '12'
+        type: string
+
+permissions:
+  contents: read
+
+# Superseded runs on a pull request are cancelled; no job here writes.
+concurrency:
+  group: crash-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  CRASH_SEED: ${{ inputs.seed }}
+  CRASH_ROUNDS: ${{ inputs.rounds || '12' }}
+
+jobs:
+  rust:
+    name: Kill and repair (Rust)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-crash-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-crash-cargo-
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      - name: Build the writer
+        run: cargo build --release --manifest-path rust/Cargo.toml --example engine_crash_writer
+
+      - name: Kill, damage and repair
+        run: >-
+          node .github/scripts/docker-crash.mjs --target rust --rounds "$CRASH_ROUNDS"
+          ${CRASH_SEED:+--seed "$CRASH_SEED"} --work "$RUNNER_TEMP/crash" --report crash-rust.json
+
+      - name: Upload report and damaged files
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: crash-rust
+          path: |
+            crash-rust.json
+            ${{ runner.temp }}/crash
+          if-no-files-found: ignore
+
+  csharp:
+    name: Kill and repair (C#)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      - name: Build the writer
+        run: dotnet build -c Release examples/engine-crash-csharp
+
+      - name: Kill, damage and repair
+        run: >-
+          node .github/scripts/docker-crash.mjs --target csharp --rounds "$CRASH_ROUNDS"
+          ${CRASH_SEED:+--seed "$CRASH_SEED"} --work "$RUNNER_TEMP/crash" --report crash-csharp.json
+
+      - name: Upload report and damaged files
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: crash-csharp
+          path: |
+            crash-csharp.json
+            ${{ runner.temp }}/crash
+          if-no-files-found: ignore
+
+  js:
+    name: Kill and repair (JS/WASM)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update --target wasm32-unknown-unknown
+          rustup default stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/wasm/target
+          key: ${{ runner.os }}-crash-wasm-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-crash-wasm-
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.15.1 --locked
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      - name: Build the WebAssembly engine
+        run: wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
+
+      - name: Kill, damage and repair
+        run: >-
+          node .github/scripts/docker-crash.mjs --target js --rounds "$CRASH_ROUNDS"
+          ${CRASH_SEED:+--seed "$CRASH_SEED"} --work "$RUNNER_TEMP/crash" --report crash-js.json
+
+      - name: Upload report and damaged files
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: crash-js
+          path: |
+            crash-js.json
+            ${{ runner.temp }}/crash
+          if-no-files-found: ignore
+
+  docker-in-docker:
+    name: Kill and repair inside docker:dind (Rust)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-crash-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-crash-cargo-
+
+      - name: Build the writer
+        run: cargo build --release --manifest-path rust/Cargo.toml --example engine_crash_writer
+
+      # The nested daemon needs --privileged to create its own containers; it
+      # has no access to the runner's daemon. The driver runs as root inside
+      # it, so the engine containers it starts run as root too. On a host whose
+      # own Docker storage is already overlay (Docker run inside a container),
+      # append --storage-driver=vfs to the docker:dind command to reproduce this
+      # locally; a GitHub runner keeps /var/lib/docker on ext4 and needs none.
+      - name: Start a Docker daemon inside a container
+        run: |
+          docker run --privileged --detach --name dind \
+            --volume "$PWD:/repo" --workdir /repo docker:dind
+          for attempt in $(seq 60); do
+            if docker exec dind docker info > /dev/null 2>&1; then break; fi
+            if [ "$attempt" = 60 ]; then docker logs dind; exit 1; fi
+            sleep 1
+          done
+          docker exec dind apk add --no-cache nodejs
+          docker exec dind node --version
+
+      - name: Kill, damage and repair from inside the nested daemon
+        run: >-
+          docker exec dind node .github/scripts/docker-crash.mjs --target rust
+          --rounds "$CRASH_ROUNDS" ${CRASH_SEED:+--seed "$CRASH_SEED"}
+          --work /repo/crash-dind --report /repo/crash-dind.json
+
+      - name: Stop the nested daemon
+        if: ${{ always() }}
+        run: |
+          docker exec dind chown -R "$(id -u):$(id -g)" /repo/crash-dind /repo/crash-dind.json || true
+          docker rm --force dind
+
+      - name: Upload report and damaged files
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: crash-dind
+          path: |
+            crash-dind.json
+            crash-dind
+          if-no-files-found: ignore
+
+  pipeline-status:
+    name: Pipeline Status (crash)
+    needs:
+      - rust
+      - csharp
+      - js
+      - docker-in-docker
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs
