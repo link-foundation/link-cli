@@ -359,11 +359,14 @@ work on an arbitrary network filesystem. A shared-nothing deployment gives
 independent logs and failure domains to followers and each independent shard.
 Partition tenants/keys into separate engines to scale aggregate independent
 work horizontally. Addresses are local to a shard; use `(shard, address)` in
-application references and keep an atomic transaction within one shard.
+application references. A transaction of one engine stays within one shard;
+select the optional [`ClusterEngine`](ENGINE-CLUSTERS.md#distributed-transactions-compared)
+for one atomic transaction across several shards.
 
 Safe automatic primary election, changing membership, consensus, cross-shard
 atomic transactions, and a routing/network service are not supplied by these
-log decorators. They require protocols beyond acknowledgement counting. Existing
+log decorators. Cross-shard transactions come from `ClusterEngine` instead, and
+consensus from the etcd store behind it. They require protocols beyond acknowledgement counting. Existing
 `RemoteLinks` TCP stores carry individual links operations; they do not create a
 transaction boundary across connections. Do not infer any of those guarantees
 from a replicated in-memory test.

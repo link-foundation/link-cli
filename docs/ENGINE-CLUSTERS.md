@@ -169,6 +169,48 @@ etcd's own supported membership and backup/recovery tools, keeping engine keys
 intact. Never expire/delete keys or roll back the coordinator while applications
 are using its generations.
 
+## Distributed transactions compared
+
+`ClusterEngine` is the optional distributed transaction: one transaction
+reads and writes several shards. With `PartitionedJournalStore` those shards
+live in independent data stores and consensus groups. Nothing changes for a
+program that does not construct it.
+
+| Property | How a cluster transaction provides it | Rust test in `engine_cluster_tests.rs` (C# `EngineClusterTests` and JS `cluster.test.mjs` cover the same cases) |
+| --- | --- | --- |
+| Atomicity | One compare-and-exchange on the catalog publishes every changed shard, or none of them | `cross_shard_commit_is_atomic_and_checks_read_only_shards` |
+| Consistency | Every shard's engine checks its constraints before anything is sent | `invalid_policies_and_coordinates_are_rejected_and_constraints_publish_no_shards` |
+| Isolation | Every selected shard's generation is compared, including shards only read, which is conservative serializability | the same atomicity test |
+| Durability | The store declares durable persistence, checked with `requireDurableFlush` | `durable_backend_and_boundary_names_are_accepted_but_bad_snapshots_fail_closed` |
+| Unknown outcome | A lost reply ends the transaction; a new one reads what was published | `lost_reply_ends_transaction_and_reopen_discovers_all_committed_shards` |
+
+The [integration runner](../experiments/issue-138/etcd-cluster.mjs) repeats
+these against real etcd groups, killing the catalog leader.
+
+The commit has one decision point, the catalog write. This is the rule
+behind Percolator's primary lock: a transaction is committed exactly when one
+record is written, and every other record follows it. Classic two-phase
+commit has no such single record. Each participant is first prepared and then
+holds its locks until a coordinator tells it the outcome.
+
+| System | Protocol, as documented | What a failure leaves behind | Here |
+| --- | --- | --- | --- |
+| PostgreSQL [`PREPARE TRANSACTION`](https://www.postgresql.org/docs/current/sql-prepare-transaction.html) | Two-phase commit driven by "an external transaction manager" | A prepared transaction "continues to hold whatever locks it held", and leaving one for a long time interferes with `VACUUM` | No prepared state on any shard. Uncommitted work is private and is dropped with the transaction. |
+| MySQL [XA](https://dev.mysql.com/doc/refman/8.4/en/xa.html) | A Transaction Manager prepares every Resource Manager, then commits or rolls them all back | Prepared branches wait for the manager's decision | The catalog store is the only manager. Its compare-and-exchange is the decision. |
+| TiKV [Percolator](https://tikv.org/deep-dive/distributed-transaction/percolator/) | Prewrite locks every row, then commit removes the primary lock; a timestamp oracle orders transactions | Secondary locks that readers resolve by checking the primary | One catalog generation per shard instead of per-row locks and timestamps. Readers never resolve locks. |
+
+The [strategy comparison](ENGINE-STRATEGIES.md#costs-and-comparison) also
+compares this with etcd `Txn` and Cassandra Accord.
+
+Two-phase commit across independent catalogs, or across separately opened
+engines, is not offered. Each catalog would need a prepared state that holds
+its shards until a coordinator with its own durable log decides. A crashed
+coordinator then leaves shards in doubt, which is the failure PostgreSQL warns
+about above. To make shards commit together, put them under one catalog.
+Their data can still sit in separate stores. The cost is that the catalog
+serializes every transaction's metadata, as described under
+[independent data stores](#independent-data-stores).
+
 ## Reproduce verification
 
 For explicit removal of retired immutable journal objects, select the separately
