@@ -200,6 +200,68 @@ fn synchronous_replication_reports_partition_and_does_not_diverge() {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_primary_behind_its_replica_is_refused_until_repaired() {
+    let primary = FaultLog::default();
+    let replica = FaultLog::default();
+    let open = |primary: &FaultLog, replica: &FaultLog| {
+        let log = ReplicatedLog::new(
+            primary.clone(),
+            vec![replica.clone()],
+            Synchronization::Synchronous {
+                acknowledgements: 2,
+            },
+        )
+        .unwrap();
+        Engine::<u64, _>::open(log, EngineOptions::default())
+    };
+    let db = open(&primary, &replica).unwrap();
+    for _ in 0..2 {
+        let mut tx = db.begin().unwrap();
+        tx.create_link(0, 0).unwrap();
+        tx.commit().unwrap();
+    }
+    drop(db);
+    // The primary loses its last acknowledged commit; the replica still has it.
+    primary.records.lock().unwrap().pop();
+    let refused = open(&primary, &replica).err().unwrap().to_string();
+    assert!(
+        refused.contains("replica 0 holds 1 records the primary lacks"),
+        "{refused}"
+    );
+    assert_eq!(primary.records.lock().unwrap().len(), 1);
+    // An unreadable or divergent replica proves nothing about the primary.
+    replica
+        .fail_read
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    let mut log = ReplicatedLog::new(
+        primary.clone(),
+        vec![replica.clone()],
+        Synchronization::Asynchronous,
+    )
+    .unwrap();
+    assert_eq!(log.read_log_entries().unwrap().len(), 1);
+    replica
+        .fail_read
+        .store(false, std::sync::atomic::Ordering::SeqCst);
+    replica.records.lock().unwrap()[0] = "diverged".into();
+    assert_eq!(log.read_log_entries().unwrap().len(), 1);
+    // Repaired from the replica, the primary opens with every commit.
+    let copy = replica.records.lock().unwrap()[1].clone();
+    primary.records.lock().unwrap().push(copy);
+    replica.records.lock().unwrap().clear();
+    assert_eq!(
+        open(&primary, &replica)
+            .unwrap()
+            .snapshot()
+            .unwrap()
+            .links()
+            .len(),
+        2
+    );
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn replication_capability_depends_on_every_required_durable_copy() {
     for primary_durable in [false, true] {
         for replica_durable in [false, true] {

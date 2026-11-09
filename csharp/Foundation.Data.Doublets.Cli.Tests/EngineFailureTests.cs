@@ -72,6 +72,28 @@ public class EngineFailureTests
         Assert.Single(follower.Read());
     }
     [Fact]
+    public void PrimaryBehindItsReplicaIsRefusedUntilRepaired()
+    {
+        var primary = new MemoryCommitLog(); var follower = new TestLog();
+        var engine = new LinksEngine<uint>(new ReplicatedCommitLog(primary, new[] { follower }, 2));
+        for (int i = 0; i < 2; i++) { using var tx = engine.Begin(); tx.CreateLink(0, 0); tx.Commit(); }
+        // The primary loses its last acknowledged commit; the replica still has it.
+        var survivor = new MemoryCommitLog(); survivor.Append(primary.Read()[0]);
+        var refused = Assert.ThrowsAny<Exception>(() => new LinksEngine<uint>(new ReplicatedCommitLog(survivor, new[] { follower }, 2)));
+        Assert.Contains("Replica 0 holds 1 records the primary lacks", refused.Message);
+        Assert.Single(survivor.Read());
+        // An unreadable or divergent replica proves nothing about the primary.
+        var traced = new List<string>();
+        var unreadable = new TestLog { FailRead = true };
+        Assert.Single(new ReplicatedCommitLog(survivor, new[] { unreadable }) { Trace = traced.Add }.Read());
+        Assert.Equal(new[] { "read failure" }, traced);
+        var divergent = new TestLog(); divergent.Append("divergence"); divergent.Append(follower.Read()[1]);
+        Assert.Single(new ReplicatedCommitLog(survivor, new[] { divergent }).Read());
+        // Repaired from the replica, the primary opens with every commit.
+        survivor.Append(follower.Read()[1]);
+        Assert.Equal(2, new LinksEngine<uint>(new ReplicatedCommitLog(survivor, new[] { follower }, 2)).Snapshot().Rows.Count);
+    }
+    [Fact]
     public void InvalidStrategiesAndDurabilityClaimsFailEarly()
     {
         var log = new MemoryCommitLog();
@@ -140,9 +162,9 @@ public class EngineFailureTests
     private sealed class TestLog : ICommitLog
     {
         private readonly MemoryCommitLog _inner = new();
-        public bool FailAppend, FailFlush, Durable;
+        public bool FailAppend, FailFlush, FailRead, Durable;
         public bool SupportsDurableFlush => Durable;
-        public IReadOnlyList<string> Read() => _inner.Read();
+        public IReadOnlyList<string> Read() => FailRead ? throw new IOException("read failure") : _inner.Read();
         public void Append(string record) { if (FailAppend) throw new IOException("append failure"); _inner.Append(record); }
         public void Flush() { if (FailFlush) throw new IOException("partition"); }
     }

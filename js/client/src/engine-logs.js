@@ -4,12 +4,13 @@ const complete = (value) => {
   if (value !== undefined)
     throw new TypeError('log operations must complete synchronously and return undefined');
 };
-const entries = (log) => {
-  const records = JSON.parse(log.read());
+const parse = (text) => {
+  const records = JSON.parse(text);
   if (!Array.isArray(records) || records.some((record) => typeof record !== 'string'))
     throw new TypeError('log read must return a JSON array of strings');
   return records;
 };
+const entries = (log) => parse(log.read());
 
 export class MemoryCommitLog {
   #records;
@@ -57,8 +58,27 @@ export class ReplicatedCommitLog {
         this.#replicas.every((log) => log.supportsDurableFlush === true))
     );
   }
+  // Replicas only receive records the primary has flushed, so a replica that
+  // holds the primary's whole log and more means the primary lost acknowledged
+  // commits (a truncated file, an old backup); writing on top would fork history
+  // and drop them for good. Unreadable or divergent replicas stay ignored.
   read() {
-    return this.#primary.read();
+    const text = this.#primary.read();
+    const records = parse(text);
+    for (const [index, replica] of this.#replicas.entries()) {
+      let copy;
+      try {
+        copy = entries(replica);
+      } catch (error) {
+        this.#report(error);
+        continue;
+      }
+      if (copy.length > records.length && records.every((record, i) => record === copy[i]))
+        throw new Error(
+          `replica ${index} holds ${copy.length - records.length} records the primary lacks; repair the primary from it before writing`,
+        );
+    }
+    return text;
   }
   append(record) {
     complete(this.#primary.append(record));
@@ -84,13 +104,16 @@ export class ReplicatedCommitLog {
         complete(replica.flush());
         count++;
       } catch (error) {
-        try {
-          this.#trace?.(String(error));
-        } catch {
-          /* Diagnostics cannot change the storage outcome. */
-        }
+        this.#report(error);
       }
     }
     return count;
+  }
+  #report(error) {
+    try {
+      this.#trace?.(String(error));
+    } catch {
+      /* Diagnostics cannot change the storage outcome. */
+    }
   }
 }

@@ -162,3 +162,29 @@ test('synchronous replication shares one primary flush and explicit catch-up sti
   assert.equal(follower.flushes, 2);
   assert.equal(follower.read(), '["first","second"]');
 });
+
+test('a primary behind its replica is refused until repaired', () => {
+  const trace = [];
+  const primary = new MemoryCommitLog(['a']);
+  const follower = new FaultLog(['a', 'b']);
+  const log = new ReplicatedCommitLog(primary, [follower], {
+    acknowledgements: 2,
+    trace: (message) => trace.push(message),
+  });
+  assert.throws(() => log.read(), /replica 0 holds 1 records the primary lacks/);
+  assert.equal(primary.read(), '["a"]');
+  // An unreadable or divergent replica proves nothing about the primary.
+  follower.failRead = true;
+  assert.equal(log.read(), '["a"]');
+  assert.match(trace[0], /read partition/);
+  follower.failRead = false;
+  const divergent = new MemoryCommitLog(['x', 'b']);
+  assert.equal(new ReplicatedCommitLog(primary, [divergent]).read(), '["a"]');
+  assert.throws(
+    () => new ReplicatedCommitLog({ read: () => '{}' }, [follower]).read(),
+    /JSON array of strings/,
+  );
+  // Repaired from the replica, the primary reads with every commit.
+  primary.append('b');
+  assert.equal(log.read(), '["a","b"]');
+});

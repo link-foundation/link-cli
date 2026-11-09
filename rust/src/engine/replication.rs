@@ -96,8 +96,24 @@ impl<P: TransitionLogStore, R: TransitionLogStore> TransitionLogStore for Replic
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
         self.primary.append_log_entry(entry)
     }
+    /// Reads the primary, refusing it when a replica holds its whole log and
+    /// more. Replicas only receive records the primary has flushed, so that
+    /// shape means the primary lost acknowledged commits (a truncated file, an
+    /// old backup); writing on top would fork history and drop them for good.
+    /// Unreadable or divergent replicas stay ignored, as during catch-up.
     fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
-        self.primary.read_log_entries()
+        let entries = self.primary.read_log_entries()?;
+        for (index, replica) in self.replicas.iter_mut().enumerate() {
+            if let Ok(copy) = replica.read_log_entries() {
+                if copy.len() > entries.len() && copy.starts_with(&entries) {
+                    return Err(error(&format!(
+                        "replica {index} holds {} records the primary lacks; repair the primary from it before writing",
+                        copy.len() - entries.len()
+                    )));
+                }
+            }
+        }
+        Ok(entries)
     }
     fn flush_log(&mut self) -> Result<(), LinkError> {
         self.primary.flush_log()?;

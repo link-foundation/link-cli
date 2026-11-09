@@ -131,7 +131,25 @@ public sealed class ReplicatedCommitLog : ICommitLog
     }
     public bool SupportsDurableFlush => _primary.SupportsDurableFlush &&
         (_acknowledgements is null or 1 || _replicas.All(log => log.SupportsDurableFlush));
-    public IReadOnlyList<string> Read() => _primary.Read();
+    /// <summary>Reads the primary, refusing it when a replica holds its whole log and more.
+    /// Replicas only receive records the primary has flushed, so that shape means the primary
+    /// lost acknowledged commits (a truncated file, an old backup); writing on top would fork
+    /// history and drop them for good. Unreadable or divergent replicas stay ignored.</summary>
+    public IReadOnlyList<string> Read()
+    {
+        var records = _primary.Read();
+        for (int i = 0; i < _replicas.Length; i++)
+        {
+            IReadOnlyList<string> copy;
+            try { copy = _replicas[i].Read(); }
+            catch (Exception error) when (error is IOException or InvalidDataException)
+            { EngineDiagnostics.Trace(Trace, error.Message); continue; }
+            if (copy.Count > records.Count && copy.Take(records.Count).SequenceEqual(records))
+                throw new InvalidDataException(
+                    $"Replica {i} holds {copy.Count - records.Count} records the primary lacks; repair the primary from it before writing.");
+        }
+        return records;
+    }
     public void Append(string record) => _primary.Append(record);
     public void Flush()
     {
