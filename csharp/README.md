@@ -354,6 +354,7 @@ and costs](../docs/ENGINE-PESSIMISTIC.md).
 Any store can be kept as a [cache with deadlines and a size limit](../docs/ENGINE-CACHE.md).
 Any session can undo part of its work with [savepoints](../docs/ENGINE-SAVEPOINTS.md).
 A running engine can be copied to an empty log with [online backup](../docs/ENGINE-BACKUP.md).
+A damaged journal can be [checked and repaired](../docs/ENGINE-RECOVERY.md) from its valid prefix or a replica.
 
 `TransactionsDecorator` borrows its data and journal stores. Finish foreground
 operations, dispose the decorator, then dispose those stores. `Shutdown()` and

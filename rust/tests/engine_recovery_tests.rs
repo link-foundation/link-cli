@@ -362,4 +362,45 @@ mod file {
         assert!(repair_journal_file::<u64>(&path, &[&other], &EngineOptions::default()).is_err());
         assert_eq!(std::fs::read(&path).unwrap(), before);
     }
+
+    /// A replica whose extra records are damaged still holds more lines than
+    /// the primary, so a writer keeps refusing: the primary's repair has
+    /// nothing valid to add. Repairing the replica first drops its damaged
+    /// tail, and the writer starts.
+    #[test]
+    fn a_replica_with_a_damaged_extra_record_is_repaired_before_the_primary() {
+        use link_cli::engine::replication::{ReplicatedLog, Synchronization};
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("primary.journal");
+        let replica = directory.path().join("replica.journal");
+        let entries = journal(3, RevisionEncoding::Changes);
+        write(&path, &entries[..2]);
+        let mut damaged = entries.clone();
+        damaged[2] = damaged[2].replacen('|', "#", 1);
+        write(&replica, &damaged);
+        let start = || {
+            let log = ReplicatedLog::new(
+                FileTransitionLog::open_exclusive(&path).unwrap(),
+                vec![FileTransitionLog::open_exclusive(&replica).unwrap()],
+                Synchronization::Synchronous {
+                    acknowledgements: 2,
+                },
+            )
+            .unwrap();
+            Engine::<u64, _>::open(log, EngineOptions::default()).map(|db| db.snapshot().unwrap())
+        };
+        let refused = start().err().unwrap().to_string();
+        assert!(
+            refused.contains("holds 1 records the primary lacks"),
+            "{refused}"
+        );
+        let primary =
+            repair_journal_file::<u64>(&path, &[&replica], &EngineOptions::default()).unwrap();
+        assert!(!primary.changed);
+        assert!(start().is_err());
+        let copy =
+            repair_journal_file::<u64>(&replica, &[&path], &EngineOptions::default()).unwrap();
+        assert_eq!((copy.changed, copy.recovery.revision), (true, 2));
+        assert_eq!(start().unwrap().revision, 2);
+    }
 }

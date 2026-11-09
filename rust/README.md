@@ -343,6 +343,7 @@ remain independent options. See [ownership, retry rules and costs](../docs/ENGIN
 Any store can be kept as a [cache with deadlines and a size limit](../docs/ENGINE-CACHE.md).
 Any session can undo part of its work with [savepoints](../docs/ENGINE-SAVEPOINTS.md).
 A running engine can be copied to an empty log with [online backup](../docs/ENGINE-BACKUP.md).
+A damaged journal can be [checked and repaired](../docs/ENGINE-RECOVERY.md) from its valid prefix or a replica.
 
 Legacy version sidecars preserve delimiter text, Unicode, NUL and newline in
 branch, parent and tag names. New branch markers use a versioned encoding and

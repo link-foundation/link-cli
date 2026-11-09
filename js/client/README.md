@@ -385,6 +385,7 @@ immediately. See [ownership, retries and costs](../../docs/ENGINE-PESSIMISTIC.md
 
 Any session can undo part of its work with [savepoints](../../docs/ENGINE-SAVEPOINTS.md).
 A running engine can be copied to an empty log with [online backup](../../docs/ENGINE-BACKUP.md).
+A damaged journal can be [checked and repaired](../../docs/ENGINE-RECOVERY.md) from its valid prefix or a replica.
 
 `await engine.commitGroup([first, second])` drains and consumes independent
 sessions, preserving each accepted write's revision while sharing one adapter

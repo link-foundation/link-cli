@@ -17,6 +17,7 @@ transaction algorithm.
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
 | Undo part of a transaction | Call `savepoint` on any session | Restore staged rows and keep the session open; costs O(staged writes) only when taken. See [semantics and limits](ENGINE-SAVEPOINTS.md). |
 | Copy a running engine | Call `backup_to` / `Backup` / `backup` with an empty log | Consistent cut of the current or a retained revision, copied outside the commit mutex and verified by read-back; pays nothing unless called. See [guarantees and limits](ENGINE-BACKUP.md). |
+| Repair a damaged journal | Call `repair_journal_file` / `EngineJournal.RepairFile` / `repairJournalFile` with any replicas | Keeps the longest valid prefix among the copies and the damaged bytes beside it; refuses copies that disagree; pays nothing unless called. See [what each repair can get back](ENGINE-RECOVERY.md). |
 | Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately, or wait a selected bounded time with deadlock refusal. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed logical revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Physical page WAL | Staged engine + optional SQLite log, require durable flush | SQLite supplies WAL/FULL and checkpoints; one engine owns its connection and cache. [Providers, maintenance, costs and examples](ENGINE-SQLITE.md). |
@@ -127,6 +128,9 @@ performs a file write immediately. These costs belong to the selected file log.
 Complete corrupt records are rejected. Recovery checks checksum, UTF-8 names,
 address bounds, unique addresses, contiguous revisions, nondecreasing allocator
 and selected constraints.
+A journal that opening refuses can be [checked and repaired](ENGINE-RECOVERY.md)
+from its valid prefix or an intact replica, and CI kills and damages the
+engine in Docker to check that path.
 Checksums detect accidental corruption, not malicious tampering. Establish the
 database directory and protect its metadata before depending on power-loss
 recovery. Filesystem/device failure outside the adapter's flush contract is not
