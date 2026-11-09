@@ -1,5 +1,40 @@
 # Verification record
 
+## ACID crash, repair and interleaving tests (2026-11-09)
+
+| Requirement from the 2026-11-09 feedback | Evidence |
+| --- | --- |
+| Crash the database in Docker, including Docker-in-Docker | `.github/workflows/crash.yml` runs `.github/scripts/docker-crash.mjs` for the Rust, C# and JS writers, and the Rust writer again under `docker:dind`. SIGKILL at seeded moments; every acknowledged revision must be on both copies. Commit `44f7a934`. |
+| Simulate file damage and recover | Bit flip, zeroed sector, truncated tail and no-replica phases are refused, then repaired with the damaged bytes kept; a 64 KiB tmpfs checks a full disk. `check`/`repair` APIs: Rust `06310372`, C# `efe90d3b`, JS/WASM `7a0c0b26`; docs `c4eb1b24`. A primary behind its replica is refused (`43b96d24`). |
+| Optional distributed transactions | `ClusterEngine` over atomic, etcd or partitioned journal stores; compared with two-phase commit, XA and Percolator in [ENGINE-CLUSTERS.md](../../ENGINE-CLUSTERS.md#distributed-transactions-compared) (`1095ae9c`). |
+| Popular ways of concurrent writes | Exclusive, optimistic and pessimistic concurrency, bounded lock waits with deadlock refusal, and `lock_for_update` in Rust, C# and JS (`823d3758`). |
+| Check other databases' strategies and testing | [ACID-TESTING-RESEARCH.md](ACID-TESTING-RESEARCH.md), with quotes from SQLite, PostgreSQL, InnoDB, RocksDB, MongoDB, Redis, etcd, FoundationDB and Elle. |
+| Isolation actually holds under concurrency | `rust/tests/engine_interleaving_tests.rs` (`21222fbd`), `EngineInterleavingTests.cs` (`585fbd48`) and `js/client/test/conformance/interleaving.mjs` (`1bcd554a`, Node, Bun and Deno). |
+
+The interleaving tests run six workloads in every interleaving of their steps,
+under three concurrency modes and four isolation choices: 2,080 interleavings
+per language. The committed transactions' reads and the final state must equal
+a serial order wherever the level promises it, and the anomaly the level allows
+must show up in some interleaving. Rust and WASM print the same counts
+(interleavings / committed both / not serializable), for optimistic and
+pessimistic sessions:
+
+| Workload | Read committed | Snapshot | Serializable |
+| --- | --- | --- | --- |
+| Lost update | 20 / 2 / 0 | 20 / 2 / 0 | 20 / 2 / 0 |
+| Read skew | 20 / 20 / 3 | 20 / 20 / 0 | 20 / 11 / 0 |
+| Write skew | 70 / 70 / 64 | 70 / 70 / 68 | 70 / 2 / 0 |
+| Write skew through a scan | 20 / 20 / 18 | 20 / 20 / 18 | 20 / 2 / 0 |
+| Disjoint rows | 20 / 20 / 0 | 20 / 20 / 0 | revision 20 / 2 / 0, read set 20 / 20 / 0 |
+| Write skew with locked reads (pessimistic) | 70 / 2 / 0 | 70 / 2 / 0 | 70 / 2 / 0 |
+
+Exclusive sessions commit both transactions only one after the other (2
+interleavings) and show no anomaly. Reproduce with
+`cargo test --manifest-path rust/Cargo.toml --test engine_interleaving_tests -- --nocapture`.
+
+Not covered: power loss that drops or reorders unsynced writes, long random
+histories, network partitions and deterministic simulation.
+
 The latest complete portable checkpoint batch passes every baseline device
 operation with before/after faults, durable old/new reopening, following writes,
 all truncated-root lengths, malformed checksummed roots, epoch boundaries and
