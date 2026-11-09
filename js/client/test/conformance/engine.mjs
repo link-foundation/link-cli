@@ -483,6 +483,22 @@ export async function engineConformance(binding) {
     { read: () => '{}', append() {}, flush() {} },
   ])
     assert.throws(() => binding.StagedEngine.withLog('{}', log));
+  // The adapter's reason reaches the caller: a string, or an Error's message.
+  for (const [thrown, reason] of [
+    ['read failure', /read failure/],
+    [new Error('replica 0 holds 1 records the primary lacks'), /replica 0 holds 1 records/],
+    [new Error(''), /JavaScript log adapter failed/],
+    [{ code: 5 }, /JavaScript log adapter failed/],
+  ]) {
+    const log = {
+      read: () => {
+        throw thrown;
+      },
+      append() {},
+      flush() {},
+    };
+    assert.throws(() => binding.StagedEngine.withLog('{}', log), reason);
+  }
 
   const parent = new WasmEngine(binding);
   let seed = parent.begin();

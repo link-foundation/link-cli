@@ -37,10 +37,19 @@ pub enum BindingLog {
     Memory(MemoryLog),
     External(JsCommitLog),
 }
+// Keep the adapter's own reason: a thrown Error carries it in `message`, and
+// replacing it with a generic text hid, for one, which replica a refused
+// primary must be repaired from.
 fn error(value: JsValue) -> LinkError {
     LinkError::Transaction(
         value
             .as_string()
+            .or_else(|| {
+                value
+                    .dyn_ref::<js_sys::Error>()
+                    .map(|error| String::from(error.message()))
+                    .filter(|message| !message.is_empty())
+            })
             .unwrap_or_else(|| "JavaScript log adapter failed".into()),
     )
 }
