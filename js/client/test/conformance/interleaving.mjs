@@ -61,7 +61,7 @@ const WORKLOADS = [
     ],
   },
 ];
-const [, , WRITE_SKEW, , LOCKED_WRITE_SKEW, DISJOINT] = WORKLOADS;
+const [LOST_UPDATE, , WRITE_SKEW, , LOCKED_WRITE_SKEW, DISJOINT] = WORKLOADS;
 
 const sum = (values) => values.reduce((total, value) => total + value, 0n);
 
@@ -153,10 +153,12 @@ export async function runSchedule(binding, options, workload, schedule) {
   }
 }
 
+/** Prevented by every configuration. */
+const ALWAYS_PREVENTED = new Set([LOST_UPDATE, LOCKED_WRITE_SKEW, DISJOINT]);
+
 function prevents(options, workload) {
   if (options.concurrency === 'exclusive' || options.isolation === 'serializable') return true;
-  if (['lost update', 'write skew with locked reads', 'disjoint read and write'].includes(workload.name))
-    return true;
+  if (ALWAYS_PREVENTED.has(workload)) return true;
   return workload.name === 'read skew' && options.isolation === 'snapshot';
 }
 
