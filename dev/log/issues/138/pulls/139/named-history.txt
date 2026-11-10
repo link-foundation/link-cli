@@ -1,0 +1,71 @@
+Ordinary transaction names and complete history (2026-10-25)
+
+Before production changes, six minimum Rust contracts and six C# contracts fail
+for rename/remove/unique-name movement, named deletion/cascade undo and name-only
+history. All six also fail under actual WASM. A separate C# zero-owner/empty-name
+test reproduces a presence/sentinel defect. A later callback audit reproduces
+two actual-WASM failures and four C# failures with one passing create control.
+Preserved files: named-history-{rust,csharp,wasm}-before.txt,
+named-history-edge-csharp-before.txt and named-history-callback-{wasm,csharp}-before.txt.
+
+Complete JournalRecord payloads retain optional names without changing the
+original row-transition fields, Rust Copy contract or v1 row codec. Canonical
+v2 records retain UTF-16 name changes and independent name-only writes. Shared
+vectors cover delimiters, Unicode, NUL/newline, absent/empty values, address zero,
+wider addresses, unpaired UTF-16 policy and eighteen rejected inputs. Old readers
+reject v2; old row-only journals remain readable but contain no recoverable names.
+Recovery validates before changing data/live indexes. Retention archives and
+durable version-movement intents carry the complete payload. Explicit name writes
+flush undo before changing the name sidecar. Name-only writes publish versions.
+
+Rows capture actual resulting names. Failed post-effect capture preserves all
+observed undo and retains explicit ownership; automatic cleanup rolls back.
+C# drains pending rows before a callback's nested name write while preserving
+ordinary callback coalescing and delivery. The intermediate eager-callback draft
+broke fourteen cascade delivery tests and a retention count; it was corrected
+before this final run. Custom name captures must return detached logical maps;
+replay requires compatible adapter name policies. See docs/TRANSACTION-NAMES.md.
+
+Twenty-four finite independent-image fault schedules per native implementation
+cover before/after append, log flush, name effect, data checkpoint and commit
+decision barriers. Images are captured at failure before cleanup. Reopening
+twice verifies rows/names and following edits. Invalid/conflicting journal
+tests preserve stores across repeated recovery; equivalent portable Rust
+contracts run on actual WASM. Existing replay-owner tests cover complete replay
+admission. Native movement faults and bounded real process exits carry names;
+additional name-only exits cover automatic/explicit decisions, undo and cleanup.
+Sized/chunked retention verifies native reopening and independent archive replay.
+
+Full sequential validation: bash experiments/issue-138/validate-named-history.sh
+Native Rust: 801 pass, zero failures, eleven ignored child entry points exercised
+by bounded parents, plus the successful custom stdout harness.
+C# Debug and Release: 1,788 pass each, zero failures or skips.
+Actual WASM: 460 pass, zero failures or ignored tests.
+JS: 111 pass, all seventeen production modules at 100% lines/branches/functions;
+strict TypeScript passes. Repository/workflow/release helpers: 217 pass.
+All three WASM wrapper files retain 100% lines/branches/functions.
+Strict native/WASM Clippy, Rust/C# formatting, release metadata, file sizes and
+whitespace checks pass. Generated actual-WASM conformance passes Node, Bun and
+Deno. Persistent snapshot/delta examples reopen the exact journal across Rust,
+C# and JS; ordinary native name/history examples verify rollback and checkout.
+
+Official LLVM totals (no coordinate-union substitution):
+Native lines 10,667/11,506 (92.71%); branches 1,884/2,274 (82.85%); functions 1,389/1,529 (90.84%).
+Complete linked WASM lines 7,867/11,060 (71.13%); branches 1,445/1,985 (72.80%); functions 1,047/1,509 (69.38%).
+Coverlet integer totals, rounded percentages:
+Debug lines 6,803/7,316 (92.99%); branches 3,327/3,756 (88.58%).
+Release lines 5,219/5,537 (94.26%); branches 3,299/3,737 (88.28%).
+Project-wide 100% coverage remains unfinished.
+
+Builds run sequentially with Cargo jobs=1, reduced debug information and C# GC
+cap 0x28000000 under the 2.92 GiB container limit. Memory reclaim occurred;
+OOM and OOM-kill counters stayed zero. Raw logs/reports remain under experiments/.
+All nine preceding-head workflows pass on 63e4c44; this new code requires fresh
+exact-head CI. Broader issue 138 criteria remain open and PR 139 stays a draft.
+
+Existing row effects can persist before observer journaling; this batch does
+not close that window or establish physical power-loss behavior. ROW-WAL-PLAN.md
+tracks the next reproductions, including custom unobserved name side effects.
+Names currently require full sidecar scans/maps; finer composition, efficient
+state/journal structures, additional competitor algorithms and cluster scaling
+criteria remain unfinished.

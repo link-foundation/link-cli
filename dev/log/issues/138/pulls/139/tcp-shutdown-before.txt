@@ -1,0 +1,30 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:58.93]     Foundation.Data.Doublets.Cli.Tests.Protocol.LinksServerTests.ShuttingDownRightAfterAConnectionArrivesIsClean [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.Protocol.LinksServerTests.ShuttingDownRightAfterAConnectionArrivesIsClean [1 s]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   System.NullReferenceException: Object reference not set to an instance of an object.
+   at System.Net.Sockets.TcpListener.AcceptTcpClient()
+   at Foundation.Data.Doublets.Cli.Protocol.LinksServer.Serve(INamedTypesLinks`1 links) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksServer.cs:line 107
+   at Foundation.Data.Doublets.Cli.Tests.Protocol.RunningServer.<.ctor>b__4_0() in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/RunningServer.cs:line 21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.Protocol.RunningServer.Stop() in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/RunningServer.cs:line 42
+   at Foundation.Data.Doublets.Cli.Tests.Protocol.RunningServer.Dispose() in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/RunningServer.cs:line 47
+   at Foundation.Data.Doublets.Cli.Tests.Protocol.LinksServerTests.ShuttingDownRightAfterAConnectionArrivesIsClean() in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/LinksServerTests.cs:line 179
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:  2026, Skipped:     0, Total:  2027, Duration: 2 m 5 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Attachments:
+  /tmp/gh-issue-solver-1792987800525/experiments/issue-138/inline-names-Release-results/98ba33c4-78bf-4187-a06c-f3192efc68f9/coverage.cobertura.xml

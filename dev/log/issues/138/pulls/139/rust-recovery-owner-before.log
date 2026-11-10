@@ -1,0 +1,24 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 0.54s
+     Running tests/transactions_portable_clock_tests.rs (rust/target/debug/deps/transactions_portable_clock_tests-1076676415b37434)
+
+running 2 tests
+
+thread 'version_recovery_preserves_an_open_owner' (783548) panicked at tests/transactions_portable_clock_tests.rs:104:5:
+recovery cannot replace owned version metadata
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test version_recovery_preserves_an_open_owner ... FAILED
+
+thread 'transaction_recovery_preserves_an_open_owner' (783547) panicked at tests/transactions_portable_clock_tests.rs:91:5:
+recovery cannot undo an owned transaction
+test transaction_recovery_preserves_an_open_owner ... FAILED
+
+failures:
+
+failures:
+    transaction_recovery_preserves_an_open_owner
+    version_recovery_preserves_an_open_owner
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--test transactions_portable_clock_tests`

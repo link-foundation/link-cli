@@ -1,0 +1,16 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact head: 3dfbc7420033bf8b5ac9ab643add02d142c8d474
+Run created 2026-10-27T05:02:02Z:
+https://github.com/link-foundation/link-cli/actions/runs/40453004922
+Rust workflow succeeds, including every platform, coverage, strict checks,
+fresh default-branch merge and final package build.
+Windows job 122020409563 succeeds, 05:04:02Z through 05:15:31Z:
+https://github.com/link-foundation/link-cli/actions/runs/40453004922/job/122020409563
+All original version/name persistence cases remain. The existing finite
+movement supervisor passes with the version-process parents. This resolves
+the reproduced aggregate timeout; underlying filesystem latency is not proven.
+
+All eight other workflows except C# pass on this same head. C# Windows now
+preserves enough diagnostics to reproduce its own aggregate 15-second timeout,
+recorded separately in csharp-phase-progress-before.txt. No complete-issue or
+new uncommitted native-source CI claim follows from the earlier passing Rust run.

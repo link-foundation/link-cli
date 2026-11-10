@@ -1,0 +1,47 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.99s
+     Running tests/transaction_row_wal_tests.rs (rust/target/debug/deps/transaction_row_wal_tests-1dfd42b9510fb109)
+
+running 1 test
+[Transactions] Prepared row undo image tx=000001a173733c4a0000000000000000.
+[Transactions] Recorded Create seq=1 tx=000001a173733c4a0000000000000000: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a173733c4a0000000000000000: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a173733c4a0000000000000000 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a173733c4d0000000000000001.
+[Transactions] Recorded Update seq=3 tx=000001a173733c4d0000000000000001: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173733c4d0000000000000001 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173733c510000000000000002.
+[Transactions] Recorded Create seq=4 tx=000001a173733c510000000000000002: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a173733c510000000000000002: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a173733c510000000000000002 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a173733c540000000000000003.
+[Transactions] Recorded Update seq=6 tx=000001a173733c540000000000000003: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173733c540000000000000003 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173733c560000000000000004.
+[Transactions] Recorded Update seq=7 tx=000001a173733c560000000000000004: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173733c560000000000000004 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173733c590000000000000005.
+[Transactions] Recorded Update seq=8 tx=000001a173733c590000000000000005: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173733c590000000000000005 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173733c5e0000000000000006.
+[Transactions] Recorded Update seq=9 tx=000001a173733c5e0000000000000006: (1,11,12) -> (1,21,22).
+[Transactions] Committed tx 000001a173733c5e0000000000000006 (mode=Sync, transitions=1).
+test faults::selected_images_complete_unobserved_effects_for_history_and_committed_redo ... FAILED
+
+failures:
+
+---- faults::selected_images_complete_unobserved_effects_for_history_and_committed_redo stdout ----
+
+thread 'faults::selected_images_complete_unobserved_effects_for_history_and_committed_redo' (318350) panicked at tests/common/transaction_row_wal_faults.rs:18:9:
+assertion `left == right` failed: complete history undo/false
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 51, target: 52 }]\n{0: \"absent\", 1: \"original 雪\", 2: \"hidden\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    faults::selected_images_complete_unobserved_effects_for_history_and_committed_redo
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--test transaction_row_wal_tests`

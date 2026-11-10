@@ -1,0 +1,8 @@
+[package]
+name = "mapped-grow-failure-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+link-cli = { path = "../../../rust", default-features = false }

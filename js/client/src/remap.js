@@ -137,8 +137,9 @@ export class AddressTable {
 
   /** Every `[outer, inner]` pair, by the address above. */
   pairs() {
+    // The keys of a map differ, so no two pairs compare equal.
     const pairs = [...this.#inner];
-    return pairs.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return pairs.sort(([a], [b]) => (a < b ? -1 : 1));
   }
 }
 

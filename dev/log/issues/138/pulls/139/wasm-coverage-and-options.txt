@@ -1,0 +1,35 @@
+PR https://github.com/link-foundation/link-cli/pull/139
+2026-10-24: actual WASM coverage and options regression
+
+Before: experiments/issue-138/wasm-coverage-expanded.log:15794-15808
+running 6 tests
+test validates_every_binding_option_and_journal_before_opening ... FAIL
+test sessions_preserve_visibility_history_and_closed_state ... ok
+test javascript_logs_round_trip_and_back_independent_branches ... ok
+test javascript_log_failures_poison_uncertain_commits_without_publishing ... ok
+test independent_branches_merge_and_resume_with_a_saved_base ... ok
+test admission_and_conflict_errors_cross_the_wasm_boundary ... ok
+
+failures:
+
+---- validates_every_binding_option_and_journal_before_opening output ----
+    error output:
+        panicked at tests/engine.rs:66:9:
+        []
+
+
+After: experiments/issue-138/wasm-coverage.sh; Rust 1.98.0 / LLVM 22; 15 tests pass.
+src/engine.rs: {"branches": {"count": 2, "covered": 2, "notcovered": 0, "percent": 100.0}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "functions": {"count": 38, "covered": 38, "percent": 100.0}, "instantiations": {"count": 38, "covered": 38, "percent": 100.0}, "lines": {"count": 165, "covered": 165, "percent": 100.0}, "regions": {"count": 261, "covered": 261, "notcovered": 0, "percent": 100.0}}
+src/engine_log.rs: {"branches": {"count": 2, "covered": 2, "notcovered": 0, "percent": 100.0}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "functions": {"count": 9, "covered": 9, "percent": 100.0}, "instantiations": {"count": 9, "covered": 9, "percent": 100.0}, "lines": {"count": 37, "covered": 37, "percent": 100.0}, "regions": {"count": 65, "covered": 65, "notcovered": 0, "percent": 100.0}}
+src/lib.rs: {"branches": {"count": 12, "covered": 12, "notcovered": 0, "percent": 100.0}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "functions": {"count": 21, "covered": 21, "percent": 100.0}, "instantiations": {"count": 21, "covered": 21, "percent": 100.0}, "lines": {"count": 125, "covered": 125, "percent": 100.0}, "regions": {"count": 173, "covered": 173, "notcovered": 0, "percent": 100.0}}
+
+Entire linked WASM report (includes unexecuted core paths):
+{"branches": {"count": 1225, "covered": 354, "notcovered": 871, "percent": 28.89795918367347}, "functions": {"count": 1274, "covered": 334, "percent": 26.21664050235479}, "instantiations": {"count": 1577, "covered": 341, "percent": 21.623335447051364}, "lines": {"count": 8853, "covered": 2626, "percent": 29.662261380323052}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 13953, "covered": 3785, "notcovered": 10168, "percent": 27.12678277073031}}
+
+Native Rust full suite: 419 passed; 2 subprocess helpers ignored.
+{"branches": {"count": 1708, "covered": 1299, "notcovered": 409, "percent": 76.05386416861826}, "functions": {"count": 1326, "covered": 1115, "percent": 84.08748114630468}, "instantiations": {"count": 5775, "covered": 2369, "percent": 41.02164502164502}, "lines": {"count": 9509, "covered": 8299, "percent": 87.2752129561468}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 15042, "covered": 12702, "notcovered": 2340, "percent": 84.44355803749501}}
+
+Release WASM conformance per Node/Bun/Deno: 8 passed, 0 failed, 4 process-only skips.
+Native and target WASM Clippy: pass with -D warnings. Workflow policy: 168 passed.
+Prior pushed SHA 483647d: all 47 checks passing; new CI must run on the next SHA.
+Memory events: oom=0, oom_kill=0.

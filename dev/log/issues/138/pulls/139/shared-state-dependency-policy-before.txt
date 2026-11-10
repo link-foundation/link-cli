@@ -1,0 +1,10 @@
+Final staged-file repository check, before moving the reusable probe to the existing Rust examples:
+
+shared-state-repository-final.log:238-241:
+test at .github/scripts/workflow-policy.test.mjs:481:1
+Dependabot watches every directory the dependency check reads
+AssertionError: cargo manifest in /experiments/issue-138/state-copy-probe is not watched by Dependabot
+
+The separate manifest is omitted from the published tree. The same finite source
+is a runnable example of the existing Rust package, with no new dependency root.
+The complete 217 repository checks and example formatting/Clippy then pass.

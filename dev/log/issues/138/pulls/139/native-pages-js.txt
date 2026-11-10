@@ -1,0 +1,50 @@
+Native doublets page journal — JS/TS production integration, 2026-10-26 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Reproduction/contracts precede provider integration:
+- native-pages-before.txt: public ordered-log contracts fail, module absent.
+- Independent Python struct/FNV/UTF-8 vectors now live in
+  docs/protocol/native-pages-v1.json and regenerate byte-for-byte.
+- native-pages-close-before.txt: fault test demonstrates premature writer-fence
+  removal after uncertain handle close. Production close now retains ownership.
+
+Run: CLINK_WASM=<generated web package> bash \
+  experiments/issue-138/validate-js-native-pages.sh
+197 JS unit tests passed, zero failed/skipped. Complete production denominator:
+20 modules, 100% measured lines/branches/functions; thresholds enforced.
+Strict TypeScript declarations and negative type contracts passed.
+221 repository tests passed, zero failed/skipped.
+Full Node 24 unit suite separately passed the same coverage thresholds.
+Default JS root, memory replicas and native line/page reopen paths load no
+SQLite module; a deliberately rejected SQLite import is the positive control.
+Actionlint, shellcheck and git diff --check passed.
+
+Finite contracts cover all new codecs/device branches: exact wire vectors,
+write/sync before/after faults, uncertain-outcome fencing, torn unacknowledged
+metadata, committed corruption, checksummed malformed structures, strict UTF-8,
+UTF-16, bounds, short/zero I/O, closed devices, cleanup faults and retained locks.
+Two actual child exits are bounded by 96 MiB heaps, 10-second parent deadlines
+and 64 KiB output limits. After observed exit, recovery explicitly removes the
+old owner and verifies following writes/reopening; no live owner is stolen.
+A measured finite cost control with 0/1/32 committed groups writes exactly one
+new 4096-byte page, one 128-byte metadata and two syncs for the same next record;
+flush performs no reads or writes of prior committed pages.
+
+Actual generated Rust WASM engine, existing conformance runner, all passed:
+Node, Bun, Deno: each 16 combinations of flat/shared roots, snapshot/changes,
+scan/indexed constraints and optional physical delta. Each configuration has two
+real file opens, exact Unicode/BOM/NUL/emoji labels, separate group revisions,
+one flush per acknowledged primary/replica, pinned predecessor, known constraint
+rejection, explicit rollback and following writes. Native page checks import no
+SQLite provider. Existing conformance behavior remains covered.
+Public example, same native database: Node 0->2, Bun 2->4, Deno 4->6 revisions;
+all prior exact names and pinned predecessors verified on every invocation.
+Normal CI now includes these runtime checks and independent vector regeneration.
+
+Rust/C# matching providers, actual cross-language wire/file interchange and
+independently selected redundant page repair remain unfinished. Native/linked
+WASM/C# whole-project coverage remains below 100%; no denominator was narrowed.
+This does not complete legacy mapped-page repair, page undo/doublewrite, LSM,
+persistent object retention, cluster balancing or multi-catalog transactions.
+The format/docs state synchronization, corruption, Windows and device limits.
+Fresh exact-head CI for this new code is required before claiming CI validation.

@@ -1,0 +1,137 @@
+Logical checkpoints through physical delta decorators; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline: a329fa7bad3d76777c1fb0d8bfb1495cc4ee217b
+Run: bash experiments/issue-138/validate-checkpoint-delta.sh <stage>
+Compilers sequential, Cargo jobs=1, reduced debug, actual WASM capped at 256 MiB.
+native: complete stage passed
+csharp: complete stage passed
+wasm: complete stage passed
+js: complete stage passed
+cluster: complete stage passed
+interop: complete stage passed
+repository: complete stage passed
+Before production changes: independent engine3 vectors fail in Rust, C# and JS codecs.
+Exact first checkpoint bytes survive; following engine1 snapshots can compress to delta1.
+Logical engine2 changes pass through and interrupt complete-image compression.
+Later checkpoints, invalid zero state, gaps and post-u64-max records reject before mutation.
+Selected state/history/encoding, immutable pins and committed allocator holes pass.
+Before/after append and flush errors fence seed/following writes until actual-prefix reopen.
+Both replication orders preserve exact logical prefixes with independently selected intervals.
+
+Native Rust: 980 passed, 0 failed, 17 ignored finite child entry points.
+Complete lines: 13093/13871 (94.39118%)
+Complete branches: 2466/2878 (85.68450%)
+Complete functions: 1669/1797 (92.87702%)
+Delta module lines: 224/224 (100%)
+Delta module branches: 72/72 (100%)
+Delta module functions: 26/26 (100%)
+
+Actual WASM: 585 passed, 0 failed, 0 ignored finite child entry points.
+Complete lines: 10564/12948 (81.58789%)
+Complete branches: 2081/2529 (82.28549%)
+Complete functions: 1342/1720 (78.02326%)
+Delta module lines: 224/224 (100%)
+Delta module branches: 72/72 (100%)
+Delta module functions: 26/26 (100%)
+Wrapper-only lines: 391/391 (100%)
+Wrapper-only branches: 20/20 (100%)
+Wrapper-only functions: 76/76 (100%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.90s
+
+C# Debug: 2187 passed, 0 failed/skipped.
+Complete lines: 8098/8392 (96.49666%)
+Complete branches: 4395/4762 (92.29315%)
+DeltaCommitLog.cs: 100% lines/branches across every reported class.
+
+C# Release: 2187 passed, 0 failed/skipped.
+Complete lines: 6213/6399 (97.09330%)
+Complete branches: 4344/4729 (91.85874%)
+DeltaCommitLog.cs: 100% lines/branches across every reported class.
+JS: {'tests': 215, 'pass': 215, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: actual-WASM conformance, native pages, 36 payload and 36 delta-composition cases pass.
+bun: actual-WASM conformance, native pages, 36 payload and 36 delta-composition cases pass.
+deno: actual-WASM conformance, native pages, 36 payload and 36 delta-composition cases pass.
+
+Finite checkpoint composition; UTF-8 JSON log bytes, not file/network framing:
+structure encoding history compression-outside-replica records primary-bytes follower-bytes
+flat snapshot None False 2 684 586
+flat snapshot None True 2 586 586
+flat snapshot 2 False 3 1016 661
+flat snapshot 2 True 3 661 661
+flat snapshot all False 8 2376 993
+flat snapshot all True 8 993 993
+flat changes None False 2 418 418
+flat changes None True 2 418 418
+flat changes 2 False 3 750 493
+flat changes 2 True 3 493 493
+flat changes all False 8 2110 825
+flat changes all True 8 825 825
+shared snapshot None False 2 684 586
+shared snapshot None True 2 586 586
+shared snapshot 2 False 3 1016 661
+shared snapshot 2 True 3 661 661
+shared snapshot all False 8 2376 993
+shared snapshot all True 8 993 993
+shared changes None False 2 418 418
+shared changes None True 2 418 418
+shared changes 2 False 3 750 493
+shared changes 2 True 3 493 493
+shared changes all False 8 2110 825
+shared changes all True 8 825 825
+sorted-runs snapshot None False 2 684 586
+sorted-runs snapshot None True 2 586 586
+sorted-runs snapshot 2 False 3 1016 661
+sorted-runs snapshot 2 True 3 661 661
+sorted-runs snapshot all False 8 2376 993
+sorted-runs snapshot all True 8 993 993
+sorted-runs changes None False 2 418 418
+sorted-runs changes None True 2 418 418
+sorted-runs changes 2 False 3 750 493
+sorted-runs changes 2 True 3 493 493
+sorted-runs changes all False 8 2110 825
+sorted-runs changes all True 8 825 825
+
+Finite UTF-8 JSON payload accounting, not disk/network framing or latency:
+structure encoding history interval records current-bytes read-bytes published-bytes
+flat snapshot None None 32 1606 24600 26204
+flat snapshot None 4 1 52 3840 3890
+flat snapshot 2 None 32 1606 24600 26204
+flat snapshot 2 4 2 103 5244 5345
+flat snapshot all None 32 1606 24600 26204
+flat snapshot all 4 33 1638 25496 27132
+flat changes None None 32 1724 26319 28041
+flat changes None 4 1 52 4015 4065
+flat changes 2 None 32 1724 26319 28041
+flat changes 2 4 2 103 5419 5520
+flat changes all None 32 1724 26319 28041
+flat changes all 4 33 1638 25671 27307
+shared snapshot None None 32 1606 24600 26204
+shared snapshot None 4 1 52 3840 3890
+shared snapshot 2 None 32 1606 24600 26204
+shared snapshot 2 4 2 103 5244 5345
+shared snapshot all None 32 1606 24600 26204
+shared snapshot all 4 33 1638 25496 27132
+shared changes None None 32 1724 26319 28041
+shared changes None 4 1 52 4015 4065
+shared changes 2 None 32 1724 26319 28041
+shared changes 2 4 2 103 5419 5520
+shared changes all None 32 1724 26319 28041
+shared changes all 4 33 1638 25671 27307
+sorted-runs snapshot None None 32 1606 24600 26204
+sorted-runs snapshot None 4 1 52 3840 3890
+sorted-runs snapshot 2 None 32 1606 24600 26204
+sorted-runs snapshot 2 4 2 103 5244 5345
+sorted-runs snapshot all None 32 1606 24600 26204
+sorted-runs snapshot all 4 33 1638 25496 27132
+sorted-runs changes None None 32 1724 26319 28041
+sorted-runs changes None 4 1 52 4015 4065
+sorted-runs changes 2 None 32 1724 26319 28041
+sorted-runs changes 2 4 2 103 5419 5520
+sorted-runs changes all None 32 1724 26319 28041
+sorted-runs changes all 4 33 1638 25671 27307
+Real etcd mode 0: native/WASM handoffs, conflicts, unknown outcomes and consensus loss pass.
+Real etcd mode 1: native/WASM handoffs, conflicts, unknown outcomes and consensus loss pass.
+Real etcd mode cache: native/WASM handoffs, conflicts, unknown outcomes and consensus loss pass.
+48 physical/policy configurations and 288 shared-file language writers pass, including mirrored repair.
+Strict lint/format, type declarations, optional-SQL guards, release/source and workflow checks pass.
+Whole-project 100% and every wider unmet issue criterion remain unfinished; fresh exact-head CI required.

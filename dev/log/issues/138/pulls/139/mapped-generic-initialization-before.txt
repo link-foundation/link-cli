@@ -1,0 +1,17 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Immutable baseline: 9bb985f602c4cad882703722c7a496e5b8b3b8de.
+Reproduce: bash experiments/issue-138/run-mapped-generic-initialization-before.sh
+Actual isolated baseline: experiments/issue-138/mapped-generic-initialization-baseline.q0x0ht/tests.log.
+Lines 68-71 and 99: all three public generic initialization tests fail, zero pass.
+Lines 75-78: growth across a page preserves the original prefix but skips requested value 91 in new padding.
+Lines 81-84: a fresh 32-value mapping returns padding instead of requested value 9.
+Lines 86-91: raw growth reports (initialized=24,prefix=8,tail=24), expected initialized=8.
+All three also fail on current pre-fix 40d850f; mapped-generic-initialization-current-before.log preserves that result.
+Root: original initialized_bytes is captured before upstream's minimum-page padding, but the destructor-bearing path forwards upstream's physical-byte initialization count.
+The plain-data path already computes and forwards the known logical count; generic growth must do the same.
+Values are transparent u64 wrappers with distinct static destructor counters, valid for every byte pattern.
+No persisted pointers, deliberate invalid values, or panic inside the baseline raw initialization callback.
+Largest case owns only 1040 eight-byte values; no stress allocation or unbounded input.
+Following growth, checked flush and exact destructor retirement must pass after correction.
+Generic real resize failure/nonzero callback panic, failed shrink/destructor panic, arbitrary persisted representation adoption, physical repair and hardware power loss remain separate unfinished audits.
+Complete coverage and all other unmet R1-R12 criteria remain required; PR139 stays draft/unmerged.

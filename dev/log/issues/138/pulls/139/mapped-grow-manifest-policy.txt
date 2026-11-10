@@ -1,0 +1,12 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+The initial mapped-growth validation passed 221 repository checks while the probe manifest was still ignored.
+After commit 2478d59 tracked experiments/issue-138/mapped-grow-failure/Cargo.toml,
+the existing policy discovered the additional manifest and correctly failed:
+discovery-guards-repository-before.log:250: cargo manifest in /experiments/issue-138/mapped-grow-failure is not watched by Dependabot.
+Add that exact directory to the existing Cargo watch list; keep the policy intact.
+Repository rerun: 221 passed, zero failed/skipped.
+Dependency freshness: 126 declared registry versions and Cargo.lock files checked; the probe has only a path dependency.
+Actionlint with ShellCheck, source sizes, changeset validation, TS declarations and whitespace checks pass.
+Complete C# Debug/Release runs were already successful and are unchanged by this one-line configuration correction.
+ALL PASS 2026-10-27T10:37:00Z.
+Fresh exact-head CI and all unfinished R1-R12 requirements remain required; the PR remains draft/unmerged.

@@ -1,0 +1,8 @@
+commit then abort: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+abort then commit: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+different owners of one sequence: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+different payloads for one sequence: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+zero sequence: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+negative sequence: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+zero owner: rejected=true, row=11 (expected 11), journal unchanged=true, contract=true
+Finite contradiction contracts failing: 0/7

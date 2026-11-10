@@ -1,0 +1,17 @@
+Public query compatibility: exact-head GitHub Actions evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 580dcb2e62944d4884f1db474ca2494f745b02c7
+All nine workflows completed successfully.
+
+Broken Link Checker: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116282
+C# CI/CD Pipeline: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116339
+Dependencies: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116330
+Docs: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116371
+JS client CI: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116364
+Rust CI/CD Pipeline: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116283
+Security: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116354
+WebAssembly CI: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116449
+Workflows: success; created 2026-10-26T08:50:49Z; https://github.com/link-foundation/link-cli/actions/runs/40295116407
+
+Native Linux/macOS/Windows matrices and actual WASM pass. Later commits need fresh CI.
+Whole-project coverage and every wider unfinished requirement remain active.

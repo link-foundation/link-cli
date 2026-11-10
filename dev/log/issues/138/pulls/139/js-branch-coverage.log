@@ -1,0 +1,102 @@
+✔ addresses travel as BigInt, never rounded through Number (9.194368ms)
+✔ addresses beyond the backend range are refused before sending (1.733046ms)
+✔ requests and replies of every operation (5.47891ms)
+✔ (error: ...) replies reject with a failed RemoteError (0.606171ms)
+✔ an unexpected reply shape is a malformed message (0.549336ms)
+✔ aborted or expired requests are not sent (2.83803ms)
+✔ require() names missing guarantees instead of emulating them (1.591522ms)
+✔ a batch reports every operation and stops after the first failure (2.854491ms)
+✔ a malformed batch operation sends nothing (0.683808ms)
+✔ an aborted batch leaves the rest not sent (0.859284ms)
+✔ a decorator is a drop-in client over any backend (0.85691ms)
+✔ file journal fences writers, flushes, repairs torn tails, and validates UTF-8 (38.035631ms)
+✔ tail recovery handles short filesystem reads (18.225451ms)
+✔ partial writes finish and zero progress is reported (10.878863ms)
+✔ failed constructor flush releases the writer fence for recovery (12.988543ms)
+✔ truncation during a read is reported and an entirely torn tail is discarded (22.385899ms)
+✔ async catch-up is idempotent and rejects divergent prefixes (3.946909ms)
+✔ synchronous acknowledgements survive fault recovery without duplicate records (1.345532ms)
+✔ durability capabilities and membership validation are explicit (0.663768ms)
+✔ malformed records and asynchronous adapters cannot count as acknowledgements (0.825341ms)
+✔ commit I/O errors are marked unknown while conflicts are failed (1.451059ms)
+✔ diagnostic callback failures cannot change replication results (2.660207ms)
+✔ transaction controls run after queued requests and failures do not break the queue (9.361138ms)
+✔ ordinary wasm stores cannot be sent transaction controls (0.726997ms)
+✔ engine wrapper preserves decimal addresses and passes explicit policies (1.295519ms)
+✔ custom logs pass through to the binding with explicit capabilities (0.855658ms)
+✔ a failing capability getter cannot leak an allocated native engine (0.717169ms)
+✔ branches pass policies and capabilities, retain ownership and classify uncertain merges (2.057883ms)
+✔ messages end with a dot line and dot-stuff leading dots (2.614873ms)
+✔ the reader splits a stream at any byte, LF or CRLF (4.226201ms)
+✔ multi-byte characters split across chunks decode (0.467323ms)
+✔ a reply over the limit fails without buffering it (1.343058ms)
+✔ invalid UTF-8 is a malformed message (0.429903ms)
+✔ references stay bare unless the notation needs them quoted (2.586479ms)
+✔ empty text and control characters become ~1{hex} literals (1.126444ms)
+✔ the formats the servers write parse into the model (2.45298ms)
+✔ formatting matches the canonical text of links-notation (0.529409ms)
+✔ every reference round-trips, Unicode and quotes included (2.416431ms)
+✔ malformed text is refused (0.986322ms)
+✔ an invalid startup address cannot leak the owned process (84.476285ms)
+✔ startup validates inputs and cancellation before spawning (7.940636ms)
+✔ startup failure and deadline reap children and retain diagnostics (599.295895ms)
+✔ owned servers expose diagnostics, await shutdown and escalate ignored interrupts (123.786294ms)
+✔ process clients forward requests and dispose their server after connection failures (271.528458ms)
+✔ transport close errors still stop the owned server and retain typed failures (5.102177ms)
+✔ malformed operation replies cannot become successful mutations or reads (12.914444ms)
+✔ decorators preserve the complete client contract and request scopes (11.45015ms)
+✔ scope validation and far deadlines are bounded and cancellation fires once (3.884342ms)
+✔ quote runs, top-level names and framing limits preserve protocol boundaries (3.939956ms)
+✔ volatile custom branch capabilities and control failures stay explicit (1.332568ms)
+✔ connect cancellation is not-sent and destroys a pending socket (8.038169ms)
+✔ socket errors classify every pipelined request and leave queued work not-sent (5.829194ms)
+✔ unsolicited replies and decoder faults close the connection (2.620514ms)
+✔ graceful close forcibly ends an unresponsive owned peer after its grace period (2.65654ms)
+✔ addresses parse with IPv4, IPv6 and objects (3.635058ms)
+✔ pipelined replies are matched to their requests in order (156.160021ms)
+✔ aborting a queued request drops it; aborting a running one closes the connection (12.855043ms)
+✔ an absolute deadline ends a request the server never answers (55.799989ms)
+✔ request and reply sizes are bounded (3.801278ms)
+✔ writes wait for the socket to drain (800.412625ms)
+✔ a peer that does not speak the links protocol is refused (9.4044ms)
+✔ connecting fails as not-sent when nobody listens or time runs out (56.006194ms)
+✔ close waits for answers, then ends only an owned connection (92.671776ms)
+✔ the WebAssembly adapter states that it has no raw TCP (3.185528ms)
+✔ requests run in order and a create equal to nothing new resolves to null (3.962389ms)
+✔ aborted or late requests never reach the store (1.831169ms)
+✔ request and reply limits (0.945054ms)
+✔ close frees the store only when the client owns it (0.755701ms)
+✔ the universal entry point imports nothing from node: (24.386885ms)
+ℹ tests 69
+ℹ suites 0
+ℹ pass 69
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4437.929425
+ℹ start of coverage report
+ℹ ----------------------------------------------------------------------
+ℹ file                  | line % | branch % | funcs % | uncovered lines
+ℹ ----------------------------------------------------------------------
+ℹ js                    |        |          |         |
+ℹ  client               |        |          |         |
+ℹ   src                 |        |          |         |
+ℹ    capabilities.js    | 100.00 |   100.00 |  100.00 |
+ℹ    client.js          | 100.00 |   100.00 |  100.00 |
+ℹ    deadline.js        | 100.00 |   100.00 |  100.00 |
+ℹ    engine-file-log.js | 100.00 |   100.00 |  100.00 |
+ℹ    engine-logs.js     | 100.00 |   100.00 |   94.44 |
+ℹ    engine.js          | 100.00 |    97.83 |  100.00 |
+ℹ    errors.js          | 100.00 |   100.00 |  100.00 |
+ℹ    framing.js         | 100.00 |   100.00 |  100.00 |
+ℹ    index.js           | 100.00 |   100.00 |  100.00 |
+ℹ    lino.js            | 100.00 |   100.00 |  100.00 |
+ℹ    operations.js      | 100.00 |   100.00 |  100.00 |
+ℹ    process.js         | 100.00 |   100.00 |  100.00 |
+ℹ    tcp.js             | 100.00 |    98.95 |   96.55 |
+ℹ    wasm.js            | 100.00 |    96.97 |  100.00 |
+ℹ ----------------------------------------------------------------------
+ℹ all files             | 100.00 |    99.61 |   99.20 |
+ℹ ----------------------------------------------------------------------
+ℹ end of coverage report

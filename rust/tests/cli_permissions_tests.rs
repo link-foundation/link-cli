@@ -1,6 +1,8 @@
 //! `clink --permissions`, `--subject` and the token table end to end (issue
 //! #149). The C# counterpart is `CliPermissionsTests`.
 
+#[path = "common/stop_server.rs"]
+mod stop_server;
 #[path = "common/permissions_world.rs"]
 mod world;
 
@@ -388,8 +390,7 @@ impl Server {
 
 impl Drop for Server {
     fn drop(&mut self) {
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        stop_server::terminate(&mut self.child);
     }
 }
 

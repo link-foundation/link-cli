@@ -1,0 +1,31 @@
+✔ etcd snapshot reads all selected journals atomically and compares modification generations (81.60537ms)
+✔ read failover is bounded while an uncertain commit is never replayed (2.20901ms)
+✔ malformed, oversized and rejected coordinator responses fail closed (11.513284ms)
+✔ invalid cluster coordinates are rejected before network I/O (1.846294ms)
+✔ close waits for an in-flight commit and frees every workspace after cleanup failure (6.202339ms)
+✔ cluster validates configuration and snapshots before creating private engines (2.817846ms)
+✔ cluster freezes its expected snapshot, rejects stale groups, and classifies custom store I/O (5.719929ms)
+✔ etcd rejects every malformed wire field and validates CAS inputs without sending (13.009645ms)
+✔ cluster publishes changed journals, retains explicit adapter outcomes and disposes asynchronously (9.442722ms)
+✔ cleanup errors cannot replace an unknown commit outcome (1.460664ms)
+✔ cleanup failure after an acknowledged commit is reported without replaying publication (0.748015ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 344.813472
+ℹ start of coverage report
+ℹ --------------------------------------------------------------
+ℹ file          | line % | branch % | funcs % | uncovered lines
+ℹ --------------------------------------------------------------
+ℹ js            |        |          |         |
+ℹ  client       |        |          |         |
+ℹ   src         |        |          |         |
+ℹ    cluster.js | 100.00 |   100.00 |  100.00 |
+ℹ --------------------------------------------------------------
+ℹ all files     | 100.00 |   100.00 |  100.00 |
+ℹ --------------------------------------------------------------
+ℹ end of coverage report

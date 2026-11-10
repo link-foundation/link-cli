@@ -1,0 +1,98 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.22]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "update", explicitOwner: False) [FAIL]
+[xUnit.net 00:00:02.81]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "cascade", explicitOwner: False) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "update", explicitOwner: False) [952 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 21, Target = 22 }, Row { Index = 2, Source = 1, Target = 1 }]
+           ↑ (pos 0)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "cascade", explicitOwner: False) [588 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 0, Target = 0 }, Row { Index = 2, Source = 1, Target = 1 }]
+           ↑ (pos 0)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.42]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "update", explicitOwner: True) [FAIL]
+[xUnit.net 00:00:04.06]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "delete", explicitOwner: False) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "update", explicitOwner: True) [606 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 21, Target = 22 }, Row { Index = 2, Source = 1, Target = 1 }]
+           ↑ (pos 0)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "delete", explicitOwner: False) [643 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                                        ↓ (pos 1)
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 0, Target = 0 }]
+                                                        ↑ (pos 1)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:04.76]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "create", explicitOwner: True) [FAIL]
+[xUnit.net 00:00:05.60]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "delete", explicitOwner: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "create", explicitOwner: True) [689 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }, Row { Index = 3, Source = 0, Target = 0 }]
+                                                                                                   ↑ (pos 2)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "delete", explicitOwner: True) [835 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+                                                        ↓ (pos 1)
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 0, Target = 0 }]
+                                                        ↑ (pos 1)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:06.33]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "create", explicitOwner: False) [FAIL]
+[xUnit.net 00:00:06.99]     Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "cascade", explicitOwner: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "create", explicitOwner: False) [724 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }, Row { Index = 3, Source = 0, Target = 0 }]
+                                                                                                   ↑ (pos 2)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(operation: "cascade", explicitOwner: True) [658 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Row { Index = 1, Source = 11, Target = 12 }, Row { Index = 2, Source = 1, Target = 1 }]
+Actual:   [Row { Index = 1, Source = 0, Target = 0 }, Row { Index = 2, Source = 1, Target = 1 }]
+           ↑ (pos 0)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionRowWalExitTests.RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(String operation, Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowWalExitTests.cs:line 105
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     8, Passed:     0, Skipped:     0, Total:     8, Duration: 5 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

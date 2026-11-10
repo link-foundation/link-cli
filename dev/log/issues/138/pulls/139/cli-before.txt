@@ -1,0 +1,71 @@
+Native tag-name before evidence; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline: b0612d0, new behavior tests installed before parser changes.
+
+experiments/issue-138/cli-rust-tags-before.log
+1:    Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+2:     Finished `test` profile [unoptimized] target(s) in 4.28s
+3:      Running tests/cli_policy_contract_tests.rs (rust/target/debug/deps/cli_policy_contract_tests-81c487526e667885)
+4:
+5: running 1 test
+6: test delimiter_tag_names_preserve_existing_alias_syntax_and_following_edits ... FAILED
+7:
+8: failures:
+9:
+10: ---- delimiter_tag_names_preserve_existing_alias_syntax_and_following_edits stdout ----
+11:
+12: thread 'delimiter_tag_names_preserve_existing_alias_syntax_and_following_edits' (202632) panicked at tests/cli_policy_contract_tests.rs:34:9:
+13: Error: Unknown tag point '雪=part=3'.
+14:
+15: note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+16:
+17:
+18: failures:
+19:     delimiter_tag_names_preserve_existing_alias_syntax_and_following_edits
+20:
+21: test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.70s
+22:
+23: error: test failed, to rerun pass `--test cli_policy_contract_tests`
+
+experiments/issue-138/cli-csharp-before-clean.log
+1:   Determining projects to restore...
+2:   All projects are up-to-date for restore.
+3:   Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+4:   Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+5:   Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+6: Test run for /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+7: VSTest version 18.0.2 (x64)
+8:
+9: Starting test execution, please wait...
+10: A total of 1 test files matched the specified pattern.
+11: [xUnit.net 00:00:05.13]     Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(name: "release=0") [FAIL]
+12: [xUnit.net 00:00:05.45]     Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(name: "release=雪=part") [FAIL]
+13:   Failed Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(name: "release=0") [279 ms]
+14:   Error Message:
+15:    clink exited with 1
+16: stdout:
+17:
+18: stderr:
+19: Unknown tag point '0=4'.
+20:
+21:   Stack Trace:
+22:      at Foundation.Data.Doublets.Cli.Tests.Clink.AssertSucceeded(Result result) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Clink.cs:line 46
+23:    at Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.Succeed(String[] arguments) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CliCommandContractTests.cs:line 46
+24:    at Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(String name) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CliCommandContractTests.cs:line 160
+25:    at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+26:    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+27:   Failed Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(name: "release=雪=part") [323 ms]
+28:   Error Message:
+29:    clink exited with 1
+30: stdout:
+31:
+32: stderr:
+33: Unknown tag point '雪=part=4'.
+34:
+35:   Stack Trace:
+36:      at Foundation.Data.Doublets.Cli.Tests.Clink.AssertSucceeded(Result result) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Clink.cs:line 46
+37:    at Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.Succeed(String[] arguments) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CliCommandContractTests.cs:line 46
+38:    at Foundation.Data.Doublets.Cli.Tests.CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(String name) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CliCommandContractTests.cs:line 160
+39:    at InvokeStub_CliCommandContractTests.TagNamesContainingEqualsAndAliasesToThemSurviveCommands(Object, Span`1)
+40:    at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+41:
+42: Failed!  - Failed:     2, Passed:    28, Skipped:     0, Total:    30, Duration: 3 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

@@ -1,0 +1,979 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-session.sh
+Actual Node/Bun/Deno: bash experiments/issue-138/validate-causal-session-actual.sh
+Missing public APIs fail before implementation in each port and the actual WASM binding.
+Independent finite model: 1029 three-operation sequences, 686 before/after lost-reply retries; 192 MiB address space, 8 MiB stack.
+343 shared vectors execute normal/before-CAS/after-CAS paths in production Rust/C# and actual Node/Bun/Deno.
+Model evidence alone does not verify production; shared vectors independently check expected rows, names, errors and final edits.
+START 2026-10-27T20:42:27Z
+BINDING BUILD PASS 2026-10-27T20:42:31Z
+ALL ACTUAL PASS 2026-10-27T20:43:04Z
+Five raw Coverlet verifier contracts pass after reproducing Windows path rejection and zero-hit generated methods with no source lines.
+First complete Debug run passes 2506 tests but the raw check rejects six unvisited session edges; additional zero-address and restriction semantics controls exercise them.
+rejected-commit-after: {'tests': 9, 'pass': 9, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+Enforced 100% production lines/branches/functions; every production denominator retained.
+Rejected JS commit requests previously poisoned immediately following valid commits/retries. Two controls fail before the pending-slot admission correction; all nine pass after it.
+A failing workflow policy control precedes enforcing raw compiled causal coverage in every C# platform job; reports remain retained after failures.
+START 2026-10-27T19:58:26Z
+JAVASCRIPT PASS 2026-10-27T20:03:48Z
+CSHARP PASS 2026-10-27T20:14:51Z
+NATIVE PASS 2026-10-27T20:36:07Z
+ACTUAL WASM PASS 2026-10-27T20:42:01Z
+ALL PASS 2026-10-27T20:42:26Z
+C# Debug: 2506 passed, zero failed/skipped, SDK 10.0.403 matching CI.
+Complete lines: 10188/10497 (97.05630%).
+Complete branches: 6605/7050 (93.68794%).
+experiments/issue-138/causal-session-Debug-results/391566ee-eb5c-49f8-aa42-2c9246236108/coverage.json: 1980939 bytes; SHA256 544941e096fefe997b1fd28c66e7aecb766190abad67cd0f79cd48738fd3cd65
+CausalBatch.cs: 190/190 raw branches
+CausalMerkle.cs: 246/246 raw branches
+CausalProjection.cs: 42/42 raw branches
+CausalReplica.cs: 182/182 raw branches
+CausalSession.cs: 108/108 raw branches
+CausalVersion.cs: 138/138 raw branches
+PASS every compiled causal branch, including methods without source lines
+CausalVersion.cs: source lines 100/100; raw compiled branches checked separately above.
+CausalReplica.cs: source lines 136/136; raw compiled branches checked separately above.
+CausalMerkle.cs: source lines 218/218; raw compiled branches checked separately above.
+CausalBatch.cs: source lines 154/154; raw compiled branches checked separately above.
+CausalProjection.cs: source lines 39/39; raw compiled branches checked separately above.
+CausalSession.cs: source lines 124/124; raw compiled branches checked separately above.
+C# Release: 2506 passed, zero failed/skipped, SDK 10.0.403 matching CI.
+Complete lines: 7868/8069 (97.50899%).
+Complete branches: 6545/7007 (93.40659%).
+experiments/issue-138/causal-session-Release-results/6a19414d-4ff0-4e9a-8e0a-fa4056ed7eae/coverage.json: 1914401 bytes; SHA256 d60c9553f425b26142a6b3b14151115c49cdb9d842750f17b2ee0e418794d2f9
+CausalBatch.cs: 188/188 raw branches
+CausalMerkle.cs: 246/246 raw branches
+CausalProjection.cs: 42/42 raw branches
+CausalReplica.cs: 182/182 raw branches
+CausalSession.cs: 106/106 raw branches
+CausalVersion.cs: 138/138 raw branches
+PASS every compiled causal branch, including methods without source lines
+CausalVersion.cs: source lines 74/74; raw compiled branches checked separately above.
+CausalReplica.cs: source lines 108/108; raw compiled branches checked separately above.
+CausalMerkle.cs: source lines 160/160; raw compiled branches checked separately above.
+CausalBatch.cs: source lines 124/124; raw compiled branches checked separately above.
+CausalProjection.cs: source lines 34/34; raw compiled branches checked separately above.
+CausalSession.cs: source lines 98/98; raw compiled branches checked separately above.
+Native Rust: 1241 passed, zero failed; 22 existing parent-driven entries ignored by normal harness.
+Complete lines: 19027/19918 (95.52666%).
+Complete branches: 3728/4224 (88.25758%).
+Complete functions: 2437/2609 (93.40744%).
+Complete regions: 29284/31549 (92.82069%).
+Complete instantiations: 12320/21809 (56.49044%).
+/rust/src/engine/causal_session.rs lines: 313/315 (99.36508%).
+/rust/src/engine/causal_session.rs branches: 29/30 (96.66667%).
+/rust/src/engine/causal_session.rs functions: 52/52 (100.00000%).
+/rust/src/engine/causal_session.rs regions: 466/481 (96.88150%).
+/rust/src/engine/causal_session.rs instantiations: 52/120 (43.33333%).
+Actual WASM: 770 passed, zero failed; 0 existing parent-driven entries ignored by normal harness.
+Complete lines: 15158/17792 (85.19559%).
+Complete branches: 3121/3643 (85.67115%).
+Complete functions: 1883/2317 (81.26888%).
+Complete regions: 23439/28143 (83.28536%).
+Complete instantiations: 4641/7808 (59.43904%).
+/rust/src/engine/causal_session.rs lines: 313/315 (99.36508%).
+/rust/src/engine/causal_session.rs branches: 29/30 (96.66667%).
+/rust/src/engine/causal_session.rs functions: 52/52 (100.00000%).
+/rust/src/engine/causal_session.rs regions: 469/481 (97.50520%).
+/rust/src/engine/causal_session.rs instantiations: 52/68 (76.47059%).
+/rust/wasm/src/causal_session.rs lines: 163/165 (98.78788%).
+/rust/wasm/src/causal_session.rs branches: 27/30 (90.00000%).
+/rust/wasm/src/causal_session.rs functions: 28/30 (93.33333%).
+/rust/wasm/src/causal_session.rs regions: 324/340 (95.29412%).
+/rust/wasm/src/causal_session.rs instantiations: 28/60 (46.66667%).
+js-full: {'tests': 695, 'pass': 695, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+Enforced 100% production lines/branches/functions; every production denominator retained.
+repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+Formats, strict native/WASM Clippy, TS declarations, workflow/ShellCheck, source sizes, release changesets and 127 fresh dependencies/locks pass.
+Bare Rust normal dependencies omit JSON/SQL/SHA; selecting causal-sessions adds neither SQLite nor SHA. JS uses a separate export.
+START 2026-10-27T20:43:04Z
+ALL PHYSICAL PASS 2026-10-27T20:47:48Z
+PASS JS causal session native LSM write plain
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain node -> node -> node
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain node -> bun -> node
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain node -> deno -> node
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain node -> csharp -> node
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain node -> rust -> node
+PASS JS causal session native LSM write plain
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain bun -> node -> bun
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain bun -> bun -> bun
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain bun -> deno -> bun
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain bun -> csharp -> bun
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain bun -> rust -> bun
+PASS JS causal session native LSM write plain
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain deno -> node -> deno
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain deno -> bun -> deno
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain deno -> deno -> deno
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain deno -> csharp -> deno
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM mutate plain
+PASS JS causal session native LSM read-advanced plain
+PASS session complete-store plain deno -> rust -> deno
+PASS C# causal session native LSM write plain
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS C# causal session native LSM read-advanced plain
+PASS session complete-store plain csharp -> node -> csharp
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS C# causal session native LSM read-advanced plain
+PASS session complete-store plain csharp -> bun -> csharp
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS C# causal session native LSM read-advanced plain
+PASS session complete-store plain csharp -> deno -> csharp
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM mutate plain
+PASS C# causal session native LSM read-advanced plain
+PASS session complete-store plain csharp -> csharp -> csharp
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM mutate plain
+PASS C# causal session native LSM read-advanced plain
+PASS session complete-store plain csharp -> rust -> csharp
+PASS Rust causal session native LSM write plain
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS Rust causal session native LSM read-advanced plain
+PASS session complete-store plain rust -> node -> rust
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS Rust causal session native LSM read-advanced plain
+PASS session complete-store plain rust -> bun -> rust
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM mutate plain
+PASS Rust causal session native LSM read-advanced plain
+PASS session complete-store plain rust -> deno -> rust
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM mutate plain
+PASS Rust causal session native LSM read-advanced plain
+PASS session complete-store plain rust -> csharp -> rust
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM mutate plain
+PASS Rust causal session native LSM read-advanced plain
+PASS session complete-store plain rust -> rust -> rust
+PASS JS causal session native LSM write mirrored
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored node -> node -> node
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored node -> bun -> node
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored node -> deno -> node
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored node -> csharp -> node
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored node -> rust -> node
+PASS JS causal session native LSM write mirrored
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored bun -> node -> bun
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored bun -> bun -> bun
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored bun -> deno -> bun
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored bun -> csharp -> bun
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored bun -> rust -> bun
+PASS JS causal session native LSM write mirrored
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored deno -> node -> deno
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored deno -> bun -> deno
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored deno -> deno -> deno
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored deno -> csharp -> deno
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM mutate mirrored
+PASS JS causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored deno -> rust -> deno
+PASS C# causal session native LSM write mirrored
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS C# causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored csharp -> node -> csharp
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS C# causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored csharp -> bun -> csharp
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS C# causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored csharp -> deno -> csharp
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM mutate mirrored
+PASS C# causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored csharp -> csharp -> csharp
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM mutate mirrored
+PASS C# causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored csharp -> rust -> csharp
+PASS Rust causal session native LSM write mirrored
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS Rust causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored rust -> node -> rust
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS Rust causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored rust -> bun -> rust
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM mutate mirrored
+PASS Rust causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored rust -> deno -> rust
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM mutate mirrored
+PASS Rust causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored rust -> csharp -> rust
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM mutate mirrored
+PASS Rust causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored rust -> rust -> rust
+PASS 50 session complete-store handoffs with physical hash preservation
+PASS JS causal session native LSM write plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-before -> node retry/following -> node
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-before -> bun retry/following -> node
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-before -> deno retry/following -> node
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM retry-before plain
+PASS C# causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-before -> csharp retry/following -> node
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM retry-before plain
+PASS Rust causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-before -> rust retry/following -> node
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-after -> node retry/following -> node
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-after -> bun retry/following -> node
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-after -> deno retry/following -> node
+PASS C# causal session native LSM read-advanced plain
+PASS C# causal session native LSM retry-after plain
+PASS C# causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-after -> csharp retry/following -> node
+PASS Rust causal session native LSM read-advanced plain
+PASS Rust causal session native LSM retry-after plain
+PASS Rust causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain node exit-after -> rust retry/following -> node
+PASS JS causal session native LSM write plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-before -> node retry/following -> bun
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-before -> bun retry/following -> bun
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-before -> deno retry/following -> bun
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM retry-before plain
+PASS C# causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-before -> csharp retry/following -> bun
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM retry-before plain
+PASS Rust causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-before -> rust retry/following -> bun
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-after -> node retry/following -> bun
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-after -> bun retry/following -> bun
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-after -> deno retry/following -> bun
+PASS C# causal session native LSM read-advanced plain
+PASS C# causal session native LSM retry-after plain
+PASS C# causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-after -> csharp retry/following -> bun
+PASS Rust causal session native LSM read-advanced plain
+PASS Rust causal session native LSM retry-after plain
+PASS Rust causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain bun exit-after -> rust retry/following -> bun
+PASS JS causal session native LSM write plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-before -> node retry/following -> deno
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-before -> bun retry/following -> deno
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-before -> deno retry/following -> deno
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM retry-before plain
+PASS C# causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-before -> csharp retry/following -> deno
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM retry-before plain
+PASS Rust causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-before -> rust retry/following -> deno
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-after -> node retry/following -> deno
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-after -> bun retry/following -> deno
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-after -> deno retry/following -> deno
+PASS C# causal session native LSM read-advanced plain
+PASS C# causal session native LSM retry-after plain
+PASS C# causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-after -> csharp retry/following -> deno
+PASS Rust causal session native LSM read-advanced plain
+PASS Rust causal session native LSM retry-after plain
+PASS Rust causal session native LSM following plain
+PASS JS causal session native LSM read-following plain
+PASS session plain deno exit-after -> rust retry/following -> deno
+PASS C# causal session native LSM write plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-before -> node retry/following -> csharp
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-before -> bun retry/following -> csharp
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-before -> deno retry/following -> csharp
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM retry-before plain
+PASS C# causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-before -> csharp retry/following -> csharp
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM retry-before plain
+PASS Rust causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-before -> rust retry/following -> csharp
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-after -> node retry/following -> csharp
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-after -> bun retry/following -> csharp
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-after -> deno retry/following -> csharp
+PASS C# causal session native LSM read-advanced plain
+PASS C# causal session native LSM retry-after plain
+PASS C# causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-after -> csharp retry/following -> csharp
+PASS Rust causal session native LSM read-advanced plain
+PASS Rust causal session native LSM retry-after plain
+PASS Rust causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-after -> rust retry/following -> csharp
+PASS Rust causal session native LSM write plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-before -> node retry/following -> rust
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-before -> bun retry/following -> rust
+PASS JS causal session native LSM read plain
+PASS JS causal session native LSM retry-before plain
+PASS JS causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-before -> deno retry/following -> rust
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM retry-before plain
+PASS C# causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-before -> csharp retry/following -> rust
+PASS Rust causal session native LSM read plain
+PASS Rust causal session native LSM retry-before plain
+PASS Rust causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-before -> rust retry/following -> rust
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS JS causal session native LSM blocked plain
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-after -> node retry/following -> rust
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-after -> bun retry/following -> rust
+PASS JS causal session native LSM read-advanced plain
+PASS JS causal session native LSM retry-after plain
+PASS JS causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-after -> deno retry/following -> rust
+PASS C# causal session native LSM read-advanced plain
+PASS C# causal session native LSM retry-after plain
+PASS C# causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-after -> csharp retry/following -> rust
+PASS Rust causal session native LSM read-advanced plain
+PASS Rust causal session native LSM retry-after plain
+PASS Rust causal session native LSM following plain
+PASS Rust causal session native LSM read-following plain
+PASS session plain rust exit-after -> rust retry/following -> rust
+PASS JS causal session native LSM write mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-before -> node retry/following -> node
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-before -> bun retry/following -> node
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-before -> deno retry/following -> node
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM retry-before mirrored
+PASS C# causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-before -> csharp retry/following -> node
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM retry-before mirrored
+PASS Rust causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-before -> rust retry/following -> node
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-after -> node retry/following -> node
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-after -> bun retry/following -> node
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-after -> deno retry/following -> node
+PASS C# causal session native LSM read-advanced mirrored
+PASS C# causal session native LSM retry-after mirrored
+PASS C# causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-after -> csharp retry/following -> node
+PASS Rust causal session native LSM read-advanced mirrored
+PASS Rust causal session native LSM retry-after mirrored
+PASS Rust causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored node exit-after -> rust retry/following -> node
+PASS JS causal session native LSM write mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-before -> node retry/following -> bun
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-before -> bun retry/following -> bun
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-before -> deno retry/following -> bun
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM retry-before mirrored
+PASS C# causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-before -> csharp retry/following -> bun
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM retry-before mirrored
+PASS Rust causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-before -> rust retry/following -> bun
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-after -> node retry/following -> bun
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-after -> bun retry/following -> bun
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-after -> deno retry/following -> bun
+PASS C# causal session native LSM read-advanced mirrored
+PASS C# causal session native LSM retry-after mirrored
+PASS C# causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-after -> csharp retry/following -> bun
+PASS Rust causal session native LSM read-advanced mirrored
+PASS Rust causal session native LSM retry-after mirrored
+PASS Rust causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored bun exit-after -> rust retry/following -> bun
+PASS JS causal session native LSM write mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-before -> node retry/following -> deno
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-before -> bun retry/following -> deno
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-before -> deno retry/following -> deno
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM retry-before mirrored
+PASS C# causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-before -> csharp retry/following -> deno
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM retry-before mirrored
+PASS Rust causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-before -> rust retry/following -> deno
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-after -> node retry/following -> deno
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-after -> bun retry/following -> deno
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-after -> deno retry/following -> deno
+PASS C# causal session native LSM read-advanced mirrored
+PASS C# causal session native LSM retry-after mirrored
+PASS C# causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-after -> csharp retry/following -> deno
+PASS Rust causal session native LSM read-advanced mirrored
+PASS Rust causal session native LSM retry-after mirrored
+PASS Rust causal session native LSM following mirrored
+PASS JS causal session native LSM read-following mirrored
+PASS session mirrored deno exit-after -> rust retry/following -> deno
+PASS C# causal session native LSM write mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-before -> node retry/following -> csharp
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-before -> bun retry/following -> csharp
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-before -> deno retry/following -> csharp
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM retry-before mirrored
+PASS C# causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-before -> csharp retry/following -> csharp
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM retry-before mirrored
+PASS Rust causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-before -> rust retry/following -> csharp
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-after -> node retry/following -> csharp
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-after -> bun retry/following -> csharp
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-after -> deno retry/following -> csharp
+PASS C# causal session native LSM read-advanced mirrored
+PASS C# causal session native LSM retry-after mirrored
+PASS C# causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-after -> csharp retry/following -> csharp
+PASS Rust causal session native LSM read-advanced mirrored
+PASS Rust causal session native LSM retry-after mirrored
+PASS Rust causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-after -> rust retry/following -> csharp
+PASS Rust causal session native LSM write mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-before -> node retry/following -> rust
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-before -> bun retry/following -> rust
+PASS JS causal session native LSM read mirrored
+PASS JS causal session native LSM retry-before mirrored
+PASS JS causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-before -> deno retry/following -> rust
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM retry-before mirrored
+PASS C# causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-before -> csharp retry/following -> rust
+PASS Rust causal session native LSM read mirrored
+PASS Rust causal session native LSM retry-before mirrored
+PASS Rust causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-before -> rust retry/following -> rust
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS JS causal session native LSM blocked mirrored
+PASS C# stale ownership rejected
+PASS Rust stale ownership rejected
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-after -> node retry/following -> rust
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-after -> bun retry/following -> rust
+PASS JS causal session native LSM read-advanced mirrored
+PASS JS causal session native LSM retry-after mirrored
+PASS JS causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-after -> deno retry/following -> rust
+PASS C# causal session native LSM read-advanced mirrored
+PASS C# causal session native LSM retry-after mirrored
+PASS C# causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-after -> csharp retry/following -> rust
+PASS Rust causal session native LSM read-advanced mirrored
+PASS Rust causal session native LSM retry-after mirrored
+PASS Rust causal session native LSM following mirrored
+PASS Rust causal session native LSM read-following mirrored
+PASS session mirrored rust exit-after -> rust retry/following -> rust
+PASS 20 reaped process exits; 100 cross-runtime retry/reopen/following checks
+Process exits establish application-crash recovery after explicit operator marker recovery, not hardware power-loss certification.
+All physical examples additionally compare every file byte/hash immediately across stale-session commit refusal, before any following publication.
+Resource-bounded process exits are application-crash evidence; hardware power loss remains unverified.
+Preparation freezes the original complete observations, final diff, generation and token; unknown replies retry exactly after following writes.
+No-op sessions persist empty receipts without author counters; invalid token syntax does not freeze; invalid final constraints/token ranges never publish.
+Reserved u64 allocation remains separate from the private journal cursor, including remote u64::MAX and lower fresh reservations.
+Owned reads/prepared/results and repeated disposal release private resources without undoing completed publication; JS frees the native handle on every preparation outcome.
+Projection CPU O(V log V + sum(r^2 W)); owned retained space O(VW); final diff O((R+F) log(R+F)) plus payload copies and selected engine mutation costs.
+Publication retains the batch complete-journal replay/copy costs; no incremental replay/throughput or remote group-atomicity claim is inferred.
+Full u32 LiNo query parity, global allocation, safe membership/history reclamation, generic mapped failures, complete project 100% and all wider unmet criteria remain unfinished.
+Fresh exact-head platform CI remains required. PR139 stays draft and unmerged.
+experiments/issue-138/causal-session-Debug-results/391566ee-eb5c-49f8-aa42-2c9246236108/coverage.cobertura.xml: 2668201 bytes; SHA256 3ba9a035f38bc36c809f5be5904873cbe6cda7dfd763a810d7e7dcd312b79ff4.
+experiments/issue-138/causal-session-Debug-results/391566ee-eb5c-49f8-aa42-2c9246236108/coverage.json: 1980939 bytes; SHA256 544941e096fefe997b1fd28c66e7aecb766190abad67cd0f79cd48738fd3cd65.
+experiments/issue-138/causal-session-Release-results/6a19414d-4ff0-4e9a-8e0a-fa4056ed7eae/coverage.cobertura.xml: 2363300 bytes; SHA256 3084696a9d6fb4129d545f5f5c12943274532b0bf0ff8edc2d529f10688d265e.
+experiments/issue-138/causal-session-Release-results/6a19414d-4ff0-4e9a-8e0a-fa4056ed7eae/coverage.json: 1914401 bytes; SHA256 d60c9553f425b26142a6b3b14151115c49cdb9d842750f17b2ee0e418794d2f9.
+experiments/issue-138/causal-session-native-coverage.json: 21635945 bytes; SHA256 15211f05708eea3affe739f14b71f49802e52b97508838de9fd5d3ebeb5eb3cf.
+experiments/issue-138/causal-session-wasm-coverage.json: 25372120 bytes; SHA256 b44b4995139cb1e04dc01c209f49efb478d0871dd31965c0cde69b12ed9fd624.
+experiments/issue-138/causal-session-js-before.log: 1497 bytes; SHA256 41440e331db743c2b32018f148a48a7d2397dd5c771386419c0a8537cda350b4.
+experiments/issue-138/causal-session-native-before.log: 486 bytes; SHA256 2ee2d979b2dc3a6e16b7a0ce9b5502bec8aefe85fffca2db18eec5e25e0cab93.
+experiments/issue-138/causal-session-csharp-before.log: 751 bytes; SHA256 94485b8e69c5c298f44d27cc3ccb03b1c313712c36ac81f318cf8ea96f781e92.
+experiments/issue-138/causal-session-wasm-binding-before.log: 587 bytes; SHA256 fc9b334f1fd03a51448627b62fa48d1c02ba61c891d8b71813a4124eb6680cc9.
+experiments/issue-138/causal-session-model.log: 379 bytes; SHA256 44726dc10be8e43156bea7a74639e10395aaa736128f9d0c338c24464d7021ec.
+experiments/issue-138/causal-session-actual-driver.log: 104 bytes; SHA256 f01cc63f134b530ded26bc423450bf73ea5692ea4d46d5e0d6a0a002b90ba243.
+experiments/issue-138/causal-session-actual-node.log: 114 bytes; SHA256 4c6eefa04edfc4ba6c606a15a082590645389eba0e10d42cecc4b0f7122e0744.
+experiments/issue-138/causal-session-actual-bun.log: 114 bytes; SHA256 4c6eefa04edfc4ba6c606a15a082590645389eba0e10d42cecc4b0f7122e0744.
+experiments/issue-138/causal-session-actual-deno.log: 114 bytes; SHA256 4c6eefa04edfc4ba6c606a15a082590645389eba0e10d42cecc4b0f7122e0744.
+experiments/issue-138/causal-session-full-driver.log: 198 bytes; SHA256 f3bda7c2171dc9a7e8ea4b55fb71e3ebffb1f20e7bcd5229dc35acd890b5d04d.
+experiments/issue-138/causal-session-js-full.log: 62164 bytes; SHA256 aba01db096bbb9ba9188abb04079e93cba26368d2a15900fab1fb0cff9bbe953.
+experiments/issue-138/causal-session-csharp-Debug-full.log: 1232 bytes; SHA256 233417496bd024b2c5b21abcff5288528c6e6ce1b35fa7c6ae94d5d4867b1323.
+experiments/issue-138/causal-session-csharp-Release-full.log: 1244 bytes; SHA256 77b3212a8ad4296e478c82e027999ad64283ed215f6ee7e77adec665c1742ae3.
+experiments/issue-138/causal-session-native-full.log: 596223 bytes; SHA256 3cc0248dab4909abad066a108e9134773071b0594e802b33163f04b0868f9173.
+experiments/issue-138/causal-session-doctests.log: 976 bytes; SHA256 306da3fa47d5f4880414ebaa54d01852daf57278f9142d4c3956ff926959b892.
+experiments/issue-138/causal-session-wasm-full.log: 68982 bytes; SHA256 a51c4f492f7d1da7e75e50436de0ad6121f941d825c153d97511689baaf3504e.
+experiments/issue-138/causal-session-repository.log: 18493 bytes; SHA256 31de4c76bbb273ad8c8d371ac06798dd1e8e57a65993bba9bd5506658091fa9c.
+experiments/issue-138/causal-session-dependency-freshness.log: 56 bytes; SHA256 d507522804fdd2e8e757a643f09b2027ddf4e835b8a9856827a6600ffffb5844.
+experiments/issue-138/causal-session-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-session-dotnet-sdk.log: 9 bytes; SHA256 00922204861c9366b1259b84337ee228d58ec876604bb149e82c077108ce3be2.
+experiments/issue-138/causal-session-physical-handoffs.log: 10991 bytes; SHA256 6667736e679fe23392c9450ca4ca1c410498ce8ce3be093dda4a3d418cd5bd4a.
+experiments/issue-138/causal-session-process-faults.log: 33438 bytes; SHA256 ebaf8b8e3a63c8616593772aa6a954ea5709771bd84377e5c78171a64126c934.
+experiments/issue-138/causal-session-raw-windows-before.log: 1979 bytes; SHA256 4747329843967410fdb6e93d5f30c484dfbdbba5441db7435d7247f9a1e29329.
+experiments/issue-138/causal-session-raw-verifier.log: 103 bytes; SHA256 e74245acedd60441274983a88f482c9d32c605da70754ef7d014a9a42c611b03.
+experiments/issue-138/causal-session-Debug-records-before.log: 2387 bytes; SHA256 37a9c042e463c61cc3ffe3e7b5d4c3e7c5ed7f2d21e1a8f5ae143ad07404588c.
+experiments/issue-138/causal-session-rejected-commit-before.log: 2868 bytes; SHA256 fed7c907cd8e34ac5381e36f9f45b548e078db061c9abc1eb42390c89470f58d.
+experiments/issue-138/causal-session-rejected-commit-after.log: 1827 bytes; SHA256 10dab630f49919920969cf13530250008deb8e1db4e6c490376835e24b46c49d.
+experiments/issue-138/causal-session-raw-ci-before.log: 10135 bytes; SHA256 b20ad71a06f2098ba25d924dc043026155fd811fd57a67f596998bd1353cd466.
+experiments/issue-138/causal-session-raw-ci-after.log: 204 bytes; SHA256 206a8551625a697488531df6cb9c93352700d966e39eeec2fe90156012c547d3.
+experiments/issue-138/causal-session-physical-driver.log: 66 bytes; SHA256 5fb169b872cf45eca8612ba0d30a1d6d4e94d791cfb8e21a56607584dc978847.
+rust/src/engine/causal_session.rs: 12913 bytes; SHA256 a5d17729b0f13dfb766c343ba1df506c9211876d3804aa3a5340a75787a0cb4a.
+rust/tests/engine_causal_session_tests.rs: 21040 bytes; SHA256 8c2da6c7a8a54a8c330ff35e9542db078ecd07a4ed412c3b68c67c023d2c13ff.
+rust/wasm/src/causal_session.rs: 7016 bytes; SHA256 2908a3dda6ee0b067ba51285a1bf5038b1273f908ec3ba675097b8739d578a54.
+rust/wasm/tests/causal_session_binding.rs: 4939 bytes; SHA256 06eda6fbe78f3aeaddb31b7f74bdaec3bc256570b746b3f142e54cc90e5b9112.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalSession.cs: 9085 bytes; SHA256 29715d56f89272acbdb6d4e149c648980ef85b52a28dbf6c9f28cf872e95e1ee.
+csharp/Foundation.Data.Doublets.Cli.Tests/CausalSessionTests.cs: 16999 bytes; SHA256 906188f59259e43bd04c9d0c3bd5f25b18c8bdf85a8d0076e128b352bb41f2fe.
+js/client/src/engine-causal-session.js: 5476 bytes; SHA256 276da98f310c0be991b7b308d0c5bd4c14a7056ae4d6b874df2c2407cc1fa2d6.
+js/client/test/engine-causal-session.test.mjs: 9407 bytes; SHA256 cfa3954645a58884c0df56176601bca8d0ecb704927baba47bffec964ed0d58f.
+js/client/test/conformance/causal-session.mjs: 11300 bytes; SHA256 cfcfaf227e75012e8db4624de9b7032c97c18e2836d8633b183949395a77f016.
+docs/protocol/causal-session-v1.json: 166280 bytes; SHA256 3809805c537fb9cd595fbceeed822da478ee781d9912575f8422e3834f6ea4f6.
+examples/native-lsm-js/session-interop.mjs: 6293 bytes; SHA256 2200376f77527d67dd2f62b7ce1acc2882fe0248be35141e9fac202bc424186e.
+rust/examples/native_lsm/session.rs: 8744 bytes; SHA256 28917e27f90b9548052dc82540c6780521e77ad6e2f45e2369de20ccb3c61959.
+examples/cluster-csharp/CausalSessionInterop.cs: 6861 bytes; SHA256 b1bba5a63d736ea12172021c84ce0be5aa974221af535c54ff1a98d69818f09d.
+.github/workflows/csharp.yml: 36454 bytes; SHA256 c980b3620e5c8c3e1bbfb9edd3110bfa9b0b333635910d70091a010c5cfdaa46.
+.github/workflows/js-client.yml: 31083 bytes; SHA256 2f01fc4bfdd717f8ab78c9fc74eb8838f14f150b5f0333acfda0300a403fab1e.
+.github/scripts/workflow-policy.test.mjs: 23921 bytes; SHA256 969706a9d881e8a3e09aad948d4a859b3ff07e08b392e9311c48954b4d11e0a0.
+experiments/issue-138/check-causal-raw-coverage.py: 1733 bytes; SHA256 2c40c1ab54c8ae9046d6a8f6d93a7eb11426246813a1432c7302f83541168a77.
+experiments/issue-138/test-causal-raw-coverage.py: 2930 bytes; SHA256 7893b742f3d8e6a949a5980994416f26638c3900d8596a46f30c7f57a6eea27f.
+experiments/issue-138/validate-causal-session.sh: 4304 bytes; SHA256 9ae4371292c451cb0f3267ac705278134d7150b427f768ba0814e48b9843b501.
+experiments/issue-138/validate-causal-session-physical.sh: 1358 bytes; SHA256 fc60e4e87c2fcd4fa36b6da0aa53be119610ad7271c30a47ebdd4f5fa3901c29.

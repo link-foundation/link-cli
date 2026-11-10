@@ -1,4 +1,5 @@
 using System.Net;
+using System.Numerics;
 using System.Net.Sockets;
 using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
@@ -26,7 +27,7 @@ public sealed record LinksServerOptions
     /// <summary>Print every request and reply to stderr.</summary>
     public bool Trace { get; init; }
 
-    /// <summary>Passed to <see cref="AdvancedMixedQueryProcessor.Options.AutoCreateMissingReferences"/>.</summary>
+    /// <summary>Passed to <see cref="AdvancedMixedQueryProcessor{T}.Options.AutoCreateMissingReferences"/>.</summary>
     public bool AutoCreateMissingReferences { get; init; }
 
     /// <summary>Protocols the server answers.</summary>
@@ -98,7 +99,7 @@ public sealed record LinksServerOptions
 /// <see cref="TripletsOperation"/>.
 /// </para>
 /// </remarks>
-public sealed class LinksServer : IDisposable
+public sealed partial class LinksServer : IDisposable
 {
     private readonly TcpListener _listener;
     private readonly LinksServerOptions _options;
@@ -171,7 +172,49 @@ public sealed class LinksServer : IDisposable
                 continue;
             }
             var session = sessions.Open();
-            var worker = new Thread(() => HandleConnection(client, stream, session)) { IsBackground = true };
+            var limits = _options.Limits.ForQuery(links.QueryLimits);
+            var worker = new Thread(() => HandleSessionConnection(client, stream, session, limits)) { IsBackground = true };
+            workers.Add(worker);
+            worker.Start();
+            workers.RemoveAll(thread => !thread.IsAlive);
+        }
+        Shutdown();
+        foreach (var worker in workers)
+        {
+            worker.Join();
+        }
+    }
+
+    /// <summary>Serves the selected unsigned address type through the same protocols.</summary>
+    public void Serve<T>(INamedTypesLinks<T> links)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
+    {
+        ArgumentNullException.ThrowIfNull(links);
+        var limits = _options.Limits.ForQuery(links.QueryLimits);
+        var workers = new List<Thread>();
+        while (!_stopping)
+        {
+            TcpClient client;
+            try
+            {
+                client = _listener.AcceptTcpClient();
+            }
+            catch (Exception error) when (error is SocketException or ObjectDisposedException or InvalidOperationException)
+            {
+                break;
+            }
+            catch (NullReferenceException) when (_stopping)
+            {
+                // .NET 10 TcpListener.Stop clears its socket after disposing it.
+                // AcceptTcpClient can pass its active check before that clear,
+                // then dereference the cleared socket. Only shutdown permits it.
+                break;
+            }
+            if (Register(client) is not { } stream)
+            {
+                continue;
+            }
+            var worker = new Thread(() => HandleConnection(client, stream, links, limits)) { IsBackground = true };
             workers.Add(worker);
             worker.Start();
             workers.RemoveAll(thread => !thread.IsAlive);
@@ -228,7 +271,7 @@ public sealed class LinksServer : IDisposable
     }
 
     /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
-    internal void HandleConnection(TcpClient client, NetworkStream stream, LinksSession session)
+    private void HandleSessionConnection(TcpClient client, NetworkStream stream, LinksSession session, ProtocolLimits limits)
     {
         var connection = new LinksConnection(client, _options.MaxPendingNotifications);
         lock (_storeLock)
@@ -252,7 +295,7 @@ public sealed class LinksServer : IDisposable
                 (IReadOnlyList<LinoLink> Document, MessageFormat Format)? message;
                 try
                 {
-                    message = LinoProtocols.ReadAnyDocument(reader, _options.Limits);
+                    message = LinoProtocols.ReadAnyDocument(reader, limits);
                 }
                 catch (LinoProtocolException error) when (error.Kind != LinoProtocolErrorKind.Io)
                 {
@@ -358,12 +401,22 @@ public sealed class LinksServer : IDisposable
                 connection?.Reply(stopping, format);
                 return stopping;
             }
-            Trace($"request: {LinoFormat.FormatDocument(document)}");
+            try
+            {
+                session.QueryLimits?.Document(document);
+            }
+            catch (InvalidOperationException error)
+            {
+                var rejected = ErrorDocument(error.Message);
+                connection?.Reply(rejected, format);
+                return rejected;
+            }
+            if (_options.Trace) Trace($"request: {LinoFormat.FormatDocument(document)}");
             var changes = new List<(DoubletLink Before, DoubletLink After)>();
             var tripletChanges = new List<TripletChange<uint>>();
             var reply = (connection is null ? null : ExecuteSubscription(connection, document, format))
                 ?? session.Execute(document, changes, tripletChanges);
-            Trace($"reply: {LinoFormat.FormatDocument(reply)}");
+            if (_options.Trace) Trace($"reply: {LinoFormat.FormatDocument(reply)}");
             if (_options.Triplets)
             {
                 reply = TripletsOperation.Pack(reply, format);
@@ -428,11 +481,79 @@ public sealed class LinksServer : IDisposable
         }
     }
 
+    /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
+    internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
+        => HandleConnection(client, stream, links, _options.Limits.ForQuery(links?.QueryLimits));
+
+    private void HandleConnection<T>(TcpClient client, NetworkStream stream, INamedTypesLinks<T> links, ProtocolLimits limits)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
+    {
+        try
+        {
+            var reader = new PacketReader(stream);
+            while (!_stopping)
+            {
+                (IReadOnlyList<LinoLink> Document, MessageFormat Format)? message;
+                try
+                {
+                    message = LinoProtocols.ReadAnyDocument(reader, limits);
+                }
+                catch (LinoProtocolException error) when (error.Kind != LinoProtocolErrorKind.Io)
+                {
+                    // The stream may be out of sync; answer in text and hang up.
+                    MessageFormat.Text.Protocol(_options.Limits).WriteDocument(stream, ErrorDocument(error.Message));
+                    Trace($"connection closed: {error.Message}");
+                    return;
+                }
+                if (message is not { } received)
+                {
+                    Trace("client hung up");
+                    return;
+                }
+                var (document, format) = received;
+                var reply = Accepts(format) ? Execute(links, document) : ErrorDocument("this server does not accept this protocol");
+                format.Protocol(_options.Limits).WriteDocument(stream, reply);
+            }
+        }
+        catch (Exception error) when (error is IOException or ObjectDisposedException or SocketException or LinoProtocolException)
+        {
+            Trace($"connection closed: {error.Message}");
+        }
+        finally
+        {
+            lock (_clients)
+            {
+                _clients.Remove(client);
+            }
+            // Also disposes the stream.
+            client.Dispose();
+        }
+    }
+
+    internal IReadOnlyList<LinoLink> Execute(INamedTypesLinks<uint> links, IReadOnlyList<LinoLink> document)
+        => Execute<uint>(links, document);
+
+    internal IReadOnlyList<LinoLink> Execute<T>(INamedTypesLinks<T> links, IReadOnlyList<LinoLink> document)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
+    {
+        lock (_storeLock)
+        {
+            // No request may touch the store once Serve is returning.
+            if (_stopping)
+            {
+                return ErrorDocument("server is shutting down");
+            }
+            var reply = ExecuteRequestCore(links, document, _options.AutoCreateMissingReferences, _options.Trace ? Trace : null);
+            if (_options.Trace) Trace($"reply: {LinoFormat.FormatDocument(reply)}");
+            return reply;
+        }
+    }
+
     private void Trace(string message)
     {
         if (_options.Trace)
         {
-            Console.Error.WriteLine($"[server] {message}");
+            DiagnosticOutput.WriteErrorLine($"[server] {message}");
         }
     }
 
@@ -473,62 +594,8 @@ public sealed class LinksServer : IDisposable
         bool autoCreateMissingReferences,
         List<(DoubletLink Before, DoubletLink After)>? changed)
     {
-        ArgumentNullException.ThrowIfNull(links);
-        ArgumentNullException.ThrowIfNull(document);
-        var changes = new List<(DoubletLink Before, DoubletLink After)>();
-        IReadOnlyList<(DoubletLink Before, DoubletLink After)>? net = null;
-        try
-        {
-            if (LinksOperation.FromDocument(document) is { } operation)
-            {
-                var operationReply = operation.Execute(links);
-                if (operation is LinksOperation.Create or LinksOperation.Update or LinksOperation.Delete)
-                {
-                    net = LinksOperation.ParseChanges(operationReply);
-                }
-                return operationReply;
-            }
-            if (document.Count == 0)
-            {
-                var any = links.Constants.Any;
-                return links.All(new DoubletLink(any, any, any))
-                    .Select(link => new DoubletLink(link))
-                    .OrderBy(link => link.Index)
-                    .Select(link => LinkLino(links, link))
-                    .ToList();
-            }
-            AdvancedMixedQueryProcessor.ProcessQuery(links, new AdvancedMixedQueryProcessor.Options
-            {
-                Query = LinoFormat.FormatDocument(document),
-                AutoCreateMissingReferences = autoCreateMissingReferences,
-                ChangesHandler = (before, after) =>
-                {
-                    changes.Add((new DoubletLink(before), new DoubletLink(after)));
-                    return links.Constants.Continue;
-                },
-            });
-            net = ChangesSimplifier.SimplifyChanges(changes).ToList();
-            return net
-                .Select(change => LinksOperation.ChangeLino(change.Before, change.After, link => LinkLino(links, link)))
-                .ToList();
-        }
-        catch (Exception error) when (error is not OutOfMemoryException)
-        {
-            return ErrorDocument(error.Message);
-        }
-        finally
-        {
-            changed?.AddRange(net ?? (changes.Count > 0 ? ChangesSimplifier.SimplifyChanges(changes) : Array.Empty<(DoubletLink, DoubletLink)>()));
-        }
+        return ExecuteRequestCore(links, document, autoCreateMissingReferences, null, changed);
     }
-
-    // `(index: source target)`, naming every reference that has a name.
-    private static LinoLink LinkLino(INamedTypesLinks<uint> links, DoubletLink link) =>
-        LinoFormat.Link(ReferenceName(links, link.Index), new List<LinoLink>
-        {
-            LinoFormat.Reference(ReferenceName(links, link.Source)),
-            LinoFormat.Reference(ReferenceName(links, link.Target)),
-        });
 
     internal static string ReferenceName(INamedTypesLinks<uint> links, uint id) =>
         links.GetName(id) ?? id.ToString(System.Globalization.CultureInfo.InvariantCulture);

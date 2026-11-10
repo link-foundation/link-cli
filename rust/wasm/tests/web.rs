@@ -103,6 +103,33 @@ fn deleting_a_link_deletes_its_usages_as_the_cli_does() {
     assert_link_missing(&deleted, 3);
 }
 
+#[wasm_bindgen_test]
+fn protocol_snapshot_reset_and_option_paths_use_the_same_store() {
+    let mut clink = Clink::default();
+    assert!(Clink::test());
+    assert!(!clink.request("(create: (0 0))").contains("error:"));
+    assert!(clink.request("(").contains("error:"));
+    assert!(clink.request("(create: ())").contains("error:"));
+    let before: Value = serde_json::from_str(&clink.snapshot()).unwrap();
+    assert_eq!(before["links"].as_array().unwrap().len(), 1);
+    let empty: Value = serde_json::from_str(&clink.execute(" ", " ")).unwrap();
+    assert_eq!(empty["success"], true);
+    let changed: Value = serde_json::from_str(&clink.execute(
+        "() ((second: second second))",
+        r#"{"before":true,"changes":false,"after":false,"trace":true}"#,
+    ))
+    .unwrap();
+    assert_eq!(changed["success"], true, "{changed}");
+    let structure: Value = serde_json::from_str(&clink.execute("", r#"{"structure":1}"#)).unwrap();
+    assert_eq!(structure["success"], true);
+    let missing: Value = serde_json::from_str(&clink.execute("", r#"{"structure":999}"#)).unwrap();
+    assert_eq!(missing["success"], false);
+    let invalid: Value = serde_json::from_str(&clink.execute("(", "{}")).unwrap();
+    assert_eq!(invalid["success"], false);
+    let reset: Value = serde_json::from_str(&clink.reset()).unwrap();
+    assert_eq!(reset["links"], serde_json::json!([]));
+}
+
 fn execute_json(clink: &mut Clink, query: &str) -> Value {
     let raw = clink.execute(
         query,

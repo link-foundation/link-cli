@@ -1,0 +1,57 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.75s
+     Running tests/transactions_named_fence_tests.rs (rust/target/debug/deps/transactions_named_fence_tests-8309cd63b460ee5e)
+
+running 6 tests
+test failed_rollback_fences_set_name ... FAILED
+test failed_rollback_fences_remove_name ... FAILED
+test committed_checkpoint_fences_set_name ... FAILED
+test committed_checkpoint_fences_remove_name ... FAILED
+test failed_version_rollback_fences_set_name ... FAILED
+test failed_version_rollback_fences_remove_name ... FAILED
+
+failures:
+
+---- failed_rollback_fences_set_name stdout ----
+
+thread 'failed_rollback_fences_set_name' (813033) panicked at tests/transactions_named_fence_tests.rs:33:5:
+failed cleanup must fence named writes
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- failed_rollback_fences_remove_name stdout ----
+
+thread 'failed_rollback_fences_remove_name' (813032) panicked at tests/transactions_named_fence_tests.rs:33:5:
+failed cleanup must fence named writes
+
+---- committed_checkpoint_fences_set_name stdout ----
+
+thread 'committed_checkpoint_fences_set_name' (813031) panicked at tests/transactions_named_fence_tests.rs:33:5:
+failed cleanup must fence named writes
+
+---- committed_checkpoint_fences_remove_name stdout ----
+
+thread 'committed_checkpoint_fences_remove_name' (813030) panicked at tests/transactions_named_fence_tests.rs:33:5:
+failed cleanup must fence named writes
+
+---- failed_version_rollback_fences_set_name stdout ----
+
+thread 'failed_version_rollback_fences_set_name' (813035) panicked at tests/transactions_named_fence_tests.rs:33:5:
+failed cleanup must fence named writes
+
+---- failed_version_rollback_fences_remove_name stdout ----
+
+thread 'failed_version_rollback_fences_remove_name' (813034) panicked at tests/transactions_named_fence_tests.rs:33:5:
+failed cleanup must fence named writes
+
+
+failures:
+    committed_checkpoint_fences_remove_name
+    committed_checkpoint_fences_set_name
+    failed_rollback_fences_remove_name
+    failed_rollback_fences_set_name
+    failed_version_rollback_fences_remove_name
+    failed_version_rollback_fences_set_name
+
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+error: test failed, to rerun pass `--test transactions_named_fence_tests`

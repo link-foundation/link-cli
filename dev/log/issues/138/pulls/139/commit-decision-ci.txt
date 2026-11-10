@@ -1,0 +1,17 @@
+Uncertain commit-decision ownership validation
+Head: 7c0da30dc2ab8d9a1ab6b374af74a3dfdf50f15c
+Checked: 2026-10-24 23:49 UTC
+All runs created at 2026-10-24T23:41:59Z after this head was pushed.
+
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40143793717
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40143793754
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40143793762
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40143793760
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40143793991
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40143793815
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40143793782
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40143793726
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40143793980
+
+All nine exact-head workflows passed. No failed logs exist for this head.
+Earlier-head results were not used as evidence for these changes.

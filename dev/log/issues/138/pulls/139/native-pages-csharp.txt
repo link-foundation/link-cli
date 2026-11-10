@@ -1,0 +1,24 @@
+C# SQL-free native doublets pages
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+18 focused page contracts passed. Complete suites pass 2,045 tests each in
+Debug and Release, with no failures or skips. Independent protocol bytes,
+finite before/after I/O faults, malformed checksummed metadata/pages, strict
+UTF-8, quotas, exact names, replicas, shared flushes and all 16 policy
+configurations pass. Native tests inject partial writes, short/zero reads,
+failed opens/directory sync, uncertain close of all four handles, bounded
+process exits and following writes. Caller ownership remains explicit.
+
+Debug coverage: 7,654/8,156 lines, 4,100/4,546 branches.
+Release coverage: 5,893/6,204 lines, 4,063/4,521 branches.
+These complete-project denominators remain below the required 100%.
+
+Rust -> Node -> Bun -> C# -> Deno -> Rust: all 16 shared-file configurations
+passed. Each invocation verifies every prior exact name, pins the predecessor
+and commits two separate revisions in one flush. Final revision is 12.
+No SQL package is added to the C# library. Resolved dependency guard, complete
+format verification, release changeset, source-size checks, actionlint,
+shellcheck, 221 repository checks and git diff whitespace checks passed.
+
+Fresh exact-head CI and independently selected redundant repair remain open.
+The matching single-copy provider does not complete the wider issue inventory.

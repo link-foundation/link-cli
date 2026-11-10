@@ -1,0 +1,113 @@
+Incremental revision encoding: runnable pre-implementation evidence
+
+Native/C# replay tests consume independently authored valid/mixed records.
+These execute and fail on unsupported mandatory engine2 format; they are not
+missing-API compiler failures. The JS physical-composition regression also
+executes and fails before accepting engine2. Invalid-stream controls already
+fail closed. Source line numbers below belong to those original pre-fix files.
+
+The bounded actual-WASM byte control uses 256 named rows and sixteen updates,
+a 128 MiB Node heap, pinned old values and reopen checks. Both pre-feature flat
+and shared state serialize 4,096 update rows / 966,063 bytes. This separately
+measures serialization, rather than map allocation or elapsed time.
+
+Evidence: change-replay-native-before.log
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 3.44s
+     Running tests/engine_change_replay_tests.rs (rust/target/debug/deps/engine_change_replay_tests-f884dcc146320e74)
+
+running 2 tests
+test independent_change_and_mixed_records_recover_exact_names_rows_history_and_allocator ... FAILED
+test malformed_change_streams_reject_without_rewriting_the_supplied_journal ... ok
+
+failures:
+
+---- independent_change_and_mixed_records_recover_exact_names_rows_history_and_allocator stdout ----
+
+thread 'independent_change_and_mixed_records_recover_exact_names_rows_history_and_allocator' (498554) panicked at tests/engine_change_replay_tests.rs:21:102:
+called `Result::unwrap()` on an `Err` value: Transaction("unsupported journal format")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    independent_change_and_mixed_records_recover_exact_names_rows_history_and_allocator
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test engine_change_replay_tests`
+
+Evidence: change-replay-csharp-before.log
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.60]     Foundation.Data.Doublets.Cli.Tests.EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(structure: Shared) [FAIL]
+[xUnit.net 00:00:01.61]     Foundation.Data.Doublets.Cli.Tests.EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(structure: Flat) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(structure: Shared) [6 ms]
+  Error Message:
+   System.IO.InvalidDataException : Malformed engine revision journal.
+---- System.FormatException : Unsupported journal format.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Engine.RevisionJournal`1.Decode(String record) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/Engine/RevisionJournal.cs:line 62
+   at Foundation.Data.Doublets.Cli.Engine.LinksEngine`1..ctor(ICommitLog log, EngineOptions options) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/Engine/LinksEngine.cs:line 81
+   at Foundation.Data.Doublets.Cli.Tests.EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(StateStructure structure) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/EngineChangeReplayTests.cs:line 20
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Engine.RevisionJournal`1.Decode(String record) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/Engine/RevisionJournal.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(structure: Flat) [1 ms]
+  Error Message:
+   System.IO.InvalidDataException : Malformed engine revision journal.
+---- System.FormatException : Unsupported journal format.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Engine.RevisionJournal`1.Decode(String record) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/Engine/RevisionJournal.cs:line 62
+   at Foundation.Data.Doublets.Cli.Engine.LinksEngine`1..ctor(ICommitLog log, EngineOptions options) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/Engine/LinksEngine.cs:line 81
+   at Foundation.Data.Doublets.Cli.Tests.EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(StateStructure structure) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/EngineChangeReplayTests.cs:line 20
+   at InvokeStub_EngineChangeReplayTests.IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Engine.RevisionJournal`1.Decode(String record) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/Engine/RevisionJournal.cs:line 41
+
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 107 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Evidence: change-delta-js-before.log
+✖ mixed logical change records pass through and reset complete-snapshot delta bases (6.311323ms)
+✔ delta journals replay shared vectors and reject every complete corrupt sequence (22.913192ms)
+✔ localized edits use portable deltas and checkpoints bound the dependency chain (6.410177ms)
+✔ configuration and logical record validation happen before mutation (4.204834ms)
+✔ malformed inner reads fail without changing the cached base (3.198978ms)
+✔ append and flush uncertainty fence the decorator until a fresh reopen (4.554676ms)
+✔ replication compares logical records or copies physical deltas in either composition order (14.370516ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 247.095858
+
+✖ failing tests:
+
+test at js/client/test/engine-delta.test.mjs:9:1
+✖ mixed logical change records pass through and reset complete-snapshot delta bases (6.311323ms)
+  Error: expected a complete engine1 revision
+      at frame (file:///tmp/gh-issue-solver-1792924568628/js/client/src/engine-delta.js:25:61)
+      at DeltaCommitLog.append (file:///tmp/gh-issue-solver-1792924568628/js/client/src/engine-delta.js:94:20)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792924568628/js/client/test/engine-delta.test.mjs:12:45)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+Evidence: revision-record-before.log
+{"rows":256,"commits":16,"state":"flat","encoding":"snapshot","encoded_update_rows":4096,"encoded_update_bytes":966063}
+
+Evidence: revision-record-shared-before.log
+{"rows":256,"commits":16,"state":"shared","encoding":"snapshot","encoded_update_rows":4096,"encoded_update_bytes":966063}

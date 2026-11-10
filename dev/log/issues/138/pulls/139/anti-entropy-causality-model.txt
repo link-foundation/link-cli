@@ -1,0 +1,16 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: python3 experiments/issue-138/anti-entropy-causality-model.py
+Actual finite result (2026-10-27T12:03Z): 120 event orders and 216 state triples pass.
+Merge is idempotent, commutative and associative over the six explicit valid states.
+Concurrent update/delete remain two incomparable versions; observed application resolution dominates both.
+Retaining the deletion prevents an old replica from resurrecting the value; discarding it does resurrect it in the negative control.
+Contradictory payloads with an equal causal identity reject before reconciliation.
+Finite inputs: two authors, five events, counters at most three; no stack/memory stress or unbounded exploration.
+This independent model is not a production anti-entropy test, performance result, distributed isolation proof or durability guarantee.
+Pinned Cassandra commit: 05853eaeab006bd1e834331ac8b1dfdc464d1f31.
+MerkleTree.java SHA256: eb378e6bc33ca6207910fc172612365f26c36be021e3a8ef987bd06bd0af2568; inspected lines 205-330.
+RepairJob.java SHA256: 2711ebede297c22ba53113afa139da7bbe45b80c7dc016be0aa381eda81b2286; inspected lines 374-439.
+LocalSyncTask.java SHA256: 0a79ea304c728070dd4bcffc8be7d4b64f40eed9713d0d984ad942811a17715b; inspected lines 80-115 and 157-181.
+Sources downloaded via authenticated GitHub contents API and retained under experiments/issue-138/research/anti-entropy; no implementation copied.
+Native/C#/actual-WASM causal storage, persistent counters, bounded Merkle transfer and crash recovery remain required production work.
+All other unmet R1-R12 criteria remain active; PR139 stays draft/unmerged.

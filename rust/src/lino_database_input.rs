@@ -36,7 +36,7 @@ where
     }
 
     for link in links.iter().filter(|link| !link.is_empty()) {
-        import_link(storage, link, false)?;
+        import_link(storage, link)?;
     }
 
     Ok(())
@@ -69,7 +69,8 @@ fn validate_link(link: &LinoLink, allow_anonymous_index: bool) -> Result<()> {
     Ok(())
 }
 
-fn import_link<T>(storage: &mut T, link: &LinoLink, allow_anonymous_index: bool) -> Result<u32>
+/// Imports a link `validate_link` accepted, as every entry to this module does first.
+fn import_link<T>(storage: &mut T, link: &LinoLink) -> Result<u32>
 where
     T: NamedTypeLinks,
 {
@@ -84,10 +85,6 @@ where
     let identifier = normalize_identifier(link.id.as_deref());
 
     if identifier.is_empty() {
-        if !allow_anonymous_index {
-            bail!("Top-level LiNo import links must have an index or name");
-        }
-
         return storage.try_get_or_create(source, target);
     }
 
@@ -101,20 +98,10 @@ where
     T: NamedTypeLinks,
 {
     if reference.values_count() == 2 {
-        return import_link(storage, reference, true);
-    }
-
-    if reference.values_count() > 0 {
-        bail!(
-            "LiNo import references must be scalar values or nested links with exactly two values"
-        );
+        return import_link(storage, reference);
     }
 
     let identifier = normalize_identifier(reference.id.as_deref());
-    if identifier.is_empty() {
-        bail!("LiNo import references must have a value");
-    }
-
     if let Some(id) = parse_reference_number(&identifier, true) {
         return Ok(id);
     }

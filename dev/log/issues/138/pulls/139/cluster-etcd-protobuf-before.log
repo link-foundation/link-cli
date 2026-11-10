@@ -1,0 +1,32 @@
+etcd evidence: /tmp/gh-issue-solver-1792854251187/experiments/issue-138/etcd/run-sLbwqu
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  Comparison {
++   outcome: 'unknown'
+-   outcome: 'failed'
+  }
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///tmp/gh-issue-solver-1792854251187/experiments/issue-138/etcd-cluster.mjs:55:37 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: LinksError: indeterminate coordinator response; read fresh journals to discover the outcome
+      at EtcdJournalStore.compareExchange (file:///tmp/gh-issue-solver-1792854251187/js/client/src/cluster.js:105:54)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async ClusterTransaction.commit (file:///tmp/gh-issue-solver-1792854251187/js/client/src/cluster.js:167:12)
+      at async waitForActual (node:assert:615:5)
+      at async strict.rejects (node:assert:738:25)
+      at async file:///tmp/gh-issue-solver-1792854251187/experiments/issue-138/etcd-cluster.mjs:55:37 {
+    outcome: 'unknown'
+  },
+  expected: { outcome: 'failed' },
+  operator: 'rejects',
+  diff: 'simple'
+}
+
+Node.js v26.12.1

@@ -1,0 +1,112 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Base: 58d35f8800f92b81342d97ed982459960a4d86d7
+Reproductions: reclaiming-chunks-before.txt. Missing Rust/C# selected APIs and
+JS blob2 instead of chunks2 fail before production changes. The isolated clean
+baseline rerun reproduces all three failures after validation, without changing
+the working source. run-reclaiming-chunks-before.sh preserves those controls.
+
+Selected behavior: optional bounded immutable chunks on the independently
+selected epoch-fenced reclamation strategy. Preserve existing APIs and blob2
+writing by default; upgraded readers accept both layouts. Cache selection is
+independent. All updates are admitted/copied before I/O and every selected
+manifest is validated before data reads. Staging compares fresh complete data.
+Every staged key uses the captured epoch, including unchanged prefixes after a
+fence. One catalog CAS checks every selected generation and the epoch root.
+Protect the complete live reference graph, preserve aliases and delete only
+older keys at their exact observed generation. A retired chunk causes one whole-
+group refresh, discarding every earlier prefix and cache hit; a second retirement
+fails closed. Unknown mutations are never automatically replayed.
+
+Reproduce sequentially within the 2.92GiB container budget:
+  bash experiments/issue-138/validate-reclaiming-chunks.sh
+  python3 experiments/issue-138/summarize-reclaiming-chunks.py
+  (cd js/client && npm test && npm run typecheck)
+  bun test js/client/test/reclaiming-chunks.test.mjs js/client/test/reclaiming-chunk-races.test.mjs --timeout 30000
+  deno test --allow-all js/client/test/reclaiming-chunks.test.mjs js/client/test/reclaiming-chunk-races.test.mjs
+  python3 experiments/issue-138/model-chunk-reclamation.py
+  python3 experiments/issue-138/model-chunk-readers.py
+  python3 experiments/issue-138/build-reclaiming-chunk-vectors.py /tmp/reclaiming-chunks-vectors.json
+  cmp docs/protocol/reclaiming-chunks-vectors.json /tmp/reclaiming-chunks-vectors.json
+
+Full sequential validation: 2026-10-27T06:52:02Z through 07:27:05Z, exit zero.
+Strict native/WASM Clippy and formatting pass; exact SDK10.0.403 whole-solution
+formatting passes. Native LLVM passes 1,159 tests and six doctests. Its 21 ignored
+child entries are driven by bounded parents; one legacy doctest remains ignored.
+Eight actual WASM binaries pass 719 tests, none ignored:
+  10 + 259 + 10 + 4 + 3 + 73 + 352 + 8.
+Both complete C# Debug and Release configurations pass 2,442 tests, none skipped.
+All 640 Node tests pass with enforced 100% production lines/branches/functions.
+Fourteen new selected controls pass in Bun and Deno; strict TypeScript passes.
+All 221 repository checks, 655 source-size checks, actionlint/ShellCheck, the
+single minor changeset and authenticated 126-declaration/Cargo.lock freshness
+checks pass. Source examples and full drivers are checked separately.
+
+Whole native LLVM coverage, every production denominator included:
+  lines 16,956/17,858; branches 3,277/3,766; functions 2,188/2,355;
+  regions 26,130/28,286; instantiations 12,084/21,687.
+Whole linked-WASM coverage:
+  lines 13,144/15,567; branches 2,659/3,169; functions 1,636/2,033;
+  regions 20,243/24,540; instantiations 4,342/7,471.
+C# Debug: lines 9,400/9,726; branches 5,695/6,144.
+C# Release: lines 7,253/7,471; branches 5,639/6,105.
+All three WASM wrapper sources reach 100% lines/functions/reported branches;
+regions and instantiations retain their complete denominators. Full native,
+C# and whole-linked-WASM 100% remains required and unfinished.
+
+Independent bounded models reproduce lost live chunks for old-epoch reuse and
+omitted epoch CAS, then pass current-epoch staging across 879/999/32,666 states
+for two writers/one collector, one/two and two/two. The 128MiB/100,000-state
+reader model reproduces fractured per-chunk refresh, then passes 1,601 states
+across all sixteen cache masks. Models are design evidence, not production tests.
+Production controls cover all sixteen four-chunk cache masks, second retirement,
+ten before/after staging/publication cuts, concurrent collectors, exact-generation
+ABA, late namespace failure, mixed old/default writers, corrupt counts/addresses,
+owned snapshots and following edits. Eighteen independent shared vectors cover
+UTF-8/BOM/NUL/supplementary values, empty journals and epochs zero/one/u64 max.
+
+Five actual Rust/C# native cluster consumers and all five actual-WASM compositions
+in Node/Bun/Deno pass. All 150 directed complete-store handoffs pass in plain and
+mirrored modes: fifty whole, fifty append-only chunks and fifty reclaiming chunks.
+Each read-only reopen preserves every physical file hash. Differing writer limits,
+exact Unicode/empty journals, history, checkpoints, collection, stale guards and
+following edits are verified. The actual-WASM conformance adapter passes eight
+applicable cases per runtime; four process/server cases explicitly skip because
+that adapter has no server process. Optional SQL checks pass in all languages,
+including eight native/WASM graphs and explicit SQLite opt-in.
+
+Two separate real three-member etcd clusters pass blob2 and chunks2 integration.
+Each verifies two Rust, two C# and four actual-WASM handoffs, ten before/after
+lost mutation replies (initialization, staging, publication, fence, deletion),
+one mutation send without automatic retry, fresh recovery/collection, retired-
+snapshot whole-group refresh, owned warm-cache outage, leader loss and majority
+loss without partial read or false publication/collection acknowledgment. Native
+examples retain every historical revision name, atomic checkpoint and following
+allocator edit. All server/child processes are shut down and reaped. Retained
+server logs are included in the expanded CI artifact paths.
+
+Actual-engine finite payload JSON is byte-identical in Node/Bun/Deno. Sixteen
+revisions/two shards use independent 256KiB caching and retained history.
+Data written/read bytes; data read requests; catalog written; scans/deleted/retained:
+  whole/no collection: 16,530/31,086; 94; 1,586; 4/0/32
+  two-record chunks/no collection: 2,958/19,232; 206; 6,376; 4/0/32
+  chunks/collection every fourth revision: 5,860/22,134; 254; 6,468; 16/40/16
+  chunks/collection every revision: 16,530/31,086; 416; 6,573; 52/128/16.
+Frequent fences restage complete current-epoch data and remove this workload's
+write savings. These measure provider UTF-8 record payload only: keys, framing,
+transport, physical I/O, durability, latency and throughput are excluded. Later
+replay/following-edit/final collection verification is outside measured counters.
+No bounded full replay/transfer, catalog throughput, automatic balancing or
+multi-catalog transaction claim follows. Complete namespace discovery remains
+bounded by configured admission. Every wider unmet R1-R12 criterion stays open.
+
+Full logs, coverage JSON/XML, preserved model controls and actual-runtime JSON:
+  experiments/issue-138/chunk-reclamation-*
+Original baseline logs: experiments/issue-138/chunks2-before.48HBS6/{js,rust,csharp}.log
+Three-member logs: experiments/issue-138/etcd/reclamation-{2hppdc,b8b2Fs}/*.log
+Sequential compilers use jobs1/debug0; .NET640MiB. Coverage and fresh consumer
+WASM modules have a verified 256MiB maximum. Both real clusters use finite
+harness/child deadlines and small etcd heaps. No cgroup OOM or OOM kill occurs.
+
+Preceding published head 58d35f8 has all nine workflows green; see
+journal-chunks-ci-after.txt. This new chunks2 source requires fresh exact-head
+CI after publication. Keep PR139 draft and unmerged while wider criteria remain.

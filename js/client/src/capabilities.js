@@ -7,6 +7,8 @@ export const MAX_U32_ADDRESS = 2n ** 32n - 1n;
 
 const common = {
   protocol: 'links-text/1',
+  // Explicit negotiation retains legacy servers' query documents.
+  losslessQueries: false,
   operations: [
     'count',
     'each',

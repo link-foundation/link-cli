@@ -1,0 +1,28 @@
+Epoch-fenced object reclamation: exact-head GitHub Actions evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 419f7c7c56f68f9d1669658cd4e0b507a90b03cb
+Commit created: 2026-10-26T22:19:24+00:00
+All nine workflows completed successfully after this commit.
+
+Broken Link Checker: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411556025
+C# CI/CD Pipeline: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411556139
+Dependencies: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411556027
+Docs: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411555866
+JS client CI: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411555986
+Rust CI/CD Pipeline: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411556013
+Security: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411555736
+WebAssembly CI: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411555978
+Workflows: success; created 2026-10-26T22:19:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411556003
+
+Native Linux/macOS/Windows matrices and actual WASM pass. Later commits need fresh CI.
+Whole-project coverage and every wider unfinished requirement remain active.
+
+rust native platform jobs:
+Test (windows-2025): success; 2026-10-26T22:22:02Z through 2026-10-26T22:31:21Z; https://github.com/link-foundation/link-cli/actions/runs/40411556013/job/121884314552
+Test (ubuntu-24.04): success; 2026-10-26T22:22:02Z through 2026-10-26T22:26:50Z; https://github.com/link-foundation/link-cli/actions/runs/40411556013/job/121884314720
+Test (macos-26): success; 2026-10-26T22:22:03Z through 2026-10-26T22:28:45Z; https://github.com/link-foundation/link-cli/actions/runs/40411556013/job/121884314734
+
+csharp native platform jobs:
+Test (windows-2025): success; 2026-10-26T22:20:09Z through 2026-10-26T22:29:16Z; https://github.com/link-foundation/link-cli/actions/runs/40411556139/job/121883479837
+Test (macos-26): success; 2026-10-26T22:20:10Z through 2026-10-26T22:23:35Z; https://github.com/link-foundation/link-cli/actions/runs/40411556139/job/121883479844
+Test (ubuntu-24.04): success; 2026-10-26T22:20:09Z through 2026-10-26T22:22:16Z; https://github.com/link-foundation/link-cli/actions/runs/40411556139/job/121883479936

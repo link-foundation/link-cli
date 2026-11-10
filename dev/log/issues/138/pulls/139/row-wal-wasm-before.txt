@@ -1,0 +1,314 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+   Compiling clink-wasm v2.4.0 (/tmp/gh-issue-solver-1792924568628/rust/wasm)
+    Finished `test` profile [unoptimized] target(s) in 24.50s
+     Running tests/storage.rs (rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-d279bf10a77f2bc4.wasm)
+Set WASM_BINDGEN_TEST_TIMEOUT to 30 seconds...
+running 5 tests
+Invoking test: transaction_row_wal::update_before_observer_recovers_rows_and_names
+panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: update/false/0
+  left: "[GenericLink { index: 1, source: 21, target: 22 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+Stack:
+
+Error
+    at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+    at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+test transaction_row_wal::update_before_observer_recovers_rows_and_names ... FAIL
+Invoking test: transaction_row_wal::ensure_before_observer_recovers_rows_and_names
+panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: ensure/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 5, source: 0, target: 0 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+Stack:
+
+Error
+    at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+    at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+test transaction_row_wal::ensure_before_observer_recovers_rows_and_names ... FAIL
+Invoking test: transaction_row_wal::delete_before_observer_recovers_rows_and_names
+panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: delete/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }]\n{0: \"zero\", 1: \"original 雪\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+Stack:
+
+Error
+    at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+    at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+test transaction_row_wal::delete_before_observer_recovers_rows_and_names ... FAIL
+Invoking test: transaction_row_wal::create_before_observer_recovers_rows_and_names
+panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: create/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 21, target: 22 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+Stack:
+
+Error
+    at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+    at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+test transaction_row_wal::create_before_observer_recovers_rows_and_names ... FAIL
+Invoking test: transaction_row_wal::cascade_before_observer_recovers_rows_and_names
+panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: cascade/false/0
+  left: "[]\n{0: \"zero\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+Stack:
+
+Error
+    at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+    at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+    at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+    at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+    at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+test transaction_row_wal::cascade_before_observer_recovers_rows_and_names ... FAIL
+
+failures:
+
+---- transaction_row_wal::update_before_observer_recovers_rows_and_names output ----
+    error output:
+        panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+        assertion `left == right` failed: update/false/0
+          left: "[GenericLink { index: 1, source: 21, target: 22 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+         right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+        Stack:
+
+        Error
+            at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23494]:0x3c5533)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23279]:0x3c51b5)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[18615]:0x3ba3fa)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290cb3)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[13026]:0x399ce5)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11883]:0x38b528)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3557]:0x2812d0)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed::<alloc[cb2b8d99256f33df]::string::String, alloc[cb2b8d99256f33df]::string::String> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11022]:0x37e07e)
+
+---- transaction_row_wal::ensure_before_observer_recovers_rows_and_names output ----
+    error output:
+        panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+        assertion `left == right` failed: ensure/false/0
+          left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 5, source: 0, target: 0 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+         right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+        Stack:
+
+        Error
+            at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23494]:0x3c5533)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23279]:0x3c51b5)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[18615]:0x3ba3fa)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290cb3)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[13026]:0x399ce5)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11883]:0x38b528)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3557]:0x2812d0)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed::<alloc[cb2b8d99256f33df]::string::String, alloc[cb2b8d99256f33df]::string::String> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11022]:0x37e07e)
+
+---- transaction_row_wal::delete_before_observer_recovers_rows_and_names output ----
+    error output:
+        panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+        assertion `left == right` failed: delete/false/0
+          left: "[GenericLink { index: 1, source: 11, target: 12 }]\n{0: \"zero\", 1: \"original 雪\", 77: \"absent\"}"
+         right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+        Stack:
+
+        Error
+            at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23494]:0x3c5533)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23279]:0x3c51b5)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[18615]:0x3ba3fa)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290cb3)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[13026]:0x399ce5)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11883]:0x38b528)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3557]:0x2812d0)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed::<alloc[cb2b8d99256f33df]::string::String, alloc[cb2b8d99256f33df]::string::String> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11022]:0x37e07e)
+
+---- transaction_row_wal::create_before_observer_recovers_rows_and_names output ----
+    error output:
+        panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+        assertion `left == right` failed: create/false/0
+          left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 21, target: 22 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+         right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+        Stack:
+
+        Error
+            at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23494]:0x3c5533)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23279]:0x3c51b5)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[18615]:0x3ba3fa)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290cb3)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[13026]:0x399ce5)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11883]:0x38b528)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3557]:0x2812d0)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed::<alloc[cb2b8d99256f33df]::string::String, alloc[cb2b8d99256f33df]::string::String> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11022]:0x37e07e)
+
+---- transaction_row_wal::cascade_before_observer_recovers_rows_and_names output ----
+    error output:
+        panicked at tests/../../tests/transaction_row_wal_tests.rs:138:13:
+        assertion `left == right` failed: cascade/false/0
+          left: "[]\n{0: \"zero\", 77: \"absent\"}"
+         right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+
+        Stack:
+
+        Error
+            at /tmp/.tmpgaEbyA/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpgaEbyA/wasm-bindgen-test.js:335:57)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[17627]:0x3b6c41)
+            at storage-d279bf10a77f2bc4.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11366]:0x383927)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[4687]:0x2c2e12)
+            at storage-d279bf10a77f2bc4.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[12860]:0x39804d)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290c5e)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23494]:0x3c5533)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[23279]:0x3c51b5)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[18615]:0x3ba3fa)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3801]:0x290cb3)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[6744]:0x3145be)
+            at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[22047]:0x3c2d04)
+            at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[13026]:0x399ce5)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11883]:0x38b528)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[3557]:0x2812d0)
+            at storage-d279bf10a77f2bc4.wasm.core[608f92abc48d28da]::panicking::assert_failed::<alloc[cb2b8d99256f33df]::string::String, alloc[cb2b8d99256f33df]::string::String> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-02ba6882:wasm-function[11022]:0x37e07e)
+
+failures:
+
+    transaction_row_wal::update_before_observer_recovers_rows_and_names
+    transaction_row_wal::ensure_before_observer_recovers_rows_and_names
+    transaction_row_wal::delete_before_observer_recovers_rows_and_names
+    transaction_row_wal::create_before_observer_recovers_rows_and_names
+    transaction_row_wal::cascade_before_observer_recovers_rows_and_names
+
+test result: FAILED. 0 passed; 5 failed; 0 ignored; 294 filtered out; finished in 0.23s
+
+Error: Node failed with exit_code 1
+error: test failed, to rerun pass `--test storage`
+
+Caused by:
+  process didn't exit successfully: `wasm-bindgen-test-runner /tmp/gh-issue-solver-1792924568628/rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-d279bf10a77f2bc4.wasm transaction_row_wal --nocapture` (exit status: 1)

@@ -1,0 +1,46 @@
+Portable physical LSM store exact-head CI; https://github.com/link-foundation/link-cli/pull/139
+Commit: bc364d2e09100bc5bd0d93274b2ecd870e31b66e
+All nine workflows created 2026-10-27T01:56:41Z after publication.
+Every workflow completed successfully; no non-passing runs require downloading.
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40435521471
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40435521505
+Dependencies: success; https://github.com/link-foundation/link-cli/actions/runs/40435521712
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40435521487
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40435521404
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40435521534
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40435521417
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40435521380
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40435521386
+40435521386 Rust coverage: success; 2026-10-27T01:56:44Z through 2026-10-27T02:03:13Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963147828
+40435521386 Detect Changes: success; 2026-10-27T01:56:43Z through 2026-10-27T01:57:37Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963148053
+40435521386 Create Changelog PR: skipped; 2026-10-27T01:56:42Z through 2026-10-27T01:56:41Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963149547
+40435521386 Verify crates.io trusted publishing: skipped; 2026-10-27T01:56:42Z through 2026-10-27T01:56:41Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963149637
+40435521386 Simulate Fresh Merge: success; 2026-10-27T01:57:40Z through 2026-10-27T02:03:04Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963443378
+40435521386 Lint and Format Check: success; 2026-10-27T01:57:40Z through 2026-10-27T01:59:54Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963443449
+40435521386 Changelog Fragment Check: success; 2026-10-27T01:57:40Z through 2026-10-27T01:58:39Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963443477
+40435521386 Test (windows-2025): success; 2026-10-27T01:58:41Z through 2026-10-27T02:10:14Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963758886
+40435521386 Test (ubuntu-24.04): success; 2026-10-27T01:58:41Z through 2026-10-27T02:04:09Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963758923
+40435521386 Test (macos-26): success; 2026-10-27T01:58:42Z through 2026-10-27T02:06:30Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121963758926
+40435521386 Build Package: success; 2026-10-27T02:10:17Z through 2026-10-27T02:10:57Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121967511414
+40435521386 Auto Release: skipped; 2026-10-27T02:10:58Z through 2026-10-27T02:10:57Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121967745741
+40435521386 Manual Release: skipped; 2026-10-27T02:10:58Z through 2026-10-27T02:10:57Z; https://github.com/link-foundation/link-cli/actions/runs/40435521386/job/121967745834
+40435521417 Detect Changes: success; 2026-10-27T01:56:43Z through 2026-10-27T01:56:50Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963148207
+40435521417 Create Changeset PR: skipped; 2026-10-27T01:56:42Z through 2026-10-27T01:56:42Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963149881
+40435521417 Verify NuGet trusted publishing: skipped; 2026-10-27T01:56:42Z through 2026-10-27T01:56:42Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963150047
+40435521417 Simulate Fresh Merge: success; 2026-10-27T01:56:54Z through 2026-10-27T01:58:35Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963190853
+40435521417 Changeset Validation: success; 2026-10-27T01:56:55Z through 2026-10-27T01:57:01Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963190982
+40435521417 Lint and Format Check: success; 2026-10-27T01:56:55Z through 2026-10-27T01:58:26Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963190997
+40435521417 Test (ubuntu-24.04): success; 2026-10-27T01:57:04Z through 2026-10-27T01:59:13Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963254864
+40435521417 Test (macos-26): success; 2026-10-27T01:57:06Z through 2026-10-27T02:00:49Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963254974
+40435521417 Test (windows-2025): success; 2026-10-27T01:57:04Z through 2026-10-27T02:07:23Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121963254975
+40435521417 Build Package: success; 2026-10-27T02:07:25Z through 2026-10-27T02:08:09Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121966581976
+40435521417 Release: skipped; 2026-10-27T02:08:09Z through 2026-10-27T02:08:09Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121966833437
+40435521417 Instant Release: skipped; 2026-10-27T02:08:09Z through 2026-10-27T02:08:09Z; https://github.com/link-foundation/link-cli/actions/runs/40435521417/job/121966834135
+40435521380 Test: success; 2026-10-27T01:56:43Z through 2026-10-27T02:07:43Z; https://github.com/link-foundation/link-cli/actions/runs/40435521380/job/121963147419
+40435521380 WASM coverage: success; 2026-10-27T01:56:44Z through 2026-10-27T02:01:44Z; https://github.com/link-foundation/link-cli/actions/runs/40435521380/job/121963147767
+
+Conditional release/changelog jobs are skipped on the PR as configured.
+Native Rust verifies Ubuntu, Windows, macOS, coverage and fresh merge.
+These checks validate the published portable API step. Native whole-store ownership,
+process-exit/file interchange, complete 100% coverage and broader R1-R12 remain open.
+PR139 remains draft and unmerged.

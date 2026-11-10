@@ -1,0 +1,312 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <repository>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <repository>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.35]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-before", entry: "graph") [FAIL]
+[xUnit.net 00:00:01.47]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-before", entry: "graph") [FAIL]
+[xUnit.net 00:00:01.59]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:01.69]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:01.80]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:01.94]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:02.11]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:02.22]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:02.35]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-before", entry: "graph") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-before", entry: "graph") [390 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-before", entry: "graph") [135 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-after", entry: "owner") [120 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-after", entry: "graph") [100 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-after", entry: "graph") [108 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-before", entry: "owner") [134 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-before", entry: "owner") [171 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-after", entry: "owner") [105 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-before", entry: "graph") [131 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:02.48]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:02.55]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-before", entry: "graph") [FAIL]
+[xUnit.net 00:00:02.63]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:02.75]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:02.83]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:02.91]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:02.99]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:03.04]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.11]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-after", entry: "owner") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-after", entry: "owner") [123 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-before", entry: "graph") [79 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-after", entry: "graph") [79 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-after", entry: "graph") [109 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-after", entry: "owner") [85 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-after", entry: "owner") [83 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-after", entry: "graph") [68 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-after", entry: "owner") [51 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-after", entry: "owner") [72 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:03.17]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-after", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.25]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:03.30]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-before", entry: "graph") [FAIL]
+[xUnit.net 00:00:03.36]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-before", entry: "graph") [FAIL]
+[xUnit.net 00:00:03.44]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-before", entry: "graph") [FAIL]
+[xUnit.net 00:00:03.49]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.55]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:03.61]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.68]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-before", entry: "owner") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-after", entry: "owner") [60 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-after", entry: "graph") [73 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-before", entry: "graph") [53 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-before", entry: "graph") [58 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-before", entry: "graph") [77 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-before", entry: "owner") [52 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-after", entry: "graph") [61 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "decision-log-before", entry: "owner") [54 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-before", entry: "owner") [69 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:03.76]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.81]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.89]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-before", entry: "owner") [FAIL]
+[xUnit.net 00:00:03.97]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-after", entry: "graph") [FAIL]
+[xUnit.net 00:00:04.03]     Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-before", entry: "graph") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-before", entry: "owner") [77 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "checkpoint-log-before", entry: "owner") [54 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 105
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-applied-before", entry: "owner") [75 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-transition-after", entry: "graph") [80 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "vc-head-before", entry: "graph") [66 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.<>c__DisplayClass4_5.<AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup>g__Fences|3(<>c__DisplayClass4_4&) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(String point, String entry) in <repository>/csharp/Foundation.Data.Doublets.Cli.Tests/AutomaticVersionFailureTests.cs:line 98
+   at InvokeStub_AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:    32, Passed:     0, Skipped:     0, Total:    32, Duration: 3 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

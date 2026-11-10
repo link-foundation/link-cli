@@ -1,0 +1,32 @@
+Signed version boundary and sparse retained histories (R1/R3/R8)
+
+Before: all three finite C# cases fail at the transition marker budget
+against published production. The corrected callback-address fixture again
+fails all three, zero pass: version-sequence-corrected-before.log.
+The original fixture used primitive Create's return value as an address;
+that test mistake is preserved in version-sequence-focused.log and corrected.
+No production recovery change was needed for that fixture mistake.
+A guard rejects a ninth marker or the first nonpositive sequence, so even
+the old signed overflow loop cannot exhaust memory or run indefinitely.
+Rust's finite sparse-100 fixture fails before the fix because Checkout(3)
+accepts an unrecorded version: version-sequence-rust-before.log, line 59.
+
+The C# inclusive attribution loop no longer increments beyond long.MaxValue.
+Both native default-history constructors now iterate actual retained records,
+rather than every integer up to LastLoggedSequence. This avoids phantom gap
+versions and work proportional to an arbitrary sparse sequence value.
+Three cases per native language verify automatic/explicit final-number
+writes, exhaustion admission, head/tag, sparse checkout and mapped reopening.
+Two additional C# contracts cover async cancellation, transaction identity,
+committed rollback/disposal, named forwarding and rejected metadata inputs.
+Focused C#: 78 pass. Focused Rust version/sequence targets all pass.
+Full C# Debug/Release: 981 pass each, zero skips.
+Full native Rust: 561 standard tests pass, 4 child entry points ignored; custom stdout harness also passes.
+Debug: 6,064/6,557 lines (92.48%); 2,762/3,174 branches (87.02%).
+Release: 4,599/4,899 lines (93.88%); 2,741/3,155 branches (86.88%).
+Native Rust: 9,277/10,127 lines (91.61%), 1,527/1,874 branches (81.48%), 1,238/1,388 functions (89.19%).
+Strict Clippy (all features/targets), Rust formatting, .NET formatting and
+minor release metadata validation pass. No coverage exclusions were added.
+The staged JS/actual-WASM version API and code are unchanged by this step.
+Complete native and linked WASM coverage remains below the requested 100%.
+Logs and machine-readable reports remain under experiments/issue-138.

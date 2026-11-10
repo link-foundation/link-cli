@@ -1,0 +1,8 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.37s
+     Running tests/version_ancestry_semantics_tests.rs (rust/target/debug/deps/version_ancestry_semantics_tests-b26b517b3f89aca5)
+
+running 1 test
+test nested_ancestry_preserves_cutoffs_order_and_following_writes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.12s

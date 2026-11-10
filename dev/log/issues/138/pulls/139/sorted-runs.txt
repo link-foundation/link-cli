@@ -1,0 +1,60 @@
+Immutable sorted runs; PR https://github.com/link-foundation/link-cli/pull/139
+Run each stage of: bash experiments/issue-138/validate-sorted-runs.sh <stage>
+One compiler job; debug info disabled; actual WASM capped at 256 MiB.
+Compiled-binding selection fails before implementation: unknown state structure.
+This is a missing-feature baseline, not a previously supported behavior defect.
+Five native component controls also pass with an explicit no-op cache-retention assertion.
+Both C# suites complete successfully; the original wrapper then exits 127
+because its running file was edited. Preserve that error separately from test results.
+The complete reports below and later repository/syntax checks verify the resulting files.
+
+Native Rust: 935 passed, 0 failed; 17 ignored child entry points.
+Complete production:
+  lines: 12969/13748 (94.33372%)
+  branches: 2419/2840 (85.17606%)
+  functions: 1654/1783 (92.76500%)
+sorted_runs.rs:
+  lines: 88/88 (100.00000%)
+  branches: 18/18 (100.00000%)
+  functions: 10/10 (100.00000%)
+Report: experiments/issue-138/sorted-runs-native-coverage.json
+
+Actual WASM: 546 passed, 0 failed; 0 ignored child entry points.
+Complete production:
+  lines: 10033/12796 (78.40731%)
+  branches: 1999/2443 (81.82562%)
+  functions: 1269/1700 (74.64706%)
+sorted_runs.rs:
+  lines: 87/88 (98.86364%)
+  branches: 17/18 (94.44444%)
+  functions: 10/10 (100.00000%)
+Three WASM wrapper source modules (separate from complete linked totals):
+  lines: 383/383 (100%)
+  branches: 20/20 (100%)
+  functions: 73/73 (100%)
+Report: experiments/issue-138/sorted-runs-wasm-coverage.json
+Native doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+Complete C# Debug: 2164 passed, 0 failed/skipped.
+lines: 8043/8353 (96.28876%)
+branches: 4351/4722 (92.14316%)
+SortedRunRows.cs unique lines: 74/74
+Report: experiments/issue-138/sorted-runs-csharp-Debug-results/b18eba0d-fcef-4670-9061-ee53f51c064b/coverage.cobertura.xml
+
+Complete C# Release: 2164 passed, 0 failed/skipped.
+lines: 6171/6365 (96.95208%)
+branches: 4300/4689 (91.70399%)
+SortedRunRows.cs unique lines: 52/52
+Report: experiments/issue-138/sorted-runs-csharp-Release-results/e89b71d2-76bd-48cd-819a-3aea1d9e28de/coverage.cobertura.xml
+Node 26 JS: {'tests': 209, 'pass': 209, 'fail': 0, 'skipped': 0}
+Node 24 JS: {'tests': 209, 'pass': 209, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: actual sorted-run public contract and expanded conformance pass; client runner 8 passed, 4 process-only scenarios skipped for in-process WASM.
+bun: actual sorted-run public contract and expanded conformance pass; client runner 8 passed, 4 process-only scenarios skipped for in-process WASM.
+deno: actual sorted-run public contract and expanded conformance pass; client runner 8 passed, 4 process-only scenarios skipped for in-process WASM.
+All JS production modules pass 100% line/branch/function thresholds; strict types pass.
+48 configurations / 288 Rust/Node/Bun/C#/Deno/Rust file writers pass, including damaged-copy repair.
+Newest-write/tombstone/resurrection, pins, no-ops, run identity, all conversions,
+independent policies, group/branch behavior and durable-prefix reopening pass.
+Native/WASM strict Clippy, formatting, release/source-size, optional-SQL guards and ShellCheck pass.
+Physical SSTables, legacy mapped repair, whole-project 100% and every wider criterion remain unfinished.

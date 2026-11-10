@@ -1,0 +1,386 @@
+Validating changesets added by this PR...
+Warning: Could not determine PR diff, checking all changesets in directory
+Found 1 changeset file(s) added by this PR
+Added changesets:
+  - acid-durability.md
+Validating changeset: csharp/.changeset/acid-durability.md
+Changeset validation passed
+   Type: minor
+   Description: Select immutable sorted runs independently of concurrency, isolation, validation,
+retention and journal encoding. Share immutable run arrays between revisions,
+preserve tombstones through merges and retain the existing links/session API.
+
+Add selected causal version encoding, retained-sibling merge and checked counter
+construction with shared Rust, actual-WASM and JS vectors. These semantic
+operations perform no storage I/O, durable author fencing or replication.
+
+Select bounded local causal batches over one coherent journal store. Publish
+the complete owner journal and separately bound retry receipts with one two-key
+compare-exchange. Reject stale bases, child-token collisions and invalid later
+edits before publication; discover exact retries after lost replies and later
+writes. Preserve standalone owner compatibility and caller-owned store lifetime.
+
+Select owned causal row/name projection with explicit conflict rejection or
+maximum-dot selection. Preserve complete retained siblings including deletions,
+validate complete input before pruning, and bound version count and wire bytes.
+
+Stage ordinary causal links and names through the existing private engine,
+with a fresh caller-reserved address range and selected constraints. Freeze
+one complete final difference before explicit-token batch publication; preserve
+exact retries after unknown replies and following writes. Expose the standard
+ulong links/name surface and owned prepared requests for process recovery.
+
+Preserve the current mapped view and owned file handle when capacity growth is
+rejected. Construct a replacement before publishing its pointer, retaining
+flush, retry, following edits and exact used-length disposal after an I/O error.
+
+Reject complete corrupt journal entries and report replay failures. Add explicit
+data/journal flush callbacks and checkpoint only after data reaches storage.
+
+Add an optional staged links engine with configurable concurrency, isolation,
+immutable revision retention, constraints and replaceable file/replicated logs.
+
+Support independent journal branches and atomic three-way merge, with saved
+merge bases for reopen/retry after uncertain I/O outcomes.
+
+Compose atomic multi-shard transactions with replaceable journal stores and an
+optional etcd HTTP adapter, with bounded I/O, linearizable snapshots, generation
+validation, unknown outcomes and actual three-member failover integration.
+
+Route immutable journals to independent data stores while atomically publishing
+small catalog pointers; preserve cross-shard validation and unknown-outcome
+discovery across independent consensus groups.
+
+Add optional portable delta journal decorators with bounded checkpoint chains,
+exact logical replay, corruption rejection and uncertain-write fencing.
+Avoid unnecessary recovered-row conflict metadata and skip per-row generation
+tracking for exclusive/whole-revision serializable strategies. Reclaim generations
+after the final session validates, preserving optimistic ABA/branch conflicts.
+
+Select serializable point-read validation independently of journal/history settings.
+Permit disjoint point edits while checking missing rows, ABA, branch changes and
+read/write cycles; scans retain conservative revision validation.
+
+Preserve storage outcomes when optional store, query, server, transaction,
+trigger or version console diagnostics fail. Retention no longer replays
+rolled-back writes or archives them as committed changes; background retention
+waits for pending transactions.
+
+Retain observed partial writes when storage or user callbacks throw, undo
+automatic operations and preserve explicit rollback state. Keep the original
+absent state across repeated allocation/update callbacks.
+
+Release owned data handles and partially initialized names mappings when a
+constructor fails; leave borrowed data usable after failed construction.
+
+Retain the complete observed undo batch before journal writes. Reject commit and
+further writes after an append failure, roll back automatic failures, and expose
+Rollback() on the decorator to retry cleanup when an implicit rollback fails.
+
+Make the transaction rollback-only before undo starts, preserving the abort
+decision when undo or rollback persistence fails until cleanup is retried.
+
+Release CLI-owned mapped data, journal, version and trigger stores before the
+entry point returns, including failure while constructing a later layer.
+
+Reject exhausted legacy transaction sequence space before mutation and retain
+complete pending undo when a cascade exceeds remaining sequence capacity.
+
+Wait for active asynchronous checkpoints before transaction shutdown returns,
+serialize concurrent shutdown callers and reject callback self-joins. Preserve
+borrowed-store ownership and journal recovery for cancelled/failed checkpoints.
+
+Select optional pessimistic point-write ownership with immediate busy errors,
+independent isolation/read-set validation, stale/ABA rejection, branch protection
+and cleanup on every session outcome. Keep engine-local locks out of cluster
+workspaces and preserve existing optimistic/exclusive defaults.
+
+Dispose complete facade graphs with borrowers before their dependencies, joining
+asynchronous checkpoints before mapped stores close. Share nested/cyclic traversal
+state, preserve detached references, and leave dependencies available when borrower
+cleanup fails and must be retried.
+
+Keep version-control admission and owner cleanup retry after failed transaction
+rollback. Release admission when the inner transaction reaches a terminal state,
+including a failure reported after rollback completes.
+
+Finish committed version publication after checkpoint or metadata errors through
+transaction/owner disposal and rollback. Keep write and metadata admission fenced
+until publication succeeds, and avoid duplicate transition markers on retry.
+
+Publish the final signed version sequence without wrapping. Initialize version
+history from retained journal records, avoiding phantom versions across gaps.
+
+Persist branch and parent names with an unambiguous versioned marker, retaining
+legacy reads. Recover tag names containing equals signs without truncation.
+
+Fence named writes while committed version publication is pending. Reject
+public journal or version recovery while an open transaction owns live state.
+
+Retain known committed synchronous checkpoints through failed persistence.
+Retry them through Commit, CommitAsync, Rollback or transaction disposal before
+releasing foreground admission or publishing version metadata. Fence row and
+named writes during incomplete commit/rollback cleanup; preserve queued async
+policy and borrowed-store shutdown semantics.
+
+Recover the ordered committed suffix after an applied-marker gap. Persist the
+complete redo and pending undo before closing that gap, so interrupted recovery
+cannot overwrite later committed updates, deletions or recreated rows.
+
+Checkpoint current inline effects when sized/chunked retention encounters an
+older failed async checkpoint; preserve newer updates, deletion and recreation.
+
+Retain uncertain commit attempts before marker append/flush, fence new writes
+and resolve the decision through cleanup without undoing a possibly durable
+commit. Avoid duplicate decision markers on retry and retain version publication
+ownership when cleanup resolves an uncertain inner commit.
+
+Exclude aborted and recovered pending records from initial version history and
+its branch head. Reject existing sidecars that attribute a known uncommitted
+record, and reject version construction/recovery over a live inner transaction.
+
+Retain an implicit version owner for automatic writes through failed commit and
+metadata publication. Retry committed work through cleanup, preserve ordinary
+pre-commit undo (including failed undo retry), and fence all new mutations until
+the original branch publication finishes. Preserve no-op and async policies.
+
+Wait asynchronously for background checkpoint work instead of occupying a
+ThreadPool thread for every idle transaction owner. Apply admitted batches in
+order without another pool dispatch, while preserving cancellation, actual
+worker joining and callback self-join rejection during shutdown.
+
+Persist a version-publication intent before journal commit and durably publish
+the exact branch/range before clearing it. Recover committed or aborted intents
+after abrupt process exit, retain admission through every metadata/flush failure,
+and reject malformed or contradictory intents without rewriting their sidecar.
+Expose the metadata flush callback and durable-publication capability.
+
+Resolve every changed undo and redo transition before checkout or branch
+switching. Reject missing retained history without changing rows or metadata,
+while preserving no-op and available-suffix moves over an unavailable shared
+prefix. Index the retained journal once instead of rescanning it per transition.
+
+Fence public unlogged transition apply/revert while a transaction or its failed
+commit/rollback cleanup still owns the data. Preserve retry of that owner and
+ordinary unlogged version replay after ownership is released.
+
+Repair partial file-journal writes before reusing the same writer for read,
+append or flush. Retain the repair requirement across repeated I/O failures,
+preserve complete records after uncertain writes and use bounded tail scanning.
+
+Persist resolved checkout/branch-switch replay intents before changing rows.
+Retain exclusive replay ownership through row, metadata and flush failures;
+finish exact positions on reopen, fence queued asynchronous checkpoints and
+preserve retry after failed startup construction. Reject contradictory movement
+metadata and retain sequence allocation floors after journal payload eviction.
+
+Claim chunk archive paths with exclusive creation, preserving existing archives
+and symlink targets. Keep rejected optional archives in the live journal for a
+later retention attempt, using a fresh random candidate.
+
+Validate recovery journals before replacing live history or replaying rows.
+Reject conflicting sequence records, contradictory decisions and invalid owners
+or sequences while preserving idempotent parsed duplicates and retained floors.
+Retain admission after failed recovery, including queued asynchronous checkpoints
+and retention, until retry completes recovery before following writes or replay.
+
+Construct branch paths iteratively without stack growth per ancestor, scanning
+transition attribution once. Preserve nested fork cutoffs, per-branch heads and
+root-to-leaf replay order, including empty histories and subsequent edits.
+
+Commit caller-selected groups of independent sessions with separate revisions
+and one shared durability flush. Preserve input-order validation, known aborts
+and indeterminate prefix recovery without publishing uncertain state. Avoid
+flushing the primary twice during synchronous replica acknowledgement.
+
+Record ordinary name changes and row-associated names in complete portable
+journal records. Restore unique-name owners and deleted/cascaded names during
+rollback; publish name-only versions and preserve names through recovery,
+movement intents and chunk archives. Retain the original row transition and
+v1 codec, add complete record snapshots/replay, preserve shared-name adapters
+and distinguish an existing name owner at address zero from an absent name.
+
+Select optional pre-effect logical row/name undo images for ordinary transactions.
+Retain preparation and cleanup ownership, validate mandatory metadata before
+mutation and reconcile unreported effects before committed history/publication.
+Preserve the default observer policy and original constructor signatures; recover
+unknown allocations and redo later committed checkpoints after image restoration.
+
+Select structurally shared immutable ordered engine state independently of
+isolation, history and journal settings. Preserve flat-map defaults and portable
+revision records; share unchanged nodes across live and recovered revisions,
+scans, group preparation and branches without copying complete row maps.
+
+Select canonical changed-row revision encoding independently of state structure
+and other engine policies. Preserve complete-snapshot defaults, mixed journal
+recovery, saved branch bases, shared group flush and physical delta composition.
+Apply selected change records against immutable predecessor roots and validate
+base, allocator, row/name operations and checksums before publication.
+
+Select an optional provider-neutral SQLite physical page-WAL journal. Preserve
+staged reads, atomic group flushes and uncertain outcomes; fence stale owners,
+validate schema/UTF-8/sequences, enforce WAL/FULL and expose bounded checkpoints.
+Keep the core free of a mandatory SQLite NuGet provider and bound explicit
+provider command retries.
+
+Select optional persistent constraint indexes independently of map, encoding and
+other engine policies. Allocate only selected pair/name/reference indexes, allow
+atomic swaps, count incoming references and publish roots only after flush.
+Preserve scan defaults, historical replay validation and uncertain group outcomes.
+
+Select a bounded immutable journal object cache for partitioned stores. Keep
+catalog reads and publication checks fresh, return owned arrays and retain no
+cache by default. Coordinate concurrent fills and payload accounting locally.
+
+Reject cyclic Unicode sequence graphs through a checked iterative walker while
+retaining the maintained package converter, repeated shared subtrees and existing
+UTF-16 behavior. Keep traversal state local after failed decoding and reject
+malformed persisted names on repeated reopening.
+
+Format deep link structures iteratively with one StringBuilder. Preserve
+source-only expansion, cycle references and deepest-first name lookups while
+avoiding call-stack exhaustion and repeated whole-subtree copying.
+
+Treat the .NET 10 listener socket-clear race as a clean accept-loop exit only
+after server shutdown starts. Preserve unexpected null-reference failures
+outside shutdown and join accepted connection workers before returning.
+
+Select a SQL-free native doublets page journal independently of logical engine
+and replication strategies. Validate canonical versioned pages and decisions,
+stage group writes, fence uncertain owners and reject committed corruption.
+Provide an exclusive native file device with bounded reads, durable flush,
+POSIX parent synchronization and explicit close-error ownership fencing.
+
+Select two-copy native page repair separately from revision, validation and
+replication policies. Synchronize both copies before acknowledgement and validate
+the entire expected prefix before repairing a damaged copy. Preserve the default
+single-copy format and costs, and retain uncertain native ownership fences.
+
+Accept equals signs in native command tag names while preserving aliases to
+complete existing tags, unknown-point diagnostics and following database edits.
+
+Select optional portable retained-history checkpoints and coordinated checkpoint
+publication through the existing generation CAS. Preserve append-only defaults,
+committed allocators, selected history and uncertain-outcome recovery.
+Compose initial checkpoints with physical delta journals and either replica
+decorator order while preserving exact replay and uncertain-operation fencing.
+
+Provide optional complete-journal replacement through two fixed page banks and
+an epoch-bound synchronized root. Keep devices caller-owned, reject pending
+physical records and fence uncertain operations until actual reopening.
+
+Compact retained committed journals under the engine commit lock through an
+optional replacement log. Preserve sessions, pins, history and allocator gaps;
+compose physical delta journals and fence unknown publication until reopening.
+
+Own the native checkpoint root and both single/mirrored banks through a selected
+factory. Acquire all fences before recovery, close every raw owner root last,
+preserve constructor and cleanup errors, and retain uncertain fences without
+flushing pending work during disposal.
+
+Select checkpoint root mirroring independently of bank copies. Retain the
+original constructor signature and single-root defaults. Validate root copies
+and their committed bank before repair, synchronize both decisions before
+acknowledgment and reject persisted mode conversion without changing existing
+bytes. Acquire and clean up every selected native root and bank owner.
+
+Add optional namespace maintenance with complete bounded revision-consistent
+etcd scans and generation-conditional single-key deletion. Preserve ordinary
+atomic-store costs and leave immutable-object reclamation independently selected.
+
+Select explicit epoch-fenced immutable journal reclamation with complete bounded
+root discovery, exact-generation deletion, coherent owned-reader refresh and
+zero-default optional caching. Keep append-only modes and expose native/WASM
+retained-history checkpoint handoffs and deterministic concurrency fault cases.
+
+Provide explicitly selected immutable physical sorted journal tables over native
+doublets pages, with exact tombstone generations, bounded full validation and
+indexed physical point reads. Verify portable vectors and native cross-language
+file interchange; keep WAL/manifest/compaction composition separate.
+
+Add optional native-lsm1 semantic WAL replay and revalidated checkpoint encoding
+with shared independent vectors, canonical u64 descriptors and finite admission.
+Keep physical table validation, publication and native ownership composition as
+separate required work; this codec performs no storage I/O.
+
+Compose an explicitly selected bounded physical journal store from an atomic
+replaceable WAL and exclusive immutable-table namespace. Preserve group CAS,
+tombstone generations, bounded buffering, foreground compaction and maintenance
+consumers; fence uncertain publication and defer table repairs until complete
+selected-state validation. Native directory ownership remains separately selected
+and requires its own read-only discovery before constructing a repairing WAL.
+
+Add borrowed read-only checkpoint inspection in Rust, C# and JavaScript. Return
+owned selected-prefix records with finite page admission, preserving suffixes and
+staged mirror repairs until higher-level semantics validate; allocate no identity,
+initialize no bank and leave ordinary constructor recovery behavior intact.
+
+Provide a separately imported JavaScript native LSM facade with exclusive
+bounded directory discovery, read-only validation before recovery effects,
+independent file mirrors, and explicit uncertain-handle cleanup fencing.
+
+Provide the C# native LSM directory facade with matching bounded read-only
+discovery, independent file mirrors, regular-file validation and cached
+uncertain-handle cleanup. Add finite file-operation failures, abrupt-exit
+recovery and actual direct, partitioned and reclaiming cluster examples.
+
+Select bounded immutable journal chunks independently of caching and engine
+policies. Reuse unchanged complete prefixes while retaining whole-journal
+defaults, atomic catalog generation checks, owned reads and fresh full-content
+staging comparisons. Validate every manifest before fetching data and every
+update before staging. Preserve native Rust/C#/JS file interchange; keep the
+epoch-reclamation format separate and reject unsupported roots before deletion.
+
+Select bounded journal chunks independently on the epoch-fenced reclaiming store.
+Protect every live reference during collection, restage complete objects after a
+fence, and refresh the complete reader group if a chunk retires. Preserve blob2
+writing by default and interoperable native file/consensus consumers.
+
+Add selected local causal ownership over atomic journals, durable retry receipts,
+retained historical identities and bounded replay, with SQL-free native LSM
+interchange and explicit process-exit recovery examples.
+
+Add selected immutable causal Merkle snapshots, canonical root-bound proof frames
+and bounded differing-range pulls with opaque continuations. Preserve concurrent
+destination evidence and validate physical cross-runtime/process-exit exchange.
+
+Share the established query matching and mutation algorithms across selected
+unsigned generic addresses while preserving the original uint facade, options,
+patterns and implicit query strings. Keep quoted numeric names distinct from
+full-width stored addresses. Preserve concrete zero bindings during swaps,
+equality and joins. Expose owned read-only callback parts without invoking the
+upstream default-constant reflection helpers that predate UInt128. The checked
+causal adapter, finite query admission and monotonic allocation preparation
+remain separate required work under CSHARP-QUERY-PARITY-PLAN.md.
+
+Prepare monotonic engine queries over detached rows and names using the shared
+processor. Reserve exact FIFO allocation identities under the owner gate,
+without creating/deleting probe rows or invoking real observers. Keep failed
+preview admission free of cursor changes, retain already reserved gaps after
+later reference rejection or rollback, and consume only after write ownership
+is acquired. Allocate reservation state lazily. Add compatible optional named
+store capabilities and direct explicit ensure, preserving legacy recycling
+prediction and explicit custom creator delegates. Guard full-width ensure
+regressions with a finite allocation cap instead of walking the u64 domain.
+
+Expose the ordinary selected-address processor through CausalSession.QueryLinks.
+Use UInt128 controls with checked u64 stored parts and the caller's independent
+fresh range, including retained-identity resurrection. Freeze every retained
+adapter operation at preparation/disposal. Admit original bytes, parser depth,
+nodes, streamed result/binding expansion and decoded named change replies on
+owned preview state before real edits or callbacks. Share the existing matching,
+mutation, reservation and explicit-token batch implementations; retain the uint
+facade and opt-in limits for existing stores. Keep anonymous creation callbacks
+compatible with the pinned upstream helper while avoiding its UInt128 list
+initializer. Verify shared query vectors, bounded refusals and exact lost-reply
+retries; physical query interchange remains required work.
+
+Select unsigned addresses in the existing operation/restriction, server and
+remote-store implementations, retaining public uint facades. Add an explicit
+original-query envelope and QueryLossless without mutation fallback retries.
+Admit decoded documents before recursive formatting/tracing and clamp checked
+text/binary decoding before canonicalization. Convert parser/admission failures
+to protocol errors; count the final decoded text byte. Keep callback rows owned
+and read-only, preserve private staging and preparation freezes, and verify
+shared query vectors across all codecs. Standard operation address checks
+precede edits; finite limits retain broad-read refusals.

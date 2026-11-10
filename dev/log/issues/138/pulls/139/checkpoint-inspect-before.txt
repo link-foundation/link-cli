@@ -1,0 +1,46 @@
+Read-only checkpoint inspection missing-API reproduction
+https://github.com/link-foundation/link-cli/pull/139
+Baseline: bc364d2e09100bc5bd0d93274b2ecd870e31b66e
+
+The new production implementation was absent during these focused controls.
+JS: node --test experiments/issue-138/checkpoint-inspect-before.test.mjs
+Exit 1, one failed: checkpoint-inspect-before-js.log line 15 names
+TypeError: CheckpointPagedCommitLog.inspect is not a function.
+
+JS behavior: node --test experiments/issue-138/checkpoint-inspect-behavior.test.mjs
+Exit 1, six failed: checkpoint-inspect-behavior-before-js.log lines 20,30,42,
+67,98,116 name the same absent method. Controls cover empty initialization,
+selected suffix preservation, missing selected LSM tables, selected corruption,
+epoch identity changes, finite admission and deferred repair completion.
+
+Rust: cargo test --manifest-path
+experiments/issue-138/checkpoint-inspect-before-rust/Cargo.toml
+The isolated dependent crate imports the baseline production library and calls
+CheckpointPagedLog::inspect(&mut root, &mut banks, 128). Exit 101;
+checkpoint-inspect-before-rust.log line 65: E0599, no associated inspect API.
+The compiler also considers Iterator::inspect, whose bounds are unsatisfied.
+The diagnostic is an API absence, not an existing behavior assertion failure.
+
+C#: dotnet test experiments/issue-138/checkpoint-inspect-before-csharp/Before.csproj
+--configuration Debug --disable-build-servers -m:1
+The isolated xUnit project references the baseline production library and links
+the existing finite page test device. Exit 1;
+checkpoint-inspect-before-csharp.log line 5: CS0117,
+CheckpointPagedCommitLog does not contain a definition for Inspect.
+The linked helper has two harmless unassigned test-field warnings.
+
+The retained fixtures and run-checkpoint-inspect-before.sh support repeating
+missing-API controls in a separate clean baseline checkout. That combined
+baseline script has not been used for the original recordings; its commands
+compile the retained controls as repository tests instead of dependent projects.
+The two original dependent-project manifests are retained with .fixture suffixes;
+materialize Cargo.toml/Before.csproj when repeating those original commands.
+They describe intentionally failing baselines rather than maintained packages.
+After implementation, the original JS fixtures pass all seven controls.
+Production tests extend these controls in Rust, C#, JS and actual WASM.
+The complete after report is checkpoint-inspect.txt; logs remain under
+experiments/issue-138/checkpoint-inspect-*.
+
+This step is a borrowed read-only API. Full native directory ownership,
+whole-store process/file interchange, whole-project 100% coverage and wider
+R1-R12 criteria remain unfinished. PR139 remains draft and unmerged.

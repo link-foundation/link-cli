@@ -152,11 +152,4 @@ impl LinksMap {
             Self::Indexed(index) => index.remove(*id),
         }
     }
-
-    pub(crate) fn clear(&mut self) {
-        match self {
-            Self::Plain(map) => map.clear(),
-            Self::Indexed(index) => *index = IndexedLinksDecorator::default(),
-        }
-    }
 }

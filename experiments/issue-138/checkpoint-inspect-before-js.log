@@ -1,0 +1,20 @@
+✖ checkpoint inspection leaves empty exclusive devices uninitialized (1.988773ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 144.587573
+
+✖ failing tests:
+
+test at experiments/issue-138/checkpoint-inspect-before.test.mjs:6:1
+✖ checkpoint inspection leaves empty exclusive devices uninitialized (1.988773ms)
+  TypeError [Error]: CheckpointPagedCommitLog.inspect is not a function
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-before.test.mjs:10:45)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)

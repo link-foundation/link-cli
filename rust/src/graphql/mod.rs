@@ -26,5 +26,5 @@ pub mod virtual_tables;
 
 pub use execute::{execute, Auth, Settings};
 pub use json::Json;
-pub use server::GraphqlServer;
+pub use server::{GraphqlServer, GraphqlShutdown};
 pub use store::DeepStore;

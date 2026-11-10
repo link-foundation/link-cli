@@ -1,0 +1,27 @@
+Fresh CI for optional JS/TS native doublets page journal
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 21847f9fe0527c5a8ea803594efc51a06e8e4c53
+All nine workflows completed successfully.
+
+Broken Link Checker: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844373
+C# CI/CD Pipeline: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844409
+Dependencies: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844425
+Docs: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844405
+JS client CI: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844397
+Rust CI/CD Pipeline: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844391
+Security: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844496
+WebAssembly CI: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844431
+Workflows: success; created 2026-10-26T05:55:10Z
+https://github.com/link-foundation/link-cli/actions/runs/40276844364
+
+Includes enforced 100% production JS coverage, actual-WASM engine composition,
+Node/Bun/Deno native file conformance, and the prior native-language suites.
+This record does not validate the following Rust/C# page provider additions.

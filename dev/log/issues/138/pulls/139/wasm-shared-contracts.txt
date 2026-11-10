@@ -1,0 +1,30 @@
+Shared native contract execution in actual WASM
+
+Baseline: 17 actual WASM tests; full linked coverage 2,729/9,235 lines,
+392/1,305 branches. Native assertions had not all executed on WASM.
+
+After adding target-specific registration and sharing pure option fixtures:
+  shared engine: 59 passed, 0 failed (includes 1,296 finite serial histories)
+  wrapper engine: 9 passed, 0 failed
+  shared model/protocol: 66 passed, 0 failed
+  web: 8 passed, 0 failed
+  total: 142 passed, 0 failed
+
+Official complete LLVM totals (including linked core):
+  lines 3,786/9,657 (39.20472196334266%)
+  branches 597/1,469 (40.639891082368955%)
+  functions 514/1,368
+  regions 5,484/15,071
+Wrapper: 331/331 lines, 16/16 branches, 68/68 functions, 505/505 regions.
+
+Full native Rust: 536 standard tests plus stdout harness pass;
+4 child entry points ignored, matching the previous native suite.
+Native/WASM Clippy -D warnings and formatting pass.
+
+Production code and coverage inclusions are unchanged. Added monomorphizations
+increase LLVM's denominator. Complete coverage remains below 100%.
+Pinned coverage toolchain and measurement semantics: COVERAGE-METHOD.md.
+
+Previous production commit 3bb4790b3970a3ee9b4702b4b22eb1cf413fb105:
+37 successful CI checks, 10 skipped, 1 neutral; all exact-SHA runs created
+2026-10-24 20:40:36 UTC; Linux, Windows, macOS and real WASM pass.

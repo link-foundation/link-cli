@@ -1,0 +1,43 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: 7e9799a7b7ef417d54a456f9dc9606ae6ef35439
+Reproduce: bash experiments/issue-138/run-mapped-flush-before.sh
+
+Before implementation, actual native tests fail to compile with E0599 for
+PersistentFileMapped::flush_handle and DoubletsStorage::with_mapped_flush.
+Original diagnostics: experiments/issue-138/mapped-flush-api-before.log.
+The runnable baseline extracts immutable source and isolates build artifacts;
+it never replaces source in the working tree. The API failure establishes the
+missing explicit ownership capability, not a reproduced hardware power loss.
+
+Root cause traced in the existing default adapter: DoubletsStorage::flush opens
+a path and calls File::sync_all. Upstream platform-mem 0.3.0 exposes no mapping
+flush method and its Drop also synchronizes only the file. On Windows, Microsoft
+requires FlushViewOfFile before FlushFileBuffers for durable mapped writes.
+C# already owns and flushes its mapped view before its file stream.
+Primary sources and downloaded hashes: docs/case-studies/issue-138/RESEARCH.md.
+
+An independent allocation-address/length regression then catches a draft error:
+RawMem::grow returns only the newly added tail. Publishing that tail selects an
+offset address and incomplete range after growth. The original assertion fails
+at mapped_flush_tests.rs:193 with different owner/barrier addresses. Complete
+failure: experiments/issue-138/mapped-flush-tail-regression-before.log.
+The correction records the complete current allocation and preserves the
+upstream tail return value. This control uses at most 8,224 u64 values (~66 KiB).
+
+The first baseline runner shared a target directory and the following build
+reused a stale baseline library. The failed attempt is preserved in
+mapped-flush-artifact-collision.log and mapped-flush-validation-initial.log.
+The runner now isolates its target directory; only this package's working-tree
+artifacts were cleaned before the complete restart. The immutable isolated
+baseline reproduces the missing APIs independently.
+
+The new owner invalidates its view before remap/unmap, closes every retained
+logical handle before Drop, releases its owned file even while clones remain,
+and serializes both barriers with descriptor replacement. Errors propagate
+before publishing path revision metadata. Generic adoption explicitly attaches
+the matching owner; a path cannot discover a foreign mapping's view.
+
+Limits: syscall mocks verify ordering and retry errors; Linux readback does not
+exercise Windows APIs or establish power-loss safety. Windows requires fresh
+exact-head CI. Physical legacy page repair and the upstream failed-resize
+lifecycle are separate unfinished criteria. PR remains draft and unmerged.

@@ -1,17 +1,17 @@
+using System.Numerics;
 // Part of the partial AdvancedMixedQueryProcessor class.
 // Applying a solution to the store: creating, updating and removing doublets.
 using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Link.Foundation.Links.Notation;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
-using DoubletLink = Platform.Data.Doublets.Link<uint>;
 namespace Foundation.Data.Doublets.Cli
 {
-    public static partial class AdvancedMixedQueryProcessor
+    public static partial class AdvancedMixedQueryProcessor<T>
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
-        private static void CreateOrUpdateLink(INamedTypesLinks<uint> links, DoubletLink linkDefinition, Options options)
+        private static void CreateOrUpdateLink(INamedTypesLinks<T> links, LinkParts<T> linkDefinition, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
@@ -20,7 +20,7 @@ namespace Foundation.Data.Doublets.Cli
             if (linkDefinition.Index == anyConstant)
             {
                 TraceIfEnabled(options, "[CreateOrUpdateLink] Detected wildcard substitution => nested create & name.");
-                var parsed = QueryParser.Parse(options.Query ?? string.Empty);
+                var parsed = QueryParser.Parse<T>(options.Query ?? string.Empty);
                 if (parsed.Count > 0)
                 {
                     var outer = parsed[0];
@@ -42,16 +42,17 @@ namespace Foundation.Data.Doublets.Cli
             if (linkDefinition.Index != nullConstant)
             {
                 // update existing link
+                linkDefinition = KeepOpenParts(links, linkDefinition, options);
                 EnsureAddress(links, linkDefinition.Index, options);
                 var existingLinkRecord = links.GetLink(linkDefinition.Index);
-                var existingDoublet = new DoubletLink(existingLinkRecord);
+                var existingDoublet = new LinkParts<T>(existingLinkRecord);
 
                 if (existingDoublet.Source != linkDefinition.Source || existingDoublet.Target != linkDefinition.Target)
                 {
                     TraceIfEnabled(options,
                         $"[CreateOrUpdateLink] Updating link #{linkDefinition.Index}: {existingDoublet.Source}->{linkDefinition.Source}, {existingDoublet.Target}->{linkDefinition.Target}.");
                     links.Update(
-                        new DoubletLink(linkDefinition.Index, anyConstant, anyConstant),
+                        new LinkParts<T>(linkDefinition.Index, anyConstant, anyConstant),
                         linkDefinition,
                         (beforeState, afterState) =>
                             options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
@@ -69,42 +70,37 @@ namespace Foundation.Data.Doublets.Cli
                 var existingLinkIndex = links.SearchOrDefault(linkDefinition.Source, linkDefinition.Target);
                 if (existingLinkIndex == default)
                 {
-                    uint newLinkIndex = 0;
+                    T newLinkIndex = T.Zero;
                     TraceIfEnabled(options,
                         $"[CreateOrUpdateLink] Creating new link => (S={linkDefinition.Source},T={linkDefinition.Target}).");
-                    links.CreateAndUpdate(linkDefinition.Source, linkDefinition.Target, (beforeState, afterState) =>
+                    CreateAndUpdate(links, linkDefinition.Source, linkDefinition.Target, (beforeState, afterState) =>
                     {
-                        var afterLinkRecord = new DoubletLink(afterState);
-                        if (newLinkIndex == 0 && afterLinkRecord.Index != 0 && afterLinkRecord.Index != anyConstant)
+                        var afterLinkRecord = new LinkParts<T>(afterState);
+                        if (newLinkIndex == T.Zero && afterLinkRecord.Index != T.Zero && afterLinkRecord.Index != anyConstant)
                         {
                             newLinkIndex = afterLinkRecord.Index;
                             TraceIfEnabled(options, $"[CreateOrUpdateLink] => assigned new ID={newLinkIndex}");
                         }
                         return options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue;
                     });
-
-                    if (newLinkIndex == 0 || newLinkIndex == anyConstant)
-                    {
-                        newLinkIndex = links.SearchOrDefault(linkDefinition.Source, linkDefinition.Target);
-                    }
                 }
                 else
                 {
                     TraceIfEnabled(options, $"[CreateOrUpdateLink] Link already found => ID={existingLinkIndex}, no changes.");
-                    var existingLink = new DoubletLink(existingLinkIndex, linkDefinition.Source, linkDefinition.Target);
+                    var existingLink = new LinkParts<T>(existingLinkIndex, linkDefinition.Source, linkDefinition.Target);
                     options.ChangesHandler?.Invoke(existingLink, existingLink);
                 }
             }
         }
 
         private static void RemoveLinks(
-            INamedTypesLinks<uint> links,
-            DoubletLink restriction,
+            INamedTypesLinks<T> links,
+            LinkParts<T> restriction,
             Options options)
         {
             var linksToRemove = links.All(restriction)
                                      .Where(l => l != null)
-                                     .Select(l => new DoubletLink(l))
+                                     .Select(l => new LinkParts<T>(l))
                                      .ToList();
 
             TraceIfEnabled(options,
@@ -123,23 +119,7 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static DoubletLink ConvertToDoubletLink(INamedTypesLinks<uint> links, LinoLink linoLink, uint defaultValue)
-        {
-            uint index = defaultValue;
-            uint source = defaultValue;
-            uint target = defaultValue;
-            TryParseLinkId(linoLink.Id, links, ref index);
-            if (linoLink.Values?.Count == 2)
-            {
-                var sourceLink = linoLink.Values[0];
-                TryParseLinkId(sourceLink.Id, links, ref source);
-                var targetLink = linoLink.Values[1];
-                TryParseLinkId(targetLink.Id, links, ref target);
-            }
-            return new DoubletLink(index, source, target);
-        }
-
-        private static bool TryParseLinkId(string? id, INamedTypesLinks<uint> links, ref uint parsedValue)
+        private static bool TryParseLinkId(string? id, INamedTypesLinks<T> links, ref T parsedValue)
         {
             if (string.IsNullOrEmpty(id)) return false;
             if (id == "*")
@@ -147,23 +127,7 @@ namespace Foundation.Data.Doublets.Cli
                 parsedValue = links.Constants.Any;
                 return true;
             }
-            else if (id.EndsWith(":"))
-            {
-                var trimmed = id.TrimEnd(':');
-                if (uint.TryParse(trimmed, out uint linkId))
-                {
-                    parsedValue = linkId;
-                    return true;
-                }
-                // Try to resolve as string alias
-                var aliasId = links.GetByName(QueryParser.Name(trimmed));
-                if (aliasId != links.Constants.Null)
-                {
-                    parsedValue = aliasId;
-                    return true;
-                }
-            }
-            else if (uint.TryParse(id, out uint linkVal))
+            else if (TryParseAddress(id, out T linkVal))
             {
                 parsedValue = linkVal;
                 return true;
@@ -215,7 +179,7 @@ namespace Foundation.Data.Doublets.Cli
             return new Pattern(linkNode.Id ?? "");
         }
 
-        private static uint EnsureLinkCreated(INamedTypesLinks<uint> links, DoubletLink link, Options options)
+        private static T EnsureLinkCreated(INamedTypesLinks<T> links, LinkParts<T> link, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
@@ -226,29 +190,24 @@ namespace Foundation.Data.Doublets.Cli
                 var existingIndex = links.SearchOrDefault(link.Source, link.Target);
                 if (existingIndex == default)
                 {
-                    uint createdIndex = 0;
+                    T createdIndex = T.Zero;
                     TraceIfEnabled(options, $"[EnsureLinkCreated] Creating link for (S={link.Source}, T={link.Target}).");
-                    links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
+                    CreateAndUpdate(links, link.Source, link.Target, (before, after) =>
                     {
-                        var afterLink = new DoubletLink(after);
-                        if (createdIndex == 0 && afterLink.Index != 0 && afterLink.Index != anyConstant)
+                        var afterLink = new LinkParts<T>(after);
+                        if (createdIndex == T.Zero && afterLink.Index != T.Zero && afterLink.Index != anyConstant)
                         {
                             createdIndex = afterLink.Index;
                             TraceIfEnabled(options, $"[EnsureLinkCreated] => assigned new ID={createdIndex}");
                         }
                         return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
                     });
-
-                    if (createdIndex == 0 || createdIndex == anyConstant)
-                    {
-                        createdIndex = links.SearchOrDefault(link.Source, link.Target);
-                    }
                     return createdIndex;
                 }
                 else
                 {
                     TraceIfEnabled(options, $"[EnsureLinkCreated] Link already found => ID={existingIndex} => no-op.");
-                    var existing = new DoubletLink(existingIndex, link.Source, link.Target);
+                    var existing = new LinkParts<T>(existingIndex, link.Source, link.Target);
                     options.ChangesHandler?.Invoke(existing, existing);
                     return existingIndex;
                 }
@@ -256,15 +215,16 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 // We have an index => ensure created or updated
+                link = KeepOpenParts(links, link, options);
                 EnsureAddress(links, link.Index, options);
                 var stored = links.GetLink(link.Index);
-                var storedD = new DoubletLink(stored);
+                var storedD = new LinkParts<T>(stored);
                 if (storedD.Source != link.Source || storedD.Target != link.Target)
                 {
                     TraceIfEnabled(options,
                         $"[EnsureLinkCreated] Updating link #{link.Index} => {storedD.Source}->{link.Source}, {storedD.Target}->{link.Target}.");
-                    uint finalIndex = link.Index;
-                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (beforeState, afterState) =>
+                    T finalIndex = link.Index;
+                    links.Update(new LinkParts<T>(link.Index, anyConstant, anyConstant), link, (beforeState, afterState) =>
                         options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
                     return finalIndex;
                 }
@@ -282,15 +242,15 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (string.IsNullOrEmpty(id)) return false;
             if (id == "*") return true;
-            uint dummy;
-            return uint.TryParse(id, out dummy);
+            T dummy;
+            return TryParseAddress(id, out dummy);
         }
 
         private static void TraceIfEnabled(Options options, string message)
         {
             if (options.Trace)
             {
-                Console.WriteLine(message);
+                DiagnosticOutput.WriteLine(message);
             }
         }
 
@@ -298,7 +258,7 @@ namespace Foundation.Data.Doublets.Cli
         /// Fills <paramref name="index"/> in when the store lacks it and reports the empty
         /// <c>(index: 0 0)</c> link that creates.
         /// </summary>
-        private static void EnsureAddress(INamedTypesLinks<uint> links, uint index, Options options)
+        private static void EnsureAddress(INamedTypesLinks<T> links, T index, Options options)
         {
             if (links.Exists(index))
             {
@@ -309,17 +269,17 @@ namespace Foundation.Data.Doublets.Cli
             ReportCreatedEmpty(links, index, options);
         }
 
-        private static void ReportCreatedEmpty(INamedTypesLinks<uint> links, uint index, Options options)
+        private static void ReportCreatedEmpty(INamedTypesLinks<T> links, T index, Options options)
         {
             var nothing = links.Constants.Null;
-            options.ChangesHandler?.Invoke(new DoubletLink(nothing, nothing, nothing), new DoubletLink(index, nothing, nothing));
+            options.ChangesHandler?.Invoke(new LinkParts<T>(nothing, nothing, nothing), new LinkParts<T>(index, nothing, nothing));
         }
 
         /// <summary>
         /// The link called <paramref name="name"/>, created and reported as the point link
         /// <c>(name: name name)</c> when there is none yet.
         /// </summary>
-        private static uint EnsureNamedPointLink(INamedTypesLinks<uint> links, string name, Options options)
+        private static T EnsureNamedPointLink(INamedTypesLinks<T> links, string name, Options options)
         {
             var existing = links.GetByName(QueryParser.Name(name));
             if (existing != links.Constants.Null)
@@ -338,19 +298,40 @@ namespace Foundation.Data.Doublets.Cli
         /// Points the existing link <paramref name="id"/> at <paramref name="source"/> and
         /// <paramref name="target"/>; a link that already does is reported unchanged and not rewritten.
         /// </summary>
-        private static void ApplyCompositeUpdate(INamedTypesLinks<uint> links, uint id, uint source, uint target, Options options)
+        private static void ApplyCompositeUpdate(INamedTypesLinks<T> links, T id, T source, T target, Options options)
         {
-            var stored = new DoubletLink(links.GetLink(id));
+            var wanted = KeepOpenParts(links, new LinkParts<T>(id, source, target), options);
+            (source, target) = (wanted.Source, wanted.Target);
+            var stored = new LinkParts<T>(links.GetLink(id));
             if (stored.Source == source && stored.Target == target)
             {
                 options.ChangesHandler?.Invoke(stored, stored);
                 return;
             }
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link ID={id} => Source={source}, Target={target}");
-            links.Update(new DoubletLink(id, links.Constants.Any, links.Constants.Any), new DoubletLink(id, source, target), ReportChanges(links, options));
+            links.Update(new LinkParts<T>(id, links.Constants.Any, links.Constants.Any), new LinkParts<T>(id, source, target), ReportChanges(links, options));
         }
 
-        private static WriteHandler<uint> ReportChanges(INamedTypesLinks<uint> links, Options options) =>
+        /// <summary>
+        /// A part the query left open keeps its stored value: the wildcard marker is not a
+        /// reference a link can hold, and a search for it would merge the link into another.
+        /// </summary>
+        private static LinkParts<T> KeepOpenParts(INamedTypesLinks<T> links, LinkParts<T> link, Options options)
+        {
+            var any = links.Constants.Any;
+            if (link.Source != any && link.Target != any)
+            {
+                return link;
+            }
+            EnsureAddress(links, link.Index, options);
+            var stored = new LinkParts<T>(links.GetLink(link.Index));
+            return new LinkParts<T>(
+                link.Index,
+                link.Source == any ? stored.Source : link.Source,
+                link.Target == any ? stored.Target : link.Target);
+        }
+
+        private static WriteHandler<T> ReportChanges(INamedTypesLinks<T> links, Options options) =>
             (before, after) => options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
 
         /// <summary>
@@ -380,46 +361,19 @@ namespace Foundation.Data.Doublets.Cli
             return false;
         }
 
-        private enum CompositeCase { Self, LeftMix, RightMix }
-
-        private static CompositeCase ClassifyCompositeCase(string name, LinoLink left, LinoLink right)
-        {
-            if (left.Id == name && right.Id == name) return CompositeCase.Self;
-            if (left.Id == name && right.Id != name) return CompositeCase.LeftMix;
-            if (left.Id != name && right.Id == name) return CompositeCase.RightMix;
-            throw new InvalidOperationException($"Invalid composite pattern for name '{name}'");
-        }
-
-        private static uint HandleStringComposite(string name, LinoLink left, LinoLink right, INamedTypesLinks<uint> links, Options options)
+        private static T HandleStringComposite(string name, LinoLink left, LinoLink right, INamedTypesLinks<T> links, Options options)
         {
             var id = EnsureNamedPointLink(links, name, options);
-            var caseType = ClassifyCompositeCase(name, left, right);
-            switch (caseType)
-            {
-                case CompositeCase.Self:
-                    ApplyCompositeUpdate(links, id, id, id, options);
-                    return id;
-                case CompositeCase.LeftMix:
-                    {
-                        var otherId = EnsureNestedLinkCreatedRecursively(links, right, options);
-                        ApplyCompositeUpdate(links, id, id, otherId, options);
-                        return id;
-                    }
-                case CompositeCase.RightMix:
-                    {
-                        var otherId = EnsureNestedLinkCreatedRecursively(links, left, options);
-                        ApplyCompositeUpdate(links, id, otherId, id, options);
-                        return id;
-                    }
-                default:
-                    throw new InvalidOperationException($"Unhandled composite case {caseType}");
-            }
+            var source = left.Id == name ? id : EnsureNestedLinkCreatedRecursively(links, left, options);
+            var target = right.Id == name ? id : EnsureNestedLinkCreatedRecursively(links, right, options);
+            ApplyCompositeUpdate(links, id, source, target, options);
+            return id;
         }
 
         /// <summary>
         /// Resolves a single leaf pattern into its numeric or named link ID.
         /// </summary>
-        private static uint ResolveLeaf(LinoLink pattern, INamedTypesLinks<uint> links, Options options)
+        private static T ResolveLeaf(LinoLink pattern, INamedTypesLinks<T> links, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
@@ -439,7 +393,7 @@ namespace Foundation.Data.Doublets.Cli
                 TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Variable leaf => returning ANY.");
                 return anyConstant;
             }
-            if (uint.TryParse(pattern.Id, out uint parsedNumber))
+            if (TryParseAddress(pattern.Id, out T parsedNumber))
             {
                 TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
                 return parsedNumber;
@@ -450,15 +404,15 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>
         /// Ensures a composite link exists with the given index or named identifier and child IDs.
         /// </summary>
-        private static uint CreateCompositeLink(
+        private static T CreateCompositeLink(
             string? literalIdentifier,
-            uint sourceLinkId,
-            uint targetLinkId,
-            INamedTypesLinks<uint> links,
+            T sourceLinkId,
+            T targetLinkId,
+            INamedTypesLinks<T> links,
             Options options)
         {
             // Determine the numeric index for the composite: default 0, wildcard, or parsed from identifier
-            uint compositeIndex = 0;
+            T compositeIndex = T.Zero;
             var wildcardIndex = links.Constants.Any;
             if (!string.IsNullOrEmpty(literalIdentifier))
             {
@@ -469,7 +423,7 @@ namespace Foundation.Data.Doublets.Cli
                 else
                 {
                     var identifierClean = literalIdentifier.Replace(":", string.Empty);
-                    if (uint.TryParse(identifierClean, out var parsedIndex))
+                    if (TryParseAddress(identifierClean, out var parsedIndex))
                     {
                         compositeIndex = parsedIndex;
                     }
@@ -486,7 +440,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
             }
             // Build the composite link structure and ensure it exists
-            var compositeLinkDefinition = new DoubletLink(compositeIndex, sourceLinkId, targetLinkId);
+            var compositeLinkDefinition = new LinkParts<T>(compositeIndex, sourceLinkId, targetLinkId);
             var compositeLinkId = EnsureLinkCreated(links, compositeLinkDefinition, options);
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index={compositeIndex}, Source={sourceLinkId}, Target={targetLinkId} => Actual ID={compositeLinkId}");
             if (isName)

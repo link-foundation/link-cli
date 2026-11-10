@@ -27,7 +27,7 @@ export function encodeMessage(text) {
 export class MessageReader {
   constructor({ maxBytes = DEFAULT_MAX_MESSAGE_BYTES } = {}) {
     this.maxBytes = maxBytes;
-    this.decoder = new TextDecoder('utf-8', { fatal: true });
+    this.decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
     this.pending = []; // byte chunks of the current, unfinished line
     this.pendingBytes = 0;
     this.lines = [];

@@ -1,0 +1,24 @@
+Public replay owner exact-head CI
+Head: 31a50a0c5796dfb77d3596ac93d2d58e8a250d9f
+All nine workflows succeed on this exact published head.
+Run creation: 2026-10-25T01:20:49Z, after publication.
+Checked: 2026-10-25 01:28:53 UTC
+
+Broken Link Checker: success, updated 2026-10-25T01:21:01Z, https://github.com/link-foundation/link-cli/actions/runs/40150268303
+C# CI/CD Pipeline: success, updated 2026-10-25T01:25:50Z, https://github.com/link-foundation/link-cli/actions/runs/40150268319
+Dependencies: success, updated 2026-10-25T01:21:16Z, https://github.com/link-foundation/link-cli/actions/runs/40150268316
+Docs: success, updated 2026-10-25T01:23:28Z, https://github.com/link-foundation/link-cli/actions/runs/40150268327
+JS client CI: success, updated 2026-10-25T01:26:08Z, https://github.com/link-foundation/link-cli/actions/runs/40150268313
+Rust CI/CD Pipeline: success, updated 2026-10-25T01:27:43Z, https://github.com/link-foundation/link-cli/actions/runs/40150268330
+Security: success, updated 2026-10-25T01:23:51Z, https://github.com/link-foundation/link-cli/actions/runs/40150268321
+WebAssembly CI: success, updated 2026-10-25T01:27:42Z, https://github.com/link-foundation/link-cli/actions/runs/40150268354
+Workflows: success, updated 2026-10-25T01:21:10Z, https://github.com/link-foundation/link-cli/actions/runs/40150268305
+
+JS attempt 1 passed 95 unit tests, all 17 production modules at 100% measured
+coverage and TypeScript, but setup-bun received GitHub API HTTP 502 before the
+conformance job started. Full original logs are preserved in
+ci-logs/js-40150268313.log (error lines 997-999). A failed-job-only rerun started
+2026-10-25T01:22:55Z and completed successfully at 2026-10-25T01:26:08Z.
+No product or workflow change was needed for that external installation failure.
+Native Linux/macOS/Windows, fresh merge, actual WASM, JS runtimes and release
+validation pass for this head. Later tail-recovery changes need their own CI.

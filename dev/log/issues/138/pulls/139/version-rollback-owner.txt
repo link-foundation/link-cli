@@ -1,0 +1,47 @@
+C# version rollback owner and admission (R1/R3/R8)
+
+Before the fix, VersionControlDecorator clears _activeTransaction in its
+rollback finally block even when the inner transaction remains rollback-only.
+Owner Dispose also clears that reference before attempting rollback. The inner
+transaction correctly keeps pending undo, but its version facade permits branch,
+tag and checkout changes and cannot retry cleanup through owner disposal.
+
+All 24 new mapped-store cases fail before production changes:
+  Failed: 24, Passed: 0, Skipped: 0, Total: 24.
+The first failure in version-rollback-before.log, lines 11-17:
+  FailedVersionRollbackRetainsAdmissionAndOwnerCleanupRetry
+  point: data-before, entry: owner
+  Assert.Throws() Failure: No exception was thrown
+  Expected: System.InvalidOperationException
+  VersionRollbackFailureTests.cs:line 85
+The unexpected success is vc.Branch("blocked") after failed rollback.
+
+The matrix injects before/after undo, data Flush, rollback marker SetName and
+journal Flush, through explicit transaction rollback, version-owner Dispose and
+whole-graph Dispose. One-shot failures leave a real nonterminal inner transaction.
+
+The version owner now retains its reference during Dispose and releases it from
+rollback only when the inner transaction is committed or rolled back. Failed
+undo/persistence preserves admission and retry. The terminal-state condition also
+handles retention's failure after MarkRolledBack, without trapping the facade.
+
+The same 24 cases verify branch/switch/checkout/tag/begin rejection, rejected
+commit of rollback-only state, successful retry through the same entry point,
+exclusive reopening of every owned file, exact two-row baseline/head recovery,
+and a following committed/tagged version transaction. An additional real mapped
+retention control leaves an older committed transition uncheckpointed, completes
+a newer rollback, then fails retention's retry of the old checkpoint. The inner
+transaction is terminal and version admission remains usable afterwards.
+
+Full Release: 928 tests pass; 4,564/4,888 lines (93.37%) and
+2,721/3,143 branches (86.57%). RollbackVersionTransaction reaches 100% measured
+lines and branches. Full project coverage remains below the issue's 100% target.
+Full final Debug: 928 tests pass; 6,014/6,542 lines (91.93%) and
+2,742/3,162 branches (86.72%). Its rollback method also measures 100% lines and
+branches. The focused rollback/lifetime suite passes all 31 cases. .NET format
+verification and the existing minor-release changeset validation pass.
+Fresh exact-SHA CI remains pending at this record's draft.
+
+Rust already clears the active version rollback state after successful error
+propagation. No Rust/JS/WASM production change is required for this defect.
+Full test logs and Cobertura reports are preserved under experiments/issue-138.

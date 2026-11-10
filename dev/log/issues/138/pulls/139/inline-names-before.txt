@@ -1,0 +1,84 @@
+Native inline-name persistence and atomic reload: before evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: faf191d10f1dc6fab561dd46dafb0d67561e0963
+Production code was unchanged when these seven new automated tests failed.
+Command: CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test --manifest-path rust/Cargo.toml --no-default-features --test inline_name_persistence_tests
+
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.30s
+     Running tests/inline_name_persistence_tests.rs (rust/target/debug/deps/inline_name_persistence_tests-5bd0e9b59bffe25a)
+
+running 7 tests
+test inline_names_keep_line_breaks_inside_the_name ... FAILED
+test inline_names_preserve_whitespace ... FAILED
+test inline_names_preserve_literal_looking_text_and_controls ... FAILED
+test legacy_inline_names_keep_backslashes_and_the_complete_quoted_tail ... FAILED
+test failed_reload_preserves_live_rows_names_indexes_and_allocator ... FAILED
+test inline_names_preserve_quote_edges_and_parentheses ... FAILED
+test names_of_absent_addresses_round_trip_without_allocating_rows ... FAILED
+
+failures:
+
+---- inline_names_keep_line_breaks_inside_the_name stdout ----
+
+thread 'inline_names_keep_line_breaks_inside_the_name' (41770) panicked at tests/inline_name_persistence_tests.rs:22:9:
+assertion `left == right` failed: reopen 0
+  left: 6
+ right: 5
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- inline_names_preserve_whitespace stdout ----
+
+thread 'inline_names_preserve_whitespace' (41773) panicked at tests/inline_name_persistence_tests.rs:25:13:
+assertion `left == right` failed: reopen 0, "leaf 雪"
+  left: Some("leaf")
+ right: Some("leaf 雪")
+
+---- inline_names_preserve_literal_looking_text_and_controls stdout ----
+
+thread 'inline_names_preserve_literal_looking_text_and_controls' (41771) panicked at tests/inline_name_persistence_tests.rs:25:13:
+assertion `left == right` failed: reopen 0, "# unused: 3"
+  left: Some("#")
+ right: Some("# unused: 3")
+
+---- legacy_inline_names_keep_backslashes_and_the_complete_quoted_tail stdout ----
+
+thread 'legacy_inline_names_keep_backslashes_and_the_complete_quoted_tail' (41774) panicked at tests/inline_name_persistence_tests.rs:82:9:
+assertion `left == right` failed
+  left: Some("a")
+ right: Some("a b")
+
+---- failed_reload_preserves_live_rows_names_indexes_and_allocator stdout ----
+
+thread 'failed_reload_preserves_live_rows_names_indexes_and_allocator' (41769) panicked at tests/inline_name_persistence_tests.rs:143:9:
+assertion `left == right` failed
+  left: 1
+ right: 2
+
+---- inline_names_preserve_quote_edges_and_parentheses stdout ----
+
+thread 'inline_names_preserve_quote_edges_and_parentheses' (41772) panicked at tests/inline_name_persistence_tests.rs:25:13:
+assertion `left == right` failed: reopen 0, "\"quoted\""
+  left: Some("quoted")
+ right: Some("\"quoted\"")
+
+---- names_of_absent_addresses_round_trip_without_allocating_rows stdout ----
+
+thread 'names_of_absent_addresses_round_trip_without_allocating_rows' (41775) panicked at tests/inline_name_persistence_tests.rs:110:13:
+assertion `left == right` failed
+  left: None
+ right: Some("zero")
+
+
+failures:
+    failed_reload_preserves_live_rows_names_indexes_and_allocator
+    inline_names_keep_line_breaks_inside_the_name
+    inline_names_preserve_literal_looking_text_and_controls
+    inline_names_preserve_quote_edges_and_parentheses
+    inline_names_preserve_whitespace
+    legacy_inline_names_keep_backslashes_and_the_complete_quoted_tail
+    names_of_absent_addresses_round_trip_without_allocating_rows
+
+test result: FAILED. 0 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test inline_name_persistence_tests`

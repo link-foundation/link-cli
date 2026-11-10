@@ -1,0 +1,8 @@
+  Determining projects to restore...
+  Restored /tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-baseline/csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj (in 798 ms).
+  Restored /tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-before-baseline-csharp/Before.csproj (in 798 ms).
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-baseline/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/NativeLsmBeforeTests.cs(12,61): error CS0246: The type or namespace name 'FileLsmOptions' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-before-baseline-csharp/Before.csproj]
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/NativeLsmBeforeTests.cs(13,32): error CS0103: The name 'FileLsmJournalStore' does not exist in the current context [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-before-baseline-csharp/Before.csproj]
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/NativeLsmBeforeTests.cs(16,66): error CS0103: The name 'FileLsmJournalStore' does not exist in the current context [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-before-baseline-csharp/Before.csproj]
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/NativeLsmBeforeTests.cs(18,32): error CS0103: The name 'FileLsmJournalStore' does not exist in the current context [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-before-baseline-csharp/Before.csproj]

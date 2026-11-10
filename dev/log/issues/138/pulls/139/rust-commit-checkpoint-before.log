@@ -1,0 +1,65 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.55s
+     Running tests/transactions_commit_failure_tests.rs (rust/target/debug/deps/transactions_commit_failure_tests-c372677f32cec769)
+
+running 9 tests
+
+thread 'composite_waits_for_committed_checkpoint' (782387) panicked at tests/transactions_commit_failure_tests.rs:124:13:
+DataBefore, automatic=false, composite
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'commit_retries_every_committed_checkpoint_phase' (782386) panicked at tests/transactions_commit_failure_tests.rs:98:13:
+assertion `left == right` failed: DataBefore, automatic=false, commit
+  left: 2
+ right: 3
+
+thread 'delete_waits_for_committed_checkpoint' (782389) panicked at tests/transactions_commit_failure_tests.rs:124:13:
+DataBefore, automatic=false, delete
+
+thread 'create_waits_for_committed_checkpoint' (782388) panicked at tests/transactions_commit_failure_tests.rs:124:13:
+DataBefore, automatic=false, create
+
+thread 'ensure_waits_for_committed_checkpoint' (782390) panicked at tests/transactions_commit_failure_tests.rs:124:13:
+DataBefore, automatic=false, ensure
+test composite_waits_for_committed_checkpoint ... FAILED
+
+thread 'get_or_create_waits_for_committed_checkpoint' (782391) panicked at tests/transactions_commit_failure_tests.rs:124:13:
+DataBefore, automatic=false, get_or_create
+test commit_retries_every_committed_checkpoint_phase ... FAILED
+test delete_waits_for_committed_checkpoint ... FAILED
+
+thread 'rollback_finishes_every_committed_checkpoint_phase' (782392) panicked at tests/transactions_commit_failure_tests.rs:98:13:
+assertion `left == right` failed: DataBefore, automatic=false, rollback
+  left: 2
+ right: 3
+test create_waits_for_committed_checkpoint ... FAILED
+test ensure_waits_for_committed_checkpoint ... FAILED
+test get_or_create_waits_for_committed_checkpoint ... FAILED
+
+thread 'save_finishes_every_committed_checkpoint_phase' (782393) panicked at tests/transactions_commit_failure_tests.rs:98:13:
+assertion `left == right` failed: DataBefore, automatic=false, save
+  left: 2
+ right: 3
+test rollback_finishes_every_committed_checkpoint_phase ... FAILED
+
+thread 'update_waits_for_committed_checkpoint' (782394) panicked at tests/transactions_commit_failure_tests.rs:124:13:
+DataBefore, automatic=false, update
+test save_finishes_every_committed_checkpoint_phase ... FAILED
+test update_waits_for_committed_checkpoint ... FAILED
+
+failures:
+
+failures:
+    commit_retries_every_committed_checkpoint_phase
+    composite_waits_for_committed_checkpoint
+    create_waits_for_committed_checkpoint
+    delete_waits_for_committed_checkpoint
+    ensure_waits_for_committed_checkpoint
+    get_or_create_waits_for_committed_checkpoint
+    rollback_finishes_every_committed_checkpoint_phase
+    save_finishes_every_committed_checkpoint_phase
+    update_waits_for_committed_checkpoint
+
+test result: FAILED. 0 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test transactions_commit_failure_tests`

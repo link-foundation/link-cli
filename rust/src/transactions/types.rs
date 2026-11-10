@@ -62,12 +62,12 @@ pub enum LogRetentionPolicy {
     /// Keep every transition forever (default).
     #[default]
     Infinite,
-    /// Drop the oldest applied transitions once the live log exceeds
-    /// `max_transitions`. Never drops un-applied transitions (R7).
+    /// Drop the oldest completed transitions once the live log exceeds
+    /// `max_transitions`. Keep pending writes; discard aborted records.
     Sized { max_transitions: u64 },
-    /// Archive the oldest `chunk_size` applied transitions to a
-    /// rolling file in `archive_directory` once the live log reaches
-    /// `chunk_size`.
+    /// Process the oldest `chunk_size` records once the live log reaches
+    /// that size. Archive committed changes in `archive_directory`,
+    /// discard aborted records, and keep pending writes.
     Chunked {
         chunk_size: u64,
         archive_directory: PathBuf,

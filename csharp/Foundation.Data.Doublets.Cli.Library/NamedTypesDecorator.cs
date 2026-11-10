@@ -15,7 +15,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
+    public partial class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable, IDurableLinks
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -29,13 +29,38 @@ namespace Foundation.Data.Doublets.Cli
         public readonly string NamedLinksDatabaseFileName;
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
+        private readonly DurableMappedMemory? _dataMemory;
+        private readonly DurableMappedMemory? _namesMemory;
+
+        public bool SupportsDurableFlush => _dataMemory is not null;
+
+        public virtual void Flush()
+        {
+            if (_dataMemory is null || _namesMemory is null)
+                throw new InvalidOperationException("A caller-owned store needs an explicit flush callback.");
+            _dataMemory.Flush();
+            _namesMemory.Flush();
+        }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
-            var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
-            return links.DecorateWithAutomaticUniquenessAndUsagesRepointing();
+            return CreateOwnedStore(databaseFilename).Links;
+        }
+
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The returned decorator owns its UnitedMemoryLinks and mapping; LinksFacadeDisposer releases the chain.")]
+        private static (ILinks<TLinkAddress> Links, DurableMappedMemory Memory) CreateOwnedStore(string filename)
+        {
+            var memory = new DurableMappedMemory(filename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
+            try
+            {
+                var links = new UnitedMemoryLinks<TLinkAddress>(memory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep,
+                    new LinksConstants<TLinkAddress>(), IndexTreeType.Default);
+                return (links.DecorateWithAutomaticUniquenessAndUsagesRepointing(), memory);
+            }
+            catch { memory.Dispose(); throw; }
         }
 
         public static string MakeNamesDatabaseFilename(string databaseFilename)
@@ -51,25 +76,46 @@ namespace Foundation.Data.Doublets.Cli
         {
         }
 
-        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
-            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
-        public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false) : base(pinnedTypesDecorator)
+        public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false)
+            : this(pinnedTypesDecorator, namesDatabaseFilename, tracingEnabled, null)
+        {
+        }
+
+        private NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator,
+            string namesDatabaseFilename, bool tracingEnabled, DurableMappedMemory? ownedDataMemory) : base(pinnedTypesDecorator)
         {
             _tracingEnabled = tracingEnabled;
             PinnedTypesDecorator = pinnedTypesDecorator;
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
-            var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
-            var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
-            var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
-            var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing();
-            _namedLinksFacade = decoratedNamesLinks;
-            NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
+            _dataMemory = ownedDataMemory;
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
+            try
+            {
+                _namesMemory = new DurableMappedMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
+                (_namedLinksFacade, NamedLinks) = NamesDatabase<TLinkAddress>.Open(_namesMemory);
+            }
+            catch
+            {
+                if (ownedDataMemory is not null) LinksFacadeDisposer.Dispose(pinnedTypesDecorator);
+                throw;
+            }
             NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
 
         public NamedTypesDecorator(string databaseFilename, bool tracingEnabled = false)
-            : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
+            : this(CreateOwnedStore(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
+        }
+
+        private NamedTypesDecorator((ILinks<TLinkAddress> Links, DurableMappedMemory Memory) store,
+            string namesFilename, bool tracingEnabled)
+            : this(PinOwnedStore(store.Links), namesFilename, tracingEnabled, store.Memory)
+        {
+        }
+
+        private static PinnedTypesDecorator<TLinkAddress> PinOwnedStore(ILinks<TLinkAddress> links)
+        {
+            try { return new PinnedTypesDecorator<TLinkAddress>(links); }
+            catch { LinksFacadeDisposer.Dispose(links); throw; }
         }
 
         public void Dispose()
@@ -107,41 +153,42 @@ namespace Foundation.Data.Doublets.Cli
             PinnedTypesDecorator.Deconstruct(out type1, out type2, out type3);
         }
 
+        public virtual IReadOnlyDictionary<TLinkAddress, string> CaptureNames() => NamedLinks.ExternalNames();
+
         public virtual string? GetName(TLinkAddress link)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetName called for link: {link}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetName called for link: {link}");
             var result = NamedLinks.GetNameByExternalReference(link);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetName result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetName result: {result}");
             return result;
         }
 
         public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
-            var existingLinkWithName = NamedLinks.GetExternalReferenceByName(name);
-            if (!existingLinkWithName.Equals(_links.Constants.Null) && !existingLinkWithName.Equals(link))
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
+            if (NamedLinks.TryGetExternalReferenceByName(name, out var existingLinkWithName) && !existingLinkWithName.Equals(link))
             {
                 RemoveName(existingLinkWithName);
             }
             RemoveName(link);
             var result = NamedLinks.SetNameForExternalReference(link, name);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] SetName result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] SetName result: {result}");
             return result;
         }
 
         public virtual TLinkAddress GetByName(string name)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName called for name: '{name}'");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetByName called for name: '{name}'");
             var result = NamedLinks.GetExternalReferenceByName(name);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetByName result: {result}");
             return result;
         }
 
         public virtual void RemoveName(TLinkAddress link)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] RemoveName called for link: {link}");
             NamedLinks.RemoveNameByExternalReference(link);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName completed for link: {link}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] RemoveName completed for link: {link}");
         }
 
         public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
@@ -149,12 +196,12 @@ namespace Foundation.Data.Doublets.Cli
             if (_tracingEnabled)
             {
                 var req = restriction == null ? "null" : string.Join(",", restriction);
-                Console.WriteLine($"[Trace] Update called with restriction: [{req}]");
+                DiagnosticOutput.WriteLine($"[Trace] Update called with restriction: [{req}]");
             }
             var @continue = _links.Constants.Continue;
             var result = _links.Update(restriction, substitution, (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
+                if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
                 if (before != null && after == null)
                 {
                     var deletedLinkIndex = _links.GetIndex(link: before);
@@ -162,7 +209,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 return handler == null ? @continue : handler(before, after);
             });
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Update result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Update result: {result}");
             return result;
         }
 
@@ -171,14 +218,14 @@ namespace Foundation.Data.Doublets.Cli
             if (_tracingEnabled)
             {
                 var formattedRestriction = restriction == null ? "null" : string.Join(",", restriction);
-                Console.WriteLine($"[Trace] Delete called with restriction: [{formattedRestriction}]");
+                DiagnosticOutput.WriteLine($"[Trace] Delete called with restriction: [{formattedRestriction}]");
             }
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
             var @continue = _links.Constants.Continue;
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
             TLinkAddress result = _links.Delete(restriction, (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
+                if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
                 if (before != null && after == null)
                 {
                     var deletedLinkIndex = _links.GetIndex(link: before);
@@ -186,7 +233,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 return handler == null ? @continue : handler(before, after);
             });
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: Delete result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: Delete result: {result}");
             return result;
         }
     }

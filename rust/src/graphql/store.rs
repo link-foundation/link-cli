@@ -397,8 +397,12 @@ impl<'s> DeepStore<'s> {
         let address = self.part_address(owner, "link_id")?;
         if let (Some(policy), false) = (&mut self.policy, self.admin) {
             let outer = self.triplets.get_link(address);
-            let mut view = PermissionsDecorator::new(&mut self.triplets, policy, subject);
+            let created = self.created.remove(&subject).unwrap_or_default();
+            let mut view = PermissionsDecorator::new(&mut self.triplets, policy, subject)
+                .with_created(created);
             let allowed = outer.is_some_and(|outer: Link| view.can_write_triplet(&outer));
+            let created = view.created().clone();
+            self.created.insert(subject, created);
             if !allowed {
                 bail!("Forbidden: {subject} may not write the value of {owner}.");
             }

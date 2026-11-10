@@ -1,0 +1,32 @@
+Native checkpoint ownership CI audit (historical head, not final success)
+Head: 600cf5f0a25741c865f8730ce23d08363f76c932
+Commit: 2026-10-26T18:43:45Z. Every run below was created after that commit.
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Broken Link Checker: success; created 2026-10-26T18:43:58Z; https://github.com/link-foundation/link-cli/actions/runs/40380341595
+Workflows: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380335495
+Dependencies: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380335856
+Security: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380336133
+JS client CI: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380336184
+Docs: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380335664
+WebAssembly CI: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380335518
+C# CI/CD Pipeline: failure; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380335548
+Rust CI/CD Pipeline: success; created 2026-10-26T18:43:56Z; https://github.com/link-foundation/link-cli/actions/runs/40380335831
+
+Eight workflows passed. C# Linux/macOS passed; Windows failed two tests.
+Downloaded full log: experiments/issue-138/ci-logs/native-checkpoint-csharp-40380335548.log (28,598 lines).
+Relevant reviewed chunks: 26,560-26,605 and 27,395-27,440.
+
+Lines 26,576-26,596: EveryFenceIsAcquiredBeforeSelectedBankRepairOrReset(mirrored: True).
+System.IO.IOException: File.ReadAllBytes(journal.bank0) cannot access the file while its exclusive owner is open.
+Stack points to NativeCheckpointFactoryTests.cs:78.
+Correction: dispose the recovered owner before comparing bank bytes; reopen a fresh owner for the following append/replacement.
+All original recovery, exact-byte and following-write assertions remain.
+
+Lines 27,409-27,425: IdleSynchronousOwnersLeaveWorkersAvailableForAsyncCheckpoints.
+Finite worker-pool child exited 1; responsive=True, checkpoint=False.
+This observation does not establish whether the checkpoint encountered an error, worker delay, or physical synchronization delay.
+Retain the physical-checkpoint regression and its three-second observations, fifteen-second parent deadline and thirty-second test timeout.
+Add trace/applied/logged/flush diagnostics plus independent callback scheduling and bounded occupied-worker controls.
+A local pass does not establish the cause of the historical Windows checkpoint failure.
+Fresh exact-head Windows CI remains required. No durability implementation or timeout was weakened.

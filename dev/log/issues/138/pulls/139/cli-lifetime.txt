@@ -1,0 +1,111 @@
+C# CLI owned-store lifetime reproduction
+======================================
+Before: actual compiled entry point returns, but immediate FileShare.None
+reopening fails. No garbage collection is forced before the assertion.
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.97]     Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "transactions") [FAIL]
+[xUnit.net 00:00:01.04]     Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "triggers") [FAIL]
+[xUnit.net 00:00:01.06]     Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "cache") [FAIL]
+[xUnit.net 00:00:01.08]     Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "construction") [FAIL]
+[xUnit.net 00:00:01.12]     Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "version") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "transactions") [299 ms]
+  Error Message:
+   System.IO.IOException : The process cannot access the file '/tmp/cli-lifetime-YB03Nv/data.transitions.names.links' because it is being used by another process.
+  Stack Trace:
+     at Microsoft.Win32.SafeHandles.SafeFileHandle.Init(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Int64& fileLength, UnixFileMode& filePermissions)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, UnixFileMode openPermissions, Int64& fileLength, UnixFileMode& filePermissions, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share)
+   at Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(String scenario) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/CliLifetimeTests.cs:line 41
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "triggers") [74 ms]
+  Error Message:
+   System.IO.IOException : The process cannot access the file '/tmp/cli-lifetime-Df23dW/data.links' because it is being used by another process.
+  Stack Trace:
+     at Microsoft.Win32.SafeHandles.SafeFileHandle.Init(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Int64& fileLength, UnixFileMode& filePermissions)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, UnixFileMode openPermissions, Int64& fileLength, UnixFileMode& filePermissions, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share)
+   at Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(String scenario) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/CliLifetimeTests.cs:line 41
+   at InvokeStub_CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "cache") [16 ms]
+  Error Message:
+   System.IO.IOException : The process cannot access the file '/tmp/cli-lifetime-7VSXdE/data.links' because it is being used by another process.
+  Stack Trace:
+     at Microsoft.Win32.SafeHandles.SafeFileHandle.Init(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Int64& fileLength, UnixFileMode& filePermissions)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, UnixFileMode openPermissions, Int64& fileLength, UnixFileMode& filePermissions, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share)
+   at Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(String scenario) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/CliLifetimeTests.cs:line 41
+   at InvokeStub_CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "construction") [22 ms]
+  Error Message:
+   System.IO.IOException : The process cannot access the file '/tmp/cli-lifetime-6a5U0X/data.links' because it is being used by another process.
+  Stack Trace:
+     at Microsoft.Win32.SafeHandles.SafeFileHandle.Init(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Int64& fileLength, UnixFileMode& filePermissions)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, UnixFileMode openPermissions, Int64& fileLength, UnixFileMode& filePermissions, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share)
+   at Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(String scenario) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/CliLifetimeTests.cs:line 41
+   at InvokeStub_CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(scenario: "version") [37 ms]
+  Error Message:
+   System.IO.IOException : The process cannot access the file '/tmp/cli-lifetime-NrvjIL/data.transitions.names.links' because it is being used by another process.
+  Stack Trace:
+     at Microsoft.Win32.SafeHandles.SafeFileHandle.Init(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Int64& fileLength, UnixFileMode& filePermissions)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, UnixFileMode openPermissions, Int64& fileLength, UnixFileMode& filePermissions, Boolean failForSymlink, Boolean& wasSymlink, Func`4 createOpenException)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share)
+   at Foundation.Data.Doublets.Cli.Tests.CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(String scenario) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/CliLifetimeTests.cs:line 41
+   at InvokeStub_CliLifetimeTests.CommandReleasesOwnedFilesBeforeReturning(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     5, Passed:     0, Skipped:     0, Total:     5, Duration: 475 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+After: original five cases pass with structured owner disposal.
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 574 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Expanded checks: ten ownership scenarios, 88 enumerable contract cases, and
+four deterministic transport failures. The latter 92 are coverage contracts;
+no production defect is claimed for them.
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   102, Skipped:     0, Total:   102, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

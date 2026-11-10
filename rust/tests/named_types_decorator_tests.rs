@@ -1,17 +1,15 @@
 use anyhow::Result;
-use link_cli::{
-    LinkStorage, NamedTypes, NamedTypesDecorator, PinnedTypesAccess, PinnedTypesDecorator,
-};
-use tempfile::NamedTempFile;
+use link_cli::{NamedTypes, NamedTypesDecorator, PinnedTypesAccess, PinnedTypesDecorator};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decorator_exposes_link_storage_operations_and_named_types() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-
-    let mut decorator = NamedTypesDecorator::with_names_database_path(db_path, names_path, false)?;
+    let (_files, mut decorator) = test_store::named()?;
 
     let link = decorator.get_or_create(10, 20);
     let name_link = decorator.set_name(link, "TestLink")?;
@@ -24,15 +22,11 @@ fn decorator_exposes_link_storage_operations_and_named_types() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decorator_includes_pinned_types_decorator() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-
-    let links = LinkStorage::new(db_path, false)?;
-    let names_links = LinkStorage::new(names_path, false)?;
+    let (_db_file, links) = test_store::links()?;
+    let (_names_file, names_links) = test_store::links()?;
     let pinned_types_decorator = PinnedTypesDecorator::from_link_storage(links);
     let mut decorator =
         NamedTypesDecorator::from_pinned_types_decorator(pinned_types_decorator, names_links);
@@ -50,14 +44,10 @@ fn decorator_includes_pinned_types_decorator() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn delete_removes_associated_name_from_names_database() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-
-    let mut decorator = NamedTypesDecorator::with_names_database_path(db_path, names_path, false)?;
+    let (_files, mut decorator) = test_store::named()?;
     let link = decorator.create(1, 2);
     decorator.set_name(link, "TemporaryName")?;
 
@@ -73,14 +63,10 @@ fn delete_removes_associated_name_from_names_database() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn setting_second_name_replaces_first_name() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-
-    let mut decorator = NamedTypesDecorator::with_names_database_path(db_path, names_path, false)?;
+    let (_files, mut decorator) = test_store::named()?;
     let link = decorator.create(1, 1);
 
     decorator.set_name(link, "First")?;
@@ -93,14 +79,10 @@ fn setting_second_name_replaces_first_name() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn reassigning_existing_name_moves_name_to_new_link() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-
-    let mut decorator = NamedTypesDecorator::with_names_database_path(db_path, names_path, false)?;
+    let (_files, mut decorator) = test_store::named()?;
     let first_link = decorator.create(10, 11);
     let second_link = decorator.create(20, 21);
 
@@ -117,7 +99,8 @@ fn reassigning_existing_name_moves_name_to_new_link() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn default_names_database_path_matches_csharp_convention() {
     assert_eq!(
         "test.names.links",
@@ -133,15 +116,11 @@ fn default_names_database_path_matches_csharp_convention() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decorator_can_be_built_from_existing_link_storages() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let names_path = names_file.path().to_str().unwrap();
-
-    let links = LinkStorage::new(db_path, false)?;
-    let names_links = LinkStorage::new(names_path, false)?;
+    let (_db_file, links) = test_store::links()?;
+    let (_names_file, names_links) = test_store::links()?;
     let mut decorator = NamedTypesDecorator::from_link_storages(links, names_links);
 
     let link = decorator.create(5, 6);
@@ -165,15 +144,10 @@ fn decorator_can_be_built_from_existing_link_storages() -> Result<()> {
 /// Before this was handled, `get_by_name` returned whichever holder the names
 /// hash map happened to yield first, and the lookup failed (or succeeded)
 /// depending on hash order.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn reserved_pinned_type_names_can_still_be_used_for_user_links() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let names_file = NamedTempFile::new()?;
-    let mut decorator = NamedTypesDecorator::with_names_database_path(
-        db_file.path().to_str().unwrap(),
-        names_file.path().to_str().unwrap(),
-        false,
-    )?;
+    let (_files, mut decorator) = test_store::named()?;
 
     let reserved = [
         "Type",

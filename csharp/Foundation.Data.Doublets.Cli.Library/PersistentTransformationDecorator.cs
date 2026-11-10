@@ -338,7 +338,7 @@ public class PersistentTransformationDecorator : LinksDecoratorBase<uint>, IName
     {
         if (_trace)
         {
-            Console.WriteLine($"[PersistentTransformation] {message}");
+            DiagnosticOutput.WriteLine($"[PersistentTransformation] {message}");
         }
     }
 

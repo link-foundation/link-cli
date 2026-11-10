@@ -1,0 +1,78 @@
+Optional SQLite page-WAL component, complete local verification
+PR: https://github.com/link-foundation/link-cli/pull/139
+Date: 2026-10-25 UTC
+Base: dd22de1835da742b48620f3c0b25e417d494a62e
+Separate Unicode correction: e812f3a
+
+Reproduce with experiments/issue-138/validate-sqlite.sh after the documented
+validation setup. It runs compilers sequentially within the 2.92 GiB budget.
+The first complete attempt exposed a repository Dependabot watch-list omission;
+all 217 repository checks pass after fixing that configuration. C# was rerun in
+both configurations after the final provider/dependency and response-control
+changes. Final counts below use those reruns, not the earlier C# reports.
+
+Complete local suites:
+- Native Rust all-features: 852 standard passes, zero failed; thirteen ignored
+  child entries are exercised by bounded parent tests. Custom stdout harness passes.
+- C# Debug and Release: 1,989 passes each, zero failed/skipped; Coverlet collected.
+- Actual WASM: 496 passes, zero failed/ignored; LLVM branch coverage collected.
+- JS: 168 passes; all eighteen production modules enforce 100% line, branch and
+  function thresholds. Strict TypeScript passes.
+- Repository: 217 passes. Native/WASM Clippy, both Rust format checks, C# format,
+  source sizes, release fragments, actionlint with ShellCheck and shell checks pass.
+- Generated actual-WASM conformance passes Node, Bun and Deno.
+- Existing shared-group examples, both ordinary undo policies and all eight
+  flat/shared x snapshot/changes x plain/delta persistent strategy examples pass.
+- Nine real SQLite adapter contracts pass separately in Node, Bun and Deno.
+- All eight SQLite compositions reopen the exact same database in the order
+  Rust -> C# -> Node -> Bun -> Deno. Each checks exact prior rows/names/revisions,
+  separate following group commits, retained pins and successful checkpointing.
+- Default Rust and WASM dependency trees contain no rusqlite/SQLite dependency.
+- Latest-dependency check passes for 117 declared versions and Cargo.lock files.
+- Container OOM and OOM-kill counters remain zero.
+
+Component and failure evidence:
+- Independently authored UTF-8 BLOB/schema/sequence vectors are consumed by native
+  Rust, C# and JS tests; leading U+FEFF, NUL and Unicode bytes survive reopening.
+- Busy/stale owners, wrong identities/schemas, malformed bytes, setting drift,
+  failed construction/close retry, finite SQLITE_FULL and before/after actual
+  COMMIT faults retain exact committed prefixes and fence later component use.
+- Forty actual child exits per native language cover five commit points across
+  both maps, logical encodings and physical delta choices. Reopening under the
+  opposite logical encoding and following writes preserve the exact SQL group.
+- Intact copied WALs retain a new commit; a torn final frame or checksum damage
+  recovers the prior checkpoint. quick_check and following writes pass.
+- Four C# missing-scalar regressions first fail, then reject absent provider rows
+  rather than interpreting null as zero. Thirty-five adapter cases and eight
+  bounded exit theories now pass (43 focused cases total).
+- Nine independent existing-code regressions first fail because JS TextDecoder
+  strips a leading U+FEFF from opaque payloads. Literal/framing/file decoding now
+  preserves the bytes while retaining strict malformed-UTF-8 rejection.
+See sqlite-before.txt for preserved before logs and exact failure line numbers.
+
+Final component builds/providers: rusqlite 0.41.0 / libsqlite3-sys 0.39.1 / SQLite 3.54.1;
+Microsoft.Data.Sqlite 10.0.14 / SQLite 3.53.3; Node 26.12.1 / SQLite 3.54.0;
+Bun 1.4.3 / SQLite 3.53.4; Deno 2.9.7 / SQLite 3.53.2. Provider observations
+are version-specific. C# System.CommandLine 2.0.14 satisfies the latest-version
+policy; no core SQLite NuGet provider is added.
+
+Official complete-run totals, without filtered denominators or diagnostic unions:
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,643/12,506 (93.10%) | 2,099/2,524 (83.16%) | 1,496/1,638 (91.33%) |
+| Actual WASM, complete linked source | 8,636/11,811 (73.12%) | 1,619/2,173 (74.51%) | 1,129/1,588 (71.10%) |
+| C# Debug | 7,248/7,763 (93.37%) | 3,751/4,190 (89.52%) | Not reported by this collector |
+| C# Release | 5,578/5,898 (94.57%) | 3,718/4,165 (89.27%) | Not reported by this collector |
+
+All three WASM wrapper files reach 100% lines/branches/functions. The native
+SQLite component measures 249/254 lines (98.03%), 50/62 branches (80.65%) and
+29/29 functions. C# SQLite component lines reach 100%; its Debug class summary
+reports 96.42% branches. Complete native/linked-WASM/C# coverage stays below 100%.
+
+This supplies one selected physical pager/WAL/checkpoint path. Legacy torn mapped
+pages, doublewrite, LSM, real physical power-loss verification, finer independent
+composition and wider cluster/competitor criteria remain unfinished. Same-host
+SQLite locking/VFS sync assumptions and whole-journal replay/retention costs are
+explicit in docs/ENGINE-SQLITE.md. The overall issue goal remains active and the
+PR remains draft; fresh exact-head CI is required after publication.

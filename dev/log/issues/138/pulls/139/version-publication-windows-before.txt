@@ -1,0 +1,129 @@
+Original downloaded log lines 15866-15875:
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1234124Z [xUnit.net 00:00:43.30]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "foreign-attribution") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1241163Z [xUnit.net 00:00:43.30]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-tn12skrv.dbh\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1244759Z [xUnit.net 00:00:43.30]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1252052Z [xUnit.net 00:00:43.31]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1254528Z [xUnit.net 00:00:43.31]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1256167Z [xUnit.net 00:00:43.31]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1258086Z [xUnit.net 00:00:43.31]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1259360Z [xUnit.net 00:00:43.31]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.1330657Z [VersionControl] Prepared version publication 37e11b55e20e419fb77f400fba8e0399: 2..3 on 'topic|:parent=?^@'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.2409558Z [VersionControl] Prepared version publication 37e11b55e20e419fb77f400fba8e0399: 2..3 on 'topic|:parent=?^@'.
+
+Original downloaded log lines 15881-15890:
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8312819Z [xUnit.net 00:00:44.01]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "wrong-current") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8315197Z [xUnit.net 00:00:44.01]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-ebwxfafo.sqr\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8316436Z [xUnit.net 00:00:44.01]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8317185Z [xUnit.net 00:00:44.01]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8317974Z [xUnit.net 00:00:44.01]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8319473Z [xUnit.net 00:00:44.01]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8321221Z [xUnit.net 00:00:44.01]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:00.8322473Z [xUnit.net 00:00:44.01]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.0362578Z [VersionControl] Prepared version publication b4f493b010cd4e21b5d8ca4be61fe57f: 0..1 on 'main'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.2052716Z [VersionControl] Published committed version tx b4f493b010cd4e21b5d8ca4be61fe57f on 'main'.
+
+Original downloaded log lines 15922-15931:
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5727931Z [xUnit.net 00:00:44.75]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "conflicting-decisions") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5731484Z [xUnit.net 00:00:44.75]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-jaxce55u.44z\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5733562Z [xUnit.net 00:00:44.75]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5735096Z [xUnit.net 00:00:44.75]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5736640Z [xUnit.net 00:00:44.75]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5740263Z [xUnit.net 00:00:44.75]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5744196Z [xUnit.net 00:00:44.75]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5747039Z [xUnit.net 00:00:44.75]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.5896967Z [VersionControl] Prepared version publication 0055d5e7b87d4b0fbc89c693cc387611: 3..4 on 'topic|:parent=?^@'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:01.7811481Z [VersionControl] Published committed version tx 0055d5e7b87d4b0fbc89c693cc387611 on 'topic|:parent=?^@'.
+
+Original downloaded log lines 15933-15942:
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3804162Z [xUnit.net 00:00:45.56]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "unknown-branch") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3808657Z [xUnit.net 00:00:45.56]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-wusxms35.4at\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3810307Z [xUnit.net 00:00:45.56]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3811100Z [xUnit.net 00:00:45.56]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3811916Z [xUnit.net 00:00:45.56]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3813513Z [xUnit.net 00:00:45.56]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3815698Z [xUnit.net 00:00:45.56]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.3816981Z [xUnit.net 00:00:45.56]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.4697769Z [VersionControl] Published committed version tx c20ac41d052f4efcace9baad9ffeecdb on 'main'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:02.4931890Z [VersionControl] Prepared version publication bfeaac1ce2df4b21a6f0e83198f4b969: 1..2 on 'main'.
+
+Original downloaded log lines 15971-15980:
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0187066Z [xUnit.net 00:00:46.20]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "applied-ahead") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0191401Z [xUnit.net 00:00:46.20]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-vpv2mvhb.gy0\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0193320Z [xUnit.net 00:00:46.20]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0194727Z [xUnit.net 00:00:46.20]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0196819Z [xUnit.net 00:00:46.20]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0199878Z [xUnit.net 00:00:46.20]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0203457Z [xUnit.net 00:00:46.20]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.0205987Z [xUnit.net 00:00:46.20]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.4660676Z [VersionControl] Prepared version publication 7bd651601214434d9697b9ff39231cfa: 0..1 on 'main'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5344820Z [VersionControl] Published committed version tx 7bd651601214434d9697b9ff39231cfa on 'main'.
+
+Original downloaded log lines 15986-15995:
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5745292Z [xUnit.net 00:00:46.75]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "multiple-intents") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5748668Z [xUnit.net 00:00:46.75]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-sj4obd5q.kwm\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5750515Z [xUnit.net 00:00:46.75]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5751967Z [xUnit.net 00:00:46.75]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5753556Z [xUnit.net 00:00:46.75]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5756573Z [xUnit.net 00:00:46.75]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5760573Z [xUnit.net 00:00:46.76]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.5762843Z [xUnit.net 00:00:46.76]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.6165891Z   Passed Foundation.Data.Doublets.Cli.Tests.CommitDecisionFailureTests.CleanupResolvesPossiblyDurableDecisionBeforeFollowingEdit(point: "marker-after", automatic: False, operation: "owner") [637 ms]
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.6169341Z   Failed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "applied-ahead") [637 ms]
+
+Original downloaded log lines 16021-16030:
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9344341Z [xUnit.net 00:00:47.11]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "missing-record") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9347570Z [xUnit.net 00:00:47.11]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-g03oivpe.vwv\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9349318Z [xUnit.net 00:00:47.11]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9350109Z [xUnit.net 00:00:47.11]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9350942Z [xUnit.net 00:00:47.11]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9352855Z [xUnit.net 00:00:47.11]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9354675Z [xUnit.net 00:00:47.11]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:03.9356164Z [xUnit.net 00:00:47.11]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.4842300Z [VersionControl] Prepared version publication b581c24f22bc418b9f3f099e49f0517c: 0..1 on 'main'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.5607022Z [VersionControl] Published committed version tx b581c24f22bc418b9f3f099e49f0517c on 'main'.
+
+Original downloaded log lines 16041-16050:
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6315508Z [xUnit.net 00:00:47.81]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "foreign-record") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6320547Z [xUnit.net 00:00:47.81]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-ouwzq3ah.wki\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6322734Z [xUnit.net 00:00:47.81]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6324605Z [xUnit.net 00:00:47.81]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6325487Z [xUnit.net 00:00:47.81]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6343937Z [xUnit.net 00:00:47.81]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6348472Z [xUnit.net 00:00:47.81]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.6351286Z [xUnit.net 00:00:47.81]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.7560598Z [VersionControl] Published committed version tx 1486091f62ce4f63ac4f0407b6c8b975 on 'topic|:parent=?^@'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:04.9364381Z   Failed Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "missing-record") [359 ms]
+
+Original downloaded log lines 16072-16081:
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2005255Z [xUnit.net 00:00:48.38]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(scenario: "head-ahead") [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2009522Z [xUnit.net 00:00:48.38]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-contradiction-teomofsu.piv\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2011508Z [xUnit.net 00:00:48.38]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2012307Z [xUnit.net 00:00:48.38]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2013157Z [xUnit.net 00:00:48.38]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2014657Z [xUnit.net 00:00:48.38]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(String scenario)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2016694Z [xUnit.net 00:00:48.38]            at InvokeStub_VersionPublicationContradictionTests.ContradictoryIntentPreservesSidecarAndCommittedRows(Object, Span`1)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.2017935Z [xUnit.net 00:00:48.38]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3582731Z [xUnit.net 00:00:48.54]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.SharedIntentVectorsResolveAbortsAndPreserveMalformedFiles [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3586078Z [xUnit.net 00:00:48.54]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-intent-vector-z3q5rqul.5ef\branches.links' because it is being used by another process.
+
+Original downloaded log lines 16080-16089:
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3582731Z [xUnit.net 00:00:48.54]     Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.SharedIntentVectorsResolveAbortsAndPreserveMalformedFiles [FAIL]
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3586078Z [xUnit.net 00:00:48.54]       System.IO.IOException : The process cannot access the file 'C:\Users\runneradmin\AppData\Local\Temp\version-intent-vector-z3q5rqul.5ef\branches.links' because it is being used by another process.
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3588394Z [xUnit.net 00:00:48.54]       Stack Trace:
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3589887Z [xUnit.net 00:00:48.54]            at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3591525Z [xUnit.net 00:00:48.54]            at System.IO.File.ReadAllBytes(String path)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3594486Z [xUnit.net 00:00:48.54]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\VersionPublicationContradictionTests.cs(98,0): at Foundation.Data.Doublets.Cli.Tests.VersionPublicationContradictionTests.SharedIntentVectorsResolveAbortsAndPreserveMalformedFiles()
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3598238Z [xUnit.net 00:00:48.54]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.3600491Z [xUnit.net 00:00:48.54]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.6246072Z [VersionControl] Prepared version publication af1077b99d344123a2c09cb5d1242f4a: 0..1 on 'main'.
+Test (windows-2025)	Run tests	2026-10-25T00:52:05.6447235Z [VersionControl] Published committed version tx af1077b99d344123a2c09cb5d1242f4a on 'main'.
+
+Final summary, original lines 18016-18023:
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5442273Z Test Run Failed.
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5443275Z Total tests: 1440
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5443712Z      Passed: 1430
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5444023Z      Failed: 10
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5446103Z  Total time: 2.5493 Minutes
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5616490Z      1>Project "D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.sln" (1) is building "D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\Foundation.Data.Doublets.Cli.Tests.csproj" (2) on node 1 (VSTest target(s)).
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5618408Z      2>_VSTestConsole:
+Test (windows-2025)	Run tests	2026-10-25T00:53:47.5618995Z          MSB4181: The "VSTestTask" task returned false but did not log an error.

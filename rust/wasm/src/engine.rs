@@ -1,0 +1,531 @@
+//! JS uses the native engine through WASM, rather than reimplementing isolation.
+use crate::engine_log::{BindingLog, JsCommitLog};
+use link_cli::engine::{
+    recovery, restore_backup, Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine,
+    EngineOptions, EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
+    RevisionEncoding, Savepoint, SerializableValidation, StateStructure,
+};
+use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
+use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
+use serde::Deserialize;
+use wasm_bindgen::prelude::*;
+
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+struct Options {
+    state_structure: Option<String>,
+    revision_encoding: Option<String>,
+    concurrency: Option<String>,
+    isolation: Option<String>,
+    serializable_validation: Option<String>,
+    history: Option<serde_json::Value>,
+    constraints: Vec<String>,
+    constraint_validation: Option<String>,
+    trace: bool,
+    require_durable_flush: bool,
+}
+pub(crate) fn options(text: &str) -> Result<EngineOptions, String> {
+    // Serde structs also accept positional arrays. The public binding accepts
+    // a JSON options object, matching the JS client rather than silently
+    // treating [] (or a positional policy array) as configuration.
+    let object: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let parsed: Options = serde_json::from_value(serde_json::Value::Object(object))
+        .map_err(|error| error.to_string())?;
+    Ok(EngineOptions {
+        constraint_validation: match parsed.constraint_validation.as_deref() {
+            None | Some("scan") => ConstraintValidation::Scan,
+            Some("indexed") => ConstraintValidation::Indexed,
+            _ => return Err("unknown constraint validation".into()),
+        },
+        revision_encoding: match parsed.revision_encoding.as_deref() {
+            None | Some("snapshot") => RevisionEncoding::Snapshot,
+            Some("changes") => RevisionEncoding::Changes,
+            _ => return Err("unknown revision encoding".into()),
+        },
+        state_structure: match parsed.state_structure.as_deref() {
+            None | Some("flat") => StateStructure::Flat,
+            Some("shared") => StateStructure::Shared,
+            Some("sorted-runs") => StateStructure::SortedRuns,
+            _ => return Err("unknown state structure".into()),
+        },
+        lock_wait: None,
+        concurrency: match parsed.concurrency.as_deref() {
+            None | Some("optimistic") => ConcurrencyControl::Optimistic,
+            Some("exclusive") => ConcurrencyControl::Exclusive,
+            Some("pessimistic") => ConcurrencyControl::Pessimistic,
+            _ => return Err("unknown concurrency control".into()),
+        },
+        isolation: match parsed.isolation.as_deref() {
+            None | Some("serializable") => IsolationLevel::Serializable,
+            Some("snapshot") => IsolationLevel::Snapshot,
+            Some("read-committed") => IsolationLevel::ReadCommitted,
+            _ => return Err("unknown isolation level".into()),
+        },
+        serializable_validation: match parsed.serializable_validation.as_deref() {
+            None | Some("revision") => SerializableValidation::Revision,
+            Some("read-set") => SerializableValidation::ReadSet,
+            _ => return Err("unknown serializable validation".into()),
+        },
+        history: match parsed.history {
+            None | Some(serde_json::Value::Null) => HistoryPolicy::None,
+            Some(serde_json::Value::String(text)) if text == "all" => HistoryPolicy::All,
+            Some(serde_json::Value::Number(number)) => HistoryPolicy::Last(
+                number
+                    .as_u64()
+                    .and_then(|n| usize::try_from(n).ok())
+                    .filter(|n| *n > 0)
+                    .ok_or("history must be positive")?,
+            ),
+            _ => return Err("history must be null, all, or a positive integer".into()),
+        },
+        constraints: parsed
+            .constraints
+            .iter()
+            .map(|constraint| match constraint.as_str() {
+                "references" => Ok(Constraint::References),
+                "unique-pairs" => Ok(Constraint::UniquePairs),
+                "unique-names" => Ok(Constraint::UniqueNames),
+                _ => Err("unknown constraint".into()),
+            })
+            .collect::<Result<_, String>>()?,
+        trace: parsed.trace,
+        require_durable_flush: parsed.require_durable_flush,
+    })
+}
+
+fn check_json(check: &recovery::JournalCheck) -> serde_json::Value {
+    serde_json::json!({
+        "validRecords": check.valid_records,
+        "totalRecords": check.total_records,
+        "revision": check.revision.to_string(),
+        "damage": check.damage.as_ref().map(|damage| serde_json::json!({
+            "record": damage.record,
+            "reason": damage.reason,
+        })),
+    })
+}
+
+#[wasm_bindgen]
+pub struct StagedEngine {
+    inner: Engine<u32, BindingLog>,
+}
+#[wasm_bindgen]
+impl StagedEngine {
+    /// journal_json contains engine1/engine2 records, optionally after one engine3
+    /// checkpoint ("[]" for an empty store).
+    #[wasm_bindgen(constructor)]
+    pub fn new(options_json: &str, journal_json: &str) -> Result<StagedEngine, String> {
+        let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        Ok(Self {
+            inner: Engine::open(
+                BindingLog::Memory(MemoryLog { entries }),
+                options(options_json)?,
+            )
+            .map_err(|e| e.to_string())?,
+        })
+    }
+    /// The caller owns the external adapter's resources and fencing.
+    #[wasm_bindgen(js_name = withLog)]
+    pub fn with_log(options_json: &str, log: JsCommitLog) -> Result<StagedEngine, String> {
+        Ok(Self {
+            inner: Engine::open(BindingLog::External(log), options(options_json)?)
+                .map_err(|e| e.to_string())?,
+        })
+    }
+    pub fn begin(&self) -> Result<StagedSession, String> {
+        Ok(StagedSession {
+            inner: self.inner.begin().map_err(|e| e.to_string())?,
+        })
+    }
+    /// Own the group handle before transferring sessions from their JS queues.
+    pub fn group(&self) -> StagedCommitGroup {
+        StagedCommitGroup {
+            engine: self.inner.clone(),
+            sessions: Vec::new(),
+            closed: false,
+        }
+    }
+    pub fn fork(&self, options_json: &str, journal_json: &str) -> Result<StagedBranch, String> {
+        let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        self.fork_log(options_json, BindingLog::Memory(MemoryLog { entries }))
+    }
+    #[wasm_bindgen(js_name = forkWithLog)]
+    pub fn fork_with_log(
+        &self,
+        options_json: &str,
+        log: JsCommitLog,
+    ) -> Result<StagedBranch, String> {
+        self.fork_log(options_json, BindingLog::External(log))
+    }
+    pub fn resume(
+        &self,
+        options_json: &str,
+        journal_json: &str,
+        base: &str,
+    ) -> Result<StagedBranch, String> {
+        let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        self.resume_log(
+            options_json,
+            BindingLog::Memory(MemoryLog { entries }),
+            base,
+        )
+    }
+    #[wasm_bindgen(js_name = resumeWithLog)]
+    pub fn resume_with_log(
+        &self,
+        options_json: &str,
+        log: JsCommitLog,
+        base: &str,
+    ) -> Result<StagedBranch, String> {
+        self.resume_log(options_json, BindingLog::External(log), base)
+    }
+    /// Export does not persist anything; caller owns the resulting bytes.
+    pub fn journal(&self) -> Result<String, String> {
+        self.inner
+            .with_log(|log| {
+                Ok(serde_json::to_string(&log.read_log_entries()?).expect("strings serialize"))
+            })
+            .map_err(|e| e.to_string())
+    }
+    /// Export retained committed snapshots without publishing or rewriting a log.
+    #[wasm_bindgen(js_name = exportCheckpoint)]
+    pub fn export_checkpoint(&self, revision: Option<u64>) -> Result<String, String> {
+        match revision {
+            Some(revision) => self.inner.export_checkpoint_at(revision),
+            None => self.inner.export_checkpoint(),
+        }
+        .map(|entries| serde_json::to_string(&entries).expect("strings serialize"))
+        .map_err(|e| e.to_string())
+    }
+    /// Copy a consistent cut to an empty log; commits continue during log calls.
+    pub fn backup(&self, log: JsCommitLog, revision: Option<u64>) -> Result<u64, String> {
+        self.inner
+            .backup_to(&mut BindingLog::External(log), revision)
+            .map_err(|e| e.to_string())
+    }
+    /// Append only the revisions an earlier backup lacks; an empty log gets a full copy.
+    #[wasm_bindgen(js_name = backupIncremental)]
+    pub fn backup_incremental(&self, log: JsCommitLog) -> Result<u64, String> {
+        self.inner
+            .backup_incremental_to(&mut BindingLog::External(log))
+            .map_err(|e| e.to_string())
+    }
+    /// Copy an archived journal to an empty log, stopping at one revision.
+    #[wasm_bindgen(js_name = restoreBackup)]
+    pub fn restore_backup(
+        source: JsCommitLog,
+        destination: JsCommitLog,
+        revision: Option<u64>,
+    ) -> Result<u64, String> {
+        restore_backup::<u32, _, _>(
+            &mut BindingLog::External(source),
+            &mut BindingLog::External(destination),
+            revision,
+        )
+        .map_err(|e| e.to_string())
+    }
+    /// Report the longest prefix of a journal that opening would replay and
+    /// the first damaged record, as JSON; see `engine::recovery::check_journal`.
+    #[wasm_bindgen(js_name = checkJournal)]
+    pub fn check_journal(options_json: &str, journal_json: &str) -> Result<String, String> {
+        let entries: Vec<String> =
+            serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        let check = recovery::check_journal::<u32>(&entries, &options(options_json)?);
+        Ok(check_json(&check).to_string())
+    }
+    /// Pick the longest valid prefix among copies of one journal (a JSON array
+    /// of journals), refusing copies that diverge; see `recover_journal`.
+    #[wasm_bindgen(js_name = recoverJournal)]
+    pub fn recover_journal(options_json: &str, copies_json: &str) -> Result<String, String> {
+        let copies: Vec<Vec<String>> =
+            serde_json::from_str(copies_json).map_err(|error| error.to_string())?;
+        let recovery = recovery::recover_journal::<u32>(&copies, &options(options_json)?)
+            .map_err(|error| error.to_string())?;
+        Ok(serde_json::json!({
+            "entries": recovery.entries,
+            "source": recovery.source,
+            "revision": recovery.revision.to_string(),
+            "checks": recovery.checks.iter().map(check_json).collect::<Vec<_>>(),
+        })
+        .to_string())
+    }
+    /// Publish a checkpoint through the optional atomic replacement capability.
+    #[wasm_bindgen(js_name = compactJournal)]
+    pub fn compact_journal(&self) -> Result<bool, String> {
+        self.inner
+            .compact_journal()
+            .map_err(|cause| cause.to_string())
+    }
+    /// Publish a checkpoint once this many revisions have landed since the last one.
+    #[wasm_bindgen(js_name = compactJournalAfter)]
+    pub fn compact_journal_after(&self, commits: u64) -> Result<bool, String> {
+        self.inner
+            .compact_journal_after(commits)
+            .map_err(|cause| cause.to_string())
+    }
+    /// Historical rows use decimal addresses, avoiding JS number precision loss.
+    pub fn snapshot(&self, revision: Option<u64>) -> Result<String, String> {
+        let snapshot = match revision {
+            Some(revision) => self.inner.snapshot_at(revision),
+            None => self.inner.snapshot(),
+        }
+        .map_err(|e| e.to_string())?;
+        let rows: Vec<_> = snapshot.iter().map(|(_, row)| serde_json::json!({
+            "index": row.link.index.to_string(), "source": row.link.source.to_string(), "target": row.link.target.to_string(), "name": row.name,
+        })).collect();
+        Ok(
+            serde_json::json!({"revision": snapshot.revision.to_string(), "rows": rows})
+                .to_string(),
+        )
+    }
+}
+
+#[wasm_bindgen]
+pub struct StagedCommitGroup {
+    engine: Engine<u32, BindingLog>,
+    sessions: Vec<EngineTransaction<u32, BindingLog>>,
+    closed: bool,
+}
+#[wasm_bindgen]
+impl StagedCommitGroup {
+    /// Consumes the handle; freeing an uncommitted group rolls back its members.
+    pub fn add(&mut self, session: StagedSession) -> Result<(), String> {
+        if self.closed {
+            return Err("commit group is closed".into());
+        }
+        self.sessions.push(session.inner);
+        Ok(())
+    }
+    pub fn commit(&mut self) -> Result<String, String> {
+        if self.closed {
+            return Err("commit group is closed".into());
+        }
+        self.closed = true;
+        let outcomes = self
+            .engine
+            .commit_group(std::mem::take(&mut self.sessions))
+            .map_err(|e| e.to_string())?;
+        let values: Vec<_> = outcomes
+            .into_iter()
+            .map(|outcome| match outcome {
+                GroupCommitOutcome::Committed(revision) => {
+                    serde_json::json!({"status":"committed", "revision":revision.to_string()})
+                }
+                GroupCommitOutcome::Aborted(error) => {
+                    serde_json::json!({"status":"aborted", "error":error})
+                }
+                GroupCommitOutcome::Indeterminate(error) => {
+                    serde_json::json!({"status":"indeterminate", "error":error})
+                }
+            })
+            .collect();
+        Ok(serde_json::Value::Array(values).to_string())
+    }
+}
+
+impl StagedEngine {
+    fn fork_log(&self, options_json: &str, log: BindingLog) -> Result<StagedBranch, String> {
+        Ok(StagedBranch {
+            inner: self
+                .inner
+                .fork(log, options(options_json)?)
+                .map_err(|error| error.to_string())?,
+        })
+    }
+    fn resume_log(
+        &self,
+        options_json: &str,
+        log: BindingLog,
+        base: &str,
+    ) -> Result<StagedBranch, String> {
+        Ok(StagedBranch {
+            inner: self
+                .inner
+                .resume_branch(log, options(options_json)?, base)
+                .map_err(|error| error.to_string())?,
+        })
+    }
+}
+
+#[wasm_bindgen]
+pub struct StagedBranch {
+    inner: Branch<u32, BindingLog, BindingLog>,
+}
+#[wasm_bindgen]
+impl StagedBranch {
+    pub fn engine(&self) -> StagedEngine {
+        StagedEngine {
+            inner: self.inner.engine().clone(),
+        }
+    }
+    pub fn merge(&mut self) -> Result<u64, String> {
+        self.inner.merge().map_err(|error| error.to_string())
+    }
+    #[wasm_bindgen(js_name = mergeBaseRecord)]
+    pub fn merge_base_record(&self) -> String {
+        self.inner.merge_base_record()
+    }
+}
+
+#[wasm_bindgen]
+pub struct StagedSession {
+    inner: EngineTransaction<u32, BindingLog>,
+}
+#[wasm_bindgen]
+impl StagedSession {
+    pub fn request(&mut self, text: &str) -> String {
+        let reply = match parse_document(text) {
+            Ok(document) => {
+                execute_request(&mut self.inner, &QueryProcessor::new(false), &document)
+            }
+            Err(error) => error_document(&error.to_string()),
+        };
+        format_document(&reply)
+    }
+    pub fn commit(&mut self) -> Result<u64, String> {
+        self.inner.commit().map_err(|e| e.to_string())
+    }
+    pub fn rollback(&mut self) {
+        self.inner.rollback();
+    }
+    /// `SELECT ... FOR UPDATE`: `[index, source, target]`, or undefined for a
+    /// missing address, which is reserved all the same.
+    #[wasm_bindgen(js_name = lockForUpdate)]
+    pub fn lock_for_update(&mut self, index: u32) -> Result<Option<Vec<u32>>, String> {
+        self.inner
+            .lock_for_update(index)
+            .map(|row| row.map(|link| vec![link.index, link.source, link.target]))
+            .map_err(|e| e.to_string())
+    }
+    #[wasm_bindgen(js_name = writeOwner)]
+    pub fn write_owner(&self) -> Option<u64> {
+        self.inner.write_owner()
+    }
+    #[wasm_bindgen(js_name = takeWriteBlocker)]
+    pub fn take_write_blocker(&mut self) -> Option<u64> {
+        self.inner.take_write_blocker()
+    }
+    pub fn savepoint(&mut self) -> Result<u64, String> {
+        let savepoint = self.inner.savepoint().map_err(|e| e.to_string())?;
+        Ok(savepoint.0)
+    }
+    #[wasm_bindgen(js_name = rollbackTo)]
+    pub fn rollback_to(&mut self, savepoint: u64) -> Result<(), String> {
+        self.inner
+            .rollback_to_savepoint(Savepoint(savepoint))
+            .map_err(|e| e.to_string())
+    }
+    #[wasm_bindgen(js_name = releaseSavepoint)]
+    pub fn release_savepoint(&mut self, savepoint: u64) -> Result<(), String> {
+        self.inner
+            .release_savepoint(Savepoint(savepoint))
+            .map_err(|e| e.to_string())
+    }
+    pub fn count(&self) -> usize {
+        self.inner.links_count()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    fn binding_sessions_and_journal_round_trip() {
+        let engine = StagedEngine::new(r#"{"history":"all"}"#, "[]").unwrap();
+        let mut session = engine.begin().unwrap();
+        assert!(!session.request("(create: (0 0))").contains("error:"));
+        assert_eq!(engine.begin().unwrap().count(), 0);
+        assert_eq!(session.commit().unwrap(), 1);
+        assert!(session.request("(create: (0 0))").contains("error:"));
+        let reopened = StagedEngine::new("{}", &engine.journal().unwrap()).unwrap();
+        assert_eq!(reopened.begin().unwrap().count(), 1);
+        assert!(engine.snapshot(Some(0)).unwrap().contains("\"rows\":[]"));
+    }
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    fn binding_savepoints_restore_staged_writes() {
+        let engine = StagedEngine::new("{}", "[]").unwrap();
+        let mut session = engine.begin().unwrap();
+        session.request("(create: (0 0))");
+        let kept = session.savepoint().unwrap();
+        let later = session.savepoint().unwrap();
+        session.request("(create: (0 0))");
+        assert_eq!(session.count(), 2);
+        session.release_savepoint(later).unwrap();
+        session.rollback_to(kept).unwrap();
+        assert_eq!(session.count(), 1);
+        assert!(session.rollback_to(later).unwrap_err().contains("unknown"));
+        session.release_savepoint(kept).unwrap();
+        assert!(session
+            .release_savepoint(kept)
+            .unwrap_err()
+            .contains("unknown"));
+        assert_eq!(session.commit().unwrap(), 1);
+        assert!(session.savepoint().unwrap_err().contains("closed"));
+    }
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    fn invalid_policies_are_not_silently_ignored() {
+        for text in [
+            "[]",
+            r#"{"isolation":"dirty"}"#,
+            r#"{"serializableValidation":"invalid"}"#,
+            r#"{"serializableValidation":42}"#,
+            r#"{"isolation":"snapshot","serializableValidation":"read-set"}"#,
+            r#"{"concurrency":"none"}"#,
+            r#"{"stateStructure":"mutable"}"#,
+            r#"{"stateStructure":42}"#,
+            r#"{"history":0}"#,
+            r#"{"constraints":["unknown"]}"#,
+            r#"{"constraintValidation":"unknown"}"#,
+            r#"{"durable":true}"#,
+        ] {
+            assert!(StagedEngine::new(text, "[]").is_err(), "{text}");
+        }
+    }
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    fn journals_are_checked_and_recovered_from_copies() {
+        let engine = StagedEngine::new("{}", "[]").unwrap();
+        for _ in 0..3 {
+            let mut tx = engine.begin().unwrap();
+            tx.request("(create: (0 0))");
+            tx.commit().unwrap();
+        }
+        let entries: Vec<String> = serde_json::from_str(&engine.journal().unwrap()).unwrap();
+        let intact: serde_json::Value = serde_json::from_str(
+            &StagedEngine::check_journal("{}", &serde_json::to_string(&entries).unwrap()).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(intact["validRecords"], 3);
+        assert_eq!(intact["revision"], "3");
+        assert!(intact["damage"].is_null());
+        let mut damaged = entries.clone();
+        damaged[1].push('x');
+        let check: serde_json::Value = serde_json::from_str(
+            &StagedEngine::check_journal("{}", &serde_json::to_string(&damaged).unwrap()).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(check["validRecords"], 1);
+        assert_eq!(check["totalRecords"], 3);
+        assert_eq!(check["damage"]["record"], 1);
+        let copies = serde_json::json!([damaged, entries]).to_string();
+        let recovery: serde_json::Value =
+            serde_json::from_str(&StagedEngine::recover_journal("{}", &copies).unwrap()).unwrap();
+        assert_eq!(recovery["source"], 1);
+        assert_eq!(recovery["revision"], "3");
+        assert_eq!(recovery["entries"], serde_json::json!(entries));
+        assert_eq!(recovery["checks"][0]["validRecords"], 1);
+        let reopened = StagedEngine::new("{}", &recovery["entries"].to_string()).unwrap();
+        assert_eq!(reopened.begin().unwrap().count(), 3);
+        assert!(StagedEngine::recover_journal("{}", "[]")
+            .unwrap_err()
+            .contains("at least one copy"));
+        assert!(StagedEngine::check_journal("{}", "{").is_err());
+        assert!(StagedEngine::check_journal("[]", "[]").is_err());
+        assert!(StagedEngine::recover_journal("{}", "[1]").is_err());
+        assert!(StagedEngine::recover_journal("[]", "[]").is_err());
+    }
+}

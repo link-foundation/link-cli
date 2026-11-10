@@ -1,0 +1,12 @@
+Published owner/clock batch b6d2223487b0efde5ff46dfe3d8642d1e9a99f01
+All nine exact-SHA workflows pass. Created 2026-10-24T22:54:44Z/45Z.
+
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40140543655
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40140543629
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40140543605
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40140543575
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40140543616
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40140543580
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40140543598
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40140543581
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40140543582

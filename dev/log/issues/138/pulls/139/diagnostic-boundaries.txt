@@ -1,0 +1,59 @@
+Diagnostic I/O regression and finite boundary verification (2026-10-24)
+
+Before: e2e714f, newly added Linux subprocess regression, before implementation
+  cargo test --manifest-path rust/Cargo.toml --all-features \
+    --test engine_boundary_tests unavailable_diagnostic_output -- --nocapture
+  commit: child exit status: 101 after persisting 1 rows
+  replication: child exit status: 101 after persisting 1 rows
+  test result: FAILED. 0 passed; 1 failed; 0 ignored
+
+Fault: the child inherits /dev/full as stderr. Each write fails immediately with
+ENOSPC; the experiment never fills a disk. A read-only stderr probe does not
+reproduce this bug because Rust ignores EBADF. This regression is Linux-only.
+Other platforms still run the portable recovery and storage contract tests.
+
+Root cause: opt-in eprintln! calls panic after successful engine publication or
+replica work. Use fallible writes for diagnostics and discard only that result.
+Storage errors retain their existing propagation and poisoning behavior.
+
+After:
+  engine_boundary_tests: 8 passed, 1 child entry point ignored
+  Both diagnostic fault modes exit successfully after two commits and catch-ups.
+  Reopening each independent file journal recovers both rows.
+  storage_decorator_contract_tests: 4 passed
+
+Finite counter/recovery tests additionally check valid-checksum but invalid
+journal sequences, forged saved merge bases, pending-session log fencing,
+u128/UInt128 allocation exhaustion, revision exhaustion, poisoned engine mutex
+extraction, and closed read-committed visibility. Adapter contracts check
+callbacks/errors, optional query filters, borrowed reads, external sidecar
+changes, flush retry and deterministic pinned addresses. Network fixtures check
+actual custom headers, malformed headers, and failed object staging without
+catalog publication. Counter limits are set directly in tiny private fixtures;
+no test loops to an address or revision limit.
+
+Full verification (one Cargo job, reduced debug info, bounded .NET GC heap):
+  RUSTC_BOOTSTRAP=1 cargo llvm-cov test --manifest-path rust/Cargo.toml \
+    --all-features --branch --json --output-path boundary-rust-coverage.json
+  Rust: 462 passed, 0 failed, 3 subprocess helper entry points ignored.
+  Lines: 8760/9774 (89.63%). Branches: 1409/1806 (78.02%).
+  Functions: 1193/1360. Regions: 13345/15446.
+  Native Clippy --all-features --all-targets -- -D warnings: pass.
+
+  dotnet test csharp --configuration Debug|Release --disable-build-servers -m:1 \
+    --collect:'XPlat Code Coverage'
+  Debug: 656 passed; lines 5746/6435 (89.29%), branches 2495/3060 (81.54%).
+  Release: 656 passed; lines 4377/4810 (91.00%), branches 2474/3041 (81.35%).
+  dotnet format csharp --no-restore --verify-no-changes: pass.
+
+  bash experiments/issue-138/wasm-coverage.sh
+  Actual WebAssembly: 17 passed.
+  Wrapper: lines 331/331, functions 68/68, branches 16/16, regions 505/505.
+  Complete WASM report including linked core: lines 2725/8948 (30.45%),
+  branches 392/1261 (31.09%), functions 346/1296, regions 3938/14091.
+  WASM-target Clippy --all-targets -- -D warnings: pass.
+  cargo fmt checks for both manifests: pass.
+
+No new production coverage exclusions. Wrapper 100% is not complete engine
+coverage. Native and linked-core coverage still fall short of the issue's 100%
+criterion. These checks do not prove power-loss persistence on every filesystem.

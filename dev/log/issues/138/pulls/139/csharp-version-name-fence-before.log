@@ -1,0 +1,50 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.32]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.72]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.79]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.15]     Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(operation: "remove") [FAIL]
+[xUnit.net 00:00:01.15]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.15]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.15]       Stack Trace:
+[xUnit.net 00:00:01.15]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionCommitFailureTests.cs(34,0): at Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(String operation)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.15]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.20]     Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(operation: "set") [FAIL]
+[xUnit.net 00:00:01.20]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.20]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.20]       Stack Trace:
+[xUnit.net 00:00:01.20]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionCommitFailureTests.cs(32,0): at Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(String operation)
+[xUnit.net 00:00:01.20]            at InvokeStub_VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(Object, Span`1)
+[xUnit.net 00:00:01.20]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.21]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(operation: "remove") [251 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionCommitFailureTests.cs:line 34
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(operation: "set") [82 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionCommitFailureTests.cs:line 32
+   at InvokeStub_VersionCommitFailureTests.NamedWritesWaitForCommittedVersionPublication(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Test Run Failed.
+Total tests: 2
+     Failed: 2
+ Total time: 2.2854 Seconds

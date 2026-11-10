@@ -638,6 +638,9 @@ C# and Rust servers and clients work with each other: see
 [`examples/tcp/`](examples/tcp) and
 [docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
 
+Ctrl+C or `SIGTERM` stops a server gracefully: it closes the store and exits
+with status 0, so it can run under a service manager or in a container.
+
 ### Serving triplets
 
 `--triplets` makes a server read every request as
@@ -693,6 +696,11 @@ Each call is one request, such as `(count: (* 1))`, `(update: (1 2 2))` or
 `(set-name: (2 'a pair'))`. A write replies with the net change of every link
 it touched. [`docs/protocol/links-operations.txt`](docs/protocol/links-operations.txt)
 records one whole conversation, and both ports replay it in their tests.
+C# also exposes `RemoteLinks<T>`, `LinksOperation<T>` and selected-address server
+overloads while retaining the uint APIs. `LinksClient.QueryLossless` carries
+original query text to supporting peers; use a checked causal `QueryLinks`
+adapter to stage full-u64 edits before explicit session publication. See
+[ordinary causal sessions](docs/ENGINE-CAUSAL-SESSIONS.md) for bounds and costs.
 
 ### Subscribe to changes
 

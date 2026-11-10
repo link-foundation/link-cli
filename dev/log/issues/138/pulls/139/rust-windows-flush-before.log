@@ -1,0 +1,36 @@
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.6941333Z running 0 tests
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.6941671Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.6942367Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.6943035Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.6959177Z ^[[1m^[[92m     Running^[[0m `D:\a\link-cli\link-cli\rust\target\debug\deps\acid_readiness_tests-1148b3ee3afe93c9.exe`
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7065268Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7065529Z running 6 tests
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7074496Z test recovery_refuses_a_complete_corrupt_transition ... ok
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7075668Z test failed_recovery_is_reported ... ok
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7078358Z test failed_checkpoint_never_writes_applied_markers ... ok
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7080146Z test recovery_refuses_corrupt_markers ... ok
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7120771Z test committed_buffered_store_survives_reopen_without_save ... FAILED
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7121553Z test rollback_is_persistent_before_its_marker ... FAILED
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7122347Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7123219Z failures:
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7123446Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7123812Z ---- committed_buffered_store_survives_reopen_without_save stdout ----
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7124349Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7125001Z thread 'committed_buffered_store_survives_reopen_without_save' (9156) panicked at tests\acid_readiness_tests.rs:20:10:
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7126455Z called `Result::unwrap()` on an `Err` value: Io(Os { code: 5, kind: PermissionDenied, message: "Access is denied." })
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7128260Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7128516Z ---- rollback_is_persistent_before_its_marker stdout ----
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7128928Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7129439Z thread 'rollback_is_persistent_before_its_marker' (7732) panicked at tests\acid_readiness_tests.rs:48:10:
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7130682Z called `Result::unwrap()` on an `Err` value: Io(Os { code: 5, kind: PermissionDenied, message: "Access is denied." })
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7131736Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7132262Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7132268Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7132389Z failures:
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7132784Z     committed_buffered_store_survives_reopen_without_save
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7133357Z     rollback_is_persistent_before_its_marker
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7133696Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7134401Z test result: FAILED. 4 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7134762Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.7184097Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test acid_readiness_tests`
+Test (windows-2025)	Run tests	2026-10-24T15:41:26.8533576Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,28 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: 78e2c2a2040d4a9d75b96ee1fbda295d64941c56
+All nine workflows created 2026-10-27T04:41:46Z, after the diagnostic commit.
+
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40451145530
+Lint and Format: success, exact SDK 10.0.403
+Fresh merge: success, 2,412 tests
+Ubuntu: success, 2,412 tests
+macOS: success, 2,412 tests
+Windows: success, 2,412 tests
+Package build: success
+Windows job: https://github.com/link-foundation/link-cli/actions/runs/40451145530/job/122013996305
+Downloaded log: experiments/issue-138/ci-logs/csharp-40451145530.log
+Fresh merge lines 12568-12570, Ubuntu 18435-18437, macOS 24758-24760 and
+Windows 30649-30651 preserve successful runs and actual totals.
+Windows tests take 7.1264 minutes; no child deadline or production durability
+policy was weakened. This successful run does not establish the cause of the
+previous five Windows deadlines. The diagnostic correction retains phases,
+bounded streams, primary/cleanup errors and kill/reap evidence on future failure.
+
+Eight workflows succeed on this head: Broken Link Checker 40451145494,
+Workflows 40451145556, Dependencies 40451145489, Docs 40451145432,
+Security 40451145573, JS client 40451145412, C# 40451145530 and
+WebAssembly 40451145443. Rust 40451145660 fails three different Windows
+version-process parents. See version-progress-ci-before.txt for actual errors,
+phase timings and the targeted test-harness correction. Do not describe this
+head as all-green. Native Rust LSM work and wider issue criteria remain active.

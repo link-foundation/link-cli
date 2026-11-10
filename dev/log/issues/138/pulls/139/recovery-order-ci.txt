@@ -1,0 +1,17 @@
+Ordered recovery and live retention validation
+Head: 59050495da5ca35d2f8f8ce58d68adfa034ff756
+Checked: 2026-10-24 23:37 UTC
+Runs created at 2026-10-24T23:29:15Z through 23:29:17Z after this head was pushed.
+
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40142931247
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40142931237
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40142931159
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40142931285
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40142931394
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40142932610
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40142931248
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40142931147
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40142931214
+
+All nine exact-head workflows passed; no failed logs exist for this head.
+Earlier-head results were not used as evidence for these changes.

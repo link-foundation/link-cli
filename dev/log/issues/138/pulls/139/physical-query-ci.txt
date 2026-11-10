@@ -1,0 +1,34 @@
+Head: cbddc1343bbc07a1d5b8b52d2772c7749c18fb89
+Run creation: 2026-10-28T12:02:27Z
+These completed workflows precede the subsequent recycling-query fixes.
+
+https://github.com/link-foundation/link-cli/actions/runs/40684594403
+Source log: js-cbddc13.log; sha256=ffa598e8d712773a93f39a22e839735c3108ef6fbad20c72147a86b7615b7b86
+Session blocked opens: 60 JS blocked result lines plus 40 Rust/C# stale-owner rejection lines = 100. Every result is followed by the unchanged-byte harness assertion.
+5673: Conformance on Node.js, Bun and Deno	Verify complete native LSM store handoffs	2026-10-28T12:15:47.9862716Z PASS 50 session complete-store handoffs with physical hash preservation
+6284: Conformance on Node.js, Bun and Deno	Verify complete native LSM store handoffs	2026-10-28T12:17:00.6837923Z PASS 20 reaped process exits; 100 cross-runtime retry/reopen/following checks
+
+https://github.com/link-foundation/link-cli/actions/runs/40684594489
+Source log: csharp-cbddc13.log; sha256=f8ae2cdd6458e30607010977cc359ff8d0bfcbdee567c8a92624a6139e1ef75e
+13836: Simulate Fresh Merge	Simulate fresh merge with base branch	2026-10-28T12:10:37.4593486Z      Passed: 2597
+20610: Test (windows-2025)	Run tests	2026-10-28T12:24:10.0428758Z      Passed: 2597
+20716: Test (windows-2025)	Write coverage summary	2026-10-28T12:24:31.8110837Z | Lines | 8276 / 8499 (97.38%) |
+20717: Test (windows-2025)	Write coverage summary	2026-10-28T12:24:31.8111313Z | Branches | 6937 / 7441 (93.23%) |
+26783: Test (ubuntu-24.04)	Run tests	2026-10-28T12:13:45.2826326Z      Passed: 2597
+26889: Test (ubuntu-24.04)	Write coverage summary	2026-10-28T12:13:53.5020905Z | Lines | 8290 / 8499 (97.54%) |
+26890: Test (ubuntu-24.04)	Write coverage summary	2026-10-28T12:13:53.5021599Z | Branches | 6957 / 7441 (93.50%) |
+33326: Test (macos-26)	Run tests	2026-10-28T12:15:07.1505270Z      Passed: 2597
+33432: Test (macos-26)	Write coverage summary	2026-10-28T12:15:15.3645660Z | Lines | 8285 / 8499 (97.48%) |
+33433: Test (macos-26)	Write coverage summary	2026-10-28T12:15:15.3646170Z | Branches | 6952 / 7441 (93.43%) |
+
+https://github.com/link-foundation/link-cli/actions/runs/40684594393
+Source log: wasm-cbddc13.log; sha256=842d46705b16f39eff301dbe74f91badf1fb14583760ee65a21ef360d55634d0
+801: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:07:59.3270049Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.06s
+811: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:08:00.8580170Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.10s
+1151: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:08:17.4493557Z test result: ok. 334 passed; 0 failed; 0 ignored; 0 filtered out; finished in 13.92s
+1167: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:08:18.9736883Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.06s
+1177: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:08:20.4321444Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.04s
+1186: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:08:21.9237004Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.05s
+1265: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:08:23.9071542Z test result: ok. 73 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.89s
+1623: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:09:10.0695399Z test result: ok. 352 passed; 0 failed; 0 ignored; 0 filtered out; finished in 44.19s
+1637: WASM coverage	Measure actual WebAssembly tests	2026-10-28T12:09:11.5347734Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.05s

@@ -12,9 +12,9 @@
 //!   the same format the C# port uses.
 //! * [`FileTransitionLog`] — a plain append-only text file, one entry
 //!   per line, `fsync`ed on every append by default. Cheaper than a
-//!   links database and crash-safe by construction: a torn write can
-//!   only ever damage the final line, which [`FileTransitionLog`]
-//!   discards on read.
+//!   links database. An incomplete final line, or trailing lines with a
+//!   NUL byte that power loss left, is discarded on open or before reusing
+//!   a writer after an I/O error.
 //!
 //! Reading takes `&mut self` because the links-backed log resolves
 //! names through [`NamedTypes::get_name`], which needs mutable access
@@ -37,6 +37,25 @@ pub trait TransitionLogStore {
 
     /// Makes every appended entry durable.
     fn flush_log(&mut self) -> Result<(), LinkError>;
+
+    /// Whether flush requests persistent storage. Custom/volatile logs default
+    /// to false; this describes an adapter, not the reliability of its hardware.
+    fn supports_durable_flush(&self) -> bool {
+        false
+    }
+}
+
+/// Optional replacement of a complete ordered journal under the same exclusive
+/// owner. Success publishes all records atomically and durably when advertised.
+/// An uncertain failure fences the implementation until actual reopening.
+pub trait ReplaceableTransitionLogStore: TransitionLogStore {
+    /// Dynamic adapters can expose the capability only when their inner log can.
+    fn supports_replacement(&self) -> bool {
+        true
+    }
+    /// Returns false when an identical committed journal needs no replacement.
+    /// Pending unflushed records must be rejected before changing durable state.
+    fn replace_log_entries(&mut self, entries: &[String]) -> Result<bool, LinkError>;
 }
 
 fn storage_error(error: anyhow::Error) -> LinkError {
@@ -44,6 +63,9 @@ fn storage_error(error: anyhow::Error) -> LinkError {
 }
 
 impl TransitionLogStore for NamedTypesDecorator {
+    fn supports_durable_flush(&self) -> bool {
+        !self.links().database_path().as_os_str().is_empty()
+    }
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
         // Always allocate a fresh link so entries never overwrite one
         // another (mirrors C# `CreateAndUpdate(Null, Null)`).
@@ -65,7 +87,7 @@ impl TransitionLogStore for NamedTypesDecorator {
     }
 
     fn flush_log(&mut self) -> Result<(), LinkError> {
-        NamedTypesDecorator::save(self).map_err(storage_error)
+        crate::LinksStorage::flush(self)
     }
 }
 
@@ -82,18 +104,21 @@ impl TransitionLogStore for NamedTypesDecorator {
 /// guarantee for throughput — the log is then durable only as far as
 /// the last [`flush_log`](TransitionLogStore::flush_log).
 ///
-/// A crash can therefore only ever truncate the file mid-line.
-/// [`open`](FileTransitionLog::open) discards such a torn tail before
-/// the log is used again — otherwise the next append would be glued
-/// onto the fragment and lost with it — and
-/// [`read_log_entries`](TransitionLogStore::read_log_entries) ignores
-/// one defensively. A torn write costs at most the single transition
-/// that was in flight.
+/// An interrupted append can leave a partial final line. Opening the log,
+/// or reading, appending or flushing after a writer I/O error, repairs that
+/// suffix before proceeding. A failed repair is retried on the next operation.
+/// Complete records remain intact, including records written before an error
+/// was returned; callers must discover an uncertain transaction's outcome
+/// rather than blindly retry it. Repair scans backwards with an 8 KiB buffer;
+/// successful operations do not rescan. This framing protocol assumes storage
+/// honors flush and does not prove device-sector atomicity after power loss.
 #[derive(Debug)]
 pub struct FileTransitionLog {
     path: PathBuf,
     file: File,
     sync_on_append: bool,
+    tail_may_be_torn: bool,
+    _lock: Option<crate::FileLock>,
 }
 
 impl FileTransitionLog {
@@ -118,11 +143,44 @@ impl FileTransitionLog {
         truncate_torn_tail(&repair)?;
         drop(repair);
         let file = OpenOptions::new().read(true).append(true).open(&path)?;
+        #[cfg(unix)]
+        File::open(
+            path.parent()
+                .filter(|p| !p.as_os_str().is_empty())
+                .unwrap_or(Path::new(".")),
+        )?
+        .sync_all()?;
         Ok(Self {
             path,
             file,
             sync_on_append: true,
+            tail_may_be_torn: false,
+            _lock: None,
         })
+    }
+
+    /// Holds the conventional sidecar lock until drop. Contention fails fast;
+    /// all writers must follow the same advisory locking convention.
+    pub fn open_exclusive<P: AsRef<Path>>(path: P) -> Result<Self, LinkError> {
+        let lock =
+            crate::FileLock::try_acquire(crate::lock_file_path(&path), crate::LockMode::Exclusive)?
+                .ok_or_else(|| LinkError::Lock("journal writer is busy".into()))?;
+        let mut log = Self::open(path)?;
+        log._lock = Some(lock);
+        Ok(log)
+    }
+
+    // An error may follow successful short writes. Keep the flag until both
+    // truncation and its durable flush succeed, so repeated I/O faults retry.
+    fn repair_if_needed(&mut self) -> Result<(), LinkError> {
+        if self.tail_may_be_torn {
+            let repair = OpenOptions::new().read(true).write(true).open(&self.path)?;
+            truncate_torn_tail(&repair)?;
+            // A previous failed repair may already have changed the length.
+            repair.sync_all()?;
+            self.tail_may_be_torn = false;
+        }
+        Ok(())
     }
 
     /// Path of the backing file.
@@ -142,21 +200,28 @@ impl FileTransitionLog {
 }
 
 impl TransitionLogStore for FileTransitionLog {
+    fn supports_durable_flush(&self) -> bool {
+        true
+    }
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
-        if entry.contains('\n') || entry.contains('\r') {
+        if entry.contains(['\n', '\r', '\0']) {
             return Err(LinkError::InvalidFormat(
-                "transition log entries must not contain line breaks".to_string(),
+                "transition log entries must not contain line breaks or NUL".to_string(),
             ));
         }
+        self.repair_if_needed()?;
+        self.tail_may_be_torn = true;
         writeln!(self.file, "{entry}")?;
         self.file.flush()?;
         if self.sync_on_append {
             self.file.sync_data()?;
         }
+        self.tail_may_be_torn = false;
         Ok(())
     }
 
     fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
+        self.repair_if_needed()?;
         let mut contents = String::new();
         File::open(&self.path)?.read_to_string(&mut contents)?;
         // Only newline-terminated lines were fully written; a trailing
@@ -170,18 +235,29 @@ impl TransitionLogStore for FileTransitionLog {
     }
 
     fn flush_log(&mut self) -> Result<(), LinkError> {
+        self.repair_if_needed()?;
+        self.tail_may_be_torn = true;
         self.file.flush()?;
         self.file.sync_data()?;
+        self.tail_may_be_torn = false;
         Ok(())
     }
 }
 
-/// Shrinks `file` to its last complete (newline-terminated) line.
+/// Shrinks `file` to its last complete (newline-terminated) line that holds no
+/// NUL byte.
 ///
 /// A crash can leave the log ending in a fragment of an entry. Appending
 /// after that fragment would concatenate the next entry onto it, turning
 /// one lost transition into two, so the fragment is dropped when the log
-/// is opened.
+/// is opened or its live writer recovers from an I/O error.
+///
+/// Power loss can also keep the newline of an entry that was never flushed
+/// while a sector before it was never written: a disk may reorder writes no
+/// flush ordered, and an unwritten sector reads back as zeros. Entries never
+/// contain NUL (appends refuse it), so trailing lines holding one are torn
+/// as well, as etcd's WAL treats a last record with a zeroed sector. A NUL
+/// before an intact line is damage; opening refuses it and repair decides.
 fn truncate_torn_tail(file: &File) -> Result<(), LinkError> {
     let len = file.metadata()?.len();
     if len == 0 {
@@ -189,25 +265,47 @@ fn truncate_torn_tail(file: &File) -> Result<(), LinkError> {
     }
     let mut file = file;
     let mut end = len;
+    // End of the line being scanned, just past its newline; None while still
+    // in the fragment after the last newline. Blank lines are skipped, as
+    // reading skips them.
+    let mut complete: Option<u64> = None;
+    let mut newer_newline = len;
+    let mut zeroed = false;
     let mut buffer = [0u8; 8192];
-    while end > 0 {
+    let keep = 'scan: loop {
+        if end == 0 {
+            // The first line of the file is reached.
+            break 'scan if zeroed { 0 } else { complete.unwrap_or(0) };
+        }
         let chunk = std::cmp::min(end, buffer.len() as u64);
         let start = end - chunk;
         file.seek(SeekFrom::Start(start))?;
         let slice = &mut buffer[..chunk as usize];
         file.read_exact(slice)?;
-        if let Some(offset) = slice.iter().rposition(|byte| *byte == b'\n') {
-            let complete = start + offset as u64 + 1;
-            if complete != len {
-                file.set_len(complete)?;
-                file.sync_all()?;
+        for (offset, byte) in slice.iter().enumerate().rev() {
+            let position = start + offset as u64;
+            match (*byte, complete) {
+                (b'\n', None) => complete = Some(position + 1),
+                (b'\n', Some(_)) if newer_newline == position + 1 => {}
+                (b'\n', Some(line_end)) => {
+                    if !zeroed {
+                        break 'scan line_end;
+                    }
+                    complete = Some(position + 1);
+                    zeroed = false;
+                }
+                (0, Some(_)) => zeroed = true,
+                _ => {}
             }
-            return Ok(());
+            if *byte == b'\n' {
+                newer_newline = position;
+            }
         }
         end = start;
+    };
+    if keep != len {
+        file.set_len(keep)?;
+        file.sync_all()?;
     }
-    // No newline anywhere: the whole file is one torn entry.
-    file.set_len(0)?;
-    file.sync_all()?;
     Ok(())
 }

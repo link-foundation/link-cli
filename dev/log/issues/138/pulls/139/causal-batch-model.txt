@@ -1,0 +1,10 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+PASS 30 finite local-batch design scenarios; imports no production implementation.
+Includes 24 size/fault/intervening schedules, both stale-session orders, later-row rejection,
+whole-batch counter exhaustion, exact retry/replay and concurrent deletion projection.
+Bounds: two authors, three rows/edits per batch, finite schedules, 192 MiB address space, 8 MiB stack.
+This model is not production parity, raw-wire admission or physical durability evidence.
+Reproduce: python3 experiments/issue-138/causal-batch-model.py
+experiments/issue-138/causal-batch-model.py: 10504 bytes; SHA256 b754019aaa655b599a2841dff86956f6447cf1cdd4d48e92deeeee6fd6019a24.
+experiments/issue-138/causal-batch-model.log: 513 bytes; SHA256 95bbf35ab9c034e586d6b12a0027529781cf2fb041b02aec9c11c2dd91867e1c.
+The model alone does not verify production batch/session APIs, canonical admission, runtime parity or physical durability. Separate current implementation receipts record those checks.

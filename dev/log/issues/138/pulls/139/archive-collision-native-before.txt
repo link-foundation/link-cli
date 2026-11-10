@@ -1,0 +1,52 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+    Finished `test` profile [unoptimized] target(s) in 0.70s
+     Running tests/transactions_archive_collision_tests.rs (rust/target/debug/deps/transactions_archive_collision_tests-36965dd3390128b7)
+
+running 5 tests
+test archive_child ... ignored, Executed only by finite archive collision parents
+test archive_creation_preserves_an_existing_directory ... FAILED
+test shared_archive_directory_preserves_older_files_after_clock_restart ... FAILED
+test archive_creation_does_not_create_a_dangling_symlink_target ... FAILED
+test archive_creation_does_not_follow_an_existing_symlink ... FAILED
+
+failures:
+
+---- archive_creation_preserves_an_existing_directory stdout ----
+
+thread 'archive_creation_preserves_an_existing_directory' (1265719) panicked at tests/transactions_archive_collision_tests.rs:34:5:
+[Transactions] Recorded Update seq=1 tx=00000192cc0914000000000000000000: (1,11,12) -> (1,31,22).
+Error: Storage error: failed to create archive file <temporary-directory>/archive/transitions-chunk-1730000000000-00000192cc0914000000000000000001.log: Is a directory (os error 21)
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- shared_archive_directory_preserves_older_files_after_clock_restart stdout ----
+
+thread 'shared_archive_directory_preserves_older_files_after_clock_restart' (1265720) panicked at tests/transactions_archive_collision_tests.rs:70:9:
+assertion `left == right` failed: Archive entry "transitions-chunk-1730000000000-00000192cc0914000000000000000001.log" was replaced.
+  left: Some((0, [118, 49, 124, 48, 48, 48, 48, 48, 49, 57, 50, 99, 99, 48, 57, 49, 52, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 55, 51, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 44, 49, 49, 44, 49, 50, 124, 49, 44, 51, 49, 44, 50, 50, 10]))
+ right: Some((0, [118, 49, 124, 48, 48, 48, 48, 48, 49, 57, 50, 99, 99, 48, 57, 49, 52, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 55, 51, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 44, 49, 49, 44, 49, 50, 124, 49, 44, 50, 49, 44, 50, 50, 10]))
+
+---- archive_creation_does_not_create_a_dangling_symlink_target stdout ----
+
+thread 'archive_creation_does_not_create_a_dangling_symlink_target' (1265717) panicked at tests/transactions_archive_collision_tests.rs:70:9:
+assertion `left == right` failed: Archive entry "transitions-chunk-1730000000000-00000192cc0914000000000000000001.log" was replaced.
+  left: Some((1, [118, 49, 124, 48, 48, 48, 48, 48, 49, 57, 50, 99, 99, 48, 57, 49, 52, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 55, 51, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 44, 49, 49, 44, 49, 50, 124, 49, 44, 51, 49, 44, 50, 50, 10]))
+ right: Some((1, []))
+
+---- archive_creation_does_not_follow_an_existing_symlink stdout ----
+
+thread 'archive_creation_does_not_follow_an_existing_symlink' (1265718) panicked at tests/transactions_archive_collision_tests.rs:70:9:
+assertion `left == right` failed: Archive entry "transitions-chunk-1730000000000-00000192cc0914000000000000000001.log" was replaced.
+  left: Some((1, [118, 49, 124, 48, 48, 48, 48, 48, 49, 57, 50, 99, 99, 48, 57, 49, 52, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 55, 51, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 44, 49, 49, 44, 49, 50, 124, 49, 44, 51, 49, 44, 50, 50, 10]))
+ right: Some((1, [118, 49, 124, 48, 48, 48, 48, 48, 49, 57, 50, 99, 99, 48, 57, 49, 52, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 55, 51, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 124, 49, 124, 49, 44, 49, 49, 44, 49, 50, 124, 49, 44, 50, 49, 44, 50, 50, 10]))
+
+
+failures:
+    archive_creation_does_not_create_a_dangling_symlink_target
+    archive_creation_does_not_follow_an_existing_symlink
+    archive_creation_preserves_an_existing_directory
+    shared_archive_directory_preserves_older_files_after_clock_restart
+
+test result: FAILED. 0 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+error: test failed, to rerun pass `--test transactions_archive_collision_tests`

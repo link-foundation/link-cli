@@ -1,8 +1,13 @@
 use anyhow::Result;
-use link_cli::{import_lino_text, LinkStorage, NamedTypeLinks};
-use tempfile::NamedTempFile;
+use link_cli::{import_lino_text, NamedTypeLinks};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn invalid_import_leaves_links_and_names_unchanged() -> Result<()> {
     for populated in [false, true] {
         for invalid in [
@@ -13,8 +18,7 @@ fn invalid_import_leaves_links_and_names_unchanged() -> Result<()> {
             "(c: (nested: a b) (bad: a))",
             "(c: a ())",
         ] {
-            let file = NamedTempFile::new()?;
-            let mut storage = LinkStorage::new(file.path(), false)?;
+            let (_file, mut storage) = test_store::links()?;
             if populated {
                 import_lino_text(&mut storage, "(a: a a)\n(b: b b)\n(existing: a b)")?;
             }
@@ -37,10 +41,10 @@ fn invalid_import_leaves_links_and_names_unchanged() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn import_lino_text_accepts_named_and_anonymous_nested_links() -> Result<()> {
-    let file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(file.path(), false)?;
+    let (_file, mut storage) = test_store::links()?;
     import_lino_text(
         &mut storage,
         "(a: a a)\n(b: b b)\n(child: (nested: a b) (b a))",
@@ -57,11 +61,10 @@ fn import_lino_text_accepts_named_and_anonymous_nested_links() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn import_lino_text_reproduces_numbered_links_at_explicit_indexes() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     import_lino_text(
         &mut storage,
@@ -80,11 +83,10 @@ fn import_lino_text_reproduces_numbered_links_at_explicit_indexes() -> Result<()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn import_lino_text_creates_named_references_as_point_links() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     import_lino_text(&mut storage, "(child: father mother)")?;
 
@@ -111,11 +113,10 @@ fn import_lino_text_creates_named_references_as_point_links() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn import_lino_text_treats_out_of_range_numbers_as_names() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let out_of_range_number = u64::from(u32::MAX) + 1;
 
     // Target `2` rather than `1` for the same reason the C# counterpart

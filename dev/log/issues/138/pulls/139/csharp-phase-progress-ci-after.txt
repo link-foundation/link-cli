@@ -1,0 +1,23 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 8d2ecdfde4757d6cfed219b99aa518707c5fadb0
+Commit timestamp: 2026-10-27T05:38:18Z
+Run: https://github.com/link-foundation/link-cli/actions/runs/40456464654
+Run created: 2026-10-27T05:38:28Z (after the tested commit)
+Conclusion: success; all C# test platforms, fresh merge, formatter and release gates pass.
+
+Complete log retained locally:
+experiments/issue-138/ci-logs/csharp-40456464654.log
+Selected lines in that complete log:
+13100 Windows DistinctFiniteProgressSurvivesAnAggregateDeadline passes, 900ms.
+13102 Windows RepeatedProgressFailsAndReapsBeforeDirectoryCleanup passes, 85ms.
+15877 Windows current-before/branchSwitch=False recovery passes, 2s.
+16012 Windows current-before/branchSwitch=True recovery passes, 1s.
+18544-18545 Windows Test Run Successful; total tests 2421, 05:48:48Z.
+24453-24454 Ubuntu Test Run Successful; total tests 2421, 05:40:50Z.
+30785-30786 macOS Test Run Successful; total tests 2421, 05:41:00Z.
+
+This verifies the finite phase supervisor on all three CI platforms, including
+the actual previously failing current-before Windows scenario. It does not
+establish the cause of underlying Windows filesystem latency, physical power
+loss behavior, or completion of any broader unmet R1-R12 requirement. Later
+source changes need their own fresh exact-head CI.

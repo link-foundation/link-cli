@@ -1,0 +1,33 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: 89fbfadf145dab8e5671838f47752d2e047ed7c9
+Commit time: 2026-10-27T09:15:15+00:00
+All nine workflow runs were created 2026-10-27T09:15:25Z, after that commit.
+C# CI/CD Pipeline: failure https://github.com/link-foundation/link-cli/actions/runs/40479397432
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40479397203
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40479397220
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40479397369
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40479397232
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40479397610
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40479397567
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40479397271
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40479397129
+
+Rust passes Windows/Linux/macOS. The complete Windows job log is retained at
+experiments/issue-138/ci-logs/rust-windows-40479397129-live.log.
+Lines 673–678 pass all six ownership unit controls; lines 1662–1676 pass
+all six actual mapped-flush integration controls. Finite native LSM fault
+campaigns account for the long job; no Rust test timeout or hang occurred.
+
+C# passes Windows/macOS and fails Linux. Its complete log is retained at
+experiments/issue-138/ci-logs/csharp-40479397432.log. Lines 26217–26283
+report DistinctFiniteProgressSurvivesAnAggregateDeadline: TimeoutException
+after 1.1331166 seconds, phase 5, actual exit 0. Child phases are at
+6/207/407/607/807 ms. Caller-context ConfigureAwait(false) is present.
+No filesystem-latency or exact runner-scheduler cause is established.
+An isolated occupied-pool control independently reproduces the same symptom;
+phase-pool-before.txt and PHASE-POOL-PLAN.md record the correction work.
+
+This is eight passing workflows and one failing workflow, not a green head.
+Fresh exact-head CI remains required after the supervision/growth corrections.
+Physical torn-page repair, hardware power-loss verification and the wider
+unfinished R1–R12 inventory remain open. The PR remains draft and unmerged.

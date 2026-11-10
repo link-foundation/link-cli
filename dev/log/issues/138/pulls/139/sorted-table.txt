@@ -1,0 +1,54 @@
+Physical sorted-table validation; https://github.com/link-foundation/link-cli/pull/139
+Published baseline: 9a9a95cda375395a54005a5f6a8495e9eee2fde9.
+New optional sealed sorted-table API; independent native binary vectors and SQL-free devices.
+Reproduce: bash experiments/issue-138/validate-sorted-table.sh
+START native 2026-10-26T23:20:09Z
+PASS native; START csharp 2026-10-26T23:32:58Z
+PASS csharp; START wasm 2026-10-26T23:41:24Z
+PASS wasm; START javascript 2026-10-26T23:46:07Z
+PASS javascript; START native interchange 2026-10-26T23:47:58Z
+PASS native interchange; START repository 2026-10-26T23:48:12Z
+Repository resume: preserve root-log layout failure; move logs under experiments; 2026-10-26T23:49:12Z
+Repository resume: preserved failure; root log directory removed; 2026-10-26T23:49:29Z
+PASS repository; ALL PASSED 2026-10-26T23:50:25Z
+Sequential compilers: Cargo jobs1/reduced debug, .NET640MiB, actual-WASM max256MiB.
+
+Native Rust: 1073 passed; 18 child entries ignored by direct discovery.
+Complete lines: 14754/15587 (94.65580%)
+Complete branches: 2808/3252 (86.34686%)
+Complete functions: 1898/2041 (92.99363%)
+Component src/engine/paged/sorted_table.rs
+lines: 269/280 (96.07143%)
+branches: 69/88 (78.40909%)
+functions: 30/33 (90.90909%)
+
+Actual WASM: 672 passed; 0 child entries ignored by direct discovery.
+Complete lines: 11938/14317 (83.38339%)
+Complete branches: 2365/2835 (83.42152%)
+Complete functions: 1499/1881 (79.69165%)
+Component src/engine/paged/sorted_table.rs
+lines: 269/280 (96.07143%)
+branches: 69/88 (78.40909%)
+functions: 30/33 (90.90909%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.77s
+
+C# Debug: 2349 passed; zero failed/skipped.
+Complete lines: 8728/9022 (96.74130%)
+Complete branches: 4993/5382 (92.77220%)
+
+C# Release: 2349 passed; zero failed/skipped.
+Complete lines: 6705/6891 (97.30083%)
+Complete branches: 4937/5345 (92.36670%)
+JS: {'tests': 533, 'pass': 533, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Bun/Deno: all 174 selected tests each; strict TypeScript and JS 100% production coverage pass.
+Formatting, strict Clippy, SQLite optionality, source limits, changesets, actionlint and ShellCheck pass.
+Native Rust/C#/Node/Bun/Deno: all 25 writer/reader pairs pass.
+Every reader preserves three physical file hashes and releases ownership.
+Independent binary vectors: 25 valid/corrupt cases; both oracle fixtures regenerate identically.
+Missing API failures were preserved before implementation; runnable before-driver uses baseline 9a9a95c.
+Shared page-reader retains the existing paged-log path and all existing tests.
+Checkpoint CI correction preserves all 258 actual native process cutpoints in 36 cases.
+Prior 9a9a95c Windows case deadline failure: run40416245668 log26794-26810; fresh CI is required.
+A physical immutable table alone is not an on-disk LSM: WAL/memtable/manifest/compaction composition remains open.
+Whole-project coverage and all wider unmet R1-R12 criteria remain unfinished.

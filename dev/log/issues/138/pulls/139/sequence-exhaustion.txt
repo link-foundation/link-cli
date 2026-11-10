@@ -1,0 +1,35 @@
+Finite signed-sequence-boundary regression, Linux, 2026-10-24.
+Boundary journal: one committed/applied no-op record; three data rows.
+
+sequence-exhaustion-rust-before.log:
+test exhausted_explicit_cascade_batch ... FAILED
+test exhausted_explicit_creation ... FAILED
+test exhausted_automatic_cascade_batch ... FAILED
+test exhausted_automatic_creation ... FAILED
+attempt to add with overflow
+attempt to add with overflow
+attempt to add with overflow
+attempt to add with overflow
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.39s
+
+sequence-exhaustion-csharp-before-corrected.log:
+Expected: typeof(System.InvalidOperationException)
+Expected: typeof(System.InvalidOperationException)
+Expected: typeof(System.InvalidOperationException)
+Expected: typeof(System.InvalidOperationException)
+Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 763 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+sequence-exhaustion-csharp-after-corrected.log:
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 809 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Full validation after the fix:
+Rust: 536 standard tests plus custom stdout harness passed; four child entry points ignored.
+C# Debug: 871 passed; Release: 871 passed.
+Actual WASM: 17 passed.
+Native/WASM Clippy: passed with warnings denied.
+Rust/C# formatting: passed. C# release fragment: passed.
+Official native Rust: 9078/10061 lines; 1460/1852 branches.
+C# Debug: 5938/6494 lines; 2673/3102 branches.
+C# Release: 4503/4843 lines; 2652/3083 branches.
+WASM wrapper: 331/331 lines; 16/16 branches; 68/68 functions.
+Complete linked WASM: 2729/9235 lines; 392/1305 branches.

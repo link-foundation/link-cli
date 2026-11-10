@@ -116,6 +116,10 @@ impl NamedTypesDecorator {
         &mut self.names_links
     }
 
+    pub(crate) fn query_copy(&self) -> Self {
+        Self::from_link_storages(self.links().query_copy(), self.names_links.query_copy())
+    }
+
     pub fn into_link_storages(self) -> (LinkStorage, LinkStorage) {
         (
             self.pinned_types_decorator.into_link_storage(),
@@ -147,6 +151,11 @@ impl NamedTypesDecorator {
 
     pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
         self.update_observed(id, source, target, &mut |_, _| {})
+    }
+
+    /// See [`LinkStorage::update_raw`](crate::LinkStorage::update_raw).
+    pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        self.pinned_types_decorator.update_raw(id, source, target)
     }
 
     /// [`Self::update`], reporting every change the decorator stack made.
@@ -262,6 +271,10 @@ impl NamedTypesDecorator {
         }
     }
 
+    pub(crate) fn logical_names(&mut self) -> Result<std::collections::BTreeMap<u32, String>> {
+        self.with_named_links(|named| named.unicode_storage().external_names())
+    }
+
     fn with_named_links<T>(
         &mut self,
         action: impl FnOnce(&mut NamedLinks<'_>) -> Result<T>,
@@ -274,14 +287,16 @@ impl NamedTypesDecorator {
 impl NamedTypes for NamedTypesDecorator {
     fn get_name(&mut self, link: u32) -> Result<Option<String>> {
         if self.trace {
-            eprintln!("[TRACE] NamedTypesDecorator get_name for link {link}");
+            crate::diagnostics::stderr!("[TRACE] NamedTypesDecorator get_name for link {link}");
         }
         self.with_named_links(|named_links| named_links.get_name_by_external_reference(link))
     }
 
     fn set_name(&mut self, link: u32, name: &str) -> Result<u32> {
         if self.trace {
-            eprintln!("[TRACE] NamedTypesDecorator set_name for link {link}: {name}");
+            crate::diagnostics::stderr!(
+                "[TRACE] NamedTypesDecorator set_name for link {link}: {name}"
+            );
         }
         if let Some(existing_link_with_name) = self.get_by_name(name)? {
             if existing_link_with_name != link {
@@ -294,14 +309,14 @@ impl NamedTypes for NamedTypesDecorator {
 
     fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
         if self.trace {
-            eprintln!("[TRACE] NamedTypesDecorator get_by_name for name {name}");
+            crate::diagnostics::stderr!("[TRACE] NamedTypesDecorator get_by_name for name {name}");
         }
         self.with_named_links(|named_links| named_links.get_external_reference_by_name(name))
     }
 
     fn remove_name(&mut self, link: u32) -> Result<()> {
         if self.trace {
-            eprintln!("[TRACE] NamedTypesDecorator remove_name for link {link}");
+            crate::diagnostics::stderr!("[TRACE] NamedTypesDecorator remove_name for link {link}");
         }
         self.with_named_links(|named_links| named_links.remove_name_by_external_reference(link))
     }

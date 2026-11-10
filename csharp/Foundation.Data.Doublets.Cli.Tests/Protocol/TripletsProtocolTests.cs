@@ -155,6 +155,13 @@ public sealed class TripletsProtocolTests
     }
 
     [Fact]
+    public void AChangeSideOfTwoLinksIsMalformed()
+    {
+        var error = Assert.ThrowsAny<Exception>(() => TripletsOperation.ParseChanges(Parse("((a b) ())")));
+        Assert.Contains("a change side", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void EveryParserReadsBothFormsOfATriplet()
     {
         var triplet = new Triplet(1, 2, 3, 4);

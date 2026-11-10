@@ -50,4 +50,22 @@ clink \
 ls -1 "$work_dir/archive" || true
 
 echo
+echo "=== 6. Share archive storage with an independent database ==="
+shopt -s nullglob
+previous_archives=("$work_dir/archive/"*.log)
+(( ${#previous_archives[@]} > 0 ))
+mkdir "$work_dir/archive-before"
+cp "${previous_archives[@]}" "$work_dir/archive-before/"
+clink \
+    --db other.links \
+    --retention "chunked:1:$work_dir/archive" \
+    "() ((1 1))"
+current_archives=("$work_dir/archive/"*.log)
+(( ${#current_archives[@]} > ${#previous_archives[@]} ))
+for archive in "${previous_archives[@]}"; do
+    cmp "$archive" "$work_dir/archive-before/${archive##*/}"
+done
+echo "Both databases have archives; every previous archive is unchanged."
+
+echo
 echo "Demo complete. Working dir: $work_dir"

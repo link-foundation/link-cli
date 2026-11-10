@@ -1,0 +1,31 @@
+Row-undo exact-head workflow verification
+
+Head: f95f59d6f8f5933d0fee82f3e82b4a554764f93f
+Commit: 2026-10-25T15:23:54Z
+All nine runs created: 2026-10-25T15:24:00Z–15:24:01Z (after commit).
+
+Broken Link Checker: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743813
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743682
+Dependencies: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743776
+Docs: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743606
+JS client CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743643
+Rust CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743651
+Security: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743619
+WebAssembly CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743622
+Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40206743649
+
+Production row-undo commit: fa03b5f20256b7c2b33ff2e205f64dd1b6949ab0.
+C# run 40205855501 on that commit rejected else/foreach indentation at
+log lines 1997–1999 under SDK 10.0.402; its three-platform tests passed.
+The explicit else block in the head above passes the fresh formatter and all
+nine workflows. See row-wal-format-ci-before.txt for the original errors.
+Later code requires fresh exact-head checks.

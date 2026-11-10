@@ -1,0 +1,64 @@
+    Finished `test` profile [unoptimized] target(s) in 0.20s
+     Running tests/transactions_recovery_fault_tests.rs (rust/target/debug/deps/transactions_recovery_fault_tests-e1cd3eb10c5f6282)
+
+running 3 tests
+test interrupted_recreation_recovery_restarts_from_durable_images ... FAILED
+test interrupted_update_recovery_restarts_from_durable_images ... FAILED
+test interrupted_delete_recovery_restarts_from_durable_images ... ok
+
+failures:
+
+---- interrupted_recreation_recovery_restarts_from_durable_images stdout ----
+
+thread 'interrupted_recreation_recovery_restarts_from_durable_images' (847880) panicked at tests/transactions_recovery_fault_tests.rs:136:57:
+latest committed row
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- interrupted_update_recovery_restarts_from_durable_images stdout ----
+
+thread 'interrupted_update_recovery_restarts_from_durable_images' (847881) panicked at tests/transactions_recovery_fault_tests.rs:137:17:
+assertion `left == right` failed: update/old-before
+  left: (21, 22)
+ right: (31, 32)
+
+
+failures:
+    interrupted_recreation_recovery_restarts_from_durable_images
+    interrupted_update_recovery_restarts_from_durable_images
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test transactions_recovery_fault_tests`
+     Running tests/transactions_recovery_order_tests.rs (rust/target/debug/deps/transactions_recovery_order_tests-616a3ba3bf974bbc)
+
+running 3 tests
+test applied_update_survives_older_gap ... FAILED
+test applied_recreation_survives_older_gap ... FAILED
+test applied_delete_survives_older_gap ... ok
+
+failures:
+
+---- applied_update_survives_older_gap stdout ----
+
+thread 'applied_update_survives_older_gap' (847885) panicked at tests/transactions_recovery_order_tests.rs:47:13:
+assertion `left == right` failed
+  left: (21, 22)
+ right: (31, 32)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- applied_recreation_survives_older_gap stdout ----
+
+thread 'applied_recreation_survives_older_gap' (847884) panicked at tests/transactions_recovery_order_tests.rs:46:41:
+latest committed row must survive replay
+
+
+failures:
+    applied_recreation_survives_older_gap
+    applied_update_survives_older_gap
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+error: test failed, to rerun pass `--test transactions_recovery_order_tests`
+error: 2 targets failed:
+    `--test transactions_recovery_fault_tests`
+    `--test transactions_recovery_order_tests`

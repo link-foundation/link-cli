@@ -1,11 +1,9 @@
 using System.Numerics;
-using Platform.Collections.Stacks;
 using Platform.Converters;
 using Platform.Data.Numbers.Raw;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.CriterionMatchers;
 using Platform.Data.Doublets.Sequences.Converters;
-using Platform.Data.Doublets.Sequences.Walkers;
 using Platform.Data.Doublets.Sequences.Unicode;
 
 namespace Foundation.Data.Doublets.Cli
@@ -65,9 +63,8 @@ namespace Foundation.Data.Doublets.Cli
                 )
             );
 
-            var sequenceWalker = new RightSequenceWalker<TLinkAddress>(
+            var sequenceWalker = new CheckedUnicodeSequenceWalker<TLinkAddress>(
                 links,
-                new DefaultStack<TLinkAddress>(),
                 unicodeSymbolCriterionMatcher.IsMatched
             );
 

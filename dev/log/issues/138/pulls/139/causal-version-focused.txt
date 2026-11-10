@@ -1,0 +1,13 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Component: selected causal semantics; no storage I/O, durable owner fencing or replication.
+Reproduce: bash experiments/issue-138/validate-causal-versions.sh
+Baseline: causal-version-js-before.log fails ERR_MODULE_NOT_FOUND before production implementation.
+Shared independent fixtures: 46 canonical/malformed codec cases, eleven merge cases, nine checked advancement cases.
+Five focused semantic tests pass in each native Rust, C# and JS implementation.
+Each implementation checks 24 delivery orders and 216 finite state triples.
+Strict native/WASM Clippy, Rust/C# formatting, TS declarations, source size and one-C#-changeset checks pass at 2026-10-27T12:33:19Z.
+Bare Rust normal dependencies contain neither serde_json nor rusqlite with causal selection disabled.
+Complete JS: 649 passed, zero failed/skipped; all production lines, branches and functions enforce 100% coverage.
+Fresh focused JS module coverage: 100% lines, branches and functions, without exclusions or reduced thresholds.
+Complete C# Debug/Release, native LLVM, actual-WASM and repository validation remain running; their results are not claimed here.
+Every full native/C#/linked-WASM production denominator remains required. Wider R1-R12 criteria stay unfinished; PR stays draft/unmerged.

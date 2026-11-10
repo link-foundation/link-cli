@@ -1,0 +1,25 @@
+Exact published group-commit head: 615df74013803cd8d82706fd16d1c88f04bc2ca3
+All workflows created 2026-10-25T12:06:43Z after this commit; all completed successfully.
+
+Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690753
+Broken Link Checker: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690790
+Dependencies: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690828
+Docs: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690893
+Security: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690865
+JS client CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690739
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690781
+WebAssembly CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690780
+Rust CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40191690767
+
+Includes Rust and C# Windows, macOS and Linux; actual WASM, JS conformance, coverage, formatting, lint and repository checks.
+Latest PR conversation, inline comments and reviews re-read after publication; no new requested changes.
+Broader acceptance and full-project coverage gaps remain open.

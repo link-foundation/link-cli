@@ -59,7 +59,7 @@ jobs:
         if: matrix.implementation == 'csharp'
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
       - name: Run against C#
         if: matrix.implementation == 'csharp'
         run: |

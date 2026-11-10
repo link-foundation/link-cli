@@ -1,0 +1,22 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: 04c1860c3dc4daec6c84e31c8b7e1a7f8a8ae43f
+Push completed: 2026-10-27T12:37:47Z
+All nine workflows created after the push and completed successfully:
+Docs: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269222 SUCCESS
+Dependencies: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269316 SUCCESS
+Workflows: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269343 SUCCESS
+Security: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269454 SUCCESS
+Broken Link Checker: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269461 SUCCESS
+Rust CI/CD Pipeline: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269531 SUCCESS
+WebAssembly CI: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269420 SUCCESS
+C# CI/CD Pipeline: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269266 SUCCESS
+JS client CI: 2026-10-27T12:37:48Z https://github.com/link-foundation/link-cli/actions/runs/40505269367 SUCCESS
+
+Rust workflow log downloaded in full; all 145 normal-harness result records per platform include doctests. Counts below include the six passing doctests and one existing ignored doctest. Platform conditional tests differ.
+macos-26: 1184 passed, 0 failed, 17 ignored across 145 result records.
+windows-2025: 1181 passed, 0 failed, 17 ignored across 145 result records.
+ubuntu-24.04: 1208 passed, 0 failed, 23 ignored across 145 result records.
+
+C# Linux, Windows and macOS: 2467 passed per platform; actual full coverage ZIP digest/size/single-Cobertura verification is retained in causal-csharp-platform-coverage.txt.
+These results verify the published semantic version boundary. They do not verify later uncommitted local causal replica work or finish the wider R1-R12 criteria.
+PR remains draft and unmerged.

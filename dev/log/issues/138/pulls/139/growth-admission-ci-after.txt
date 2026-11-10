@@ -1,0 +1,21 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published commit: 3cd89e983ea5b8d8b0e92d5e100f0dd803768826
+Commit time: 2026-10-27T11:57:40+00:00
+All nine exact-head workflows complete successfully; created after this commit.
+Broken Link Checker: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064466
+C# CI/CD Pipeline: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064469
+Dependencies: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064592
+Workflows: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064556
+Docs: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064512
+Security: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064489
+WebAssembly CI: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064637
+JS client CI: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064500
+Rust CI/CD Pipeline: success; created 2026-10-27T11:57:46Z; https://github.com/link-foundation/link-cli/actions/runs/40500064468
+Rust ubuntu-24.04: Run tests totals 1200 passing including six doctests; 23 harness-ignored entries including one legacy doctest. Actual result lines 38182 through 45734.
+Rust windows-2025: Run tests totals 1173 passing including six doctests; 17 harness-ignored entries including one legacy doctest. Actual result lines 29762 through 37281.
+Rust macos-26: Run tests totals 1176 passing including six doctests; 17 harness-ignored entries including one legacy doctest. Actual result lines 21392 through 28915.
+Rust full log: experiments/issue-138/ci-logs/rust-40500064468.log; native platform cfg differences are retained, not normalized away.
+Rust complete coverage, merge simulation, lint, packaging and native LSM consumers also pass.
+C#: all 2462 tests pass on each platform; all three complete reports are downloaded and digest-verified in csharp-platform-coverage.txt.
+This head includes generic mapped growth admission and coverage retention. Later logical initialization and causal semantic changes require fresh CI.
+Complete native/C#/linked-WASM coverage and every wider unmet R1-R12 criterion remain active; PR139 stays draft/unmerged.

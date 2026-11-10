@@ -1,0 +1,27 @@
+Fresh CI for text-name/reload and TCP-shutdown corrections
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: b125e6d6375b4ce7129b8415053da1533ae7b91a
+All nine workflows completed successfully.
+
+Broken Link Checker: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275434945
+C# CI/CD Pipeline: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275435004
+Dependencies: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275434949
+Docs: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275434987
+JS client CI: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275435053
+Rust CI/CD Pipeline: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275434967
+Security: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275435029
+WebAssembly CI: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275434976
+Workflows: success; created 2026-10-26T05:39:54Z
+https://github.com/link-foundation/link-cli/actions/runs/40275435081
+
+Includes Linux/macOS/Windows Rust and C#, actual WASM, runtime conformance,
+optional-SQL guards, coverage and repository checks. The later JS page journal
+requires its own fresh CI; this record does not cover later commits.

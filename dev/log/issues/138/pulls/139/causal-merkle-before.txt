@@ -1,0 +1,40 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Test-first Merkle evidence. The snapshot/proof/transfer component is absent at published d00e022; tests were added before production implementations.
+The node-budget continuation control runs 128 finite attempts; the leaf-only control runs eight attempts. Node uses --max-old-space-size=128. No unbounded stress is used.
+
+experiments/issue-138/causal-merkle-before.log: SHA256 dfe3caf500f11eea709d3767505057bc96142a820cb2347c7188b6e0f47180b9; 1514 bytes.
+2:     throw new ERR_MODULE_NOT_FOUND(
+5: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/gh-issue-solver-1792987800525/js/client/src/engine-causal-merkle.js' imported from /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-merkle-contracts.mjs
+16:   code: 'ERR_MODULE_NOT_FOUND',
+
+experiments/issue-138/causal-merkle-csharp-before.log: SHA256 ddcccbd03a202f536dcca855ee64924c0b41576acea3d6352e7ef14f51e51f51; 2600 bytes.
+5: /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CausalMerkleTests.cs(33,66): error CS0246: The type or namespace name 'ICausalMerkleSource' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+6: /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CausalMerkleTests.cs(33,33): error CS0246: The type or namespace name 'CausalMerkleSnapshot' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+7: /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CausalMerkleTests.cs(35,31): error CS0246: The type or namespace name 'CausalMerkleNode' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+8: /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CausalMerkleTests.cs(36,30): error CS0246: The type or namespace name 'CausalMerkleLeaf' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+experiments/issue-138/causal-merkle-rust-before.log: SHA256 41958b6120c44fb3b000f36509fdd9a82acad45ed241c550fec9738bbb337eb1; 557 bytes.
+2: error[E0432]: unresolved import `link_cli::engine::causal_merkle`
+8: For more information about this error, try `rustc --explain E0432`.
+
+experiments/issue-138/causal-merkle-continuation-before.log: SHA256 fffd135baa360c9025c414a291ef462a463db1c47a2eb3d657a0208ee189b613; 919 bytes.
+15:   AssertionError [ERR_ASSERTION]: finite retries must advance the pending traversal
+
+experiments/issue-138/causal-merkle-leaf-retry-frozen-before.log: SHA256 fb6d2b10fd7f3cfab5839ec069500641727250b3d7fdac213a0d1a17d8d2506c; 1132 bytes.
+13: AssertionError [ERR_ASSERTION]: leaf-only retries must advance past the concurrent first address
+
+Frozen pre-fix candidate experiments/issue-138/causal-merkle-without-continuation.mjs: SHA256 dcece10f844970939c29830fff6d994f9c9a0cd6f963accc9e9d4360956ec91b; 12324 bytes.
+Reproduce expected leaf-only failure:
+CAUSAL_MERKLE_MODULE=./causal-merkle-without-continuation.mjs node --max-old-space-size=128 experiments/issue-138/causal-merkle-leaf-retry.mjs
+The frozen source has six addresses. A concurrent destination sibling makes the first joined leaf remain hash-unequal. Fresh attempts with maxLeafRequests=1 repeatedly fetch that same address: all eight attempts retain only two versions and never complete.
+The node-only case independently shows a single-node budget restarting at the root forever.
+Correction: return a bounded opaque root/author-bound traversal frontier; retain the currently unprocessed path on every budget stop. Copies own their pending paths; resume only the same monotone destination journal.
+Reproduce corrected public API:
+node --max-old-space-size=128 experiments/issue-138/causal-merkle-leaf-retry.mjs
+{"attempt":0,"leafRequests":1,"changedLeaves":1,"complete":false,"visibleVersions":2}
+{"attempt":1,"leafRequests":1,"changedLeaves":1,"complete":false,"visibleVersions":3}
+{"attempt":2,"leafRequests":1,"changedLeaves":1,"complete":false,"visibleVersions":4}
+{"attempt":3,"leafRequests":1,"changedLeaves":1,"complete":false,"visibleVersions":5}
+{"attempt":4,"leafRequests":1,"changedLeaves":1,"complete":false,"visibleVersions":6}
+{"attempt":5,"leafRequests":1,"changedLeaves":1,"complete":true,"visibleVersions":7}
+Portable contracts also cover node-only and leaf-only bounded continuation, malformed/fabricated continuations, changed roots, different destination authors, duplicate traversal, complete-null cursors and independently owned copies. Full suite/physical evidence is retained separately.

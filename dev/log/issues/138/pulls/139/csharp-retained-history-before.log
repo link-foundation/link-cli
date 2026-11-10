@@ -1,0 +1,39 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.32]     Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(entry: "switch") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(entry: "switch") [337 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(String entry) in csharp/Foundation.Data.Doublets.Cli.Tests/VersionRetainedHistoryTests.cs:line 42
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.43]     Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(entry: "checkout") [FAIL]
+[xUnit.net 00:00:01.59]     Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(entry: "redo") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(entry: "checkout") [110 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(String entry) in csharp/Foundation.Data.Doublets.Cli.Tests/VersionRetainedHistoryTests.cs:line 42
+   at InvokeStub_VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(entry: "redo") [161 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(String entry) in csharp/Foundation.Data.Doublets.Cli.Tests/VersionRetainedHistoryTests.cs:line 42
+   at InvokeStub_VersionRetainedHistoryTests.MissingChangedHistoryRejectsBeforeAnyMutation(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3, Duration: 645 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

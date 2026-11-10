@@ -1,0 +1,46 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Test-first local causal replica evidence; captured before the corresponding production implementation/correction.
+The new local API was absent in all three languages. Later corrections address unpublished drafts; these are not claims that published 04c1860 already had this component.
+
+causal-replica-before.log
+SHA256 dd925b9e2277a963d3e09526112bd430a86ec7b8721ecce8238ee016e8edaf52
+2: throw new ERR_MODULE_NOT_FOUND(
+5: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/gh-issue-solver-1792987800525/js/client/src/engine-causal-replica.js' imported from /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-tests-draft.mjs
+16: code: 'ERR_MODULE_NOT_FOUND',
+
+causal-replica-rust-before.log
+SHA256 982262150ef1e8b461b05beca6e9eb97f7a39022f614dca06d4d43288088f4f7
+1: error[E0432]: unresolved import `link_cli::engine::causal_replica`
+9: For more information about this error, try `rustc --explain E0432`.
+
+causal-replica-csharp-before.log
+SHA256 788f7b84a9206048b610a04c2900d8f6486f34b2201298c6d4aa59ce91e19faf
+3: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(16,21): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+4: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(31,72): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+5: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(34,24): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+6: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(41,55): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+7: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(42,21): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+11: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(16,21): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+12: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(31,72): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+13: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(34,24): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+14: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(41,55): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+15: /tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Program.cs(42,21): error CS0246: The type or namespace name 'CausalReplica' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/causal-replica-csharp-probe/Probe.csproj]
+
+causal-replica-framing-before.log
+SHA256 e17e19bf3325b370550907f7f67a8c3953c9e9b608fc316e9e074ed7c4cfa4bc
+24: 'AssertionError [ERR_ASSERTION]: an inadmissible frame reached JSON.parse'
+31: actual: AssertionError [ERR_ASSERTION]: an inadmissible frame reached JSON.parse
+
+causal-replica-object-frame-before.log
+SHA256 2972727e8874975d82d73520eccc805014ca054058bdee458af97638499a685d
+24: 'AssertionError [ERR_ASSERTION]: an inadmissible frame reached JSON.parse'
+31: actual: AssertionError [ERR_ASSERTION]: an inadmissible frame reached JSON.parse
+
+causal-replica-observed-history-before.log
+SHA256 35dafe0db480c70f75c24ca947143efc9533e084e3ce6a1ea9eee2f36938f89c
+15: AssertionError [ERR_ASSERTION]: Missing expected rejection.
+
+Framing regression replaces JSON.parse with a rejecting sentinel. Oversize/deep/object/malformed frames must fail before that sentinel; valid maximum dimensions remain admitted. The finite test uses no recursive host-exhaustion input.
+Historical-observation regression: receive B1, resolve it with A1, then attempt a write observing a forged B1 and dominating A1. The old draft pruned forged B1 first and incorrectly accepted it. The automated assertion requires rejection and unchanged publication bytes/call count.
+Additional controls introduce B1/B2 only as write observations, reopen, reject an old forged B1 delivery, reject a forged dominated observation on a token retry, and return the original result for a valid normalized retry.
+Production Rust/C#/JS tests retain these controls. The independent generator adds full-evidence, forged-after-reopen and noncanonical-order journal vectors. Complete validation is recorded separately in causal-replica.txt.

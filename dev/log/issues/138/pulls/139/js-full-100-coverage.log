@@ -1,0 +1,118 @@
+✔ addresses travel as BigInt, never rounded through Number (7.444295ms)
+✔ addresses beyond the backend range are refused before sending (1.279456ms)
+✔ requests and replies of every operation (3.334099ms)
+✔ (error: ...) replies reject with a failed RemoteError (0.535979ms)
+✔ an unexpected reply shape is a malformed message (0.41805ms)
+✔ aborted or expired requests are not sent (2.139241ms)
+✔ require() names missing guarantees instead of emulating them (1.023118ms)
+✔ a batch reports every operation and stops after the first failure (2.291443ms)
+✔ a malformed batch operation sends nothing (0.530569ms)
+✔ an aborted batch leaves the rest not sent (1.096324ms)
+✔ a decorator is a drop-in client over any backend (1.177165ms)
+✔ etcd snapshot reads all selected journals atomically and compares modification generations (64.381865ms)
+✔ read failover is bounded while an uncertain commit is never replayed (2.831792ms)
+✔ malformed, oversized and rejected coordinator responses fail closed (4.864953ms)
+✔ invalid cluster coordinates are rejected before network I/O (1.120419ms)
+✔ close waits for an in-flight commit and frees every workspace after cleanup failure (4.462413ms)
+✔ cluster validates configuration and snapshots before creating private engines (1.782745ms)
+✔ cluster freezes its expected snapshot, rejects stale groups, and classifies custom store I/O (5.006227ms)
+✔ etcd rejects every malformed wire field and validates CAS inputs without sending (14.921311ms)
+✔ cluster publishes changed journals, retains explicit adapter outcomes and disposes asynchronously (2.640555ms)
+✔ cleanup errors cannot replace an unknown commit outcome (1.098658ms)
+✔ cleanup failure after an acknowledged commit is reported without replaying publication (0.682174ms)
+✔ file journal fences writers, flushes, repairs torn tails, and validates UTF-8 (54.286716ms)
+✔ tail recovery handles short filesystem reads (17.578888ms)
+✔ partial writes finish and zero progress is reported (20.764429ms)
+✔ failed constructor flush releases the writer fence for recovery (6.471951ms)
+✔ truncation during a read is reported and an entirely torn tail is discarded (15.413519ms)
+✔ async catch-up is idempotent and rejects divergent prefixes (4.98612ms)
+✔ synchronous acknowledgements survive fault recovery without duplicate records (1.910695ms)
+✔ durability capabilities and membership validation are explicit (0.810852ms)
+✔ malformed records and asynchronous adapters cannot count as acknowledgements (0.825961ms)
+✔ commit I/O errors are marked unknown while conflicts are failed (1.616055ms)
+✔ diagnostic callback failures cannot change replication results (0.395247ms)
+✔ replicated reads return the authoritative primary journal before catch-up (0.24085ms)
+✔ transaction controls run after queued requests and failures do not break the queue (7.197264ms)
+✔ ordinary wasm stores cannot be sent transaction controls (0.604558ms)
+✔ engine wrapper preserves decimal addresses and passes explicit policies (1.311004ms)
+✔ custom logs pass through to the binding with explicit capabilities (0.758724ms)
+✔ a failing capability getter cannot leak an allocated native engine (0.503269ms)
+✔ branches pass policies and capabilities, retain ownership and classify uncertain merges (1.457268ms)
+✔ snapshot without a revision requests the current native state (0.387443ms)
+✔ messages end with a dot line and dot-stuff leading dots (2.226774ms)
+✔ the reader splits a stream at any byte, LF or CRLF (3.004363ms)
+✔ multi-byte characters split across chunks decode (0.542472ms)
+✔ a reply over the limit fails without buffering it (1.254029ms)
+✔ invalid UTF-8 is a malformed message (0.452043ms)
+✔ references stay bare unless the notation needs them quoted (2.688635ms)
+✔ empty text and control characters become ~1{hex} literals (1.539101ms)
+✔ the formats the servers write parse into the model (3.193546ms)
+✔ formatting matches the canonical text of links-notation (0.783501ms)
+✔ every reference round-trips, Unicode and quotes included (2.266046ms)
+✔ malformed text is refused (0.785785ms)
+✔ an invalid startup address cannot leak the owned process (82.418667ms)
+✔ startup validates inputs and cancellation before spawning (7.905845ms)
+✔ startup failure and deadline reap children and retain diagnostics (599.315972ms)
+✔ owned servers expose diagnostics, await shutdown and escalate ignored interrupts (94.83179ms)
+✔ process clients forward requests and dispose their server after connection failures (199.329028ms)
+✔ transport close errors still stop the owned server and retain typed failures (1.028718ms)
+✔ malformed operation replies cannot become successful mutations or reads (10.420466ms)
+✔ decorators preserve the complete client contract and request scopes (5.127114ms)
+✔ scope validation and far deadlines are bounded and cancellation fires once (3.238971ms)
+✔ quote runs, top-level names and framing limits preserve protocol boundaries (6.154028ms)
+✔ volatile custom branch capabilities and control failures stay explicit (1.265239ms)
+✔ connect cancellation is not-sent and destroys a pending socket (6.397452ms)
+✔ socket errors classify every pipelined request and leave queued work not-sent (1.607308ms)
+✔ unsolicited replies and decoder faults close the connection (2.373026ms)
+✔ graceful close forcibly ends an unresponsive owned peer after its grace period (1.759652ms)
+✔ a deadline expiring during registration cannot remove another queued request or send expired work (4.140633ms)
+✔ addresses parse with IPv4, IPv6 and objects (4.401269ms)
+✔ pipelined replies are matched to their requests in order (145.811666ms)
+✔ aborting a queued request drops it; aborting a running one closes the connection (9.07101ms)
+✔ an absolute deadline ends a request the server never answers (54.303487ms)
+✔ request and reply sizes are bounded (6.525812ms)
+✔ writes wait for the socket to drain (522.38552ms)
+✔ a peer that does not speak the links protocol is refused (6.271449ms)
+✔ connecting fails as not-sent when nobody listens or time runs out (55.269179ms)
+✔ close waits for answers, then ends only an owned connection (89.101963ms)
+✔ the WebAssembly adapter states that it has no raw TCP (3.546004ms)
+✔ requests run in order and a create equal to nothing new resolves to null (4.111699ms)
+✔ aborted or late requests never reach the store (1.566031ms)
+✔ request and reply limits (1.720379ms)
+✔ close frees the store only when the client owns it (1.019931ms)
+✔ the universal entry point imports nothing from node: (20.538989ms)
+✔ a request whose scope expires while queued never reaches native code (0.743748ms)
+ℹ tests 84
+ℹ suites 0
+ℹ pass 84
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4019.803489
+ℹ start of coverage report
+ℹ ----------------------------------------------------------------------
+ℹ file                  | line % | branch % | funcs % | uncovered lines
+ℹ ----------------------------------------------------------------------
+ℹ js                    |        |          |         |
+ℹ  client               |        |          |         |
+ℹ   src                 |        |          |         |
+ℹ    capabilities.js    | 100.00 |   100.00 |  100.00 |
+ℹ    client.js          | 100.00 |   100.00 |  100.00 |
+ℹ    cluster.js         | 100.00 |   100.00 |  100.00 |
+ℹ    deadline.js        | 100.00 |   100.00 |  100.00 |
+ℹ    engine-file-log.js | 100.00 |   100.00 |  100.00 |
+ℹ    engine-logs.js     | 100.00 |   100.00 |  100.00 |
+ℹ    engine.js          | 100.00 |   100.00 |  100.00 |
+ℹ    errors.js          | 100.00 |   100.00 |  100.00 |
+ℹ    framing.js         | 100.00 |   100.00 |  100.00 |
+ℹ    index.js           | 100.00 |   100.00 |  100.00 |
+ℹ    lino.js            | 100.00 |   100.00 |  100.00 |
+ℹ    operations.js      | 100.00 |   100.00 |  100.00 |
+ℹ    process.js         | 100.00 |   100.00 |  100.00 |
+ℹ    tcp.js             | 100.00 |   100.00 |  100.00 |
+ℹ    wasm.js            | 100.00 |   100.00 |  100.00 |
+ℹ ----------------------------------------------------------------------
+ℹ all files             | 100.00 |   100.00 |  100.00 |
+ℹ ----------------------------------------------------------------------
+ℹ end of coverage report

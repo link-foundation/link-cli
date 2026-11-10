@@ -1,0 +1,2422 @@
+{
+  "scans": [
+    {
+      "name": "empty namespace",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": []
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": []
+    },
+    {
+      "name": "explicit zero count",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [],
+                "count": "0"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": []
+    },
+    {
+      "name": "pinned pagination",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "WyJmaXJzdCDpm6oiXQ=="
+                  },
+                  {
+                    "key": "L3Rlc3QvYg==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "more": true,
+                "count": "3"
+              }
+            }
+          ]
+        },
+        {
+          "header": {
+            "revision": "12"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3Qveg==",
+                    "mod_revision": "9",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "pageKeys": 2
+      },
+      "prefix": "/test/",
+      "expected": [
+        {
+          "key": "a",
+          "version": {
+            "generation": "7",
+            "entries": [
+              "first 雪"
+            ]
+          }
+        },
+        {
+          "key": "b",
+          "version": {
+            "generation": "7",
+            "entries": []
+          }
+        },
+        {
+          "key": "z",
+          "version": {
+            "generation": "9",
+            "entries": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "maximum signed revision",
+      "replies": [
+        {
+          "header": {
+            "revision": "9223372036854775807"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "9223372036854775807",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": [
+        {
+          "key": "a",
+          "version": {
+            "generation": "9223372036854775807",
+            "entries": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "unicode namespace",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L+mbqi9h",
+                    "mod_revision": "7",
+                    "value": "WyJow6lsbG9cbvCfmIAiXQ=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/雪/",
+      "expected": [
+        {
+          "key": "a",
+          "version": {
+            "generation": "7",
+            "entries": [
+              "héllo\n😀"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "keys only",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7"
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "keysOnly": true
+      },
+      "prefix": "/test/",
+      "expected": [
+        {
+          "key": "a",
+          "version": {
+            "generation": "7",
+            "entries": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "keys only explicit empty value",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": ""
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "keysOnly": true
+      },
+      "prefix": "/test/",
+      "expected": [
+        {
+          "key": "a",
+          "version": {
+            "generation": "7",
+            "entries": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "null snapshot",
+      "replies": [
+        null
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "array snapshot",
+      "replies": [
+        []
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "empty snapshot",
+      "replies": [
+        {}
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "false snapshot",
+      "replies": [
+        {
+          "succeeded": false
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision None",
+      "replies": [
+        {
+          "header": {
+            "revision": null
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision ''",
+      "replies": [
+        {
+          "header": {
+            "revision": ""
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision '0'",
+      "replies": [
+        {
+          "header": {
+            "revision": "0"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision '01'",
+      "replies": [
+        {
+          "header": {
+            "revision": "01"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision '+1'",
+      "replies": [
+        {
+          "header": {
+            "revision": "+1"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision '9223372036854775808'",
+      "replies": [
+        {
+          "header": {
+            "revision": "9223372036854775808"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad revision 10",
+      "replies": [
+        {
+          "header": {
+            "revision": 10
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad success None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": null,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad success False",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": false,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad success 'true'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": "true",
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad responses None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": null
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad responses []",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": []
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad responses [{}, {}]",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {},
+            {}
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad responses [{}]",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {}
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad range None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": null
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad range []",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": []
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad range 7",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": 7
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad kvs None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": null,
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad kvs {}",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": {},
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad kvs 7",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": 7,
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad more None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1",
+                "more": null
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad more 0",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1",
+                "more": 0
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad more 'false'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1",
+                "more": "false"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad count None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": null
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad count '0'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "0"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad count '01'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "01"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad count '2'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad count '9223372036854775808'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "9223372036854775808"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad count 1",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": 1
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad generation None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": null,
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad generation '0'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "0",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad generation '01'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "01",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad generation '11'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "11",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad generation '9223372036854775808'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "9223372036854775808",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad generation 7",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": 7,
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": null,
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key '!'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "!",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key 'L3Rlc3QvYQ==\\n'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==\n",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key 'L2ZvcmVpZ24vYQ=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L2ZvcmVpZ24vYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key 'L3Rlc3Qv'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3Qv",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key 'L3Rlc3QvYS9i'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYS9i",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key 'L3Rlc3QvYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFh'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFh",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad key '/w=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "/w==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value None",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": null
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value '!'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "!"
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'W10=\\n'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10=\n"
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'bnVsbA=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "bnVsbA=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'W251bGxd'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W251bGxd"
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'Wzdd'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "Wzdd"
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'MTIz'",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "MTIz"
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'WyJcdWQ4MDAiXQ=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "WyJcdWQ4MDAiXQ=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'WyJcdWRjMDAiXQ=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "WyJcdWRjMDAiXQ=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value 'ew=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "ew=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "bad value '/w=='",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "/w=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "missing nonempty count",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "empty more",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [],
+                "more": true,
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "more contradicts count",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "more": true,
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "duplicate keys",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  },
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "reversed keys",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3Qveg==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  },
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {},
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "keys only returned data",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "keysOnly": true
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "later revision reversal",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "more": true,
+                "count": "2"
+              }
+            }
+          ]
+        },
+        {
+          "header": {
+            "revision": "9"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYg==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "pageKeys": 1
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "later generation beyond pin",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "more": true,
+                "count": "2"
+              }
+            }
+          ]
+        },
+        {
+          "header": {
+            "revision": "12"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYg==",
+                    "mod_revision": "11",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "pageKeys": 1
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "later duplicate",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "more": true,
+                "count": "2"
+              }
+            }
+          ]
+        },
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "pageKeys": 1
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "key limit",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  },
+                  {
+                    "key": "L3Rlc3QvYg==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "maxKeys": 1
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "more beyond key limit",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "more": true,
+                "count": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "maxKeys": 1,
+        "pageKeys": 1
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "byte limit",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "WyLpm6oiXQ=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "maxBytes": 12
+      },
+      "prefix": "/test/",
+      "expected": null
+    },
+    {
+      "name": "exact byte limit",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "WyLpm6oiXQ=="
+                  }
+                ],
+                "count": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "maxBytes": 13
+      },
+      "prefix": "/test/",
+      "expected": [
+        {
+          "key": "a",
+          "version": {
+            "generation": "7",
+            "entries": [
+              "雪"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "page limit",
+      "replies": [
+        {
+          "header": {
+            "revision": "10"
+          },
+          "succeeded": true,
+          "responses": [
+            {
+              "response_range": {
+                "kvs": [
+                  {
+                    "key": "L3Rlc3QvYQ==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  },
+                  {
+                    "key": "L3Rlc3QvYg==",
+                    "mod_revision": "7",
+                    "value": "W10="
+                  }
+                ],
+                "count": "2"
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "pageKeys": 1
+      },
+      "prefix": "/test/",
+      "expected": null
+    }
+  ],
+  "deletes": [
+    {
+      "name": "omitted rejection",
+      "reply": {
+        "header": {
+          "revision": "10"
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "explicit rejection",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": false,
+        "responses": []
+      },
+      "expected": false
+    },
+    {
+      "name": "acknowledged deletion",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true,
+        "responses": [
+          {
+            "response_delete_range": {
+              "deleted": "1"
+            }
+          }
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "null",
+      "reply": null,
+      "expected": null
+    },
+    {
+      "name": "missing header",
+      "reply": {},
+      "expected": null
+    },
+    {
+      "name": "zero revision",
+      "reply": {
+        "header": {
+          "revision": "0"
+        }
+      },
+      "expected": null
+    },
+    {
+      "name": "bad success",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": null
+      },
+      "expected": null
+    },
+    {
+      "name": "missing deletion",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true
+      },
+      "expected": null
+    },
+    {
+      "name": "rejection with results",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "responses": [
+          {}
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "bad rejection results",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "responses": null
+      },
+      "expected": null
+    },
+    {
+      "name": "invalid deletion None",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true,
+        "responses": [
+          {
+            "response_delete_range": {
+              "deleted": null
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "invalid deletion '0'",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true,
+        "responses": [
+          {
+            "response_delete_range": {
+              "deleted": "0"
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "invalid deletion '2'",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true,
+        "responses": [
+          {
+            "response_delete_range": {
+              "deleted": "2"
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "invalid deletion '01'",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true,
+        "responses": [
+          {
+            "response_delete_range": {
+              "deleted": "01"
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "invalid deletion 1",
+      "reply": {
+        "header": {
+          "revision": "10"
+        },
+        "succeeded": true,
+        "responses": [
+          {
+            "response_delete_range": {
+              "deleted": 1
+            }
+          }
+        ]
+      },
+      "expected": null
+    }
+  ]
+}

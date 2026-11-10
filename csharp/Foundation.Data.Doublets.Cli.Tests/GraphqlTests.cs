@@ -8,7 +8,7 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class GraphqlTests
 {
-    private static string Vectors(string name)
+    internal static string Vectors(string name)
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
@@ -72,37 +72,43 @@ public class GraphqlTests
         Assert.True(failures.Count == 0, string.Join('\n', failures));
     }
 
-    [Fact]
-    public void ExecuteVectorsAnswerAsRecorded()
+    [Theory]
+    [InlineData("execute-vectors.json", null)]
+    [InlineData("edge-vectors.json", "deep-core.json")]
+    public void ExecuteVectorsAnswerAsRecorded(string file, string? package)
     {
         var database = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         try
         {
             using var links = new NamedTypesDecorator<uint>(database, false);
             var store = new DeepStore(links, null);
-            var vectors = Json.Parse(Vectors("execute-vectors.json"));
+            var vectors = Json.Parse(Vectors(file));
+            if (package is not null)
+            {
+                store.LoadPackage(Json.Parse(Vectors(package)));
+            }
             store.LoadPackage(vectors.Get("seed")!);
             var settings = new Settings(Encoding.UTF8.GetBytes("secret"), null);
             var failures = new List<string>();
             foreach (var step in vectors.Get("steps")!.AsList())
             {
-                var (answer, _) = Exec.Execute(store, settings, step.Get("query")!.AsStr()!, null, step.Get("variables") ?? Json.Null, default);
+                var (answer, _) = Exec.Execute(store, settings, step.Get("query")!.AsStr()!, step.Get("operation")?.AsStr(), step.Get("variables") ?? Json.Null, default);
                 var written = answer.Write();
                 var passed = step.Get("error")?.AsStr() is { } code
                     ? written.Contains($"\"code\":\"{code}\"", StringComparison.Ordinal)
                     : (answer.Get("data")?.Write() ?? "") == step.Get("data")!.Write();
                 if (!passed)
                 {
-                    failures.Add($"{step.Get("name")!.AsStr()}: {written}");
+                    failures.Add($"{step.Get("name")!.AsStr()}\t{written}");
                 }
             }
             Assert.True(failures.Count == 0, string.Join('\n', failures));
         }
         finally
         {
-            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(database)!, Path.GetFileName(database) + "*"))
+            foreach (var file2 in Directory.GetFiles(Path.GetDirectoryName(database)!, Path.GetFileName(database) + "*"))
             {
-                File.Delete(file);
+                File.Delete(file2);
             }
         }
     }

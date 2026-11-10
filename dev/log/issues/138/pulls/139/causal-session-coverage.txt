@@ -1,0 +1,86 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Production implementation: 082213be4c04c09d16bb24ec9490d36d691d8b51
+Reproduce after the complete session run: bash experiments/issue-138/validate-causal-session-coverage.sh
+These focused tests supplement the 1241 native/770 actual-WASM complete run; they are not another full-suite run.
+Six raw verifier contracts pass, after the new complete-session fixture fails before --require-session is implemented.
+C# platform CI now requires all six components, including CausalSession, and refuses a report that omits one.
+experiments/issue-138/causal-session-Debug-results/391566ee-eb5c-49f8-aa42-2c9246236108/coverage.json: 1980939 bytes; SHA256 544941e096fefe997b1fd28c66e7aecb766190abad67cd0f79cd48738fd3cd65
+CausalBatch.cs: 190/190 raw branches
+CausalMerkle.cs: 246/246 raw branches
+CausalProjection.cs: 42/42 raw branches
+CausalReplica.cs: 182/182 raw branches
+CausalSession.cs: 108/108 raw branches
+CausalVersion.cs: 138/138 raw branches
+PASS every compiled causal branch, including methods without source lines
+experiments/issue-138/causal-session-Release-results/6a19414d-4ff0-4e9a-8e0a-fa4056ed7eae/coverage.json: 1914401 bytes; SHA256 d60c9553f425b26142a6b3b14151115c49cdb9d842750f17b2ee0e418794d2f9
+CausalBatch.cs: 188/188 raw branches
+CausalMerkle.cs: 246/246 raw branches
+CausalProjection.cs: 42/42 raw branches
+CausalReplica.cs: 182/182 raw branches
+CausalSession.cs: 106/106 raw branches
+CausalVersion.cs: 138/138 raw branches
+PASS every compiled causal branch, including methods without source lines
+native-tests: 10 passed, zero failed/ignored.
+wasm-tests: 10 passed, zero failed/ignored.
+wasm-binding-tests: 3 passed, zero failed/ignored.
+native: complete source-file set retained.
+Complete lines: 19027/19918 (95.52666%); denominator unchanged.
+Complete branches: 3729/4224 (88.28125%); denominator unchanged.
+Complete functions: 2437/2609 (93.40744%); denominator unchanged.
+Complete regions: 29284/31549 (92.82069%); denominator unchanged.
+Complete instantiations: 12320/21809 (56.49044%); denominator unchanged.
+/rust/src/engine/causal_session.rs lines: 313/315 (99.36508%).
+/rust/src/engine/causal_session.rs branches: 30/30 (100.00000%).
+/rust/src/engine/causal_session.rs functions: 52/52 (100.00000%).
+/rust/src/engine/causal_session.rs regions: 466/481 (96.88150%).
+/rust/src/engine/causal_session.rs instantiations: 52/120 (43.33333%).
+wasm: complete source-file set retained.
+Complete lines: 15159/17792 (85.20121%); denominator unchanged.
+Complete branches: 3125/3643 (85.78095%); denominator unchanged.
+Complete functions: 1884/2317 (81.31204%); denominator unchanged.
+Complete regions: 23442/28143 (83.29602%); denominator unchanged.
+Complete instantiations: 4642/7808 (59.45184%); denominator unchanged.
+/rust/src/engine/causal_session.rs lines: 313/315 (99.36508%).
+/rust/src/engine/causal_session.rs branches: 30/30 (100.00000%).
+/rust/src/engine/causal_session.rs functions: 52/52 (100.00000%).
+/rust/src/engine/causal_session.rs regions: 469/481 (97.50520%).
+/rust/src/engine/causal_session.rs instantiations: 52/68 (76.47059%).
+/rust/wasm/src/causal_session.rs lines: 164/165 (99.39394%).
+/rust/wasm/src/causal_session.rs branches: 30/30 (100.00000%).
+/rust/wasm/src/causal_session.rs functions: 29/30 (96.66667%).
+/rust/wasm/src/causal_session.rs regions: 327/340 (96.17647%).
+/rust/wasm/src/causal_session.rs instantiations: 29/60 (48.33333%).
+Strict native/WASM all-target Clippy, both formats, 221 repository checks, actionlint/ShellCheck and whitespace pass.
+Production session source bytes are unchanged from the complete run. Added controls cover zero addresses, retained observers, option overflow and unknown operation guards.
+Remaining unvisited functions/regions and whole-project coverage remain reported; no exclusions or denominator filtering are added.
+Fresh exact-head CI and every wider unfinished R1-R12 criterion remain active. PR139 stays draft and unmerged.
+experiments/issue-138/causal-session-coverage-driver.log: 155 bytes; SHA256 ad6ed4c0dca3e7c03edcc4cf7dc65ef4ada2b69f3c78901e021ab1255bd65f25.
+experiments/issue-138/causal-session-coverage-verifier-after.log: 104 bytes; SHA256 d5a7c064eae6e26f110e85fcd2514484b14ac87ea58cb7c57a35a2855541afbb.
+experiments/issue-138/causal-session-coverage-verifier-after.log: 104 bytes; SHA256 d5a7c064eae6e26f110e85fcd2514484b14ac87ea58cb7c57a35a2855541afbb.
+experiments/issue-138/causal-session-coverage-verifier-before.log: 921 bytes; SHA256 59750fed497b7e93c6e58334a61d176181af36805d7bb65366d415debf9dfe55.
+experiments/issue-138/causal-session-coverage-Debug-records.log: 496 bytes; SHA256 7919e4e0834e1bc3b44a1bda02980b456ceec0138622824fd9541ba9922afa89.
+experiments/issue-138/causal-session-coverage-Release-records.log: 498 bytes; SHA256 4dd5670ef1e3116fe18f4e39f621f727cd91b529c3ca2ecfa1c0aa25eaaddc99.
+experiments/issue-138/causal-session-coverage-native-tests.log: 1300 bytes; SHA256 c6ffeff37e676e7f5a970f7b840f3e2a65eb8ece2c83bcc52941003f2188d9dc.
+experiments/issue-138/causal-session-coverage-wasm-tests.log: 1561 bytes; SHA256 0eaf52857996f760ebb27246fc746c2e0a16186b53e00cb36a7cf205b86cff7a.
+experiments/issue-138/causal-session-coverage-wasm-binding-tests.log: 856 bytes; SHA256 4491b3c26da4a6cd66553310053475e3ee9c9634e1bdc481dcb6be11093f7cb9.
+experiments/issue-138/causal-session-native-coverage.json: 21635945 bytes; SHA256 15211f05708eea3affe739f14b71f49802e52b97508838de9fd5d3ebeb5eb3cf.
+experiments/issue-138/causal-session-coverage-native.json: 21638159 bytes; SHA256 469581797be1deae6cbac136b93a1643cf3d3b45dea2ab50acddaa36f66132f5.
+experiments/issue-138/causal-session-coverage-native-report.log: 125 bytes; SHA256 3e57b95f830b1b033bc1260d47c83f83645fe3535b7ecf00c9c5ea9dec326e55.
+experiments/issue-138/causal-session-coverage-native-clippy.log: 60 bytes; SHA256 7e8397b3c3d5ef73830e57f61ffa6f2cfd565f338d3d371aefe79dbf3b020764.
+experiments/issue-138/causal-session-wasm-coverage.json: 25372120 bytes; SHA256 b44b4995139cb1e04dc01c209f49efb478d0871dd31965c0cde69b12ed9fd624.
+experiments/issue-138/causal-session-coverage-wasm.json: 25375883 bytes; SHA256 143e9cd01e04011f10c1b8ca446b9e3c467a9e69f749bbe53eaff9ef1eba5d41.
+experiments/issue-138/causal-session-coverage-wasm-report.log: 123 bytes; SHA256 c8bcf0ad76d83d2d884a2478cef32fc2a6cf6d3874c282a56aa9b533bfa5baa4.
+experiments/issue-138/causal-session-coverage-wasm-clippy.log: 60 bytes; SHA256 43ddda3fc4d2c06eec615b56bd83f059740d1ce91f6f4d1733f6bbbc0e1a3e13.
+experiments/issue-138/causal-session-coverage-repository.log: 18483 bytes; SHA256 6db9f546adea2ef4350e945cbfea8414283901b0129cc1b8923cd0bf54950328.
+experiments/issue-138/causal-session-coverage-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-session-coverage-whitespace.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+rust/src/engine/causal_session.rs: 12913 bytes; SHA256 a5d17729b0f13dfb766c343ba1df506c9211876d3804aa3a5340a75787a0cb4a.
+rust/wasm/src/causal_session.rs: 7016 bytes; SHA256 2908a3dda6ee0b067ba51285a1bf5038b1273f908ec3ba675097b8739d578a54.
+rust/tests/engine_causal_session_tests.rs: 21148 bytes; SHA256 5beb0a5eb28531bc099d2becea95c47b15d777acd8eb02fe9a198377e06c9002.
+rust/wasm/tests/causal_session_binding.rs: 6071 bytes; SHA256 c744596d7f09d2c41f536ff9e97f6281af485aa02f3e067225373fe5e822e0e4.
+.github/workflows/csharp.yml: 36472 bytes; SHA256 bd13dbdd19cf9c1414567b3bb38c3bb66d1e78ef5d1bd38426f4e2a76a64c94d.
+.github/scripts/workflow-policy.test.mjs: 23945 bytes; SHA256 e3e942bffa4d4b88d68e34365e3b80482bea39dfc82319fa9304c9dbdd066f4a.
+experiments/issue-138/check-causal-raw-coverage.py: 1996 bytes; SHA256 e1236eceea6ad0e7c774921641c6bf9a2b195318ef292bbc0afb962fadb1de85.
+experiments/issue-138/test-causal-raw-coverage.py: 3505 bytes; SHA256 2e037e467ae2a059207b350af5457bcf2097585a635db7455235d3ce9b4c4f1a.
+experiments/issue-138/validate-causal-session-coverage.sh: 2989 bytes; SHA256 48a03f39e455ac9d7649ef15b5eefd4eb0cea5274793b5eef60e549ff37ab19c.
+experiments/issue-138/summarize-causal-session-coverage.py: 4919 bytes; SHA256 d9147f3e98d45bc1d960b6e773e95a77bcf83d98f7152869df2d8d8366414361.

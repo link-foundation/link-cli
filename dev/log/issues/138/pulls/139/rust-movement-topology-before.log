@@ -1,0 +1,84 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.14s
+     Running tests/version_movement_recovery_tests.rs (rust/target/debug/deps/version_movement_recovery_tests-9f0db7bfd1137e85)
+
+running 25 tests
+test duplicate_attribution ... ok
+test duplicate_applied ... ok
+test duplicate_intents ... ok
+test duplicate_branch ... ok
+test cyclic_parent ... FAILED
+test duplicate_current ... FAILED
+test impossible_publication ... ok
+test extra_redo ... ok
+test invalid_applied ... FAILED
+test evicted_record ... FAILED
+test invalid_branch ... FAILED
+test invalid_attribution ... FAILED
+test missing_from ... ok
+test invalid_checksum ... ok
+test missing_undo ... ok
+test missing_to ... ok
+test overlapping_intents ... ok
+test unreachable_from ... ok
+test missing_parent ... FAILED
+test unreachable_to ... ok
+test wrong_applied ... ok
+test wrong_current ... ok
+test wrong_decision ... ok
+test wrong_payload ... ok
+test valid_record ... ok
+
+failures:
+
+---- cyclic_parent stdout ----
+
+thread 'cyclic_parent' (1158017) panicked at tests/version_movement_recovery_tests.rs:93:13:
+accepted cyclic-parent
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- duplicate_current stdout ----
+
+thread 'duplicate_current' (1158021) panicked at tests/version_movement_recovery_tests.rs:93:13:
+accepted duplicate-current
+
+---- invalid_applied stdout ----
+
+thread 'invalid_applied' (1158026) panicked at tests/version_movement_recovery_tests.rs:93:13:
+accepted invalid-applied
+
+---- evicted_record stdout ----
+
+thread 'evicted_record' (1158023) panicked at tests/version_movement_recovery_tests.rs:88:13:
+assertion `left == right` failed: evicted-record
+  left: 2
+ right: 3
+
+---- invalid_branch stdout ----
+
+thread 'invalid_branch' (1158034) panicked at tests/version_movement_recovery_tests.rs:93:13:
+accepted invalid-branch
+
+---- invalid_attribution stdout ----
+
+thread 'invalid_attribution' (1158027) panicked at tests/version_movement_recovery_tests.rs:93:13:
+accepted invalid-attribution
+
+---- missing_parent stdout ----
+
+thread 'missing_parent' (1158046) panicked at tests/version_movement_recovery_tests.rs:93:13:
+accepted missing-parent
+
+
+failures:
+    cyclic_parent
+    duplicate_current
+    evicted_record
+    invalid_applied
+    invalid_attribution
+    invalid_branch
+    missing_parent
+
+test result: FAILED. 18 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.42s
+
+error: test failed, to rerun pass `--test version_movement_recovery_tests`

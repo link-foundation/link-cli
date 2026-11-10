@@ -1,0 +1,40 @@
+C# finite child phase supervision
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Before evidence: csharp-phase-progress-before.txt preserves the exact-head
+Windows failure and an independently failing finite local progress control.
+The Windows child completes three distinct persistence phases before the old
+aggregate 15-second deadline kills it. This does not establish the lower-level
+cause of Windows filesystem latency.
+
+Retain the 15-second idle bound and accept only complete consecutive phases
+1..64. Partial, repeated, regressing, gapped, noncanonical and oversized progress
+cannot renew admission. Ordinary output is not progress. Capture remains bounded
+to 65,536 characters per stream; the parent kills/reaps before fixture cleanup.
+No production persistence behavior or retry policy changes.
+
+The actual finite child first fails under the previous 500ms aggregate bound,
+then passes while four distinct operations complete over 800ms. Repeated
+progress fails, reaps and releases the exclusive file before directory cleanup.
+Parser controls cover chunked stream reads, CRLF, all 64 phases, phase 65,
+oversized ordinary diagnostics and malformed/partial reserved progress.
+The original stalled/failed-child and primary-plus-cleanup controls still pass.
+All 50 focused controls pass; nine new full-suite cases are included.
+
+Complete sequential local validation: 2026-10-27T05:27:21Z to 05:35:33Z.
+NATIVE_LSM_CSHARP_PREFIX=experiments/issue-138/csharp-phase \
+  bash experiments/issue-138/validate-native-lsm-csharp.sh
+Exact SDK 10.0.403, .NET heap 640MiB, one build worker.
+Debug: 2,421 passed, zero failed/skipped.
+Release: 2,421 passed, zero failed/skipped.
+Production coverage remains Debug 9,280/9,606 lines, 5,559/6,004 branches;
+Release 7,167/7,385 lines, 5,505/5,965 branches. All denominators remain included.
+Exact-SDK formatter, three actual native cluster consumers, 32 complete-store
+C#/Node/Bun/Deno handoffs with physical hash preservation and SQL-optional
+dependency controls pass. No cgroup OOM or killed processes.
+
+Logs: experiments/issue-138/csharp-phase-{validation,focused,Debug-full,
+Release-full,format-check,example-build,consumer-direct,consumer-partitioned,
+consumer-reclaiming,interop,optional}.log and both full coverage XML files.
+Fresh exact-head Windows CI is still required; local Linux success does not
+establish Windows behavior. All broader unmet R1-R12 criteria remain active.

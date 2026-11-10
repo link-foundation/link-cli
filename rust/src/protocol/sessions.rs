@@ -227,7 +227,11 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
 
     /// Answers a request written as LiNo text, as the text protocol does.
     pub fn request(&mut self, session: SessionId, text: &str) -> String {
-        let reply = match parse_document(text) {
+        let parsed = match self.store().query_limits() {
+            Some(limits) => super::server::parse_document_with_limits(text, limits),
+            None => parse_document(text).map_err(Into::into),
+        };
+        let reply = match parsed {
             Ok(document) => self.execute(session, &document),
             Err(error) => error_document(&error.to_string()),
         };
@@ -273,6 +277,11 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
         changed: &mut Vec<Change>,
         triplets_changed: &mut Vec<TripletChange>,
     ) -> LinoDocument {
+        if let Some(limits) = self.store().query_limits() {
+            if let Err(error) = super::server::admit_document(document, limits) {
+                return error_document(&error.to_string());
+            }
+        }
         let mut state = self.sessions.remove(&session).unwrap_or(Session {
             subject: self.subject,
             created: HashSet::new(),

@@ -1,0 +1,777 @@
+{
+  "format": "address-reservations1",
+  "cases": [
+    {
+      "name": "absent",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "0",
+        "entries": []
+      },
+      "valid": true,
+      "options": {},
+      "next": "1",
+      "reservations": []
+    },
+    {
+      "name": "initialized-empty",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]"
+        ]
+      },
+      "valid": true,
+      "options": {},
+      "next": "1",
+      "reservations": []
+    },
+    {
+      "name": "first-grant",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": true,
+      "options": {},
+      "next": "3",
+      "reservations": [
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000001",
+          "count": "2",
+          "first": "1",
+          "last": "2"
+        }
+      ]
+    },
+    {
+      "name": "maximum-exhaustion",
+      "first": "18446744073709551614",
+      "last": "18446744073709551615",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"18446744073709551614\",\"18446744073709551615\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"18446744073709551614\",\"18446744073709551615\"]"
+        ]
+      },
+      "valid": true,
+      "options": {},
+      "next": null,
+      "reservations": [
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000001",
+          "count": "2",
+          "first": "18446744073709551614",
+          "last": "18446744073709551615"
+        }
+      ]
+    },
+    {
+      "name": "full-domain",
+      "first": "1",
+      "last": "18446744073709551615",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"18446744073709551615\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"18446744073709551615\",\"1\",\"18446744073709551615\"]"
+        ]
+      },
+      "valid": true,
+      "options": {},
+      "next": null,
+      "reservations": [
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000001",
+          "count": "18446744073709551615",
+          "first": "1",
+          "last": "18446744073709551615"
+        }
+      ]
+    },
+    {
+      "name": "zero-generation-with-bytes",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "0",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "missing-header",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": []
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-header",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-domain",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"2\",\"5\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "header-whitespace",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          " [\"address-reservations1\",\"1\",\"5\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "header-escape",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"\\u0061ddress-reservations1\",\"1\",\"5\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "duplicate-token",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000002\",\"00000000000000000000000000000001\",\"1\",\"3\",\"3\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "gap",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"1\",\"2\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "overlap",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000002\",\"00000000000000000000000000000002\",\"2\",\"2\",\"3\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "past-domain",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"6\",\"1\",\"6\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-width",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"3\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-whitespace",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          " [\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-object",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "{}"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-null",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "null"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-json-error",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "["
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-too-long",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "                                                                                                                                                                                                                                                                 "
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-depth",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "record-budget",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {
+        "maxEntries": 2,
+        "maxBytes": 136
+      }
+    },
+    {
+      "name": "entry-budget",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {
+        "maxEntries": 2
+      }
+    },
+    {
+      "name": "bad-field-0-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"wrong\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-0-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[null,\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-1-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000000\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-1-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-1-2",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-1-3",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"bad\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-2-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000000\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-2-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-2-2",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",null,\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-2-3",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"bad\",\"2\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-3-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"0\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-3-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"01\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-3-2",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"-1\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-3-3",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"18446744073709551616\",\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-3-4",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",2,\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-3-5",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",null,\"1\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-4-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"0\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-4-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"01\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-4-2",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"18446744073709551616\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-4-3",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",1,\"2\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-5-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"0\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-5-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"02\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-5-2",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"-1\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-5-3",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"18446744073709551616\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "bad-field-5-4",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",2]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-fields-0",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-fields-1",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-fields-5",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    },
+    {
+      "name": "wrong-fields-7",
+      "first": "1",
+      "last": "5",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"address-reservations1\",\"1\",\"5\"]",
+          "[\"reserve-addresses1\",\"00000000000000000000000000000001\",\"00000000000000000000000000000001\",\"2\",\"1\",\"2\",\"extra\"]"
+        ]
+      },
+      "valid": false,
+      "options": {}
+    }
+  ]
+}

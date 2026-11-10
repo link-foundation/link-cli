@@ -27,6 +27,7 @@ which scenarios each composition serves.
 | Undo (#149) | `UndoableLinksDecorator<T>` | `UndoableLinksDecorator` | - | Makes a request atomic. |
 | Transactions (#98) | `TransactionsDecorator<T>` | `TransactionsDecorator`, `GenericTransactionsDecorator` (over any layer through `NamedLinksStorage`) | - | Records every write in a log. |
 | Version control | `VersionControlDecorator` | `VersionControlDecorator` | - | Adds branches, tags and checkout over the log. |
+| Cache | `CacheLinksDecorator<T>` | `CacheLinks` | `CacheLinks` | Links with deadlines and a size limit, see [the guide](ENGINE-CACHE.md). |
 | Composed | `IComposedLinks<T>` (`Claims`, `EnsureCreated`) | `NamedTypeLinks::claims` | `UnionLinks.ownerOf` | Reports which network an address belongs to. |
 
 No layer depends on another. The union knows nothing of permissions, and

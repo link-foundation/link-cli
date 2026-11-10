@@ -1,0 +1,50 @@
+Persisted initial checkpoints in SQL-free native pages; PR https://github.com/link-foundation/link-cli/pull/139
+Production engine, physical page codec and delta code are unchanged from 68fa923.
+Independent generator: experiments/issue-138/generate-checkpoint-vectors.py; nativePageSeed.
+Seed revision 40; 32 rows; next allocator 41; retired addresses 33..40.
+Exact BOM/Unicode/NUL names and references; duplicate names and pairs remain valid.
+
+Focused controls:
+Rust exit 0
+Native checkpoint pages group: 40 -> 42 revisions; 32 -> 34 rows; pinned predecessor and exact prior names verified
+C# exit 0
+Native checkpoint pages group: 40 -> 42 revisions; 32 -> 34 rows; pinned predecessor and exact prior names verified
+JS exit 0
+Native checkpoint pages group: 40 -> 42 revisions; 32 -> 34 rows; pinned predecessor and exact prior names verified
+PASS all three real page entry points: initial checkpoint plus following physical delta group.
+
+Complete persisted handoffs:
+PASS checkpoint pages: 48 configurations, 288 persistent writer handoffs, revision 40 -> 52; allocator holes and retained checkpoint verified.
+Mirrored handoffs include damaged-copy repair; complete report: experiments/issue-138/checkpoint-paged-interop.log
+Final revision 52 with 44 rows; each handoff adds two separately published session revisions.
+48 = single/mirrored x scan/indexed references x flat/shared/sorted-runs x snapshot/changes x plain/delta.
+Writers: Rust -> Node -> Bun -> C# -> Deno -> Rust; 288 invocations.
+Every invocation checks exact retained checkpoint bytes and revision40, rejects revision39,
+preserves retired addresses, validates all prior names/rows, and keeps a pinned predecessor.
+Each mirrored handoff after the first damages one closed data copy and a metadata slot.
+The next provider repairs it; both copies match and both ownership files are released.
+
+Ordinary control: 48 configurations / 288 invocations; revision/rows 0 -> 12.
+This preserves the prior default example behavior.
+
+Local verification: cargo fmt and all-feature/all-target Clippy -D warnings; native example build;
+C# example format and Debug build (zero warnings/errors); focused real-provider entry points;
+checkpoint fixture regeneration byte comparison; 221 repository tests; release and size checks;
+optional-SQL positive guards in all three languages; actionlint/ShellCheck/whitespace.
+Compilers run sequentially with one Cargo job and a bounded C# heap under 2.92 GiB.
+
+Reproduce with the actual WASM package produced by validate-checkpoint-delta.sh wasm:
+bash experiments/issue-138/validate-checkpoint-paged.sh examples
+bash experiments/issue-138/validate-checkpoint-paged.sh interop
+bash experiments/issue-138/validate-checkpoint-paged.sh repository
+Full local reports: experiments/issue-138/checkpoint-paged-*.log.
+Normal JS-client CI executes and uploads the full persisted-checkpoint handoff log.
+
+The preceding full suites and all nine workflows pass on exact delta head 68fa923;
+checkpoint-delta.txt and checkpoint-delta-ci.txt preserve measured scopes and run URLs.
+Those metrics are not presented as fresh coverage measurements for these example-only changes.
+Fresh exact-head CI for this extension remains required after publication.
+This imports independent databases; it neither replaces an acknowledged local journal
+nor coordinates future allocator reservations with a copied source database.
+Atomic local replacement, old object reclamation, physical power loss, full project coverage
+and every wider unmet acceptance criterion remain unfinished. PR remains draft and unmerged.

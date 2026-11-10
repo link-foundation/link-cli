@@ -1,0 +1,16 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `test` profile [unoptimized] target(s) in 3.09s
+     Running tests/recycling_query_allocation_tests.rs (rust/target/debug/deps/recycling_query_allocation_tests-71c3ab215334f09b)
+
+running 9 tests
+test explicit_definition_changes_the_following_recycled_allocation ... ok
+test high_definition_allows_the_actual_recycled_reference ... ok
+test high_definition_does_not_authorize_an_uncreated_low_reference ... ok
+test named_leaf_changes_the_following_recycled_allocation ... ok
+test nested_pair_reuse_does_not_authorize_an_extra_reference ... ok
+test rejected_preview_never_writes_the_data_or_names_files ... ok
+test rejected_preview_preserves_names_live_rows_and_free_list_order ... ok
+test transaction_preview_writes_no_journal_and_preserves_rollback ... ok
+test version_preview_preserves_history_and_following_checkout ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s

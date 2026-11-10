@@ -24,9 +24,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { ANY, createWasmClient, LinksClient, MAX_U32_ADDRESS } from '../../src/index.js';
+import {
+  ANY,
+  CacheLinks,
+  createWasmClient,
+  LinksClient,
+  MAX_U32_ADDRESS,
+} from '../../src/index.js';
 import { connectProcess, startServer } from '../../src/process.js';
 import { connectTcp } from '../../src/tcp.js';
+import { engineConformance } from './engine.mjs';
+import { clusterConformance } from './cluster.mjs';
 
 const SCENARIO_TIMEOUT_MS = 60_000;
 const runtime = globalThis.Deno
@@ -107,6 +115,8 @@ function processBackend(name, path, capabilities) {
 async function wasmBackend(dir) {
   const module = await import(pathToFileURL(join(dir, 'clink_wasm.js')).href);
   module.initSync({ module: readFileSync(join(dir, 'clink_wasm_bg.wasm')) });
+  await engineConformance(module);
+  await clusterConformance(module);
   return {
     name: 'wasm',
     process: false,
@@ -501,6 +511,30 @@ const scenarios = [
         const f = await client.create(4n, 1n);
         assert.deepEqual(indexes([e, f]), [2n, 3n]);
         assert.deepEqual(indexes(await client.each()), [1n, 2n, 3n, 4n]);
+      });
+    },
+  },
+  {
+    name: 'a cache over the store: what comes due takes what is built on it, capacity evicts what is unused',
+    async run(store) {
+      await withClient(store, async (client) => {
+        let now = 1000;
+        const clock = () => now;
+        const expiring = new CacheLinks(client, { clock });
+        const base = await expiring.create(0n, 0n);
+        await expiring.create(base.index, base.index);
+        assert.equal(await expiring.expire(base.index, 5), true);
+        assert.equal(await expiring.timeToLive(base.index), 5);
+        now += 5;
+        assert.equal(await expiring.purgeExpired(), 2);
+        assert.equal(await client.count(), 0n);
+
+        const held = new CacheLinks(client, { maxLinks: 2, clock });
+        const used = await held.create(0n, 0n);
+        const user = await held.create(used.index, used.index);
+        await assert.rejects(held.create(user.index, used.index), { name: 'LimitExceededError' });
+        const last = await held.create(used.index, 0n);
+        assert.deepEqual(indexes(await client.each()).sort(), [used.index, last.index].sort());
       });
     },
   },

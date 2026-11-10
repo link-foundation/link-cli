@@ -1,0 +1,132 @@
+[
+  {
+    "entries": [],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": []
+  },
+  {
+    "entries": [
+      ""
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          ""
+        ],
+        "address": "blob1-5e9d6e8eb40afe9d"
+      }
+    ]
+  },
+  {
+    "entries": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+    ],
+    "maxRecords": 2,
+    "maxBytes": 8,
+    "chunks": [
+      {
+        "entries": [
+          "a",
+          "b"
+        ],
+        "address": "blob1-9bfbc394306455fa"
+      },
+      {
+        "entries": [
+          "c",
+          "d"
+        ],
+        "address": "blob1-f1646da57a09597e"
+      },
+      {
+        "entries": [
+          "e"
+        ],
+        "address": "blob1-c75d8b7be95e8677"
+      }
+    ]
+  },
+  {
+    "entries": [
+      "é",
+      "😀",
+      "",
+      "﻿\u0000",
+      "tail"
+    ],
+    "maxRecords": 3,
+    "maxBytes": 6,
+    "chunks": [
+      {
+        "entries": [
+          "é",
+          "😀",
+          ""
+        ],
+        "address": "blob1-c8451618999d0092"
+      },
+      {
+        "entries": [
+          "﻿\u0000"
+        ],
+        "address": "blob1-99e019be27b70e54"
+      },
+      {
+        "entries": [
+          "tail"
+        ],
+        "address": "blob1-4234ce52f3a55477"
+      }
+    ]
+  },
+  {
+    "entries": [
+      "ab",
+      "c",
+      "é",
+      "",
+      "x"
+    ],
+    "maxRecords": 9,
+    "maxBytes": 3,
+    "chunks": [
+      {
+        "entries": [
+          "ab",
+          "c"
+        ],
+        "address": "blob1-4987f0929bf7efe0"
+      },
+      {
+        "entries": [
+          "é",
+          "",
+          "x"
+        ],
+        "address": "blob1-a7382ba02812da96"
+      }
+    ]
+  },
+  {
+    "entries": [
+      "😀"
+    ],
+    "maxRecords": 1,
+    "maxBytes": 4,
+    "chunks": [
+      {
+        "entries": [
+          "😀"
+        ],
+        "address": "blob1-6edfde5800885154"
+      }
+    ]
+  }
+]

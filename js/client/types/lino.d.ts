@@ -15,4 +15,6 @@ export function decodeReferenceLiteral(literal: string): string;
 export function formatReference(text: string): string;
 export function formatLink(link: LinoNode): string;
 export function formatDocument(document: LinoDocument): string;
-export function parseDocument(text: string): LinoDocument;
+/** Optional admission before recursive parsing; syntax nodes include identifiers. */
+export interface LinoLimits { maxBytes?: number; maxDepth?: number; maxNodes?: number; }
+export function parseDocument(text: string, limits?: LinoLimits): LinoDocument;

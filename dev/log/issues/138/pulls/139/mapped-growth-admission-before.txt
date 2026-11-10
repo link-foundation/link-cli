@@ -1,0 +1,14 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-mapped-growth-admission-before.sh
+Immutable baseline: 9bb985f602c4cad882703722c7a496e5b8b3b8de.
+Only the four new public API tests are copied into archived source with a separate compiler target.
+Serial compilation with debug information disabled. No large allocation or stress is attempted:
+arithmetic/layout limits are rejected before allocation; each control creates 32 initial plus 8 following values.
+Actual immutable result: one passed, three failed, zero ignored.
+mapped-growth-admission-baseline.k6C4xA/tests.log:76-95 preserves actual failures:
+- arithmetic capacity overflow returns CapacityOverflow, but its live flush handle rejects with unfinished remap;
+- layout capacity overflow returns CapacityOverflow with the same invalid barrier;
+- zero growth calls the user callback, which edits its initialized prefix and panics; the still-valid mapping's barrier rejects afterward.
+Ordinary zero growth's callback/empty-tail semantics already pass.
+The correction must preserve exact prefix, pointer, physical file size and checked flush, allow following growth and drop all forty constructed values exactly once.
+Genuine resize I/O failure, nonzero callback panic and destructor panic during shrink remain separate unfinished safety hazards.

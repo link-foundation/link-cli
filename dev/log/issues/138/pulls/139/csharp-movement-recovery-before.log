@@ -1,0 +1,67 @@
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.27]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.94]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.03]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:02.56]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "valid") [FAIL]
+[xUnit.net 00:00:02.56]       System.IO.InvalidDataException : Version movement intent contradicts its committed records.
+[xUnit.net 00:00:02.57]       Stack Trace:
+[xUnit.net 00:00:02.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.Movement.cs(177,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.RecoverMovementsLocked(List`1 pending)
+[xUnit.net 00:00:02.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(686,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:02.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:02.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:02.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(93,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:02.57]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.73]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "evicted-record") [FAIL]
+[xUnit.net 00:00:02.73]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:02.73]       Expected: 3
+[xUnit.net 00:00:02.73]       Actual:   2
+[xUnit.net 00:00:02.73]       Stack Trace:
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(97,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:02.73]         --- End of stack trace from previous location ---
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate") [434 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "unreachable-from") [153 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-applied") [133 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-from") [199 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-payload") [221 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "checksum") [123 ms]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "valid") [151 ms]
+  Error Message:
+   System.IO.InvalidDataException : Version movement intent contradicts its committed records.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.VersionControlDecorator.RecoverMovementsLocked(List`1 pending) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.Movement.cs:line 177
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 686
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 93
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "evicted-record") [175 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 3
+Actual:   2
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 97
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.73]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-decision") [122 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-to") [112 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "extra-redo") [126 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "unreachable-to") [131 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "impossible-publication") [120 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-undo") [115 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-current") [117 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "overlap") [142 ms]
+
+Test Run Failed.
+Total tests: 16
+     Passed: 14
+     Failed: 2
+ Total time: 5.1412 Seconds

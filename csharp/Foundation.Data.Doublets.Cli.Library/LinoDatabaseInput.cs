@@ -40,11 +40,6 @@ public static class LinoDatabaseInput
     private static uint ResolveReference(INamedTypesLinks<uint> links, ImportContext context, ImportReference reference)
     {
         var identifier = reference.Value;
-        if (identifier.Length == 0)
-        {
-            throw new FormatException("LiNo import references must have a value.");
-        }
-
         return !reference.IsQuoted && TryParseSupportedReference(links, identifier, allowNull: true, out var link)
             ? link
             : EnsureNamedPointLink(links, context, identifier);
@@ -99,13 +94,6 @@ public static class LinoDatabaseInput
             return existing;
         }
 
-        existing = FindByExistingName(links, name);
-        if (existing != links.Constants.Null)
-        {
-            context.NamedReferences[name] = existing;
-            return existing;
-        }
-
         var link = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
         links.SetName(link, name);
         links.Update(
@@ -114,23 +102,6 @@ public static class LinoDatabaseInput
             (_, _) => links.Constants.Continue);
         context.NamedReferences[name] = link;
         return link;
-    }
-
-    private static uint FindByExistingName(INamedTypesLinks<uint> links, string name)
-    {
-        var any = links.Constants.Any;
-        var query = new DoubletLink(index: any, source: any, target: any);
-
-        foreach (var link in links.All(query))
-        {
-            var doublet = new DoubletLink(link);
-            if (links.GetName(doublet.Index) == name)
-            {
-                return doublet.Index;
-            }
-        }
-
-        return links.Constants.Null;
     }
 
     private static bool TryParseSupportedReference(INamedTypesLinks<uint> links, string identifier, bool allowNull, out uint link)

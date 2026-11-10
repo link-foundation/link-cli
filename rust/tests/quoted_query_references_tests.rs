@@ -1,14 +1,16 @@
 use anyhow::Result;
-use link_cli::{
-    link_reference_validator::LinkReferenceValidator, LinkStorage, LinoLink, QueryProcessor,
-};
-use tempfile::NamedTempFile;
+use link_cli::{link_reference_validator::LinkReferenceValidator, LinoLink, QueryProcessor};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn quoted_numbers_are_names() -> Result<()> {
     for name in ["0", "1", "2", "99", "01", "+1", "4294967295"] {
-        let file = NamedTempFile::new()?;
-        let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+        let (_file, mut storage) = test_store::links()?;
         let strict = QueryProcessor::new(false);
         let auto = QueryProcessor::new(false).with_auto_create_missing_references(true);
         strict.process_query(&mut storage, "() ((a: a a) (b: b b))")?;
@@ -27,10 +29,10 @@ fn quoted_numbers_are_names() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn quoted_definitions_support_strict_matching_updating_and_deletion() -> Result<()> {
-    let file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+    let (_file, mut storage) = test_store::links()?;
     let strict = QueryProcessor::new(false);
     strict.process_query(
         &mut storage,
@@ -60,10 +62,10 @@ fn quoted_definitions_support_strict_matching_updating_and_deletion() -> Result<
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn missing_quoted_number_requires_its_name_even_when_address_exists() -> Result<()> {
-    let file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+    let (_file, mut storage) = test_store::links()?;
     let strict = QueryProcessor::new(false);
     strict.process_query(&mut storage, "() ((a: a a))")?;
     let error = strict
@@ -77,10 +79,10 @@ fn missing_quoted_number_requires_its_name_even_when_address_exists() -> Result<
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn numeric_name_remains_stable_when_its_address_is_allocated_later() -> Result<()> {
-    let file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+    let (_file, mut storage) = test_store::links()?;
     let auto = QueryProcessor::new(false).with_auto_create_missing_references(true);
     let strict = QueryProcessor::new(false);
     auto.process_query(&mut storage, "() ((p: x '99'))")?;
@@ -97,7 +99,8 @@ fn numeric_name_remains_stable_when_its_address_is_allocated_later() -> Result<(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn quoted_and_encoded_references_preserve_literal_names() -> Result<()> {
     for name in [
         "*",
@@ -111,8 +114,7 @@ fn quoted_and_encoded_references_preserve_literal_names() -> Result<()> {
         "\"one\"",
         "both'\"quotes",
     ] {
-        let file = NamedTempFile::new()?;
-        let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+        let (_file, mut storage) = test_store::links()?;
         let auto = QueryProcessor::new(false).with_auto_create_missing_references(true);
         let strict = QueryProcessor::new(false);
         let literal = links_notation::encode_reference_literal(name);
@@ -129,7 +131,8 @@ fn quoted_and_encoded_references_preserve_literal_names() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn query_quotes_follow_notation_delimiter_rules() -> Result<()> {
     for (reference, name) in [
         ("''1''", "1"),
@@ -143,8 +146,7 @@ fn query_quotes_follow_notation_delimiter_rules() -> Result<()> {
         ("\"unclosed", "\"unclosed"),
         ("`unclosed", "`unclosed"),
     ] {
-        let file = NamedTempFile::new()?;
-        let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+        let (_file, mut storage) = test_store::links()?;
         let auto = QueryProcessor::new(false).with_auto_create_missing_references(true);
         auto.process_query(
             &mut storage,
@@ -157,27 +159,26 @@ fn query_quotes_follow_notation_delimiter_rules() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn exported_numeric_names_can_be_replayed_as_a_query() -> Result<()> {
-    let source_file = NamedTempFile::new()?;
-    let mut source = LinkStorage::new(source_file.path().to_str().unwrap(), false)?;
+    let (_source_file, mut source) = test_store::links()?;
     let strict = QueryProcessor::new(false);
     strict.process_query(
         &mut source,
         "() ((1: 1 1) ('1': '1' '1') ('0': '0' '0') ('42': '42' '42') (p: 1 '1'))",
     )?;
     let exported = source.lino_lines();
-    let destination_file = NamedTempFile::new()?;
-    let mut destination = LinkStorage::new(destination_file.path().to_str().unwrap(), false)?;
+    let (_destination_file, mut destination) = test_store::links()?;
     strict.process_query(&mut destination, &format!("() ({})", exported.join(" ")))?;
     assert_eq!(exported, destination.lino_lines());
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn normalized_trigger_query_keeps_quoted_names_and_bare_addresses() -> Result<()> {
-    let file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+    let (_file, mut storage) = test_store::links()?;
     let auto = QueryProcessor::new(false).with_auto_create_missing_references(true);
     let parsed = link_cli::PersistentTransformationQuery::parse(
         "() ((a: a a) (p: a '0') (q: a '1') (r: a 1))",
@@ -195,7 +196,8 @@ fn normalized_trigger_query_keeps_quoted_names_and_bare_addresses() -> Result<()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn trigger_normalization_preserves_existing_named_query_text() -> Result<()> {
     let condition = "((p: 'source name' \"target's name\"))";
     let substitution = "((p: 'source name' \"next's name\"))";
@@ -207,10 +209,10 @@ fn trigger_normalization_preserves_existing_named_query_text() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn public_validator_preserves_literal_quotes_in_parsed_names() -> Result<()> {
-    let file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+    let (_file, mut storage) = test_store::links()?;
     let name = "\"one\"";
     storage.get_or_create_named(name);
     // Public callers supply already-decoded identifiers, without the query

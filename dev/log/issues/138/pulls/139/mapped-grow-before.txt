@@ -1,0 +1,36 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Unchanged source: 89fbfadf145dab8e5671838f47752d2e047ed7c9
+Replay: bash experiments/issue-138/run-mapped-grow-before.sh
+Saved replay: experiments/issue-138/mapped-grow-baseline.nkgYEe/
+Driver: experiments/issue-138/mapped-grow-baseline-reproduction.log
+
+The new durable tests precede production changes. The immutable replay copies
+only those tests into archived 89fbfad and builds separate artifacts. Its
+tests.log has 120 lines: one passed, five failed, one parent-driven child ignored.
+Lines 79-92: a fresh nonzero fill returns zeros and the callback reports 24
+initialized items instead of the eight actually present in the original file.
+Lines 94-107: overflow, panicking fill and quota rejection leave the retained
+checked flush handle reporting an unfinished remap. The generic destructor
+single-owner control passes; it is not evidence for failed destructor growth.
+
+The independent child probe demonstrates the actual stale allocation, rather
+than merely the barrier error. With a 4 KiB file-size quota, growing 32 u64
+items by 8,192 returns EFBIG. The logical allocation still reports length 32;
+its safe public prefix read then terminates with SIGSEGV (exit -11). A separate
+within-quota growth control exits zero and preserves value 42. Complete output
+is retained in the replay directory's quota.log and the original
+experiments/issue-138/mapped-grow-failure-before.log.
+
+The runner bounds each child to 256 MiB address space, 8 MiB stack, 4 KiB file,
+5/6 CPU seconds, no core dumps and a 30-second child deadline. Both children
+are killed/reaped on errors and all temporary data is removed. The durable
+quota test independently bounds/reaps its own child and restores its soft file
+quota before coverage cleanup. Build jobs are serial with debug info disabled.
+
+Source trace: platform-mem 0.3.0 FileMapped::grow drops its mmap before metadata,
+set_len and map_mut can fail. Its RawPlace retains the previous address on an
+error. FileMapped::new also pads to 4 KiB; physical file length alone therefore
+cannot establish which elements were initialized by this owner or persisted
+before it opened the file. FileMappedValue and destructor compatibility remain
+separate contracts. Failed shrink, arbitrary destructor-bearing failed growth,
+physical page recovery and hardware power loss remain unverified/unfixed here.

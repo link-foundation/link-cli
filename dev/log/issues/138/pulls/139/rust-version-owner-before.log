@@ -1,0 +1,69 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 0.53s
+     Running tests/version_commit_retry_tests.rs (rust/target/debug/deps/version_commit_retry_tests-626f67a5a8b45067)
+
+running 11 tests
+
+thread 'create_is_fenced_until_version_publication' (773938) panicked at tests/version_commit_retry_tests.rs:92:5:
+create must wait for version publication
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test create_is_fenced_until_version_publication ... FAILED
+
+thread 'ensure_is_fenced_until_version_publication' (773940) panicked at tests/version_commit_retry_tests.rs:92:5:
+ensure must wait for version publication
+test ensure_is_fenced_until_version_publication ... FAILED
+
+thread 'delete_is_fenced_until_version_publication' (773939) panicked at tests/version_commit_retry_tests.rs:92:5:
+delete must wait for version publication
+test delete_is_fenced_until_version_publication ... FAILED
+
+thread 'composite_is_fenced_until_version_publication' (773937) panicked at tests/version_commit_retry_tests.rs:92:5:
+composite must wait for version publication
+
+thread 'get_or_create_is_fenced_until_version_publication' (773941) panicked at tests/version_commit_retry_tests.rs:92:5:
+get_or_create must wait for version publication
+test composite_is_fenced_until_version_publication ... FAILED
+test get_or_create_is_fenced_until_version_publication ... FAILED
+
+thread 'remove_name_is_fenced_until_version_publication' (773957) panicked at tests/version_commit_retry_tests.rs:92:5:
+remove_name must wait for version publication
+test remove_name_is_fenced_until_version_publication ... FAILED
+
+thread 'rollback_after_committed_checkpoint_failure_finishes_publication' (773958) panicked at tests/version_commit_retry_tests.rs:54:5:
+assertion `left == right` failed: known commit must publish through cleanup
+  left: 2
+ right: 4
+test rollback_after_committed_checkpoint_failure_finishes_publication ... FAILED
+
+thread 'set_name_is_fenced_until_version_publication' (773960) panicked at tests/version_commit_retry_tests.rs:92:5:
+set_name must wait for version publication
+test set_name_is_fenced_until_version_publication ... FAILED
+
+thread 'save_after_committed_checkpoint_failure_finishes_publication' (773959) panicked at tests/version_commit_retry_tests.rs:54:5:
+assertion `left == right` failed: known commit must publish through cleanup
+  left: 2
+ right: 4
+test save_after_committed_checkpoint_failure_finishes_publication ... FAILED
+
+thread 'update_is_fenced_until_version_publication' (773961) panicked at tests/version_commit_retry_tests.rs:92:5:
+update must wait for version publication
+test update_is_fenced_until_version_publication ... FAILED
+test commit_retry_after_committed_checkpoint_failure_finishes_publication ... ok
+
+failures:
+
+failures:
+    composite_is_fenced_until_version_publication
+    create_is_fenced_until_version_publication
+    delete_is_fenced_until_version_publication
+    ensure_is_fenced_until_version_publication
+    get_or_create_is_fenced_until_version_publication
+    remove_name_is_fenced_until_version_publication
+    rollback_after_committed_checkpoint_failure_finishes_publication
+    save_after_committed_checkpoint_failure_finishes_publication
+    set_name_is_fenced_until_version_publication
+    update_is_fenced_until_version_publication
+
+test result: FAILED. 1 passed; 10 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+error: test failed, to rerun pass `--test version_commit_retry_tests`

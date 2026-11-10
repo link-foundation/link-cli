@@ -1,0 +1,70 @@
+Engine journal compaction: exact-head CI verification
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 133c4ff4a51240cda983dc34f7e4ca58c44d1c4c
+All workflows were created 2026-10-26T17:36:05Z, after the commit.
+
+https://github.com/link-foundation/link-cli/actions/runs/40370140447
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:36:49Z; success
+  Check Links: success
+https://github.com/link-foundation/link-cli/actions/runs/40370140610
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:37:18Z; success
+  Dependencies are on their latest versions: success
+https://github.com/link-foundation/link-cli/actions/runs/40370140414
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:39:07Z; success
+  zizmor: success
+  Workflow Policy Tests: success
+  Lint Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40370140435
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:40:01Z; success
+  Build documentation: success
+  Deploy to GitHub Pages: skipped
+https://github.com/link-foundation/link-cli/actions/runs/40370140625
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:42:00Z; success
+  Unit tests and types: success
+  Conformance on Node.js, Bun and Deno: success
+  Verify npm trusted publishing: skipped
+  Release to npm: success
+https://github.com/link-foundation/link-cli/actions/runs/40370140442
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:45:15Z; success
+  Dependency Review: success
+  Cargo audit (rust/wasm): success
+  CodeQL (actions): success
+  CodeQL (javascript-typescript): success
+  Audit npm lock: success
+  Scan for committed secrets: success
+  CodeQL (rust): success
+  CodeQL (csharp): success
+  Cargo audit (rust): success
+https://github.com/link-foundation/link-cli/actions/runs/40370140487
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:49:06Z; success
+  WASM coverage: success
+  Test: success
+https://github.com/link-foundation/link-cli/actions/runs/40370140470
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:50:19Z; success
+  Detect Changes: success
+  Verify NuGet trusted publishing: skipped
+  Create Changeset PR: skipped
+  Changeset Validation: success
+  Lint and Format Check: success
+  Simulate Fresh Merge: success
+  Test (ubuntu-24.04): success
+  Test (macos-26): success
+  Test (windows-2025): success
+  Build Package: success
+  Release: skipped
+  Instant Release: skipped
+https://github.com/link-foundation/link-cli/actions/runs/40370140433
+Created 2026-10-26T17:36:05Z; finished 2026-10-26T17:51:58Z; success
+  Rust coverage: success
+  Detect Changes: success
+  Create Changelog PR: skipped
+  Verify crates.io trusted publishing: skipped
+  Lint and Format Check: success
+  Changelog Fragment Check: success
+  Simulate Fresh Merge: success
+  Test (macos-26): success
+  Test (ubuntu-24.04): success
+  Test (windows-2025): success
+  Build Package: success
+  Manual Release: skipped
+  Auto Release: skipped

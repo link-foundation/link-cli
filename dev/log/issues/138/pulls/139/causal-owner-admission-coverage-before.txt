@@ -1,0 +1,14 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Coverage audit before additional local-owner admission controls.
+Production and baseline test head: d00e02232812346ace3525efb3525fc42fd6d17e.
+The complete C# Release suite passes 2475 tests. Its retained production report includes CausalReplica.cs at 108/108 executable lines and 174/180 branches.
+These are missing test conditions, not demonstrated production failures. The production implementation remains unchanged.
+Complete XML report SHA256: 165b072733280a9747053d1fa88e971a41105aa5f06d2f6f2391122ca1488564.
+Remaining component conditions:
+121: 75% (6/8): if (result is null || result.Count != 1 || result[0] is null || result[0].Entries is null) throw Invalid();
+93: 91.66% (22/24): if (string.IsNullOrEmpty(key) || key.Length > 128 || key.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('.' or '_' or '-')) ||
+70: 83.33% (5/6): if (entry.ValueKind != JsonValueKind.Array || entry.GetArrayLength() < 1 || entry[0].ValueKind != JsonValueKind.String) throw Invalid();
+78: 83.33% (5/6): if (entry.GetArrayLength() != 4 || entry[0].GetString() != "causal-write1" || entry[1].ValueKind != JsonValueKind.String) throw Invalid();
+The first additional controls cover four missing Release branches (178/180); the remaining two optimized conditions are on the constructor admission line. Add both upper entry/byte-limit refusals as well.
+Additional public controls exercise all allowed key punctuation and the maximum 128-character key with a real write/read; null whole reads, null rows and null row entries; empty/non-string-tag/unknown-tag/non-string-token journal entries.
+Rejected journal/provider shapes must not publish; the mock publication count remains unchanged. Full current Debug/Release coverage supplies the after measurement.

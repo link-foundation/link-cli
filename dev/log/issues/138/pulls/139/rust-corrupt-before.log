@@ -1,0 +1,24 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.31s
+     Running tests/acid_readiness_tests.rs (rust/target/debug/deps/acid_readiness_tests-e138f3ccc7e92427)
+
+running 3 tests
+test recovery_refuses_a_complete_corrupt_transition ... FAILED
+test rollback_is_persistent_before_its_marker ... ok
+test committed_buffered_store_survives_reopen_without_save ... ok
+
+failures:
+
+---- recovery_refuses_a_complete_corrupt_transition stdout ----
+
+thread 'recovery_refuses_a_complete_corrupt_transition' (10228) panicked at tests/acid_readiness_tests.rs:79:5:
+a complete corrupt entry must not silently erase a committed write
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    recovery_refuses_a_complete_corrupt_transition
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--test acid_readiness_tests`

@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-mapped-grow-before.sh
+Reproduce: bash experiments/issue-138/validate-mapped-grow.sh
+Immutable 89fbfad: five durable regressions fail; the generic destructor control passes.
+Independent finite 4 KiB quota child reproduces stale-pointer SIGSEGV; a within-quota control passes.
+START 2026-10-27T09:57:45Z
+FOCUSED AND STRICT CHECKS PASS 2026-10-27T09:59:06Z
+NATIVE PASS 2026-10-27T10:16:58Z
+ACTUAL WASM PASS 2026-10-27T10:22:16Z
+ALL PASS 2026-10-27T10:22:42Z
+api-after: six flush and six growth controls pass, one parent-driven child entry ignored.
+default-after: six flush and six growth controls pass, one parent-driven child entry ignored.
+Nine ownership/growth unit controls pass, including injected mapping-after-extension and clone failures.
+Finite quota probe retains pointer, prefix and checked flush after EFBIG; owned-flush example passes.
+Native Rust: 1184 passed; 22 parent-driven child entries ignored by normal harness.
+Complete lines: 17176/18090 (94.94748%)
+Complete branches: 3291/3780 (87.06349%)
+Complete functions: 2223/2389 (93.05149%)
+Complete regions: 26422/28631 (92.28459%)
+Complete instantiations: 12326/21983 (56.07060%)
+/rust/src/storage/file_mem_grow.rs lines: 43/45 (95.55556%)
+/rust/src/storage/file_mem_grow.rs branches: 1/2 (50.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 4/4 (100.00000%)
+/rust/src/storage/file_mem.rs lines: 94/142 (66.19718%)
+/rust/src/storage/file_mem.rs branches: 3/6 (50.00000%)
+/rust/src/storage/file_mem.rs functions: 16/23 (69.56522%)
+/rust/src/storage/mapped_flush.rs lines: 82/82 (100.00000%)
+/rust/src/storage/mapped_flush.rs branches: 4/4 (100.00000%)
+/rust/src/storage/mapped_flush.rs functions: 17/17 (100.00000%)
+Actual WASM: 723 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 13144/15737 (83.52291%)
+Complete branches: 2663/3171 (83.97982%)
+Complete functions: 1636/2057 (79.53330%)
+Complete regions: 20244/24787 (81.67184%)
+Complete instantiations: 4342/7495 (57.93195%)
+/rust/src/storage/file_mem_grow.rs lines: 0/45 (0.00000%)
+/rust/src/storage/file_mem_grow.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 0/4 (0.00000%)
+/rust/src/storage/file_mem.rs lines: 0/80 (0.00000%)
+/rust/src/storage/file_mem.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem.rs functions: 0/13 (0.00000%)
+/rust/src/storage/mapped_flush.rs lines: 0/82 (0.00000%)
+/rust/src/storage/mapped_flush.rs branches: 0/2 (0.00000%)
+/rust/src/storage/mapped_flush.rs functions: 0/17 (0.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.97s
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, native/WASM strict Clippy, source sizes, changeset, dependency freshness and workflow/ShellCheck checks pass.
+Growth prepares one temporary overlapping mapping and cloned file; Windows additionally uses a temporary mapping handle when extending.
+No heap copy of the old allocation or private upstream layout is used. Prefix edits during a panicking callback can remain observable.
+Generic destructor-bearing growth and failed shrink safety remain unfinished; no physical torn-page repair or hardware power-loss claim.
+Every production coverage denominator remains included. Complete native/C#/linked-WASM 100% and other unmet R1-R12 criteria remain open.
+Fresh exact-head Windows/Linux/macOS CI is still required. The PR remains draft and unmerged.

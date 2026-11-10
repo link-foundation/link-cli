@@ -1,0 +1,45 @@
+✔ etcd snapshot reads all selected journals atomically and compares modification generations (59.047608ms)
+✔ read failover is bounded while an uncertain commit is never replayed (3.547216ms)
+✔ malformed, oversized and rejected coordinator responses fail closed (5.51598ms)
+✔ invalid cluster coordinates are rejected before network I/O (1.319252ms)
+✔ close waits for an in-flight commit and frees every workspace after cleanup failure (5.409091ms)
+✔ cluster validates configuration and snapshots before creating private engines (2.039043ms)
+✖ cluster freezes its expected snapshot, rejects stale groups, and classifies custom store I/O (6.8622ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 260.905855
+
+✖ failing tests:
+
+test at js/client/test/cluster.test.mjs:115:1
+✖ cluster freezes its expected snapshot, rejects stale groups, and classifies custom store I/O (6.8622ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + Comparison {}
+  - Comparison {
+  -   outcome: 'unknown'
+  - }
+
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:129:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: connection lost
+        at store.compareExchange (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:126:47)
+        at #commit (file:///tmp/gh-issue-solver-1792854251187/js/client/src/cluster.js:180:30)
+        at async waitForActual (node:assert:615:5)
+        at async strict.rejects (node:assert:738:25)
+        at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:129:3)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:974:7),
+    expected: { outcome: 'unknown' },
+    operator: 'rejects',
+    diff: 'simple'
+  }

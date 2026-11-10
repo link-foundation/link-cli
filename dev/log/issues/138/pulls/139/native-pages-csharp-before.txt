@@ -1,0 +1,12 @@
+Public C# native page file contract before implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedCommitLogTests.cs(22,41): error CS0246: The type or namespace name 'FilePageDevice' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedCommitLogTests.cs(24,35): error CS0246: The type or namespace name 'PagedCommitLog' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedCommitLogTests.cs(25,61): error CS0246: The type or namespace name 'FilePageDevice' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedCommitLogTests.cs(28,42): error CS0246: The type or namespace name 'FilePageDevice' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedCommitLogTests.cs(29,79): error CS0246: The type or namespace name 'PagedCommitLog' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]

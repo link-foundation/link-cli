@@ -1,0 +1,46 @@
+Movement child supervision: preserved Windows failure and bounded correction
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published failing head: d12760fc13db30439d114ee15ab98be970aae5f1
+Workflow created: 2026-10-27T00:45:24Z
+Run: https://github.com/link-foundation/link-cli/actions/runs/40428407830
+Failed job: https://github.com/link-foundation/link-cli/actions/runs/40428407830/job/121940440242
+Windows job started 00:47:11Z and completed 00:56:40Z on 2026-10-27.
+Eight other workflows pass on this exact head. Rust Ubuntu/macOS/coverage pass.
+
+Downloaded full log: experiments/issue-138/ci-logs/rust-40428407830.log
+The 45,246-line log is preserved locally and inspected in bounded excerpts.
+Lines 36794-36796 name all three failing movement parent tests.
+Line 36801: Finite movement child did not stop: intent-flush-after/true.
+Line 36817: Finite movement child did not stop: intent-flush-after/false.
+Line 36833: Finite movement child did not stop: intent-flush-after/false.
+Line 36851: 0 passed; 3 failed; 1 ignored; finished in 10.69s.
+Line 36854: process exited with code 1.
+
+The setup diagnostics are decisive: original naming starts at 3.878s, branch
+creation at 7.615s and update at 7.621s in the first child. Other children reach
+update at 7.919s and 7.647s. None has installed the requested movement fault yet.
+The old deadline measures accumulated finite setup plus the requested operation,
+so it kills progressing children before the persistence cut under examination.
+The underlying source of Windows mapped-file barrier latency is not established.
+
+The correction keeps the ten-second idle deadline. Progress is a canonical,
+strictly increasing sequence of at most 64 phase lines, with at most 192 bytes.
+Only complete new phases reset the clock; repeated, partial or invalid lines do
+not. Setup and metadata callbacks emit phases; durability decisions and the 40
+original crash/recovery scenarios are unchanged. Supervisor errors kill and
+reap the child. The progress channel is test supervision, not durability proof.
+
+Three additional deterministic controls verify slow total but progressing work,
+stalled/repeated/partial progress, finite parsing, and actual child cleanup after
+parser, deadline and filesystem errors. The finite cleanup child has a one-second
+fallback lifetime. No persistent process or unbounded stress probe is introduced.
+
+Validation: full focused target passes 6 tests; two child entries are ignored
+and invoked by their bounded parents. Strict Clippy and formatting pass.
+A clean committed-production archive plus only the two changed harness files
+is checked separately by experiments/issue-138/validate-movement-progress.sh;
+its output is movement-progress-isolated.log. Fresh Windows CI remains required.
+All 221 repository checks and all 594 native source file size checks pass.
+Tracking the new baseline fixture manifests first exposed a Dependabot policy
+failure; both fixture directories are now watched and all 221 checks then pass.
+Physical-store production changes are excluded from this atomic CI correction.

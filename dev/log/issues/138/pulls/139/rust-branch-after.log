@@ -1,0 +1,20 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.85s
+     Running tests/engine_branch_fault_tests.rs (rust/target/debug/deps/engine_branch_fault_tests-972e981792306f20)
+
+running 2 tests
+test failed_merge_is_indeterminate_and_replay_recovers_it_once ... ok
+test failed_branch_seed_does_not_modify_parent_and_unfinished_writes_do_not_merge ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/engine_branch_tests.rs (rust/target/debug/deps/engine_branch_tests-c19cd4215770f3ff)
+
+running 5 tests
+test branch_merge_base_survives_reopening_and_history_eviction ... ok
+test fork_refuses_existing_logs_and_resume_requires_a_real_branch_revision ... ok
+test branches_merge_independent_changes_and_reject_overlapping_edits ... ok
+test merge_obeys_exclusive_admission_constraints_and_conflict_validation ... ok
+test allocator_only_merge_is_durable_even_when_no_rows_survive ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

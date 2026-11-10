@@ -1,0 +1,22 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.86]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.EmptyNamesAndZeroAddressNamesKeepDistinctPresenceAndOwners [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.EmptyNamesAndZeroAddressNamesKeepDistinctPresenceAndOwners [87 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   ""
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.EmptyNamesAndZeroAddressNamesKeepDistinctPresenceAndOwners() in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 96
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:     9, Skipped:     0, Total:    10, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

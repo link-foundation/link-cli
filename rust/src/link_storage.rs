@@ -15,6 +15,9 @@ use crate::indexed_links::LinksMap;
 use crate::link::Link;
 use crate::named_type_links::escape_lino_reference;
 use crate::storage::StorageRevision;
+use crate::text_storage_format::{
+    name_metadata, needs_name_metadata, parse_link_line, parse_name_metadata, NAME_HEADER,
+};
 
 /// Callback invoked once per `(before, after)` change a write produced.
 ///
@@ -23,7 +26,8 @@ use crate::storage::StorageRevision;
 /// only stay in sync if they can see all of them. This is the equivalent of the
 /// `WriteHandler` the C# implementation threads through every decorator. A
 /// change whose `after` [`is null`](Link::is_null) is a deletion.
-pub type ChangeObserver<'a> = &'a mut dyn FnMut(Link, Link);
+pub type ChangeObserver<'a, T = u32> =
+    &'a mut dyn FnMut(crate::GenericLink<T>, crate::GenericLink<T>);
 
 /// Adapts a [`ChangeObserver`] to the `doublets` write handler signature.
 fn observe(
@@ -121,6 +125,20 @@ impl LinkStorage {
         }
     }
 
+    /// Own the exact recycling state for query preview without file I/O.
+    pub(crate) fn query_copy(&self) -> Self {
+        let mut copy = Self::in_memory(false);
+        copy.links = LinksMap::Plain(self.links.iter().map(|(id, row)| (*id, *row)).collect());
+        copy.names = self.names.clone();
+        copy.name_to_id = self.name_to_id.clone();
+        copy.allocated = self.allocated;
+        copy.unused = self.unused.clone();
+        if self.links.indexed().is_some() {
+            copy.enable_indexed_lookups();
+        }
+        copy
+    }
+
     /// Adds an optional lookup-index decorator, retaining the scan-based
     /// implementation when this builder is not called. Indexes use O(n) memory
     /// and are rebuilt from persisted links when enabled after opening a store.
@@ -132,7 +150,7 @@ impl LinkStorage {
     pub(crate) fn enable_indexed_lookups(&mut self) {
         self.links.enable_index();
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[TRACE] IndexedLinksDecorator enabled for {} links",
                 self.links.len()
             );
@@ -177,20 +195,17 @@ impl LinkStorage {
         Ok(())
     }
 
-    /// Discards in-memory state and re-reads the database file.
+    /// Replaces in-memory state only after the entire database loads successfully.
     pub fn reload_from_disk(&mut self) -> Result<()> {
-        self.links.clear();
-        self.names.clear();
-        self.name_to_id.clear();
-        self.allocated = 0;
-        self.unused.clear();
-        if self.is_in_memory() {
-            return Ok(());
+        let mut loaded = if self.is_in_memory() {
+            Self::in_memory(self.trace)
+        } else {
+            Self::new(&self.db_path, self.trace)?
+        };
+        if self.links.indexed().is_some() {
+            loaded.enable_indexed_lookups();
         }
-        if self.db_path.exists() {
-            self.load()?;
-        }
-        self.revision = StorageRevision::of(&self.db_path)?;
+        *self = loaded;
         Ok(())
     }
 
@@ -202,12 +217,30 @@ impl LinkStorage {
         let reader = BufReader::new(file);
         let mut recorded_unused = None;
 
-        for line in reader.lines() {
-            let line = line?;
+        for (number, line) in reader.lines().enumerate() {
+            let line = line.with_context(|| {
+                format!(
+                    "Failed to read {} at line {}",
+                    self.db_path.display(),
+                    number + 1
+                )
+            })?;
             let line = line.trim();
 
             if let Some(addresses) = line.strip_prefix(UNUSED_HEADER) {
                 recorded_unused = Some(Self::parse_unused_header(addresses));
+                continue;
+            }
+
+            if let Some(metadata) = line.strip_prefix(NAME_HEADER) {
+                let (id, name) = parse_name_metadata(metadata).with_context(|| {
+                    format!(
+                        "Invalid name metadata in {} at line {}",
+                        self.db_path.display(),
+                        number + 1
+                    )
+                })?;
+                self.set_name(id, &name);
                 continue;
             }
 
@@ -216,14 +249,13 @@ impl LinkStorage {
             }
 
             // Parse link format: (index source target) or (index source target "name")
-            if let Some((link, name)) = self.parse_link_line(line) {
+            if let Some((link, name)) = parse_link_line(line) {
                 self.links.insert(link.index, link);
                 if link.index > self.allocated {
                     self.allocated = link.index;
                 }
                 if let Some(name) = name {
-                    self.names.insert(link.index, name.clone());
-                    self.name_to_id.insert(name, link.index);
+                    self.set_name(link.index, &name);
                 }
             }
         }
@@ -231,7 +263,7 @@ impl LinkStorage {
         self.unused = self.restore_unused(recorded_unused);
 
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[TRACE] Loaded {} links from {}",
                 self.links.len(),
                 self.db_path.display()
@@ -239,27 +271,6 @@ impl LinkStorage {
         }
 
         Ok(())
-    }
-
-    /// Parses a single link line from the database
-    fn parse_link_line(&self, line: &str) -> Option<(Link, Option<String>)> {
-        // Simple format: (index source target) or (index source target "name")
-        let line = line.trim_matches(|c| c == '(' || c == ')');
-        let parts: Vec<&str> = line.split_whitespace().collect();
-
-        if parts.len() >= 3 {
-            let index = parts[0].parse().ok()?;
-            let source = parts[1].parse().ok()?;
-            let target = parts[2].parse().ok()?;
-            let name = if parts.len() > 3 {
-                Some(parts[3].trim_matches('"').to_string())
-            } else {
-                None
-            };
-            return Some((Link::new(index, source, target), name));
-        }
-
-        None
     }
 
     /// Parses the addresses recorded by an [`UNUSED_HEADER`] line into the
@@ -387,7 +398,11 @@ impl LinkStorage {
         links.sort_by_key(|l| l.index);
 
         for link in links {
-            if let Some(name) = self.names.get(&link.index) {
+            if let Some(name) = self
+                .names
+                .get(&link.index)
+                .filter(|name| !needs_name_metadata(name))
+            {
                 writeln!(
                     writer,
                     "({} {} {} \"{}\")",
@@ -398,13 +413,25 @@ impl LinkStorage {
             }
         }
 
+        // Names need not have rows. Controls use this versioned comment rather
+        // than inserting line breaks into the line-oriented row grammar.
+        let mut metadata = self
+            .names
+            .iter()
+            .filter(|(id, name)| !self.links.contains_key(*id) || needs_name_metadata(name))
+            .collect::<Vec<_>>();
+        metadata.sort_by_key(|(id, _)| **id);
+        for (id, name) in metadata {
+            writeln!(writer, "{}", name_metadata(*id, name))?;
+        }
+
         writer.flush()?;
         drop(writer);
         std::fs::rename(&saving, &self.db_path)
             .with_context(|| format!("Failed to replace database: {}", self.db_path.display()))?;
 
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[TRACE] Saved {} links to {}",
                 self.links.len(),
                 self.db_path.display()
@@ -425,7 +452,7 @@ impl LinkStorage {
         self.links.insert(id, link);
 
         if self.trace {
-            eprintln!("[TRACE] Created link: ({} {} {})", id, source, target);
+            crate::diagnostics::stderr!("[TRACE] Created link: ({} {} {})", id, source, target);
         }
 
         id
@@ -468,7 +495,7 @@ impl LinkStorage {
         }
 
         if self.trace {
-            eprintln!("[TRACE] Ensured link: ({} 0 0)", id);
+            crate::diagnostics::stderr!("[TRACE] Ensured link: ({} 0 0)", id);
         }
 
         id
@@ -494,9 +521,13 @@ impl LinkStorage {
     pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
         if let Some(before) = self.links.get(&id).copied() {
             if self.trace {
-                eprintln!(
+                crate::diagnostics::stderr!(
                     "[TRACE] Updating link {} from ({} {}) to ({} {})",
-                    id, before.source, before.target, source, target
+                    id,
+                    before.source,
+                    before.target,
+                    source,
+                    target
                 );
             }
             self.links.insert(id, Link::new(id, source, target));
@@ -520,9 +551,11 @@ impl LinkStorage {
         if let Some(link) = self.links.remove(&id) {
             self.release(id);
             if self.trace {
-                eprintln!(
+                crate::diagnostics::stderr!(
                     "[TRACE] Deleted link: ({} {} {})",
-                    link.index, link.source, link.target
+                    link.index,
+                    link.source,
+                    link.target
                 );
             }
             Ok(link)
@@ -760,23 +793,17 @@ impl LinkStorage {
         self.format_structure_recursive(id, &mut visited)
     }
 
-    /// Recursively formats a link structure
+    /// Formats a source spine using explicit frames rather than call-stack depth.
     fn format_structure_recursive(&self, id: u32, visited: &mut HashSet<u32>) -> Result<String> {
-        let link = self.get(id).ok_or(LinkError::not_found(id))?;
-        if !visited.insert(id) {
-            return Ok(self.format_lino_reference(id));
-        }
-
-        let source = if self.exists(link.source) && !visited.contains(&link.source) {
-            self.format_structure_recursive(link.source, visited)?
-        } else {
-            self.format_lino_reference(link.source)
-        };
-        let target = self.format_lino_reference(link.target);
-        let index = self.format_lino_reference(link.index);
-        visited.remove(&id);
-
-        Ok(format!("({index}: {source} {target})"))
+        let mut store = self;
+        crate::structure_format::format_structure(
+            &mut store,
+            id,
+            visited,
+            |store, address| store.get(address).copied(),
+            |store, address| store.exists(address),
+            |store, address| Ok(store.format_lino_reference(address)),
+        )
     }
 
     /// Prints all links
@@ -811,7 +838,7 @@ impl LinkStorage {
             self.names.insert(id, name.to_string());
             self.name_to_id.insert(name.to_string(), id);
             if self.trace {
-                eprintln!("[TRACE] Created named link: {} => {}", name, id);
+                crate::diagnostics::stderr!("[TRACE] Created named link: {} => {}", name, id);
             }
             id
         }
@@ -829,7 +856,7 @@ impl LinkStorage {
         }
         self.names.insert(id, name.to_string());
         if self.trace {
-            eprintln!("[TRACE] Set name: {} => {}", id, name);
+            crate::diagnostics::stderr!("[TRACE] Set name: {} => {}", id, name);
         }
     }
 
@@ -848,7 +875,7 @@ impl LinkStorage {
         if let Some(name) = self.names.remove(&id) {
             self.name_to_id.remove(&name);
             if self.trace {
-                eprintln!("[TRACE] Removed name: {} => {}", id, name);
+                crate::diagnostics::stderr!("[TRACE] Removed name: {} => {}", id, name);
             }
         }
     }

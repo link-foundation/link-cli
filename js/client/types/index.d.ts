@@ -1,5 +1,192 @@
 import type { LinoDocument } from './lino.js';
 
+export interface EngineOptions {
+  /** Default full scans, or persistent indexes for only the selected constraints. */
+  constraintValidation?: 'scan' | 'indexed';
+  /** In-memory immutable state; independent of journal and isolation. */
+  stateStructure?: 'flat' | 'shared' | 'sorted-runs';
+  /** Logical journal records; independent of the physical delta decorator. */
+  revisionEncoding?: 'snapshot' | 'changes';
+  concurrency?: 'optimistic' | 'exclusive' | 'pessimistic';
+  /** With pessimistic concurrency, how long a request waits for another session's
+   * write address before answering busy; a wait closing a cycle is refused at once. */
+  lockWaitMs?: number;
+  isolation?: 'read-committed' | 'snapshot' | 'serializable';
+  /** Serializable point dependencies; scans conservatively validate the revision. */
+  serializableValidation?: 'revision' | 'read-set';
+  history?: null | 'all' | number;
+  constraints?: ('references' | 'unique-pairs' | 'unique-names')[];
+  trace?: boolean;
+  requireDurableFlush?: boolean;
+}
+export interface CommitLog {
+  /** Optional synchronous atomic replacement; false means identical records. */
+  readonly supportsReplacement?: boolean;
+  replace?(records: readonly string[]): boolean;
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class MemoryCommitLog implements CommitLog {
+  constructor(records?: string[]);
+  readonly supportsDurableFlush: false;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+/** Records `revision|unix milliseconds` in a second log for every appended record. */
+export class TimedCommitLog implements CommitLog {
+  constructor(inner: CommitLog, timeline: CommitLog, options?: { clock?: () => number });
+  readonly supportsDurableFlush: boolean;
+  readonly supportsReplacement: boolean;
+  replace(records: readonly string[]): boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+/** The latest revision written by `time`; refuses a time before the first timestamp. */
+export function revisionAt(timeline: CommitLog, time: Date | number): bigint;
+export class DeltaCommitLog implements CommitLog {
+  constructor(inner: CommitLog, options?: { checkpointInterval?: number });
+  readonly supportsDurableFlush: boolean;
+  readonly supportsReplacement: boolean;
+  replace(records: readonly string[]): boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class ReplicatedCommitLog implements CommitLog {
+  constructor(primary: CommitLog, replicas: CommitLog[], options?: { acknowledgements?: number | null; trace?: (message: string) => void });
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+  synchronize(): number;
+}
+export interface StagedSessionLike extends ClinkLike {
+  commit(): bigint;
+  rollback(): void;
+  savepoint?(): bigint;
+  rollbackTo?(savepoint: bigint): void;
+  releaseSavepoint?(savepoint: bigint): void;
+  lockForUpdate?(index: number): Uint32Array | undefined;
+}
+export interface StagedEngineLike {
+  begin(): StagedSessionLike;
+  group(): StagedCommitGroupLike;
+  snapshot(revision?: bigint): string;
+  journal(): string;
+  exportCheckpoint(revision?: bigint): string;
+  backup(destination: CommitLog, revision?: bigint): bigint;
+  backupIncremental(destination: CommitLog): bigint;
+  compactJournal(): boolean;
+  compactJournalAfter(commits: bigint): boolean;
+  fork(options: string, journal: string): StagedBranchLike;
+  forkWithLog(options: string, log: CommitLog): StagedBranchLike;
+  resume(options: string, journal: string, base: string): StagedBranchLike;
+  resumeWithLog(options: string, log: CommitLog, base: string): StagedBranchLike;
+  free(): void;
+}
+export interface StagedCommitGroupLike {
+  /** Takes ownership of the native session handle. */
+  add(session: StagedSessionLike): void;
+  commit(): string;
+  free(): void;
+}
+export type GroupCommitOutcome =
+  | { status: 'committed'; revision: bigint }
+  | { status: 'aborted' | 'indeterminate'; error: string };
+export interface StagedBranchLike {
+  engine(): StagedEngineLike;
+  merge(): bigint;
+  mergeBaseRecord(): string;
+  free(): void;
+}
+export class EngineClient extends LinksClient {
+  constructor(session: StagedSessionLike, capabilities?: { durableFlush?: boolean; persistent?: boolean });
+  commit(): Promise<bigint>;
+  rollback(): Promise<void>;
+  savepoint(): Promise<bigint>;
+  /** Restores staged writes only: reads stay validated and addresses stay retired. */
+  rollbackTo(savepoint: bigint): Promise<void>;
+  releaseSavepoint(savepoint: bigint): Promise<void>;
+  /**
+   * Reads a link and reserves its address until the session ends, like SQL
+   * `SELECT ... FOR UPDATE`. Needs `concurrency: 'pessimistic'`. Undefined for
+   * a missing address, which is reserved all the same.
+   */
+  lockForUpdate(
+    index: bigint | number | string,
+  ): Promise<{ index: bigint; source: bigint; target: bigint } | undefined>;
+}
+/** A savepoint covers this shard only, not the containing group. */
+export interface ClusterShardClient extends LinksClient {
+  savepoint(): Promise<bigint>;
+  rollbackTo(savepoint: bigint): Promise<void>;
+  releaseSavepoint(savepoint: bigint): Promise<void>;
+}
+export interface JournalCheck {
+  /** Records that replay, counted from the first: the valid prefix. */
+  validRecords: number;
+  totalRecords: number;
+  /** Revision after the valid prefix. */
+  revision: bigint;
+  /** Null when every record replays. */
+  damage: { record: number; reason: string } | null;
+}
+export interface JournalRecovery {
+  entries: string[];
+  /** Index of the copy that supplied `entries`; the first wins a tie. */
+  source: number;
+  revision: bigint;
+  checks: JournalCheck[];
+}
+export class WasmEngine {
+  constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
+  begin(): EngineClient;
+  /** Drains queued requests, consumes all members and shares one flush. */
+  commitGroup(sessions: EngineClient[]): Promise<GroupCommitOutcome[]>;
+  fork(options?: EngineOptions, journal?: string[] | CommitLog): WasmBranch;
+  resumeBranch(journal: string[] | CommitLog, mergeBaseRecord: string, options?: EngineOptions): WasmBranch;
+  snapshot(revision?: AddressInput): { revision: bigint; rows: (Link & { name: string | null })[] };
+  journal(): string[];
+  /** Retained committed snapshots; does not rewrite or publish the live log. */
+  exportCheckpoint(revision?: AddressInput): string[];
+  /** Copy a consistent cut to an empty log and verify it. Commits continue during
+   * the copy. Returns the revision it ends at. Discard the destination on failure. */
+  backup(destination: CommitLog, options?: { revision?: AddressInput }): bigint;
+  backupIncremental(destination: CommitLog): bigint;
+  /** Copy an archived journal to an empty log, stopping at one revision, and verify
+   * it. Opening the destination gives the engine at that revision, on a new timeline. */
+  static restoreBackup(
+    binding: object,
+    source: CommitLog,
+    destination: CommitLog,
+    options?: { revision?: AddressInput },
+  ): bigint;
+  /** The longest prefix opening would replay and the first damaged record. */
+  static checkJournal(binding: object, journal: string[], options?: EngineOptions): JournalCheck;
+  /** The longest valid prefix among copies; copies that disagree are refused. */
+  static recoverJournal(binding: object, copies: string[][], options?: EngineOptions): JournalRecovery;
+  /** Publish under the commit lock. Unknown outcomes require reopening. */
+  compactJournal(): boolean;
+  /** Compact once this many revisions have landed since the last compaction. */
+  compactJournalAfter(commits: AddressInput): boolean;
+  /** Call compactJournalAfter on a timer until stop(), which throws the first failure. */
+  compactEvery(schedule: { commits: AddressInput; periodMs: number }): { stop(): void };
+  close(): void;
+  [Symbol.dispose](): void;
+}
+export class WasmBranch {
+  private constructor();
+  readonly engine: WasmEngine;
+  merge(): bigint;
+  mergeBaseRecord(): string;
+  close(): void;
+  [Symbol.dispose](): void;
+}
+
 export type { LinoDocument, LinoLink, LinoNode, LinoRef } from './lino.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
 
@@ -80,6 +267,8 @@ export interface Capabilities {
   readonly transport: 'tcp' | 'in-process' | string;
   readonly protocol: 'links-text/1' | string;
   readonly operations: readonly string[];
+  /** Original query-text envelopes are understood by this peer. */
+  readonly losslessQueries?: boolean;
   readonly addressBits: number;
   readonly maxAddress: bigint;
   readonly atomicTransactions: boolean;
@@ -311,6 +500,32 @@ export class RemapLinks<Outer = bigint> extends LinksDecorator {
   toInner(outer: Outer | AddressInput): Promise<bigint | null>;
 }
 
+/** What a `CacheLinks` enforces. Each is optional, and the default is neither. */
+export interface CacheOptions {
+  /** How many links the store may hold, reached by evicting. */
+  maxLinks?: number | null;
+  /** The milliseconds a link created here has before it comes due. */
+  timeToLive?: number | null;
+  /** Milliseconds, `Date.now` by default. A step back delays what comes due. */
+  clock?: () => number;
+}
+/**
+ * `links` kept as a cache: what comes due goes, and capacity evicts the links used
+ * least recently that nothing else uses. Every write has to go through it.
+ */
+export interface CacheLinks extends Links {}
+export class CacheLinks extends LinksDecorator {
+  constructor(links: Links, options?: CacheOptions);
+  /** Deletes what is due now; resolves to how many links that deleted, cascades included. */
+  purgeExpired(options?: RequestOptions): Promise<number>;
+  /** Gives `link` a deadline in place of any it had; false when there is no such link. */
+  expire(link: AddressInput, milliseconds: number, options?: RequestOptions): Promise<boolean>;
+  /** Takes the deadline of `link` away; false when it had none. */
+  persist(link: AddressInput, options?: RequestOptions): Promise<boolean>;
+  /** The milliseconds `link` has left; null when it has no deadline or is gone. */
+  timeToLive(link: AddressInput, options?: RequestOptions): Promise<number | null>;
+}
+
 /** The name of the point every scheme of external ids starts from. */
 export const EXTERNAL_ID_NAME: 'ExternalId';
 /** The ids of one scheme (such as `uuid`) bound to links, stored as links; every method takes the store of the table. */
@@ -351,6 +566,11 @@ export class WasmTransport implements Transport {
   readonly capabilities: Capabilities;
   readonly stats: { requests: number; bytesSent: number; bytesReceived: number };
   send(text: string, scope?: Scope): Promise<string>;
+  control(method: 'commit'): Promise<bigint>;
+  control(method: 'rollback'): Promise<void>;
+  control(method: 'savepoint'): Promise<bigint>;
+  control(method: 'rollbackTo' | 'releaseSavepoint', savepoint: bigint): Promise<void>;
+  control(method: 'lockForUpdate', index: number): Promise<Uint32Array | undefined>;
   close(): Promise<void>;
 }
 export function createWasmClient(clink: ClinkLike, options?: WasmOptions): LinksClient;
@@ -361,4 +581,100 @@ export class MessageReader {
   constructor(options?: { maxBytes?: number });
   push(chunk: Uint8Array): string[];
   readonly midMessage: boolean;
+}
+
+
+export interface JournalVersion { generation: string; entries: string[] }
+export interface AtomicJournalStore {
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+/** Synchronous providers may be selected by consumers that await I/O results. */
+export interface SynchronousAtomicJournalStore {
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): JournalVersion[];
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): boolean;
+}
+export type AtomicJournalStoreProvider = AtomicJournalStore | SynchronousAtomicJournalStore;
+export interface EtcdJournalStoreOptions {
+  prefix?: string;
+  fetch?: typeof globalThis.fetch;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  maxRequestBytes?: number;
+  maxResponseBytes?: number;
+}
+/** Decoded key bytes + 8 generation bytes + UTF-8 records with one separator each.
+ * Container overhead also depends on the accounted record count. */
+export interface JournalScanOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; keysOnly?: boolean }
+export interface JournalNamespaceEntry { key: string; version: JournalVersion }
+export interface JournalMaintenanceStore extends AtomicJournalStore {
+  scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
+  compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
+}
+export interface SynchronousJournalMaintenanceStore extends SynchronousAtomicJournalStore {
+  scanNamespace(options?: JournalScanOptions): JournalNamespaceEntry[];
+  compareDelete(key: string, expectedGeneration: string): boolean;
+}
+export type JournalMaintenanceProvider = JournalMaintenanceStore | SynchronousJournalMaintenanceStore;
+export class EtcdJournalStore implements JournalMaintenanceStore {
+  constructor(endpoints: string[], options?: EtcdJournalStoreOptions);
+  scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
+  compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
+  readonly supportsDurableFlush: true;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+export class ClusterEngine {
+  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStoreProvider, options?: EngineOptions & { journalCheckpointInterval?: number });
+  begin(keys: string[]): Promise<ClusterTransaction>;
+}
+export class ClusterTransaction {
+  private constructor();
+  shard(key: string): ClusterShardClient;
+  commit(): Promise<void>;
+  rollback(): Promise<void>;
+  close(): Promise<void>;
+  [Symbol.asyncDispose](): Promise<void>;
+}
+export type {
+  RaftCommand,
+  RaftEntry,
+  RaftEnvelope,
+  RaftHardState,
+  RaftMessage,
+  RaftOutcome,
+} from './raft.js';
+export { JournalState, RaftConfig, RaftNode, RaftRole } from './raft.js';
+/** Bounded immutable journal chunk write policy, independent of read caching. */
+export interface JournalChunkOptions {
+  /** Positive record limit, at most 65,536; default 64. */
+  maxRecords?: number;
+  /** UTF-8 payload bytes per chunk, at most 8,388,608; default 65,536. */
+  maxBytes?: number;
+  /** Positive manifest bound, at most 4,096; default 1,024. */
+  maxChunks?: number;
+}
+/** Immutable data objects in independent stores; atomic publication in a catalog. */
+export class PartitionedJournalStore implements AtomicJournalStore {
+  /** Cache budget counts one byte per object/record plus record UTF-8 bytes; zero disables. Catalogs stay fresh. */
+  constructor(catalog: AtomicJournalStoreProvider, partitions: Record<string, AtomicJournalStoreProvider>, route: (shard: string) => string, options?: { cacheBytes?: number; chunks?: JournalChunkOptions | null });
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+
+/** Dedicated epoch-fenced namespaces; collection is caller-selected and never automatic. */
+export interface ReclamationOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; cacheBytes?: number; chunks?: JournalChunkOptions | null }
+export interface ReclamationResult { epoch: string; examined: number; deleted: number }
+export class ReclaimingPartitionedJournalStore implements AtomicJournalStore {
+  private constructor();
+  static open(catalog: JournalMaintenanceProvider, partitions: Record<string, JournalMaintenanceProvider>, route: (shard: string) => string, options?: ReclamationOptions): Promise<ReclaimingPartitionedJournalStore>;
+  readonly supportsDurableFlush: boolean;
+  /** 1..31 distinct nonreserved shards; returned groups are owned. */
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+  /** Null means a known competing epoch. Errors can follow acknowledged cuts. */
+  collectGarbage(): Promise<ReclamationResult | null>;
 }

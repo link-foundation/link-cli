@@ -1,0 +1,34 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 10.13s
+     Running tests/transaction_name_failure_tests.rs (rust/target/debug/deps/transaction_name_failure_tests-799f74ef8b98b13d)
+
+running 1 test
+[Transactions] Recorded Create seq=1 tx=000001a1737334440000000000000000: (0,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1737334440000000000000000 (mode=Sync, transitions=1).
+[Transactions] Recorded Create seq=2 tx=000001a1737334450000000000000001: (0,0,0) -> (2,13,14).
+[Transactions] Committed tx 000001a1737334450000000000000001 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=3 tx=000001a1737334460000000000000002: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1737334460000000000000002 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=4 tx=000001a1737334480000000000000003: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1737334480000000000000003 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=5 tx=000001a17373344b0000000000000004: (1,11,12) -> (1,21,22).
+[Transactions] Committed tx 000001a17373344b0000000000000004 (mode=Sync, transitions=1).
+test unobserved_name_owner_eviction_is_in_rollback_and_complete_history ... FAILED
+
+failures:
+
+---- unobserved_name_owner_eviction_is_in_rollback_and_complete_history stdout ----
+
+thread 'unobserved_name_owner_eviction_is_in_rollback_and_complete_history' (318188) panicked at tests/transaction_name_failure_tests.rs:384:13:
+assertion `left == right` failed
+  left: Some({1: "original"})
+ right: Some({1: "original", 2: "borrowed"})
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    unobserved_name_owner_eviction_is_in_rollback_and_complete_history
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--test transaction_name_failure_tests`

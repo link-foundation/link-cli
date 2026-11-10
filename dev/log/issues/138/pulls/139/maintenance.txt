@@ -1,0 +1,62 @@
+Optional namespace maintenance; https://github.com/link-foundation/link-cli/pull/139
+Missing-feature baseline df6e01cbdf08bd11470aac8a72ef1c57a5ca927d; maintenance-before.txt.
+Validation: bash experiments/issue-138/validate-maintenance.sh
+Sequential Cargo jobs1/reduced debug, .NET heap640MiB, verified actual-WASM cap256MiB.
+START native 2026-10-26T20:42:50Z
+PASS native; START csharp 2026-10-26T20:56:04Z
+PASS csharp; START wasm 2026-10-26T21:06:13Z
+PASS wasm; START javascript 2026-10-26T21:11:08Z
+PASS javascript; START real-etcd 2026-10-26T21:13:12Z
+PASS real-etcd; START repository 2026-10-26T21:13:48Z
+79 scan cases, 15 delete cases
+PASS repository; ALL PASSED 2026-10-26T21:13:57Z
+Independent wire fixtures: 79 scan / 15 conditional-deletion cases consumed by Rust/C#/JS.
+
+Native Rust: 1032 passed; 18 child entries ignored by direct discovery.
+Complete lines: 14062/14876 (94.52810%)
+Complete branches: 2639/3054 (86.41126%)
+Complete functions: 1829/1966 (93.03154%)
+/rust/src/engine/etcd/maintenance.rs lines: 194/199 (97.48744%)
+/rust/src/engine/etcd/maintenance.rs branches: 59/60 (98.33333%)
+/rust/src/engine/etcd/maintenance.rs functions: 25/27 (92.59259%)
+
+Actual WASM: 631 passed; 0 child entries ignored by direct discovery.
+Complete lines: 11241/13606 (82.61796%)
+Complete branches: 2196/2637 (83.27645%)
+Complete functions: 1430/1806 (79.18051%)
+/rust/wasm/src/engine.rs lines: 263/263 (100.00000%)
+/rust/wasm/src/engine.rs branches: 6/6 (100.00000%)
+/rust/wasm/src/engine.rs functions: 50/50 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.66s
+
+C# Debug: 2268 passed; zero failed/skipped.
+Complete lines: 8428/8722 (96.62921%)
+Complete branches: 4684/5054 (92.67907%)
+Foundation.Data.Doublets.Cli.Engine.EtcdJournalStore: lines 1; branches 0.9806999999999999
+Foundation.Data.Doublets.Cli.Engine.EtcdJournalStore/NamespaceCodec: lines 1; branches 1
+
+C# Release: 2268 passed; zero failed/skipped.
+Complete lines: 6481/6667 (97.21014%)
+Complete branches: 4629/5017 (92.26629%)
+Foundation.Data.Doublets.Cli.Engine.EtcdJournalStore: lines 1; branches 0.9806999999999999
+Foundation.Data.Doublets.Cli.Engine.EtcdJournalStore/NamespaceCodec: lines 1; branches 1
+JS: {'tests': 359, 'pass': 359, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Bun/Deno each pass all98 maintenance cases; strict TypeScript and JS100% full production coverage pass.
+PASS lazy maintenance: root import and ordinary read/CAS do not load selected codecs; positive selection control loads them before I/O.
+
+PASS Rust: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+PASS C#: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+PASS JS: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+PASS JS: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+PASS JS: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+PASS real etcd: revision-pinned pages exclude concurrent insert/update/delete
+PASS real etcd: compacted historical page restarts the complete snapshot
+PASS real etcd: lost deletion response is discovered without mutation replay
+PASS real etcd: complete scan after leader loss
+PASS real etcd: majority loss returns no partial scan and no false deletion acknowledgment
+PASS all maintenance integration contracts; retained server logs <workspace>/experiments/issue-138/etcd/maintenance-LTcjB5
+Vector regeneration, formatting, strict native/WASM Clippy, optional-SQL guards, changesets, source limits, repository tests, actionlint and ShellCheck pass.
+The existing partitioned store still retains its objects. No object liveness/epoch-fencing collector is implemented by this capability.
+Complete native Rust/C#/linked-WASM coverage and wider R1-R12 criteria remain unfinished; no denominator is reduced.
+Truthful provider synchronization and nonreused generations are assumptions. These process/network tests do not certify physical power loss.
