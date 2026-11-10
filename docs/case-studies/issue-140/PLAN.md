@@ -42,7 +42,7 @@ Keep every source file below the repository's 1000-line Python limit.
 
 ## Verification record
 
-- Local native suite: 15 tests pass, covering ten Linux mechanisms including
+- Local native suite: 16 tests pass, covering ten Linux mechanisms including
   anonymous pipes, composition, registration and failure regressions. Four
   actual-server integration tests are deliberately supplied a built CLI by CI.
 - Local workflow helper/policy suite: 268 tests pass. Ruff checks and formatting
@@ -59,6 +59,11 @@ Keep every source file below the repository's 1000-line Python limit.
   anonymous-pipe binary conversations and delayed mapping-handle cleanup.
   macOS exposed Darwin's 31-byte shared-memory name limit. A reproducing
   regression failed before shortening names to fit and passes afterward.
+- A later Windows run completed every protocol exchange but exposed a test
+  cleanup race: force-terminating an exec relay left its child briefly holding
+  the inherited log file. Anonymous-pipe conversations now use `--once` and
+  wait for normal relay exit and child reaping. A native CLI test exchanges
+  bytes through that chain and verifies the inherited log can be removed.
 - At `259ded94`, all six IPC matrix jobs pass: native Linux/macOS/Windows
   and real Rust/Linux plus C#/Linux/Windows conversations. The latter include
   both protocols, anonymous pipes, JavaScript and mixed-stack subscriptions.

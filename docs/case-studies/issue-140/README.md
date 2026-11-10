@@ -210,6 +210,10 @@ diagnostic watchdogs bound hangs; job deadlines also include source builds.
 Regression tests cover interrupted cleanup, occupied mailboxes, peer crashes,
 lost datagrams/ACKs/handshakes, and existing endpoint preservation. Source
 quality and all repository workflows remain required on the final PR head.
+Anonymous-pipe integration tests wait for `--once` relays to exit and reap
+their children before deleting logs. This avoids a Windows cleanup race from
+force-terminating a parent whose child still inherited its log handle; the
+native suite also verifies normal relay exit releases that inherited handle.
 
 The first CI pass also found existing dependency-freshness failures: cargo-audit,
 System.CommandLine, Microsoft.Data.Sqlite, Microsoft.NET.Test.Sdk and the locked

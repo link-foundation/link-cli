@@ -119,6 +119,66 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(read_all(stream), PAYLOAD[:1000])
         self.assertEqual(child.wait(timeout=8), 0)
 
+    def test_once_relay_reaps_anonymous_pipe_child(self):
+        child, address = self.peer("tcp:127.0.0.1:0")
+        argv = [
+            sys.executable,
+            "-m",
+            "link_ipc",
+            "--listen",
+            "stdio:",
+            "--connect",
+            address,
+        ]
+        ready, log_path = self.root / "ready.json", self.root / "gateway.log"
+        log = open(log_path, "w")
+        self.addCleanup(log.close)
+        gateway = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "link_ipc",
+                "--listen",
+                "tcp:127.0.0.1:0",
+                "--connect",
+                "exec:" + json.dumps(argv),
+                "--once",
+                "--ready-file",
+                str(ready),
+            ],
+            stderr=log,
+            stdout=subprocess.DEVNULL,
+        )
+
+        def reap():
+            if gateway.poll() is None:
+                gateway.kill()
+            gateway.wait()
+
+        self.addCleanup(reap)
+        end = time.monotonic() + 8
+        while not ready.exists() and gateway.poll() is None and time.monotonic() < end:
+            time.sleep(0.01)
+        self.assertTrue(ready.exists(), "one-connection relay did not start")
+        # Readiness is written before accepting, but the file can be visible
+        # just before json.dump completes.
+        while True:
+            try:
+                endpoint = json.loads(ready.read_text())["endpoint"]
+                break
+            except json.JSONDecodeError:
+                self.assertLess(time.monotonic(), end)
+                time.sleep(0.01)
+        with connect(endpoint, OPTIONS) as stream:
+            stream.sendall(PAYLOAD)
+            stream.shutdown_write()
+            self.assertEqual(read_all(stream), PAYLOAD)
+        self.assertEqual(gateway.wait(timeout=8), 0)
+        self.assertEqual(child.wait(timeout=8), 0)
+        log.close()
+        # Windows rejects this if the child outlives its normally exited owner.
+        log_path.unlink()
+
     def test_close_unblocks_anonymous_pipe_reader(self):
         # The child holds stdout open without producing data.
         endpoint = "exec:" + json.dumps(

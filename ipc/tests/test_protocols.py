@@ -76,7 +76,7 @@ class ProtocolTests(unittest.TestCase):
             if child.stdout:
                 child.stdout.close()
 
-    def gateway(self, incoming, outgoing):
+    def gateway(self, incoming, outgoing, *, once=False):
         self.gateways += 1
         ready = self.root / f"ready-{self.gateways}.json"
         log = open(self.root / f"gateway-{self.gateways}.log", "w+")
@@ -95,6 +95,7 @@ class ProtocolTests(unittest.TestCase):
                 "--timeout",
                 "5",
                 "--trace",
+                *(["--once"] if once else []),
             ],
             stderr=log,
             stdout=subprocess.DEVNULL,
@@ -191,11 +192,19 @@ class ProtocolTests(unittest.TestCase):
             self.assertEqual(read_text(stream), b"(count: 0)\n")
             stream.shutdown_write()
             self.assertEqual(stream.recv(), b"")
-        local = self.gateway("tcp:127.0.0.1:0", "exec:" + json.dumps(argv))
         for protocol in ("text", "binary"):
-            self.assertEqual(self.invoke(local, "(count: ())", protocol), "(count: 0)")
-            self.assertIn("((1: 0 0))", self.invoke(local, "(create: (0 0))", protocol))
-            self.assertIn("()", self.invoke(local, "(delete: 1)", protocol))
+            for query, expected in (
+                ("(count: ())", "(count: 0)"),
+                ("(create: (0 0))", "((1: 0 0))"),
+                ("(delete: 1)", "()"),
+            ):
+                local = self.gateway(
+                    "tcp:127.0.0.1:0", "exec:" + json.dumps(argv), once=True
+                )
+                self.assertIn(expected, self.invoke(local, query, protocol))
+                # Let the relay reap its exec child. Forcibly terminating the
+                # parent can leave the child holding the Windows log handle.
+                self.assertEqual(self.children[-1].wait(timeout=10), 0)
 
     def test_existing_javascript_client(self):
         native = self.gateway(
