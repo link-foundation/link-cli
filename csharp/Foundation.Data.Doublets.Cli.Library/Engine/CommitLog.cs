@@ -20,8 +20,9 @@ public sealed class MemoryCommitLog : ICommitLog
     public void Flush() { }
 }
 
-/// <summary>Exclusive file writer; repairs an incomplete final line on open
-/// and before reuse after an I/O error. Complete records are preserved.</summary>
+/// <summary>Exclusive file writer; repairs an incomplete final line, or trailing
+/// lines with a NUL byte that power loss left, on open and before reuse after an
+/// I/O error. Complete records are preserved.</summary>
 public sealed class FileCommitLog : ICommitLog, IDisposable
 {
     private readonly FileStream _file;
@@ -45,22 +46,47 @@ public sealed class FileCommitLog : ICommitLog, IDisposable
         catch { _file.Dispose(); _lock.Dispose(); throw; }
     }
 
+    // Power loss can also keep the newline of a record that was never flushed
+    // while a sector before it reads back as zeros (the disk reordered writes no
+    // flush ordered). Records never contain NUL (Append refuses it), so trailing
+    // lines holding one are torn too, as etcd's WAL treats a last record with a
+    // zeroed sector. A NUL before an intact line is damage that reading refuses.
     private void RepairTail()
     {
         // Scan backwards in bounded chunks rather than loading a torn tail.
         long end = _file.Length;
         var buffer = new byte[8192];
-        long complete = 0;
-        while (end > 0)
+        long? complete = null; // End of the line being scanned, past its newline.
+        long newerNewline = end;
+        bool zeroed = false;
+        long keep = -1;
+        while (keep < 0)
         {
+            if (end == 0) { keep = zeroed ? 0 : complete ?? 0; break; }
             int length = (int)Math.Min(end, buffer.Length);
-            _file.Position = end - length;
+            long start = end - length;
+            _file.Position = start;
             _file.ReadExactly(buffer.AsSpan(0, length));
-            int offset = buffer.AsSpan(0, length).LastIndexOf((byte)'\n');
-            if (offset >= 0) { complete = end - length + offset + 1; break; }
-            end -= length;
+            for (int offset = length - 1; offset >= 0 && keep < 0; offset--)
+            {
+                long position = start + offset;
+                byte value = buffer[offset];
+                if (value == (byte)'\n')
+                {
+                    // Blank lines are skipped, as reading the journal skips them.
+                    if (complete is null) complete = position + 1;
+                    else if (newerNewline != position + 1)
+                    {
+                        if (!zeroed) keep = complete.Value;
+                        else { complete = position + 1; zeroed = false; }
+                    }
+                    newerNewline = position;
+                }
+                else if (value == 0 && complete is not null) zeroed = true;
+            }
+            end = start;
         }
-        if (complete != _file.Length) _file.SetLength(complete);
+        if (keep != _file.Length) _file.SetLength(keep);
         // Retry persistence even if an earlier failed repair changed the length.
         _file.Flush(flushToDisk: true);
         _file.Position = _file.Length;
@@ -85,8 +111,8 @@ public sealed class FileCommitLog : ICommitLog, IDisposable
     }
     public void Append(string record)
     {
-        if (record.Contains('\n') || record.Contains('\r'))
-            throw new ArgumentException("Log records cannot contain line breaks.", nameof(record));
+        if (record.AsSpan().IndexOfAny('\n', '\r', '\0') >= 0)
+            throw new ArgumentException("Log records cannot contain line breaks or NUL.", nameof(record));
         var bytes = Utf8.GetBytes(record + "\n");
         RepairIfNeeded();
         _file.Position = _file.Length;

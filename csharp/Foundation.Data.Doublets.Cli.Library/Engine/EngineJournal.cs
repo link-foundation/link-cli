@@ -82,8 +82,8 @@ public static class EngineJournal<T>
 
     /// <summary>Complete lines of a file journal, as <see cref="FileCommitLog"/> reads
     /// them, but tolerating damage it would reject: invalid UTF-8 becomes U+FFFD (so
-    /// the checksum flags that record), blank lines are skipped, a torn final line is
-    /// ignored and a missing file is empty.</summary>
+    /// the checksum flags that record), blank lines are skipped, a torn final line and
+    /// trailing lines with a NUL byte are ignored and a missing file is empty.</summary>
     public static IReadOnlyList<string> ReadFileLossy(string path) => Lines(ReadBytes(path));
 
     /// <summary>Rebuild the journal at <paramref name="path"/> from the longest valid
@@ -134,15 +134,19 @@ public static class EngineJournal<T>
 
     private static IReadOnlyList<string> Lines(byte[] bytes)
     {
-        var lines = new List<string>();
+        var lines = new List<(int Start, int Length)>();
         int start = 0;
         for (int index = 0; index < bytes.Length; index++)
         {
             if (bytes[index] != (byte)'\n') continue;
-            if (index > start) lines.Add(Lenient.GetString(bytes, start, index - start));
+            if (index > start) lines.Add((start, index - start));
             start = index + 1;
         }
-        return lines;
+        // Trailing lines with a NUL byte are torn by power loss, as FileCommitLog
+        // drops them; one further back is damage.
+        while (lines.Count > 0 && bytes.AsSpan(lines[^1].Start, lines[^1].Length).Contains((byte)0))
+            lines.RemoveAt(lines.Count - 1);
+        return lines.Select(line => Lenient.GetString(bytes, line.Start, line.Length)).ToList();
     }
 
     // Claim the first free <path>.damaged-<n> so no earlier evidence is lost.

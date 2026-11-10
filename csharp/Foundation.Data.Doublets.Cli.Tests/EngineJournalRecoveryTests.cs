@@ -226,6 +226,65 @@ public class EngineJournalRecoveryTests
         Assert.Null(again.Preserved);
     }
 
+    // Power loss can persist the newline of a never-flushed record while a
+    // sector before it reads back as zeros. Trailing lines holding a NUL are
+    // therefore torn; a NUL in front of an intact record is still damage.
+    [Fact]
+    public void TrailingLinesZeroedByPowerLossAreTorn()
+    {
+        using var directory = new Directory();
+        var path = directory.File("links.journal");
+        var entries = Journal(4);
+        byte[] Intact(int count) => Encoding.UTF8.GetBytes(string.Concat(entries.Take(count).Select(entry => entry + "\n")));
+        byte[] Zeroed(string entry)
+        {
+            var bytes = Encoding.UTF8.GetBytes(entry + "\n");
+            Array.Clear(bytes, entry.Length / 2, 4);
+            return bytes;
+        }
+        byte[] Concat(params byte[][] parts) => parts.SelectMany(part => part).ToArray();
+        byte[] newline = { (byte)'\n' };
+        var cases = new (byte[] Bytes, int Revision)[]
+        {
+            // A zeroed hole in the last record, its newline kept.
+            (Concat(Intact(3), Zeroed(entries[3])), 3),
+            // Two trailing records with holes, a blank line between them.
+            (Concat(Intact(2), Zeroed(entries[2]), newline, Zeroed(entries[3])), 2),
+            // A record that is all zeros, then zeros past the last newline.
+            (Concat(Intact(4), new byte[40], newline, new byte[7]), 4),
+            // Only zeroed lines.
+            (Concat(new byte[9], newline, Zeroed(entries[0])), 0),
+        };
+        foreach (var (bytes, revision) in cases)
+        {
+            File.WriteAllBytes(path, bytes);
+            Assert.Equal(entries.Take(revision), EngineJournal<ulong>.ReadFileLossy(path));
+            Assert.Equal((ulong)revision, OpenRevision(path));
+            Assert.Equal(Intact(revision), File.ReadAllBytes(path));
+            // The writer continues after the cut.
+            using (var log = new FileCommitLog(path))
+            {
+                var engine = new LinksEngine<ulong>(log);
+                using var tx = engine.Begin();
+                var id = tx.CreateLink(0, 0);
+                tx.UpdateLink(id, id, id);
+                tx.Commit();
+            }
+            Assert.Equal((ulong)revision + 1, OpenRevision(path));
+        }
+        // A hole in front of an intact record is damage: opening refuses it, the
+        // lossy reader keeps it for repair to judge.
+        var damaged = Concat(Zeroed(entries[0]), Encoding.UTF8.GetBytes(entries[1] + "\n"));
+        File.WriteAllBytes(path, damaged);
+        Assert.Equal(2, EngineJournal<ulong>.ReadFileLossy(path).Count);
+        Assert.ThrowsAny<Exception>(() => { using var log = new FileCommitLog(path); _ = new LinksEngine<ulong>(log); });
+        Assert.Equal(damaged, File.ReadAllBytes(path));
+        Assert.Equal(0ul, EngineJournal<ulong>.RepairFile(path, Array.Empty<string>()).Recovery.Revision);
+        // Appends refuse NUL, so a record can never end up holding one.
+        using var writer = new FileCommitLog(path);
+        Assert.Throws<ArgumentException>(() => writer.Append("a\0b"));
+    }
+
     [Fact]
     public void TornTailsInvalidUtf8AndMissingFilesAreReadLeniently()
     {
