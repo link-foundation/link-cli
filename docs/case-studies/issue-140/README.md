@@ -96,6 +96,12 @@ Python's [shared-memory documentation](https://docs.python.org/3/library/multipr
 explains the independent resource-tracker hazard; `track=False` is why this
 package requires Python 3.13+. Both peers can unlink owned blocks on shutdown,
 including when the creator was killed.
+Darwin limits names to 31 bytes (`PSHMNAMLEN` in
+[Apple's native header](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/posix_shm.h)).
+The initial macOS CI run exposed longer generated names. Names now fit that
+limit, including the leading slash, while retaining 96 random bits; a bounded
+regression applies the native length restriction around a real allocation
+and payload exchange on every platform.
 
 [Pipes/FIFOs](https://man7.org/linux/man-pages/man7/pipe.7.html) have byte-stream
 semantics and bounded kernel buffers. Paired POSIX FIFOs therefore carry framed

@@ -238,6 +238,22 @@ class TransportTests(unittest.TestCase):
             client.sendall(b"second")
         self.assertEqual(server.recv(), b"first")
 
+    def test_shared_memory_respects_darwin_native_name_limit(self):
+        import errno
+        from multiprocessing.shared_memory import SharedMemory
+
+        def darwin_memory(*, name, **kwargs):
+            # Darwin rejects a name beyond PSHMNAMLEN, including the slash
+            # Python prepends. Keep the real allocation and data exchange.
+            if len(("/" + name).encode()) > 31:
+                raise OSError(errno.ENAMETOOLONG, "shared-memory name too long")
+            return SharedMemory(name=name, **kwargs)
+
+        with patch("link_ipc.local.SharedMemory", side_effect=darwin_memory):
+            client, server, _ = self.pair("shm")
+            client.sendall(b"native shared memory with portable names")
+            self.assertEqual(server.recv(), b"native shared memory with portable names")
+
     def test_close_unblocks_waiting_native_reader(self):
         client, _, _ = self.pair("mmap")
         failures = []

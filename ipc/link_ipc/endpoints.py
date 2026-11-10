@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import secrets
 import select
 import shutil
 import socket
@@ -12,7 +13,6 @@ import struct
 import sys
 import tempfile
 import time
-import uuid
 from dataclasses import dataclass, replace
 from multiprocessing.connection import Client, Listener
 from pathlib import Path
@@ -194,7 +194,9 @@ class NativeListener:
         control = self._accept_control()
         root = Path(tempfile.mkdtemp(prefix="session-", dir=self.root))
         session = Session(control, self.options, root, 0, owner=True)
-        names = ["clink_" + uuid.uuid4().hex for _ in range(2)]
+        # Darwin's PSHMNAMLEN is 31, including the leading POSIX slash.
+        # Keep 96 random bits while fitting native shared-memory names.
+        names = ["clink_" + secrets.token_hex(12) for _ in range(2)]
         if self.kind == "mq":
             names = ["/" + name for name in names]
         try:

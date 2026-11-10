@@ -116,8 +116,9 @@ adapter terminates and reaps only the child it starts. See
   sessions/integrity levels. Mailslots use only `\\.\mailslot\...`; the
   deprecated remote mailslot protocol is never enabled or required.
 
-These are local IPC adapters, with POSIX private directories and mode-0600
-resources, and Windows native object permissions inherited from the process.
+These are local IPC adapters, with POSIX private directories, mode-0600
+sockets/shared-memory/queue resources, and Windows native object permissions
+inherited from the process. Mailbox files are protected by their private parent.
 Use a private endpoint parent directory/appropriate Windows ACLs. They do not
 add encryption or bypass the database's authentication/permissions. Bind the
 existing TCP boundary to loopback. `udp:` deliberately accepts only numeric

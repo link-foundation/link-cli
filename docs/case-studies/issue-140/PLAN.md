@@ -36,7 +36,7 @@ Keep every source file below the repository's 1000-line Python limit.
 
 ## Verification record
 
-- Local native suite: 14 tests pass, covering ten Linux mechanisms plus
+- Local native suite: 15 tests pass, covering ten Linux mechanisms including
   anonymous pipes, composition, registration and failure regressions. Four
   actual-server integration tests are deliberately supplied a built CLI by CI.
 - Local workflow helper/policy suite: 268 tests pass. Ruff checks and formatting
@@ -49,6 +49,10 @@ Keep every source file below the repository's 1000-line Python limit.
 - The first C# Windows protocol run passed all native text/binary combinations
   and mixed-stack subscriptions; its anonymous-pipe failure was the same
   polling result bug. System.CommandLine 3.0.0 builds without warnings.
+- Current Windows CI passes the native and real-server suites, including
+  anonymous-pipe binary conversations and delayed mapping-handle cleanup.
+  macOS exposed Darwin's 31-byte shared-memory name limit. A reproducing
+  regression failed before shortening names to fit and passes afterward.
 - Final current-head native/protocol jobs and all existing repository checks
   must pass before PR #175 is marked ready. Their authoritative final record
   and run URLs are maintained in the PR description, which can be updated

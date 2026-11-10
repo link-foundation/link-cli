@@ -19,7 +19,7 @@ In a third terminal, add a client-side layer:
 clink-ipc --listen tcp:127.0.0.1:7778 --connect shm:/tmp/example-links
 ```
 
-Any existing Rust, C# or JS client can now connect to `127.0.0.1:7778`:
+Any existing Rust, C# or JS client can now connect to `127.0.0.1:7778`.
 
 With an empty database, the existing JavaScript client can run the automated
 example with `node examples/ipc/javascript-client.mjs 127.0.0.1:7778`.
