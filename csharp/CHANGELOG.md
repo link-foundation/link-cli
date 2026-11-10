@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.1] - 2026-11-10
+
+Update System.CommandLine to 3.0.0 and refresh the test dependencies to satisfy
+the registry freshness check. Optional native IPC adapters are available in
+`ipc/` without changing the existing LiNo server or client commands (#140).
+
 ## [5.1.0] - 2026-11-05
 
 Serve Hasura-compatible GraphQL for Deep with `clink --serve <address> --graphql`, with `--jwt-secret`, `--graphql-admin-secret` and `--deep-package`; add `TripletsQueryProcessor.MatchQuery` (#153).
