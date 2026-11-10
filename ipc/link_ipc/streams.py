@@ -1,6 +1,8 @@
 """Bounded duplex byte streams and protocol-independent relay composition."""
 
 import contextlib
+import os
+import select
 import socket
 import subprocess
 import threading
@@ -133,29 +135,90 @@ class ConnectionChannel:
 class FileStream(Stream):
     """Anonymous pipes / stdio. The owner explicitly provides cancellation."""
 
-    def __init__(self, reader, writer, cancel=None):
+    def __init__(self, reader, writer, cancel=None, timeout=30):
         self.reader, self.writer, self.cancel = reader, writer, cancel
+        self.timeout = timeout
+        self.closed = threading.Event()
+        self.write_thread = None
+        if os.name == "posix":
+            os.set_blocking(reader.fileno(), False)
+            os.set_blocking(writer.fileno(), False)
+
+    def cancel_write(self):
+        if os.name == "nt" and self.write_thread is not None:
+            import ctypes
+            from ctypes import wintypes
+
+            kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel.OpenThread.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            kernel.OpenThread.restype = wintypes.HANDLE
+            kernel.CancelSynchronousIo.argtypes = [wintypes.HANDLE]
+            kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+            handle = kernel.OpenThread(1, False, self.write_thread)
+            if handle:
+                kernel.CancelSynchronousIo(handle)
+                kernel.CloseHandle(handle)
 
     def recv(self, size=CHUNK):
-        return (
-            self.reader.read1(size)
-            if hasattr(self.reader, "read1")
-            else self.reader.read(size)
-        )
+        while not self.closed.is_set():
+            if os.name == "nt":
+                import _winapi
+                import msvcrt
+
+                try:
+                    _, available, _ = _winapi.PeekNamedPipe(
+                        msvcrt.get_osfhandle(self.reader.fileno()), 0
+                    )
+                except BrokenPipeError:
+                    return b""
+                if available:
+                    return os.read(self.reader.fileno(), min(size, available))
+                self.closed.wait(0.02)
+            elif select.select([self.reader], [], [], 0.1)[0]:
+                try:
+                    return os.read(self.reader.fileno(), size)
+                except BlockingIOError:
+                    continue
+        return b""
 
     def sendall(self, data):
-        view = memoryview(data)
-        while view:
-            count = self.writer.write(view)
-            if not count:
-                raise BrokenPipeError("IPC pipe closed")
-            view = view[count:]
-        self.writer.flush()
+        end = time.monotonic() + self.timeout
+        timer = None
+        if os.name == "nt":
+            self.write_thread = threading.get_native_id()
+            timer = threading.Timer(self.timeout, self.cancel_write)
+            timer.start()
+        try:
+            view = memoryview(data)
+            while view:
+                if self.closed.is_set():
+                    raise BrokenPipeError("IPC pipe closed")
+                if time.monotonic() >= end:
+                    raise TimeoutError("IPC pipe write stalled; outcome unknown")
+                if (
+                    os.name == "posix"
+                    and not select.select([], [self.writer], [], 0.1)[1]
+                ):
+                    continue
+                try:
+                    count = os.write(self.writer.fileno(), view[:CHUNK])
+                except BlockingIOError:
+                    continue
+                if not count:
+                    raise BrokenPipeError("IPC pipe closed")
+                view = view[count:]
+        finally:
+            if timer:
+                timer.cancel()
+                timer.join()
+            self.write_thread = None
 
     def shutdown_write(self):
         self.writer.close()
 
     def close(self):
+        self.closed.set()
+        self.cancel_write()
         if self.cancel:
             self.cancel()
         for file in (self.reader, self.writer):
@@ -176,7 +239,7 @@ def child_stream(argv, timeout=30):
             child.kill()
             child.wait()
 
-    return FileStream(child.stdout, child.stdin, cancel)
+    return FileStream(child.stdout, child.stdin, cancel, timeout)
 
 
 def relay(left, right, stop=None, trace=None):

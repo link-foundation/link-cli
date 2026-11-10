@@ -125,6 +125,8 @@ class LockedBuffer:
     def __init__(self, root, name, kind, create):
         self.path = Path(root) / name
         self.kind, self.create = kind, create
+        self.guard = threading.RLock()
+        self.closed = False
         self.lock = open(str(self.path) + ".lock", "a+b")
         if os.fstat(self.lock.fileno()).st_size == 0:
             self.lock.write(b"\0")
@@ -146,6 +148,16 @@ class LockedBuffer:
             self.store(b"\0\0\0\0", 0)
 
     def __enter__(self):
+        self.guard.acquire()
+        try:
+            if self.closed:
+                raise ConnectionResetError("IPC buffer closed")
+            return self._lock()
+        except BaseException:
+            self.guard.release()
+            raise
+
+    def _lock(self):
         if os.name == "nt":
             import msvcrt
 
@@ -160,15 +172,18 @@ class LockedBuffer:
         return self
 
     def __exit__(self, *_):
-        if os.name == "nt":
-            import msvcrt
+        try:
+            if os.name == "nt":
+                import msvcrt
 
-            self.lock.seek(0)
-            msvcrt.locking(self.lock.fileno(), msvcrt.LK_UNLCK, 1)
-        else:
-            import fcntl
+                self.lock.seek(0)
+                msvcrt.locking(self.lock.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
 
-            fcntl.flock(self.lock, fcntl.LOCK_UN)
+                fcntl.flock(self.lock, fcntl.LOCK_UN)
+        finally:
+            self.guard.release()
 
     def load(self, size, offset=0):
         if self.kind == "file":
@@ -184,16 +199,20 @@ class LockedBuffer:
             self.buffer[offset : offset + len(data)] = data
 
     def close(self):
-        if self.shared:
-            self.buffer.release()
-            self.shared.close()
-            with contextlib.suppress(FileNotFoundError):
-                self.shared.unlink()
-        if self.mapping:
-            self.mapping.close()
-        if self.file:
-            self.file.close()
-        self.lock.close()
+        with self.guard:
+            if self.closed:
+                return
+            self.closed = True
+            if self.shared:
+                self.buffer.release()
+                self.shared.close()
+                with contextlib.suppress(FileNotFoundError):
+                    self.shared.unlink()
+            if self.mapping:
+                self.mapping.close()
+            if self.file:
+                self.file.close()
+            self.lock.close()
 
 
 class Mailboxes:

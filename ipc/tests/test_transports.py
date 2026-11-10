@@ -2,6 +2,7 @@
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -113,6 +114,27 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(read_all(stream), PAYLOAD[:1000])
         self.assertEqual(child.wait(timeout=8), 0)
 
+    def test_close_unblocks_anonymous_pipe_reader(self):
+        # The child holds stdout open without producing data.
+        endpoint = "exec:" + json.dumps(
+            [sys.executable, "-c", "import time; time.sleep(20)"]
+        )
+        stream = connect(endpoint, OPTIONS)
+        reader = threading.Thread(target=stream.recv)
+        reader.start()
+        stream.close()
+        reader.join(3)
+        self.assertFalse(reader.is_alive())
+
+    @unittest.skipIf(os.name == "nt", "SIGUSR1 is POSIX-only")
+    def test_signal_handler_does_not_acquire_python_locks(self):
+        from link_ipc.local import enable_signals, wait_tick
+
+        enable_signals()
+        for _ in range(100):
+            os.kill(os.getpid(), signal.SIGUSR1)
+            wait_tick(0.001)
+
     def test_stacking_two_native_layers(self):
         child, address = self.peer("shm:" + str(self.root / "stack"))
         listener = listen("tcp:127.0.0.1:0", OPTIONS)
@@ -149,6 +171,88 @@ class TransportTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             listen(f"shm:{root}", OPTIONS)
         self.assertEqual((root / "precious").read_bytes(), b"keep")
+
+    def pair(self, kind, timeout=3):
+        listener = listen(
+            f"{kind}:{self.root / ('pair-' + kind)}", Options(timeout=timeout)
+        )
+        self.addCleanup(listener.close)
+        accepted, failures = [], []
+
+        def accept():
+            try:
+                accepted.append(listener.accept())
+            except OSError as error:
+                failures.append(error)
+
+        worker = threading.Thread(target=accept)
+        worker.start()
+        client = connect(listener.address, Options(timeout=timeout))
+        worker.join(5)
+        self.assertFalse(worker.is_alive(), "native accept did not finish")
+        self.assertEqual(failures, [])
+        self.addCleanup(client.close)
+        self.addCleanup(accepted[0].close)
+        return client, accepted[0]
+
+    def test_mailbox_payload_uses_requested_native_storage(self):
+        import mmap
+        from multiprocessing.shared_memory import SharedMemory
+
+        for kind in ("shm", "mmap", "file"):
+            with self.subTest(kind=kind):
+                client, server = self.pair(kind)
+                slot = client.channel.outgoing
+                if kind == "shm":
+                    self.assertIsInstance(slot.shared, SharedMemory)
+                    self.assertFalse(slot.path.exists())
+                elif kind == "mmap":
+                    self.assertIsInstance(slot.mapping, mmap.mmap)
+                    self.assertTrue(slot.path.exists())
+                else:
+                    self.assertIsNone(slot.mapping)
+                    self.assertIsNone(slot.shared)
+                    self.assertTrue(slot.path.exists())
+                client.sendall(b"native payload")
+                self.assertEqual(server.recv(), b"native payload")
+
+    def test_full_mailbox_times_out_without_overwriting_bytes(self):
+        client, server = self.pair("shm", timeout=0.2)
+        client.sendall(b"first")
+        with self.assertRaises(TimeoutError):
+            client.sendall(b"second")
+        self.assertEqual(server.recv(), b"first")
+
+    def test_close_unblocks_waiting_native_reader(self):
+        client, _ = self.pair("mmap")
+        failures = []
+
+        def read():
+            try:
+                client.recv()
+            except ConnectionResetError:
+                failures.append("closed")
+
+        reader = threading.Thread(target=read)
+        reader.start()
+        client.close()
+        reader.join(3)
+        self.assertFalse(reader.is_alive())
+        self.assertEqual(failures, ["closed"])
+
+    def test_extension_contract(self):
+        from link_ipc import register
+
+        register(
+            "application_adapter",
+            connector=lambda address, options: connect("tcp:" + address, options),
+            listener=lambda address, options: listen("tcp:" + address, options),
+        )
+        listener = listen("application_adapter:127.0.0.1:0")
+        self.addCleanup(listener.close)
+        with self.assertRaises(ValueError):
+            register("tcp", connector=connect, listener=listen)
+        self.assertTrue(listener.address.startswith("tcp:"))
 
     def test_peer_crash_unblocks_reader(self):
         child, address = self.peer(f"shm:{self.root / 'crash'}")

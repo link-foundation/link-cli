@@ -238,17 +238,17 @@ class CopyData:
             self.session.check()
             result = SIZE()
             # A timeout has an unknown delivery outcome. Never retry it.
-            checked(
-                U.SendMessageTimeoutW(
-                    self.peer,
-                    0x4A,
-                    0,
-                    C.addressof(packet),
-                    2,
-                    max(1, int(self.session.options.timeout * 1000)),
-                    C.byref(result),
-                )
+            sent = U.SendMessageTimeoutW(
+                self.peer,
+                0x4A,
+                0,
+                C.addressof(packet),
+                2,
+                max(1, int(self.session.options.timeout * 1000)),
+                C.byref(result),
             )
+            if not sent:
+                raise OSError("WM_COPYDATA send failed or timed out; outcome unknown")
             if result.value:
                 return
             if time.monotonic() >= end:

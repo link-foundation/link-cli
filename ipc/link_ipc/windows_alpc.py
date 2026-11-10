@@ -96,6 +96,8 @@ class PortMessage(C.Structure):
 
 
 def check(status):
+    if status == 0x102:
+        raise TimeoutError("ALPC operation timed out; outcome unknown")
     if status < 0:
         raise OSError(f"ALPC NTSTATUS 0x{status & 0xFFFFFFFF:08X}; outcome unknown")
     return status

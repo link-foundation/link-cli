@@ -103,6 +103,9 @@ def main(argv=None):
             workers.append(worker)
             if args.once or args.listen == "stdio:":
                 break
+    except BaseException:
+        stop.set()
+        raise
     finally:
         if stop.is_set():
             with lock:
