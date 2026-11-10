@@ -263,6 +263,44 @@ fn a_log_whose_metadata_no_copy_can_read_is_refused_rather_than_treated_as_new()
     assert!(pair.trace.borrow().calls.is_empty());
 }
 
+/// Power loss while both copies of the next, unacknowledged decision were
+/// being written can leave both torn or zero-filled. The other slot still holds
+/// the acknowledged decision, so the mirror opens it, as one device would.
+/// Found by `engine_simulation_tests.rs`.
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn both_copies_of_the_unacknowledged_slot_torn_by_power_loss_open_the_other_slot(
+) -> Result<(), LinkError> {
+    let (image, expected) = fixture("oneGroup");
+    let healthy = image.metadata[0].clone().unwrap();
+    let mut torn = healthy.clone();
+    torn[64..].fill(0);
+    for copies in [
+        [vec![0; 128], vec![0; 128]],
+        [torn.clone(), vec![0; 128]],
+        [healthy.clone(), torn.clone()].map(|bytes| {
+            let mut bytes = bytes;
+            bytes[120] ^= 1;
+            bytes
+        }),
+    ] {
+        let images = copies.map(|bytes| {
+            let mut damaged = image.clone();
+            damaged.metadata[0] = Some(bytes);
+            damaged
+        });
+        let pair = Pair::new(images);
+        assert_eq!(pair.open()?.read_log_entries()?, expected);
+        following(&pair, &expected)?;
+    }
+    // With neither slot decodable there is no decision to fall back to.
+    let mut lost = image.clone();
+    lost.metadata = [Some(vec![0; 128]), Some(vec![0; 128])];
+    let pair = Pair::new([lost.clone(), lost]);
+    assert!(pair.open().is_err());
+    Ok(())
+}
+
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn every_tail_cleanup_failure_fences_until_both_devices_reopen() -> Result<(), LinkError> {

@@ -97,10 +97,13 @@ impl<D: RepairPageDevice> PageDevice for MirroredPageDevice<D> {
         if slot > 1 {
             return Err(invalid("mirror metadata slot"));
         }
-        let raw = self
-            .devices
-            .each_mut()
-            .map(|d| d.read_metadata(slot).unwrap_or_else(|_| Some(vec![0])));
+        let mut failed = false;
+        let raw = self.devices.each_mut().map(|d| {
+            d.read_metadata(slot).unwrap_or_else(|_| {
+                failed = true;
+                Some(vec![0])
+            })
+        });
         let states = [
             Metadata::decode(raw[0].as_deref().unwrap_or_default(), 1)?,
             Metadata::decode(raw[1].as_deref().unwrap_or_default(), 1)?,
@@ -112,10 +115,15 @@ impl<D: RepairPageDevice> PageDevice for MirroredPageDevice<D> {
         }
         let side = match &states {
             [None, None] => {
-                if raw.iter().flatten().any(|b| !b.is_empty()) {
+                if failed {
                     return Err(invalid("both mirror metadata copies are unreadable"));
                 }
-                return Ok(None);
+                // Power loss while both copies of the next, unacknowledged
+                // decision were being written can tear or zero both. Like one
+                // device, report the readable but invalid bytes: the log then
+                // uses the other slot, or refuses when neither decodes.
+                self.metadata.remove(&slot);
+                return Ok(raw.iter().flatten().find(|b| !b.is_empty()).cloned());
             }
             [Some(_), None] => 0,
             [None, Some(_)] => 1,
