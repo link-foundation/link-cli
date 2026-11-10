@@ -2,7 +2,7 @@
 
 Fixes #172
 
-This PR audits every warning, error, false positive and false negative in the `main` runs at `199a07b` listed in the issue, finds the root cause of each and fixes it. Each fix has a regression test, except one configuration-only change. Everything is in one PR. The only item left needs a maintainer: the NuGet credential, described [below](#blocked-on-a-maintainer).
+This PR audits every warning, error, false positive and false negative in the `main` runs at `199a07b` listed in the issue, finds the root cause of each and fixes it. Each fix has a regression test, except one configuration-only change. Everything is in one PR. Two items are left, and both need a maintainer: the NuGet credential and the Codecov GitHub App, described [below](#blocked-on-a-maintainer).
 
 All evidence is in [`dev/log/issues/172/pulls/174`](https://github.com/link-foundation/link-cli/blob/issue-172-4d10c904b01e/dev/log/issues/172/pulls/174/README.md):
 
@@ -34,6 +34,7 @@ All evidence is in [`dev/log/issues/172/pulls/174`](https://github.com/link-foun
 | F17 | notice | macOS arm64 queue-time notice | GitHub capacity | Covered by the infrastructure rerun (F13) | existing |
 | F18 | false negative | Found while verifying this PR: a green Rust run for head `067cb2c3` had **skipped** Rust lint and test, although the PR changes Rust | PR change detection diffed only the last commit (`HEAD^2^..HEAD^2`), whose earlier runs had been superseded | Diff the whole PR against its base (`HEAD^1..HEAD`), as the C# detector already does (`38ef331a`) | `detect-code-changes.rs` test `main_merge_and_pr_both_check_every_change_of_the_branch` |
 | F19 | warning | Found while verifying this PR: `Security` warned that install-action cannot verify `cargo-audit@0.23.0` and fell back to an unverified download | F14's bump outran the pinned action's manifest | Held at `0.22.2` with a blocker comment that points at #176, so the Dependencies check reports it as held, not outdated (`b373d4bb`) | Dependencies workflow, `Security` annotations |
+| F20 | warning | Found while verifying this PR: the Codecov comment says "Please install the codecov app" | The Codecov GitHub App is not installed for the organisation, so the shared `codecov-commenter` bot posts (uploads work through OIDC) | Needs an organisation admin, see [below](#blocked-on-a-maintainer) | n/a |
 
 ## Blocked on a maintainer
 
@@ -47,6 +48,8 @@ Until then:
 - `main` fails `Pipeline Status (csharp)` with that explicit remediation message.
 - Pull requests pass, because the preflight is advisory there.
 - Since F2, lint, tests and build still run and report the code's own status.
+
+**Codecov GitHub App (F20).** An organisation admin needs to install the [Codecov GitHub App](https://github.com/apps/codecov) for this repository. Coverage uploads and reporting already work. Only the warning in the PR comment remains, and because it is not a check, CI has nothing to fail on.
 
 ## Template comparison and upstream reports
 

@@ -9,7 +9,7 @@ Baseline: `main` at `199a07b`, the run table in the issue, and the flattened ann
 
 | # | Requirement (issue text) | Where it is met |
 | --- | --- | --- |
-| R1 | Find and fix every false positive, false negative, warning and error in CI/CD | Findings F1–F19 below |
+| R1 | Find and fix every false positive, false negative, warning and error in CI/CD | Findings F1–F20 below |
 | R2 | Compare every file of the five pipeline templates and reuse their best practices | [Template comparison](#template-comparison) |
 | R3 | When a defect also exists in a template, report it there | [Upstream reports](upstream-reports/SUMMARY.md) |
 | R4 | Follow `CI-CD-BEST-PRACTICES.md` (hive-mind) | [Best practices](#best-practices-cross-check) |
@@ -40,6 +40,7 @@ Baseline: `main` at `199a07b`, the run table in the issue, and the flattened ann
 | F17 | notice (infrastructure) | "jobs targeting macOS arm64 runners may experience longer queue times" | GitHub capacity | Covered by the infrastructure rerun workflow (F13) | existing |
 | F18 | false negative | Found while verifying this PR. The Rust CI/CD Pipeline run for head `067cb2c3` (`42898138563`) succeeded, but Rust lint and test were **skipped** (`rs-changed=false`) although the PR changes many Rust files | `rust/scripts/detect-code-changes.rs` diffed only the last commit of the PR head (`HEAD^2^..HEAD^2`). That commit changed only a Python helper, and the runs for the earlier Rust commits had been superseded | `pull_request` merge commits now diff `HEAD^1..HEAD`, the whole PR against its base. This matches the C# detector, which already compares base...head (`38ef331a`). | `rust/scripts/detect-code-changes.rs` test `main_merge_and_pr_both_check_every_change_of_the_branch`, run by `rust/scripts/test-scripts.sh` (fails on the old code with `["README.md"]`) |
 | F19 | warning | Found while verifying this PR. `Security` run `42898137431` warned that `cargo-audit@0.23.0` had no verified manifest in `taiki-e/install-action` and fell back to an unverified `cargo-binstall` download | F14 bumped cargo-audit to a crates.io release newer than the pinned install-action's manifest | Pinned `cargo-audit@0.22.2`, the newest version the action verifies, with a blocker comment that points at tracking issue #176. `check-latest-dependencies.mjs` reports it as *held*, not outdated, while #176 is open, and flags it again once #176 is closed (`b373d4bb`). | Dependencies workflow (held-dependency mechanism) and the `Security` annotations |
+| F20 | warning (needs an organisation admin) | Found while verifying this PR. The Codecov PR comment starts with ":warning: Please install the codecov app to ensure uploads and comments are reliably processed" | The comment is posted by the shared `codecov-commenter` bot account, which Codecov uses when the Codecov GitHub App is not installed for the organisation. The upload itself works through OIDC (`csharp.yml`, `use_oidc: true`), and the report says that all modified lines are covered. | None possible in code: installing https://github.com/apps/codecov needs an organisation admin, and the workflow `GITHUB_TOKEN` cannot read app installations, so CI cannot detect it or gate on it. Listed under [Blocked on a maintainer](#blocked-on-a-maintainer). | n/a (not a check result) |
 
 Formatting fallout from the new tests was fixed in `6fbe4167`: the `Workflows` lint job rejected their prettier formatting.
 
@@ -51,6 +52,8 @@ Formatting fallout from the new tests was fixed in `6fbe4167`: the `Workflows` l
 2. Or renew `NUGET_API_KEY` with the **Push** scope (new packages and package versions) for `clink`, created by the package owner.
 
 The PR is not blocked by this: the preflight is advisory on pull requests. `main` keeps failing with that explicit remediation message until a maintainer acts. Since F2, lint, tests and build still report the code's own status in the meantime.
+
+**Codecov GitHub App (F20).** An organisation admin should install the [Codecov GitHub App](https://github.com/apps/codecov) for `link-foundation`, with access to this repository. Until then, coverage still uploads and is reported, but the PR comment carries Codecov's "Please install the codecov app" warning. This is not a check, so there is nothing for `main` to fail on. `.github/scripts/coverage.mjs` already makes uploads mandatory once Codecov reports the repository as activated.
 
 ## Template comparison
 
