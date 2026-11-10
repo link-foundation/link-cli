@@ -1,0 +1,2730 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "nodes": [
+              {
+                "oid": "6559ccf146235a8ca087962a49b2cd49253c1c61",
+                "committedDate": "2026-11-10T11:19:15Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512686,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512564,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512568,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512630,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512917,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512799,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806512882,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806513148,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T11:24:56Z",
+                            "completedAt": "2026-11-10T11:35:43Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806513013,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806513280,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42806513397,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T11:27:32Z",
+                            "completedAt": "2026-11-10T12:00:56Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "286801f2d77d2e0946f1616b577e2e1a33aa0bec",
+                "committedDate": "2026-11-10T10:34:50Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368183,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368045,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368057,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368053,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368082,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368223,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368087,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368303,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T10:52:34Z",
+                            "completedAt": "2026-11-10T11:26:37Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368325,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T10:47:50Z",
+                            "completedAt": "2026-11-10T11:00:57Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368160,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800368226,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "45924dcb71de8b599905ec99c7380c6790ee90d4",
+                "committedDate": "2026-11-10T10:34:32Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326650,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326685,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326570,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326639,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326930,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326687,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326762,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326977,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800326880,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800327032,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42800327177,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "ca5ac6cd21dce542e3679fe0d3958784923ac044",
+                "committedDate": "2026-11-10T10:23:47Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798434,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T10:46:40Z",
+                            "completedAt": "2026-11-10T10:52:20Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798406,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798222,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798234,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798250,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798508,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798313,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798530,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798388,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798798510,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42798799052,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "8f0bcd2c766323761d19a9a09e201e8a65fdd93b",
+                "committedDate": "2026-11-10T10:13:02Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271172,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271187,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271184,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271205,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T10:29:54Z",
+                            "completedAt": "2026-11-10T10:46:23Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271290,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271300,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T10:35:03Z",
+                            "completedAt": "2026-11-10T10:47:00Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271356,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271417,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271451,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271663,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797271590,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "88211e56ac79c54f42946dc5d526e26892402fc0",
+                "committedDate": "2026-11-10T10:13:02Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              },
+              {
+                "oid": "6fc3e936f07aa5ef2accdc0d6f81a8b5eb694be0",
+                "committedDate": "2026-11-10T10:11:45Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080305,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080307,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080309,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080567,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080589,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080394,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080392,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080402,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080656,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080666,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42797080735,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "a07a9779446c782ccba5bc93d5ca52817ea79f20",
+                "committedDate": "2026-11-10T10:05:06Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144337,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144343,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T10:15:08Z",
+                            "completedAt": "2026-11-10T10:27:10Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144166,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144180,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144176,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144209,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T10:16:15Z",
+                            "completedAt": "2026-11-10T10:29:28Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144519,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144566,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144597,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144395,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42796144582,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "58042f3d6bbdc3ad189b078a077436127e172ca9",
+                "committedDate": "2026-11-10T09:48:57Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875614,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875668,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875689,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T10:00:02Z",
+                            "completedAt": "2026-11-10T10:10:09Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875713,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875757,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875770,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793875802,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793876160,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793876171,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793876169,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793876369,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "21cde63ce7bf47e0ee21cec908e788cbe72eb1b0",
+                "committedDate": "2026-11-10T09:48:18Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783377,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T09:52:52Z",
+                            "completedAt": "2026-11-10T09:59:20Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783382,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783393,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783396,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783407,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783410,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783660,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783716,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783766,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783621,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793783851,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "a1d8aa705a83151e2e48a2801955b03799a20d7e",
+                "committedDate": "2026-11-10T09:44:46Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288727,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288740,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288754,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288763,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288785,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288826,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T09:51:53Z",
+                            "completedAt": "2026-11-10T10:16:02Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288828,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793289087,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793288909,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793289146,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42793289039,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "d8f8165a3db362c24ca7657f19324c337fac54a9",
+                "committedDate": "2026-11-10T07:36:31Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490444,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490476,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490474,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490527,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490533,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T07:41:32Z",
+                            "completedAt": "2026-11-10T08:09:47Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490749,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490619,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490850,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490867,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490908,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T07:39:46Z",
+                            "completedAt": "2026-11-10T07:51:10Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42776490870,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "3f10358a3cca9304c2e071cae31e3d4498a1556c",
+                "committedDate": "2026-11-10T06:53:26Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537657,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537696,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537716,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537871,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537870,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537824,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T06:56:48Z",
+                            "completedAt": "2026-11-10T07:08:56Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537972,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537981,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771537838,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771538108,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42771538017,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T06:58:34Z",
+                            "completedAt": "2026-11-10T07:33:49Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "6a47d862eb40d46f9921a4173114ebf3ec48ca6b",
+                "committedDate": "2026-11-10T06:53:26Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              },
+              {
+                "oid": "d8531f73b8cb0739372b58a75b66e79a309d9537",
+                "committedDate": "2026-11-10T06:47:58Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942294,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942296,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942340,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942385,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942440,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942459,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942588,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T06:52:49Z",
+                            "completedAt": "2026-11-10T06:56:23Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942590,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942495,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942723,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42770942862,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "aba7e4aed5d3ab6fb77922821b53bc11fac40996",
+                "committedDate": "2026-11-10T06:36:10Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622790,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622836,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622861,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622896,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622907,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622915,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622916,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T06:40:00Z",
+                            "completedAt": "2026-11-10T06:58:03Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769622931,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769623294,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769623301,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "SUCCESS",
+                            "startedAt": "2026-11-10T06:39:18Z",
+                            "completedAt": "2026-11-10T06:49:53Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769623522,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "36f6f5734e6ec6d8c9b873d8a8b65a5a5a820a71",
+                "committedDate": "2026-11-10T06:33:22Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309595,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309668,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309677,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309694,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309756,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309768,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309770,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309934,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309947,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309956,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42769309962,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "00be81b1b98f57df0b475f08e446a7b8e99d9a2e",
+                "committedDate": "2026-11-10T06:29:21Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852899,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852777,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852785,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852792,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852814,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852812,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768852839,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768853017,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T06:34:52Z",
+                            "completedAt": "2026-11-10T06:39:52Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768853056,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": [
+                          {
+                            "name": "Test (windows-2025)",
+                            "conclusion": "CANCELLED",
+                            "startedAt": "2026-11-10T06:32:30Z",
+                            "completedAt": "2026-11-10T06:39:07Z"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768853162,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42768853303,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "3090796f59e832fc8e77d63329e26aabf8d13c13",
+                "committedDate": "2026-11-10T06:29:21Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              },
+              {
+                "oid": "c21ed84c8800b425fb5e14fdc94737073c939426",
+                "committedDate": "2026-11-10T06:29:09Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              },
+              {
+                "oid": "0348535a0b0c90a56889d7640547d53f5605f56c",
+                "committedDate": "2026-11-10T06:29:09Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              },
+              {
+                "oid": "2145a7c5377ce90505adc6effadd60b5e32b8efb",
+                "committedDate": "2026-11-10T06:29:09Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              },
+              {
+                "oid": "1e197ce41072a8deda625d44e8204da4e28b4d2f",
+                "committedDate": "2026-11-10T06:01:16Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737756,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737784,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737779,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737781,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737925,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737810,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737808,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737833,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765737914,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765738086,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765738176,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "0a1c7901cec452d1dd98449f1ad267c97eef225a",
+                "committedDate": "2026-11-10T05:58:51Z",
+                "checkSuites": {
+                  "nodes": [
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480431,
+                        "workflow": {
+                          "name": "WebAssembly CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480442,
+                        "workflow": {
+                          "name": "DeepClient CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480474,
+                        "workflow": {
+                          "name": "C# CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480481,
+                        "workflow": {
+                          "name": "Broken Link Checker"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480629,
+                        "workflow": {
+                          "name": "Dependencies"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480614,
+                        "workflow": {
+                          "name": "Docs"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480636,
+                        "workflow": {
+                          "name": "JS client CI"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480576,
+                        "workflow": {
+                          "name": "Rust CI/CD Pipeline"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480764,
+                        "workflow": {
+                          "name": "Crash tests"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480609,
+                        "workflow": {
+                          "name": "Security"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": {
+                        "databaseId": 42765480914,
+                        "workflow": {
+                          "name": "Workflows"
+                        }
+                      },
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "workflowRun": null,
+                      "checkRuns": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "oid": "2f277e2a62799167836894c00c6f4fe70f69d4ff",
+                "committedDate": "2026-11-10T05:29:20Z",
+                "checkSuites": {
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

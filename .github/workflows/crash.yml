@@ -94,8 +94,9 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -126,6 +127,18 @@ jobs:
             crash-rust.json
             ${{ runner.temp }}/crash
           if-no-files-found: ignore
+
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
   csharp:
     name: Kill and repair (C#)
@@ -177,8 +190,9 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update --target wasm32-unknown-unknown
           rustup default stable
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -213,6 +227,18 @@ jobs:
             ${{ runner.temp }}/crash
           if-no-files-found: ignore
 
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/wasm/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+
   docker-in-docker:
     name: Kill and repair inside docker:dind (Rust)
     runs-on: ubuntu-24.04
@@ -227,8 +253,9 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -280,6 +307,18 @@ jobs:
             crash-dind.json
             crash-dind
           if-no-files-found: ignore
+
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
   pipeline-status:
     name: Pipeline Status (crash)

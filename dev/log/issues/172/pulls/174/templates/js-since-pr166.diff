@@ -1,0 +1,1681 @@
+diff --git a/.github/actions/artifact-transport/package-lock.json b/.github/actions/artifact-transport/package-lock.json
+index cc27c34..74a22f8 100644
+--- a/.github/actions/artifact-transport/package-lock.json
++++ b/.github/actions/artifact-transport/package-lock.json
+@@ -88,6 +88,22 @@
+         "minimatch": "^10.2.5"
+       }
+     },
++    "node_modules/@actions/glob/node_modules/minimatch": {
++      "version": "11.0.5",
++      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.5.tgz",
++      "integrity": "sha512-snPlVppFcYWfLLFQGhDxUyBcHNtMlWmn3jtj7pEaO+DP8pqL0IvAzXhMYmn1z9ASNtgmwLBdFxSf4tMUB0OTKA==",
++      "license": "BlueOak-1.0.0",
++      "dependencies": {
++        "@isaacs/nonrecursive-glob-match": "^1.1.0",
++        "brace-expansion": "^5.0.12"
++      },
++      "engines": {
++        "node": "20 || >=22"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/isaacs"
++      }
++    },
+     "node_modules/@actions/http-client": {
+       "version": "4.0.1",
+       "resolved": "https://registry.npmjs.org/@actions/http-client/-/http-client-4.0.1.tgz",
+@@ -308,9 +324,9 @@
+       }
+     },
+     "node_modules/@isaacs/nonrecursive-glob-match": {
+-      "version": "1.0.3",
+-      "resolved": "https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.0.3.tgz",
+-      "integrity": "sha512-SI7kyKHq4XXDRozw+r9GlRZkia1ZkFrpLW98r2IC2Bpr8YkFGE3fvjzmxCG0x78A++69HmDNrDvSMYBZmHGpKA==",
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.1.0.tgz",
++      "integrity": "sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw==",
+       "license": "BlueOak-1.0.0"
+     },
+     "node_modules/@nodable/entities": {
+@@ -2176,21 +2192,6 @@
+         "node": ">= 0.4"
+       }
+     },
+-    "node_modules/minimatch": {
+-      "version": "10.2.6",
+-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.6.tgz",
+-      "integrity": "sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==",
+-      "license": "BlueOak-1.0.0",
+-      "dependencies": {
+-        "brace-expansion": "^5.0.8"
+-      },
+-      "engines": {
+-        "node": "18 || 20 || >=22"
+-      },
+-      "funding": {
+-        "url": "https://github.com/sponsors/isaacs"
+-      }
+-    },
+     "node_modules/minimist": {
+       "version": "1.2.8",
+       "resolved": "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz",
+diff --git a/.github/actions/artifact-transport/package.json b/.github/actions/artifact-transport/package.json
+index 8ec64d7..69e95bc 100644
+--- a/.github/actions/artifact-transport/package.json
++++ b/.github/actions/artifact-transport/package.json
+@@ -14,6 +14,8 @@
+     },
+     "@actions/artifact": {
+       "unzip-stream": "0.3.4"
+-    }
++    },
++    "minimatch@>=7 <11": "^11.0.4",
++    "glob@>=9 <=14.0.1": "^14.0.2"
+   }
+ }
+diff --git a/.github/workflows/example-app.yml b/.github/workflows/example-app.yml
+index ebc4b30..56d7a30 100644
+--- a/.github/workflows/example-app.yml
++++ b/.github/workflows/example-app.yml
+@@ -9,6 +9,14 @@ on:
+       - 'package.json'
+       - 'package-lock.json'
+       - 'scripts/update-preview-images.mjs'
++      - 'scripts/setup-preview-gh.sh'
++      - 'scripts/check-preview-tools.sh'
++      - 'scripts/push-main-with-rebase-retry.mjs'
++      - 'scripts/push-failure-classifier.mjs'
++      - 'scripts/land-via-pull-request.mjs'
++      - 'scripts/run-command.mjs'
++      - 'scripts/release-metadata.mjs'
++      - 'scripts/github-actions-log.mjs'
+       - 'scripts/check-pages.sh'
+       - 'scripts/check-desktop-compat.mjs'
+       - 'scripts/deploy-pages.mjs'
+@@ -26,6 +34,14 @@ on:
+       - 'package.json'
+       - 'package-lock.json'
+       - 'scripts/update-preview-images.mjs'
++      - 'scripts/setup-preview-gh.sh'
++      - 'scripts/check-preview-tools.sh'
++      - 'scripts/push-main-with-rebase-retry.mjs'
++      - 'scripts/push-failure-classifier.mjs'
++      - 'scripts/land-via-pull-request.mjs'
++      - 'scripts/run-command.mjs'
++      - 'scripts/release-metadata.mjs'
++      - 'scripts/github-actions-log.mjs'
+       - 'scripts/check-pages.sh'
+       - 'scripts/check-desktop-compat.mjs'
+       - 'scripts/deploy-pages.mjs'
+@@ -289,7 +305,33 @@ jobs:
+   # Regenerate example-app preview screenshots (docs/screenshots/example-app/*)
+   # using browser-commander + Playwright so README/site images always reflect
+   # the current UI. Issue: #62. Implementation: scripts/update-preview-images.mjs.
++  preview-tools:
++    name: Preview container tools
++    runs-on: ubuntu-24.04
++    container:
++      image: mcr.microsoft.com/playwright@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53 # v1.59.1-noble
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-preview-tools
++      cancel-in-progress: true
++    permissions:
++      contents: read
++    defaults:
++      run:
++        shell: bash
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - name: Trust the checkout
++        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
++      - name: Install pinned GitHub CLI
++        run: bash scripts/setup-preview-gh.sh
++      - name: Check preview container tools
++        run: bash scripts/check-preview-tools.sh
++
+   preview-regen:
++    needs: [preview-tools]
+     name: Regenerate Preview Images
+     runs-on: ubuntu-24.04
+     container:
+@@ -329,6 +371,12 @@ jobs:
+       - name: Trust the checkout
+         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+ 
++      - name: Install pinned GitHub CLI
++        run: bash scripts/setup-preview-gh.sh
++
++      - name: Check preview container tools
++        run: bash scripts/check-preview-tools.sh
++
+       - name: Install example app dependencies
+         run: npm ci --prefix examples/universal-app --no-audit --no-fund
+ 
+@@ -453,6 +501,7 @@ jobs:
+       - android-build
+       - ios-build
+       - preview-regen
++      - preview-tools
+     # actions: read lets the gate list this run's jobs and name the ones
+     # GitHub never acquired a runner for.
+     permissions:
+diff --git a/.github/workflows/javascript-first-example.yml b/.github/workflows/javascript-first-example.yml
+index c970776..967fd80 100644
+--- a/.github/workflows/javascript-first-example.yml
++++ b/.github/workflows/javascript-first-example.yml
+@@ -6,6 +6,7 @@ on:
+       - 'examples/javascript-first/**'
+       - '.github/workflows/javascript-first*.yml'
+       - 'tests/javascript-first-gate.test.js'
++      - 'tests/javascript-first-adoption.test.js'
+       - '.github/actions/artifact-transport/**'
+       - 'scripts/artifact-*.mjs'
+   push:
+@@ -23,6 +24,8 @@ jobs:
+   javascript-first:
+     uses: ./.github/workflows/javascript-first-gate.yml
+     with:
++      # Reference integration: the Rust jobs below are installed with the gate.
++      rust-template-applied: true
+       source-sha: ${{ github.event.pull_request.head.sha || github.sha }}
+       javascript-command: node --test examples/javascript-first/native-check.mjs
+       parity-command: node examples/javascript-first/check-parity.mjs --strict
+diff --git a/.github/workflows/javascript-first-gate.yml b/.github/workflows/javascript-first-gate.yml
+index 3ed29d9..4e01f01 100644
+--- a/.github/workflows/javascript-first-gate.yml
++++ b/.github/workflows/javascript-first-gate.yml
+@@ -3,6 +3,10 @@ name: JavaScript-first gate
+ on:
+   workflow_call:
+     inputs:
++      rust-template-applied:
++        description: The Rust CI/CD template is applied together with this gate and all Rust jobs depend on it
++        required: true
++        type: boolean
+       source-sha:
+         description: Immutable forty-character commit SHA to validate, including release candidates
+         required: true
+@@ -29,6 +33,8 @@ permissions:
+ 
+ jobs:
+   javascript-first:
++    name: JavaScript-first readiness
++    if: inputs.rust-template-applied
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     outputs:
+diff --git a/.github/workflows/links.yml b/.github/workflows/links.yml
+index 8bf4414..10989ff 100644
+--- a/.github/workflows/links.yml
++++ b/.github/workflows/links.yml
+@@ -14,6 +14,9 @@ on:
+       - '.lycheeignore'
+       - 'scripts/check-web-archive.mjs'
+       - 'scripts/lychee-report.mjs'
++      - 'scripts/install-lychee.sh'
++      - 'tests/lychee-install.test.js'
++      - 'tests/lychee-step.test.js'
+       - 'scripts/recheck-broken-links.mjs'
+       - 'tests/fixtures/lychee-report.md'
+       - 'tests/links-workflow.test.js'
+@@ -30,6 +33,9 @@ on:
+       - '.lycheeignore'
+       - 'scripts/check-web-archive.mjs'
+       - 'scripts/lychee-report.mjs'
++      - 'scripts/install-lychee.sh'
++      - 'tests/lychee-install.test.js'
++      - 'tests/lychee-step.test.js'
+       - 'scripts/recheck-broken-links.mjs'
+       - 'tests/fixtures/lychee-report.md'
+       - 'tests/links-workflow.test.js'
+@@ -82,40 +88,45 @@ jobs:
+           key: cache-lychee-${{ runner.os }}-${{ steps.link-cache.outputs.day }}-${{ github.sha }}
+           restore-keys: cache-lychee-${{ runner.os }}-${{ steps.link-cache.outputs.day }}-
+ 
++      - name: Install pinned lychee with download retries
++        run: bash scripts/install-lychee.sh
++        env:
++          LYCHEE_VERSION: v0.24.2
++
+       - name: Check links with lychee
+         id: lychee
+-        uses: lycheeverse/lychee-action@v2
+-        with:
+-          # Check all Markdown and HTML files
+-          # Exclude case-studies directory - these are research documents from
+-          # external repos with references to files and issues that don't exist
+-          # in this repository (similar exclusion pattern as eslint.config.js)
+-          # Exclude the Vite source HTML because its root-relative app asset
+-          # URLs are only valid when served by Vite.
+-          # Exclude tests/fixtures - the captured lychee reports there contain
+-          # deliberately broken links used as parser test input.
+-          args: >-
+-            --verbose
+-            --no-progress
+-            --cache
+-            --max-cache-age 1d
+-            --max-retries 3
+-            --timeout 30
+-            --hidden
+-            --extensions md,html
+-            --exclude-path docs/case-studies
+-            --exclude-path dev/log
+-            --exclude-path examples/universal-app/index.html
+-            --exclude-path tests/fixtures
+-            .
+-          # Don't fail the workflow immediately - we want to check web archive first
+-          fail: false
+-          # Output file for broken links report (used by check-web-archive.mjs)
+-          output: lychee/out.md
+-          # Write a job summary
+-          jobSummary: true
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++        run: |
++          mkdir -p lychee
++          # Discard a stale report so a CLI error cannot reuse its evidence.
++          rm -f lychee/out.md
++          code=0
++          # Keep research data, Vite-only asset URLs and parser fixtures out
++          # of the raw file scan, as in the previous action configuration.
++          lychee --mode task --format markdown --output lychee/out.md \
++            --verbose --no-progress --cache --max-cache-age 1d \
++            --max-retries 3 --timeout 30 --hidden --extensions md,html \
++            --exclude-path docs/case-studies --exclude-path dev/log \
++            --exclude-path examples/universal-app/index.html \
++            --exclude-path tests/fixtures . || code=$?
++          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
++          if [ ! -s lychee/out.md ]; then
++            echo "::error title=lychee failed::lychee exited with code $code without writing a report."
++            exit 1
++          fi
++          cat lychee/out.md
++          cat lychee/out.md >> "$GITHUB_STEP_SUMMARY"
++          if [ "$code" -ne 0 ] && [ "$code" -ne 2 ]; then
++            echo "::error title=lychee failed::lychee exited with code $code."
++            exit 1
++          fi
++          if ! grep -Eq 'Total[[:space:]]*\|[[:space:]]*[1-9][0-9]*[[:space:]]*\|' lychee/out.md; then
++            echo "::error title=No links checked::Report has no positive Total count. Check the lychee arguments."
++            exit 1
++          fi
++          # Exit 2 with a report is left to the existing re-check/archive
++          # diagnostics and final failure step, just as with fail: false.
+ 
+       - name: Re-check transient link failures
+         # Retry transport errors, 429, and 5xx within a shared budget.
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 61c90af..16c592a 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -62,7 +62,7 @@ jobs:
+       actions: read
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: github.event_name != 'workflow_dispatch'
+     outputs:
+       js-changed: ${{ steps.changes.outputs.js-changed }}
+@@ -95,10 +95,11 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-test-compilation
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: |
+-      needs.detect-changes.outputs.js-changed == 'true'
++      !cancelled() &&
++      (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.js-changed == 'true')
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -120,11 +121,13 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-check-file-line-limits
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: |
++      !cancelled() &&
++      (github.event_name == 'workflow_dispatch' ||
+       needs.detect-changes.outputs.docs-changed == 'true' ||
+-      needs.detect-changes.outputs.any-code-changed == 'true'
++      needs.detect-changes.outputs.any-code-changed == 'true')
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -152,7 +155,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-version-check
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: github.event_name == 'pull_request'
+     steps:
+       - uses: actions/checkout@v7
+@@ -178,7 +181,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true'
+     steps:
+@@ -223,7 +226,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: |
+       !cancelled() &&
+@@ -296,7 +299,7 @@ jobs:
+     timeout-minutes: 15
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.runtime }}-${{ matrix.os }}
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs:
+       [
+         detect-changes,
+@@ -408,7 +411,7 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-docker-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true'
+     permissions:
+@@ -460,7 +463,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-validate-docs
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: |
+       needs.detect-changes.outputs.docs-changed == 'true'
+@@ -1055,7 +1058,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: >-
+       !cancelled()
+     needs:
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index 3432a02..b9e207e 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -118,6 +118,8 @@ jobs:
+           # Same level as the npm-audit gate; npm-audit annotates the lower
+           # severities this accepts.
+           fail-on-severity: high
++          show-openssf-scorecard: true
++          warn-on-openssf-scorecard-level: 0
+           comment-summary-in-pr: on-failure
+ 
+   npm-audit:
+diff --git a/experiments/issue-287/reproduce.mjs b/experiments/issue-287/reproduce.mjs
+new file mode 100644
+index 0000000..d5ee274
+--- /dev/null
++++ b/experiments/issue-287/reproduce.mjs
+@@ -0,0 +1,113 @@
++// Offline, bounded comparison with the issue's immutable template snapshot.
++import assert from 'node:assert/strict';
++import { execFileSync } from 'node:child_process';
++import { cpSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join, resolve } from 'node:path';
++import { pathToFileURL } from 'node:url';
++
++const before = process.argv.includes('--before');
++const baseline = '7877a27980664bc6453e80262f8391d1c2562ab1';
++const temp = mkdtempSync(join(tmpdir(), 'issue-287-repro-'));
++try {
++  cpSync('scripts', join(temp, 'scripts'), { recursive: true });
++  writeFileSync(join(temp, 'package.json'), '{"type":"module"}');
++  if (before) {
++    for (const name of [
++      'push-main-with-rebase-retry',
++      'push-failure-classifier',
++      'npm-audit-report',
++      'recheck-broken-links',
++      'check-codeql-results',
++    ]) {
++      writeFileSync(
++        join(temp, 'scripts', `${name}.mjs`),
++        execFileSync('git', ['show', `${baseline}:scripts/${name}.mjs`], {
++          timeout: 5000,
++        })
++      );
++    }
++  }
++  const load = (name) =>
++    import(pathToFileURL(resolve(temp, 'scripts', `${name}.mjs`)).href);
++  const { pushWithRecovery } = await load('push-main-with-rebase-retry');
++  let attempts = 0;
++  let recovered = false;
++  try {
++    await pushWithRecovery({
++      runner: () =>
++        Promise.resolve(
++          ++attempts === 1
++            ? { code: 1, stderr: 'remote: fatal error in commit_refs_rules' }
++            : { code: 0 }
++        ),
++      sleepFn: async () => {},
++      logger: { log() {} },
++    });
++    recovered = true;
++  } catch {
++    /* the old implementation fails at the first push */
++  }
++  assert.equal(recovered, !before);
++  assert.equal(attempts, before ? 1 : 2);
++  console.log(
++    `push retry: ${before ? 'reproduced immediate failure' : 'recovered unchanged push'}`
++  );
++
++  const { main } = await load('npm-audit-report');
++  let status;
++  const originalLog = console.log;
++  try {
++    console.log = () => {};
++    status = main({}, () => ({ status: 2, stdout: '{"vulnerabilities":{}}' }));
++  } finally {
++    console.log = originalLog;
++  }
++  assert.equal(status, before ? 0 : 1);
++  console.log(
++    `audit transport: ${before ? 'reproduced false pass' : 'rejected failed execution'}`
++  );
++
++  const { parseLycheeFailures } = await load('recheck-broken-links');
++  const failures = parseLycheeFailures(
++    '## Errors per input\n* [404] https://example.com/missing\n* [ERROR] https://example.com/reset\n'
++  );
++  assert.equal(failures.length, before ? 1 : 2);
++  console.log(`lychee adjacent errors: ${failures.length} records`);
++
++  const { checkCodeqlResults } = await load('check-codeql-results');
++  const directory = join(temp, 'sarif');
++  mkdirSync(directory);
++  writeFileSync(
++    join(directory, 'example.sarif'),
++    JSON.stringify({
++      version: '2.1.0',
++      runs: [
++        {
++          tool: { driver: { name: 'CodeQL' } },
++          results: [],
++          invocations: [
++            {
++              executionSuccessful: true,
++              toolExecutionNotifications: [
++                { level: 'error', message: { text: 'Extraction failed' } },
++              ],
++            },
++          ],
++        },
++      ],
++    })
++  );
++  let rejected = false;
++  try {
++    checkCodeqlResults(directory, () => {});
++  } catch {
++    rejected = true;
++  }
++  assert.equal(rejected, !before);
++  console.log(
++    `CodeQL extraction: ${before ? 'reproduced false pass' : 'rejected extraction diagnostic'}`
++  );
++} finally {
++  rmSync(temp, { recursive: true, force: true });
++}
+diff --git a/scripts/check-ci-workflows.mjs b/scripts/check-ci-workflows.mjs
+index 78701d9..1edff9d 100644
+--- a/scripts/check-ci-workflows.mjs
++++ b/scripts/check-ci-workflows.mjs
+@@ -72,6 +72,36 @@ function workflowFiles(directory) {
+   });
+ }
+ 
++/** Keep actionlint's temporary self-repository exception limited to actual users. */
++export function checkSelfRepositoryPolicy(files, config) {
++  const block =
++    config
++      .replace(/\r\n/g, '\n')
++      .match(
++        /\n {2}self-repository:\n {4}ignore:\n((?: {6}- [^\n]+\r?\n?)*)/
++      )?.[1] ?? '';
++  const allowed = new Set(
++    Array.from(block.matchAll(/- ([^\s]+)[ \t]*$/gm), (match) => match[1])
++  );
++  const errors = [];
++  const used = new Set();
++  for (const [path, text] of Object.entries(files)) {
++    if (/^\s*(?:- )?uses: ['"]?\.\//m.test(text)) {
++      const name = path.split(/[\\/]/).at(-1);
++      used.add(name);
++      if (!allowed.has(name)) {
++        errors.push(`Unlisted self-repository action user: ${path}`);
++      }
++    }
++  }
++  for (const name of allowed) {
++    if (!used.has(name)) {
++      errors.push(`Unused or broad self-repository exception: ${name}`);
++    }
++  }
++  return errors;
++}
++
+ if (
+   process.argv[1] &&
+   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+@@ -86,6 +116,21 @@ if (
+       process.exitCode = 1;
+     }
+   }
++  let selfRepositoryConfig = '';
++  try {
++    selfRepositoryConfig = readFileSync('.github/zizmor.yml', 'utf8');
++  } catch (error) {
++    if (error.code !== 'ENOENT') {
++      throw error;
++    }
++  }
++  for (const error of checkSelfRepositoryPolicy(
++    Object.fromEntries(files.map((path) => [path, readFileSync(path, 'utf8')])),
++    selfRepositoryConfig
++  )) {
++    console.error(`::error::${error}`);
++    process.exitCode = 1;
++  }
+   if (!process.exitCode) {
+     console.log('Workflow package, zizmor, and hosted runner pins verified');
+   }
+diff --git a/scripts/check-codeql-results.mjs b/scripts/check-codeql-results.mjs
+index 5f6af41..026b890 100644
+--- a/scripts/check-codeql-results.mjs
++++ b/scripts/check-codeql-results.mjs
+@@ -14,6 +14,62 @@ function reportsIn(directory) {
+   });
+ }
+ 
++function describeNotification(notification) {
++  const descriptor =
++    notification?.descriptor?.id ??
++    notification?.associatedRule?.id ??
++    'unknown diagnostic';
++  const locations = Array.isArray(notification?.locations)
++    ? notification.locations
++        .map((location) => {
++          const physical = location?.physicalLocation;
++          return `${physical?.artifactLocation?.uri ?? 'unknown location'}:${physical?.region?.startLine ?? '?'}`;
++        })
++        .join(', ')
++    : '';
++  return `${descriptor} ${locations}`;
++}
++
++function validNotification(notification, message, level) {
++  return (
++    notification &&
++    !Array.isArray(notification) &&
++    typeof notification === 'object' &&
++    typeof message === 'string' &&
++    ['error', 'warning', 'note', 'none'].includes(level)
++  );
++}
++
++function invocationDiagnostics(invocation, file, runIndex) {
++  const failures = [];
++  for (const key of [
++    'toolExecutionNotifications',
++    'toolConfigurationNotifications',
++  ]) {
++    const notifications = invocation[key];
++    if (notifications === undefined) {
++      continue;
++    }
++    if (!Array.isArray(notifications)) {
++      failures.push(`${file} run ${runIndex}: malformed ${key}`);
++      continue;
++    }
++    for (const notification of notifications) {
++      const level = notification?.level ?? 'warning';
++      const message =
++        notification?.message?.text ?? notification?.message?.markdown;
++      if (!validNotification(notification, message, level)) {
++        failures.push(`${file} run ${runIndex}: malformed ${key} notification`);
++      } else if (level === 'error' || level === 'warning') {
++        failures.push(
++          `${file} run ${runIndex}: ${key} ${describeNotification(notification)} [${level}] ${message}`
++        );
++      }
++    }
++  }
++  return failures;
++}
++
+ function checkRun(run, index, file) {
+   if (
+     typeof run?.tool?.driver?.name !== 'string' ||
+@@ -29,10 +85,15 @@ function checkRun(run, index, file) {
+       `Invalid results/tool or unsuccessful invocation in run ${index}`
+     );
+   }
+-  return run.results.map(
+-    (finding) =>
+-      `${file} run ${index}: ${finding?.ruleId ?? 'unknown rule'} [${finding?.level ?? 'unspecified severity'}] ${finding?.message?.text ?? 'CodeQL finding'}`
+-  );
++  return [
++    ...(run.invocations ?? []).flatMap((invocation) =>
++      invocationDiagnostics(invocation, file, index)
++    ),
++    ...run.results.map(
++      (finding) =>
++        `${file} run ${index}: ${finding?.ruleId ?? 'unknown rule'} [${finding?.level ?? 'unspecified severity'}] ${finding?.message?.text ?? 'CodeQL finding'}`
++    ),
++  ];
+ }
+ 
+ function checkReport(file) {
+diff --git a/scripts/check-preview-tools.sh b/scripts/check-preview-tools.sh
+new file mode 100644
+index 0000000..801efa9
+--- /dev/null
++++ b/scripts/check-preview-tools.sh
+@@ -0,0 +1,33 @@
++#!/usr/bin/env bash
++# Check the real container tools and Git credential helper without network writes.
++set -euo pipefail
++
++for tool in bash curl git gh node npm sha256sum tar; do
++  if ! command -v "$tool" > /dev/null; then
++    echo "::error::Preview container is missing required tool: $tool"
++    exit 1
++  fi
++  if [[ "${CI_SCRIPTS_DEBUG:-0}" == 1 ]]; then
++    printf '::debug::Preview tool %s: %s\n' "$tool" "$(command -v "$tool")"
++  fi
++done
++gh --version
++git --version
++node --version
++npm --version
++
++fixture="$(mktemp -d)"
++trap 'rm -rf "$fixture"' EXIT
++export GIT_CONFIG_NOSYSTEM=1
++export GIT_CONFIG_GLOBAL="$fixture/gitconfig"
++export GH_CONFIG_DIR="$fixture/gh"
++export GH_HOST=github.com
++export GH_TOKEN=preview-tools-fixture
++export GIT_TERMINAL_PROMPT=0
++gh auth setup-git
++credential="$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill)"
++if [[ "$credential" != *'password=preview-tools-fixture'* ]]; then
++  echo '::error::Preview Git credential helper did not return the fixture credential.'
++  exit 1
++fi
++echo 'Preview container tools and GitHub credential helper verified.'
+diff --git a/scripts/check-web-archive.mjs b/scripts/check-web-archive.mjs
+index 6727e14..5112dde 100644
+--- a/scripts/check-web-archive.mjs
++++ b/scripts/check-web-archive.mjs
+@@ -32,7 +32,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
+ import { readFileSync, appendFileSync, existsSync } from 'node:fs';
+ import { fileURLToPath } from 'node:url';
+ import path from 'node:path';
+-import { validateLycheeReport } from './lychee-report.mjs';
++import {
++  extractErrorsSection,
++  validateLycheeReport,
++} from './lychee-report.mjs';
+ 
+ const WAYBACK_API = 'https://archive.org/wayback/available?url=';
+ 
+@@ -61,25 +64,7 @@ function setOutput(name, value) {
+  * @param {string} kind - Failure section name; defaults to Errors
+  * @returns {string} The errors section, or the whole document when there is none
+  */
+-export function extractErrorsSection(content, kind = 'Errors') {
+-  const lines = content.split('\n');
+-  const start = lines.findIndex(
+-    (line) => /^#+\s+(Errors|Timeouts) per input\s*$/.exec(line)?.[1] === kind
+-  );
+-  if (start === -1) {
+-    return kind === 'Errors' ? content : '';
+-  }
+-  const heading = /^(#+)\s/.exec(lines[start])[1].length;
+-  const section = [];
+-  for (const line of lines.slice(start + 1)) {
+-    const next = /^(#+)\s/.exec(line);
+-    if (next && next[1].length <= heading) {
+-      break; // a sibling or parent heading ends the errors section
+-    }
+-    section.push(line);
+-  }
+-  return section.join('\n');
+-}
++export { extractErrorsSection } from './lychee-report.mjs';
+ 
+ /**
+  * Extract broken links from lychee markdown output.
+diff --git a/scripts/install-git-hooks.mjs b/scripts/install-git-hooks.mjs
+index ceef7cf..9614f18 100755
+--- a/scripts/install-git-hooks.mjs
++++ b/scripts/install-git-hooks.mjs
+@@ -35,7 +35,7 @@ export async function installGitHooks({
+   } catch {
+     hooksPath = '';
+   }
+-  if (!hooksPath) {
++  if (message || !hooksPath) {
+     log(`git hooks were not installed: ${message || 'husky said nothing'}`);
+     return 1;
+   }
+diff --git a/scripts/install-lychee.sh b/scripts/install-lychee.sh
+new file mode 100755
+index 0000000..0eeba83
+--- /dev/null
++++ b/scripts/install-lychee.sh
+@@ -0,0 +1,62 @@
++#!/usr/bin/env bash
++# Install a pinned lychee release with retries and a SHA-256 check.
++#
++# Adapted from link-assistant/hive-mind PR #4026 for issue #291.
++# Retry downloads only; a broken link must still fail the checker.
++#
++# Usage: LYCHEE_VERSION=v0.24.2 scripts/install-lychee.sh [install-dir]
++# Debug:  LYCHEE_INSTALL_DEBUG=1 prints every command.
++set -euo pipefail
++[ "${LYCHEE_INSTALL_DEBUG:-}" = 1 ] && set -x
++
++version="${LYCHEE_VERSION:?LYCHEE_VERSION is required, e.g. v0.24.2}"
++if ! [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
++  echo "::error title=lychee install::LYCHEE_VERSION must be a pinned release such as v0.24.2, got '$version'." >&2
++  exit 1
++fi
++install_dir="${1:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/lychee/bin}"
++case "$(uname -m)" in
++  x86_64 | amd64) arch=x86_64 ;;
++  aarch64 | arm64) arch=aarch64 ;;
++  *)
++    echo "::error title=lychee install::Unsupported architecture $(uname -m)." >&2
++    exit 1
++    ;;
++esac
++asset="lychee-${arch}-unknown-linux-gnu.tar.gz"
++base_url="${LYCHEE_DOWNLOAD_BASE_URL:-https://github.com/lycheeverse/lychee/releases/download}/lychee-${version}"
++
++work="$(mktemp -d)"
++trap 'rm -rf "$work"' EXIT
++
++# --retry-all-errors also retries HTTP 5xx/429 and dropped connections; --fail
++# keeps an error page from being saved as the archive.
++fetch() {
++  curl --fail --silent --show-error --location \
++    --retry "${LYCHEE_DOWNLOAD_RETRIES:-5}" --retry-all-errors --retry-delay "${LYCHEE_DOWNLOAD_RETRY_DELAY:-5}" \
++    --connect-timeout 20 --max-time 60 --retry-max-time 180 \
++    --output "$2" "$1"
++}
++
++echo "Downloading ${base_url}/${asset}"
++if ! fetch "${base_url}/${asset}" "$work/$asset" || ! fetch "${base_url}/${asset}.sha256" "$work/$asset.sha256"; then
++  echo "::error title=lychee install::Could not download lychee ${version} (${asset}) after retries. GitHub's release download service may be unavailable; re-run the job." >&2
++  exit 1
++fi
++
++expected="$(awk '{print $1; exit}' "$work/$asset.sha256")"
++actual="$(sha256sum "$work/$asset" | awk '{print $1}')"
++if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
++  echo "::error title=lychee install::Checksum mismatch for ${asset}: expected '${expected}', got '${actual}'." >&2
++  exit 1
++fi
++
++tar -xzf "$work/$asset" -C "$work"
++binary="$(find "$work" -type f -name lychee -perm -u+x | head -n 1)"
++if [ -z "$binary" ]; then
++  echo "::error title=lychee install::No lychee binary in ${asset}; the archive layout changed." >&2
++  exit 1
++fi
++install -D -m 0755 "$binary" "$install_dir/lychee"
++[ -n "${GITHUB_PATH:-}" ] && echo "$install_dir" >> "$GITHUB_PATH"
++"$install_dir/lychee" --version
+diff --git a/scripts/lychee-report.mjs b/scripts/lychee-report.mjs
+index 75c2f37..eaa44a0 100644
+--- a/scripts/lychee-report.mjs
++++ b/scripts/lychee-report.mjs
+@@ -22,3 +22,25 @@ export function validateLycheeReport(
+     );
+   }
+ }
++
++export function extractErrorsSection(content, kind = 'Errors') {
++  const lines = content.split('\n');
++  const start = lines.findIndex(
++    (line) => /^#+\s+(Errors|Timeouts) per input\s*$/.exec(line)?.[1] === kind
++  );
++  if (start === -1) {
++    return kind === 'Errors' && !/^#+\s+[^\r\n]+ per input\s*$/m.test(content)
++      ? content
++      : '';
++  }
++  const heading = /^(#+)\s/.exec(lines[start])[1].length;
++  const section = [];
++  for (const line of lines.slice(start + 1)) {
++    const next = /^(#+)\s/.exec(line);
++    if (next && next[1].length <= heading) {
++      break; // a sibling or parent heading ends the errors section
++    }
++    section.push(line);
++  }
++  return section.join('\n');
++}
+diff --git a/scripts/npm-audit-report.mjs b/scripts/npm-audit-report.mjs
+index 7229818..839d33a 100644
+--- a/scripts/npm-audit-report.mjs
++++ b/scripts/npm-audit-report.mjs
+@@ -55,10 +55,71 @@ function vulnerabilitiesOf(report) {
+       `npm audit failed: ${[code, summary, detail].filter(Boolean).join(': ')}`
+     );
+   }
+-  if (!report.vulnerabilities || typeof report.vulnerabilities !== 'object') {
++  if (
++    !report.vulnerabilities ||
++    typeof report.vulnerabilities !== 'object' ||
++    Array.isArray(report.vulnerabilities)
++  ) {
+     throw new Error('npm audit report has no vulnerabilities map');
+   }
+-  return Object.values(report.vulnerabilities);
++  const vulnerabilities = Object.values(report.vulnerabilities);
++  for (const vulnerability of vulnerabilities) {
++    validateVulnerability(vulnerability, report.vulnerabilities);
++  }
++  const reachesAdvisory = (name, seen = new Set()) => {
++    if (seen.has(name)) {
++      return false;
++    }
++    const next = new Set([...seen, name]);
++    return vulnerabilitiesMap[name].via.some(
++      (via) => typeof via === 'object' || reachesAdvisory(via, next)
++    );
++  };
++  const vulnerabilitiesMap = report.vulnerabilities;
++  for (const name of Object.keys(vulnerabilitiesMap)) {
++    if (!reachesAdvisory(name)) {
++      throw new Error(
++        `npm audit reference-only cycle has no advisory evidence: ${name}`
++      );
++    }
++  }
++  return vulnerabilities;
++}
++
++function validateAdvisory(via) {
++  rank(via.severity);
++  const complete = ['title', 'name', 'range'].every(
++    (key) => typeof via[key] === 'string' && via[key].trim()
++  );
++  const identified =
++    (typeof via.url === 'string' && /^https:\/\//.test(via.url)) ||
++    Number.isInteger(via.source);
++  if (!complete || !identified) {
++    throw new Error('npm audit advisory is missing identifying evidence');
++  }
++}
++
++function validateVulnerability(vulnerability, vulnerabilities) {
++  if (
++    !vulnerability ||
++    !Array.isArray(vulnerability.via) ||
++    vulnerability.via.length === 0
++  ) {
++    throw new Error('npm audit vulnerability has no advisory evidence');
++  }
++  rank(vulnerability.severity);
++  for (const via of vulnerability.via) {
++    if (
++      typeof via === 'string'
++        ? !Object.hasOwn(vulnerabilities, via)
++        : !via || typeof via !== 'object' || Array.isArray(via)
++    ) {
++      throw new Error('npm audit vulnerability has invalid advisory evidence');
++    }
++    if (typeof via === 'object') {
++      validateAdvisory(via);
++    }
++  }
+ }
+ 
+ /**
+@@ -98,6 +159,9 @@ export function collectAdvisories(report) {
+       advisories.set(id, entry);
+     }
+   }
++  if (advisories.size === 0 && Object.keys(report.vulnerabilities).length > 0) {
++    throw new Error('npm audit vulnerabilities contain no advisories');
++  }
+   return [...advisories.values()].sort(
+     (a, b) => rank(b.severity) - rank(a.severity) || a.id.localeCompare(b.id)
+   );
+@@ -206,6 +270,26 @@ export function report(stdout, options = {}) {
+   return render(classify(collectAdvisories(parsed), options), options);
+ }
+ 
++function runAudit(run, options) {
++  const audit = run('npm', ['audit', '--package-lock-only', '--json'], {
++    encoding: 'utf8',
++    maxBuffer: 64 * 1024 * 1024,
++  });
++  if (audit.error) {
++    throw audit.error;
++  }
++  if (audit.signal || (audit.status !== 0 && audit.status !== 1)) {
++    throw new Error(
++      `npm audit execution failed (${audit.signal || `exit ${audit.status}`})`
++    );
++  }
++  const result = report(audit.stdout, options);
++  if (audit.status === 1 && result.annotations.length === 0) {
++    throw new Error('npm audit exited 1 without advisory evidence');
++  }
++  return result;
++}
++
+ export function main(env = process.env, run = spawnSync) {
+   const options = {
+     directory: env.AUDIT_DIR || '.',
+@@ -217,14 +301,7 @@ export function main(env = process.env, run = spawnSync) {
+     if (options.fixableLevel) {
+       rank(options.fixableLevel);
+     }
+-    const audit = run('npm', ['audit', '--package-lock-only', '--json'], {
+-      encoding: 'utf8',
+-      maxBuffer: 64 * 1024 * 1024,
+-    });
+-    if (audit.error) {
+-      throw audit.error;
+-    }
+-    const result = report(audit.stdout, options);
++    const result = runAudit(run, options);
+     for (const line of result.annotations) {
+       console.log(line);
+     }
+diff --git a/scripts/publish-to-npm.mjs b/scripts/publish-to-npm.mjs
+index 10ea90e..2c81ce8 100644
+--- a/scripts/publish-to-npm.mjs
++++ b/scripts/publish-to-npm.mjs
+@@ -3,7 +3,7 @@
+ /**
+  * Publish to npm using OIDC trusted publishing
+  * Usage: node scripts/publish-to-npm.mjs [--should-pull] [--js-root <path>]
+- *   should_pull: Optional flag to pull latest changes before publishing (for release job)
++ *   should_pull: Verify the validated release commit landed on main before publishing
+  *
+  * Configuration:
+  * - CLI: --js-root <path> to explicitly set JavaScript root
+@@ -23,6 +23,7 @@ import { appendFileSync } from 'fs';
+ import { getJsRoot, needsCd, parseJsRootConfig } from './js-paths.mjs';
+ import { isPackageVersionPublished } from './npm-registry.mjs';
+ import { readPackageInfo } from './package-info.mjs';
++import { prepareReleasePublication } from './release-publication.mjs';
+ import {
+   buildAuthFailureGuidance,
+   isNonRetryableFailure,
+@@ -51,7 +52,7 @@ const config = makeConfig({
+       .option('should-pull', {
+         type: 'boolean',
+         default: getenv('SHOULD_PULL', false),
+-        describe: 'Pull latest changes before publishing',
++        describe: 'Verify the validated release commit landed on main',
+       })
+       .option('js-root', {
+         type: 'string',
+@@ -226,9 +227,8 @@ async function runPublishCommand(shell, jsRoot, originalCwd) {
+ 
+ async function main() {
+   try {
+-    if (shouldPull) {
+-      // Pull the latest changes we just pushed
+-      await $`git pull origin main`;
++    if (process.env.GITHUB_SHA || shouldPull) {
++      await prepareReleasePublication({ verifyRemote: shouldPull, jsRoot });
+     }
+ 
+     // Get current version
+diff --git a/scripts/push-failure-classifier.mjs b/scripts/push-failure-classifier.mjs
+index 0244704..aeb7705 100644
+--- a/scripts/push-failure-classifier.mjs
++++ b/scripts/push-failure-classifier.mjs
+@@ -84,9 +84,25 @@ export function isBlockedByRepositoryRule(result) {
+  * @returns {boolean}
+  */
+ export function isNonFastForward(result) {
+-  if (isBlockedByRepositoryRule(result)) {
++  if (isBlockedByRepositoryRule(result) || isAuthenticationFailure(result)) {
+     return false;
+   }
+   const output = combinedOutput(result, false);
+   return NON_FAST_FORWARD_PATTERNS.some((pattern) => output.includes(pattern));
+ }
++
++function isAuthenticationFailure(result) {
++  return /authentication failed|permission denied|could not read username|(?:http|requested url returned error)[ :]+40[13]\b/i.test(
++    combinedOutput(result)
++  );
++}
++
++/** Internal GitHub failures can reject an otherwise valid, unchanged push. */
++export function isTransientPushFailure(result) {
++  if (isBlockedByRepositoryRule(result) || isAuthenticationFailure(result)) {
++    return false;
++  }
++  return /fatal error in commit_refs_rules|(?:requested url returned error|http)[ :]+(?:429|5[0-9]{2})\b|remote: internal server error/i.test(
++    combinedOutput(result)
++  );
++}
+diff --git a/scripts/push-main-with-rebase-retry.mjs b/scripts/push-main-with-rebase-retry.mjs
+index c3a68ea..d2d8571 100644
+--- a/scripts/push-main-with-rebase-retry.mjs
++++ b/scripts/push-main-with-rebase-retry.mjs
+@@ -1,13 +1,15 @@
+ #!/usr/bin/env node
+ 
+ /**
+- * Push HEAD to a branch, recovering from BOTH ways the push can be rejected.
++ * Push HEAD to a branch with bounded recovery for server errors and races.
+  *
+- *   1. Lost race — another main writer pushed first. Rebase onto the new remote
++ *   1. Transient GitHub errors — retry the unchanged ref update three times.
++ *   2. Lost race — another main writer pushed first. Rebase onto the new remote
+  *      head and push again.
+- *   2. Repository rule violation (GH013 / GH006) — the branch refuses direct
++ *   3. Repository rule violation (GH013 / GH006) — the branch refuses direct
+  *      pushes. Rebasing can never satisfy a rule, so the same commit is landed
+- *      through a pull request instead (see land-via-pull-request.mjs).
++ *      through a pull request for preview updates. Releases fail with explicit
++ *      rule configuration guidance (see land-via-pull-request.mjs).
+  *
+  * Before the GH013 report in link-foundation/js-ai-driven-development-pipeline-template#143 every failure was treated as case 1: under a `pull_request`
+  * ruleset both attempts failed, the release job died after the version bump had
+@@ -32,7 +34,9 @@ import { landViaPullRequest } from './land-via-pull-request.mjs';
+ import {
+   isBlockedByRepositoryRule,
+   isNonFastForward,
++  isTransientPushFailure,
+ } from './push-failure-classifier.mjs';
++import { assertReleaseMetadataOnly } from './release-metadata.mjs';
+ import { CommandFailedError, runCommand, runStrict } from './run-command.mjs';
+ 
+ /**
+@@ -95,10 +99,48 @@ export async function pushWithRecovery({
+   mergeDelayMs,
+   sleepFn,
+   logger = console,
++  releaseParent,
+ }) {
+   const pushArgs = ['push', remote, `HEAD:${branch}`];
++  const sleep =
++    sleepFn || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
++  // Retrying the same ref update is idempotent, including a lost response.
++  // Revalidate release metadata before every attempt and after any rebase.
++  const push = async () => {
++    for (let attempt = 1; attempt <= 3; attempt++) {
++      if (releaseParent) {
++        await assertReleaseMetadataOnly({
++          runner,
++          parentSha: releaseParent,
++          logger,
++        });
++      }
++      const result = await runner('git', pushArgs, { logger });
++      if (process.env.CI_SCRIPTS_DEBUG === '1') {
++        logger.log(
++          `[push] attempt=${attempt} exit=${result.code} rules=${isBlockedByRepositoryRule(result)} transient=${isTransientPushFailure(result)} race=${isNonFastForward(result)}`
++        );
++      }
++      if (
++        result.code === 0 ||
++        !isTransientPushFailure(result) ||
++        attempt === 3
++      ) {
++        return result;
++      }
++      logger.log(
++        `::notice::GitHub temporarily rejected the push; retrying the same commit (${attempt}/3).`
++      );
++      await sleep(attempt * 1000);
++    }
++  };
+ 
+   const fallback = async (via) => {
++    if (releaseParent) {
++      throw new Error(
++        'Repository rules rejected the release push. Configure the rule to permit github-actions; automated release pull requests are disabled.'
++      );
++    }
+     await landViaPullRequest({
+       runner,
+       label: label || defaultLabel(),
+@@ -112,7 +154,7 @@ export async function pushWithRecovery({
+     return { pushed: true, via };
+   };
+ 
+-  const first = await runner('git', pushArgs, { logger });
++  const first = await push();
+   if (first.code === 0) {
+     logger.log('Push succeeded.');
+     return { pushed: true, via: 'direct' };
+@@ -120,7 +162,7 @@ export async function pushWithRecovery({
+ 
+   if (isBlockedByRepositoryRule(first)) {
+     logger.log(
+-      `::notice::Push to ${branch} was declined by a repository rule; landing the commit through a pull request.`
++      `::notice::Push to ${branch} was declined by a repository rule.`
+     );
+     return fallback('pull-request');
+   }
+@@ -131,6 +173,12 @@ export async function pushWithRecovery({
+     throw new CommandFailedError('git', pushArgs, first);
+   }
+ 
++  if (releaseParent) {
++    throw new Error(
++      'Remote main advanced after validation; rerun CI on current main. Release commits cannot be rebased.'
++    );
++  }
++
+   logger.log(
+     `::warning::Initial push failed; rebasing on ${remote}/${branch} before retry.`
+   );
+@@ -139,7 +187,7 @@ export async function pushWithRecovery({
+     logger,
+   });
+ 
+-  const second = await runner('git', pushArgs, { logger });
++  const second = await push();
+   if (second.code === 0) {
+     logger.log('Push succeeded after rebase retry.');
+     return { pushed: true, via: 'rebase' };
+@@ -148,7 +196,7 @@ export async function pushWithRecovery({
+   // A rule can also appear between the two attempts (a ruleset added mid-run).
+   if (isBlockedByRepositoryRule(second)) {
+     logger.log(
+-      `::notice::Push to ${branch} was declined by a repository rule; landing the commit through a pull request.`
++      `::notice::Push to ${branch} was declined by a repository rule.`
+     );
+     return fallback('pull-request');
+   }
+@@ -165,6 +213,7 @@ export async function main(argv) {
+   await pushWithRecovery({
+     remote,
+     branch,
++    releaseParent: options['release-parent'],
+     label: options.label,
+     mergeAttempts: options['merge-attempts']
+       ? Number(options['merge-attempts'])
+diff --git a/scripts/recheck-broken-links.mjs b/scripts/recheck-broken-links.mjs
+index 707b6fa..abc88da 100644
+--- a/scripts/recheck-broken-links.mjs
++++ b/scripts/recheck-broken-links.mjs
+@@ -40,7 +40,10 @@
+ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+ import { fileURLToPath } from 'node:url';
+ import path from 'node:path';
+-import { validateLycheeReport } from './lychee-report.mjs';
++import {
++  extractErrorsSection,
++  validateLycheeReport,
++} from './lychee-report.mjs';
+ 
+ // Environment-derived settings are read inside main(), not here: the Deno
+ // test leg imports this module under `--allow-read` only, and any
+@@ -66,10 +69,14 @@ const ACCEPT_DEFAULT = '100..=103,200..=299';
+ export function parseLycheeFailures(content) {
+   const failures = [];
+   const entryPattern =
+-    /^\s*(?:\*|-)\s+\[([^\]]+)\]\s+<?([^\s>|)]+)>?(?:\s+\(at [^)]*\))?\s*\|?\s*(.*)$/gim;
++    /^[ \t]*(?:\*|-)[ \t]+\[([^\]]+)\][ \t]+<?([^\s>|)]+)>?(?:[ \t]+\(at [^)]*\))?[ \t]*\|?[ \t]*([^\r\n]*)$/gim;
++  const section = [
++    extractErrorsSection(content),
++    extractErrorsSection(content, 'Timeouts'),
++  ].join('\n');
+ 
+   let match;
+-  while ((match = entryPattern.exec(content)) !== null) {
++  while ((match = entryPattern.exec(section)) !== null) {
+     const marker = match[1].trim();
+     const url = match[2].trim().replace(/[.,;!?]+$/, '');
+     const detail = match[3].trim();
+diff --git a/scripts/release-metadata.mjs b/scripts/release-metadata.mjs
+index dda48a4..927d3a6 100644
+--- a/scripts/release-metadata.mjs
++++ b/scripts/release-metadata.mjs
+@@ -27,11 +27,33 @@ function isAllowedReleaseChange(status, path, allowed) {
+   return consumedChangeset || metadata;
+ }
+ 
++function assertMetadataDiff(stdout, extraPaths) {
++  const allowed = allowedMetadataPaths(extraPaths);
++  const fields = stdout.split('\0').filter(Boolean);
++  if (fields.length === 0 || fields.length % 2 !== 0) {
++    throw new Error('Release commit has no valid metadata diff to attest.');
++  }
++  const unexpected = [];
++  for (let index = 0; index < fields.length; index += 2) {
++    const status = fields[index];
++    const path = fields[index + 1];
++    if (!isAllowedReleaseChange(status, path, allowed)) {
++      unexpected.push(`${status} ${path}`);
++    }
++  }
++  if (unexpected.length > 0) {
++    throw new Error(
++      `Refusing to attest unvalidated release changes: ${unexpected.join(', ')}`
++    );
++  }
++}
++
+ /** Prove that the new commit only changes version metadata. */
+ export async function assertReleaseMetadataOnly({
+   runner = runCommand,
+   parentSha = process.env.GITHUB_SHA,
+   extraPaths = process.env.RELEASE_METADATA_PATHS || '',
++  headRef = 'HEAD',
+   logger = console,
+ } = {}) {
+   if (!/^[0-9a-f]{40}$/i.test(parentSha || '')) {
+@@ -40,15 +62,16 @@ export async function assertReleaseMetadataOnly({
+     );
+   }
+   const strict = (args) => runStrict('git', args, { runner, logger });
+-  const headSha = (await strict(['rev-parse', 'HEAD'])).stdout.trim();
+-  const actualParent = (await strict(['rev-parse', 'HEAD^'])).stdout.trim();
++  const headSha = (await strict(['rev-parse', headRef])).stdout.trim();
++  const actualParent = (
++    await strict(['rev-parse', `${headRef}^`])
++  ).stdout.trim();
+   if (actualParent !== parentSha) {
+     throw new Error(
+       `Release commit parent ${actualParent} differs from validated parent ${parentSha}.`
+     );
+   }
+ 
+-  const allowed = allowedMetadataPaths(extraPaths);
+   const diff = await strict([
+     'diff-tree',
+     '--no-commit-id',
+@@ -56,25 +79,53 @@ export async function assertReleaseMetadataOnly({
+     '--name-status',
+     '-r',
+     '-z',
+-    'HEAD^',
++    `${headRef}^`,
++    headRef,
++  ]);
++  assertMetadataDiff(diff.stdout, extraPaths);
++  return headSha;
++}
++
++/** Stage release metadata only; reject unrelated tracked edits. */
++export async function stageReleaseMetadata({
++  runner = runCommand,
++  extraPaths = process.env.RELEASE_METADATA_PATHS || '',
++  logger = console,
++} = {}) {
++  const strict = (args) => runStrict('git', args, { runner, logger });
++  const diff = await strict([
++    'diff',
+     'HEAD',
++    '--no-renames',
++    '--name-status',
++    '-z',
+   ]);
+-  const fields = diff.stdout.split('\0').filter(Boolean);
+-  if (fields.length === 0 || fields.length % 2 !== 0) {
+-    throw new Error('Release commit has no valid metadata diff to attest.');
+-  }
+-  const unexpected = [];
++  // New changelogs are not tracked yet. Ignore unrelated untracked files,
++  // but include only explicitly allowed metadata additions.
++  const untracked = await strict([
++    'ls-files',
++    '--others',
++    '--exclude-standard',
++    '-z',
++  ]);
++  const allowed = allowedMetadataPaths(extraPaths);
++  const additions = untracked.stdout
++    .split('\0')
++    .filter((path) => allowed.has(path));
++  const changes =
++    diff.stdout + additions.map((path) => `A\0${path}\0`).join('');
++  assertMetadataDiff(changes, extraPaths);
++  const fields = changes.split('\0').filter(Boolean);
++  const deleted = [];
++  const modified = [];
+   for (let index = 0; index < fields.length; index += 2) {
+-    const status = fields[index];
+-    const path = fields[index + 1];
+-    if (!isAllowedReleaseChange(status, path, allowed)) {
+-      unexpected.push(`${status} ${path}`);
+-    }
++    (fields[index] === 'D' ? deleted : modified).push(fields[index + 1]);
+   }
+-  if (unexpected.length > 0) {
+-    throw new Error(
+-      `Refusing to attest unvalidated release changes: ${unexpected.join(', ')}`
+-    );
++  // Consumed changesets may already have been removed from the index.
++  if (deleted.length) {
++    await strict(['update-index', '--force-remove', '--', ...deleted]);
++  }
++  if (modified.length) {
++    await strict(['add', '-A', '--', ...modified]);
+   }
+-  return headSha;
+ }
+diff --git a/scripts/release-publication.mjs b/scripts/release-publication.mjs
+new file mode 100644
+index 0000000..cdbfb2e
+--- /dev/null
++++ b/scripts/release-publication.mjs
+@@ -0,0 +1,66 @@
++import { posix } from 'node:path';
++import { assertReleaseMetadataOnly } from './release-metadata.mjs';
++import {
++  assertVersionOnlyChanges,
++  validateVersionTree,
++} from './version-lock.mjs';
++import { runCommand, runStrict } from './run-command.mjs';
++
++/** Accept the validated commit or its version-only child, with the same dependencies. */
++export async function assertValidatedRelease({
++  parentSha = process.env.GITHUB_SHA,
++  headRef = 'HEAD',
++  jsRoot = '.',
++  runner = runCommand,
++  logger = console,
++} = {}) {
++  const strict = (args) => runStrict('git', args, { runner, logger });
++  const headSha = (await strict(['rev-parse', headRef])).stdout.trim();
++  if (!/^[0-9a-f]{40}$/i.test(parentSha || '')) {
++    throw new Error('A validated GITHUB_SHA is required before publication.');
++  }
++  if (headSha === parentSha) {
++    return headSha;
++  }
++  await assertReleaseMetadataOnly({ parentSha, headRef, runner, logger });
++  const readTree = async (ref) => {
++    const read = async (name) =>
++      JSON.parse(
++        (await strict(['show', `${ref}:${posix.join(jsRoot, name)}`])).stdout
++      );
++    const tree = {
++      manifest: await read('package.json'),
++      lock: await read('package-lock.json'),
++    };
++    validateVersionTree(tree);
++    return tree;
++  };
++  assertVersionOnlyChanges(await readTree(parentSha), await readTree(headSha));
++  return headSha;
++}
++
++/** Fetching verifies the version landed; publication never pulls untested code. */
++export async function prepareReleasePublication({
++  verifyRemote = false,
++  runner = runCommand,
++  logger = console,
++  ...options
++} = {}) {
++  const headSha = await assertValidatedRelease({ ...options, runner, logger });
++  await runStrict('git', ['diff', '--exit-code', 'HEAD', '--'], {
++    runner,
++    logger,
++  });
++  if (verifyRemote) {
++    await runStrict('git', ['fetch', 'origin', 'main'], { runner, logger });
++    await runStrict(
++      'git',
++      ['merge-base', '--is-ancestor', headSha, 'origin/main'],
++      {
++        runner,
++        logger,
++      }
++    );
++  }
++  return headSha;
++}
+diff --git a/scripts/setup-preview-gh.sh b/scripts/setup-preview-gh.sh
+new file mode 100644
+index 0000000..a7ca5d0
+--- /dev/null
++++ b/scripts/setup-preview-gh.sh
+@@ -0,0 +1,29 @@
++#!/usr/bin/env bash
++# Install the reviewed GitHub CLI inside the Linux x64 Playwright container.
++# GitHub-hosted runner utilities are not inherited by container jobs.
++set -euo pipefail
++
++: "${RUNNER_TEMP:?RUNNER_TEMP is required}"
++: "${GITHUB_PATH:?GITHUB_PATH is required}"
++if [[ "$(uname -s)/$(uname -m)" != Linux/x86_64 ]]; then
++  echo '::error::Preview GitHub CLI setup requires Linux x86_64.'
++  exit 1
++fi
++
++version=2.103.3
++checksum=4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d
++install_dir="$(mktemp -d "$RUNNER_TEMP/preview-gh.XXXXXX")"
++archive="$install_dir/gh.tar.gz"
++trap 'rm -f "$archive"' EXIT
++
++curl --fail --silent --show-error --location --retry 3 \
++  "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz" \
++  --output "$archive"
++if ! printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status; then
++  echo '::error::Preview GitHub CLI archive checksum mismatch.' >&2
++  exit 1
++fi
++tar -xzf "$archive" -C "$install_dir" --strip-components=2 \
++  "gh_${version}_linux_amd64/bin/gh"
++"$install_dir/gh" --version
++printf '%s\n' "$install_dir" >> "$GITHUB_PATH"
+diff --git a/scripts/version-and-commit.mjs b/scripts/version-and-commit.mjs
+index ad6aa63..25d8e73 100644
+--- a/scripts/version-and-commit.mjs
++++ b/scripts/version-and-commit.mjs
+@@ -16,12 +16,11 @@
+  * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
+  */
+ 
+-import { readFileSync, appendFileSync, readdirSync } from 'fs';
++import { readFileSync, appendFileSync } from 'fs';
+ 
+ import {
+   getJsRoot,
+   getPackageJsonPath,
+-  getChangesetDir,
+   needsCd,
+   parseJsRootConfig,
+ } from './js-paths.mjs';
+@@ -31,6 +30,8 @@ import { printUntrusted } from './github-actions-log.mjs';
+ import { checkStagedFormatting } from './check-staged-formatting.mjs';
+ import { runStrict } from './run-command.mjs';
+ import { captureVersionTree, syncVersionLock } from './version-lock.mjs';
++import { stageReleaseMetadata } from './release-metadata.mjs';
++import { assertValidatedRelease } from './release-publication.mjs';
+ 
+ // Import link-foundation libraries
+ // Loaded through bootstrapDependencies: when installed helpers are unavailable,
+@@ -146,19 +147,6 @@ function setOutput(key, value) {
+   }
+ }
+ 
+-/**
+- * Count changeset files (excluding README.md)
+- */
+-function countChangesets() {
+-  try {
+-    const changesetDir = getChangesetDir({ jsRoot });
+-    const files = readdirSync(changesetDir);
+-    return files.filter((f) => f.endsWith('.md') && f !== 'README.md').length;
+-  } catch {
+-    return 0;
+-  }
+-}
+-
+ /**
+  * Get package version
+  * @param {string} source - 'local' or 'remote'
+@@ -176,6 +164,8 @@ async function getVersion(source = 'local') {
+ 
+ async function main() {
+   try {
++    await assertValidatedRelease({ jsRoot });
++
+     // Configure git
+     // The 41898282+ prefix is what links the commit to the github-actions[bot]
+     // account. Without it the commit is "unattributed", and a ruleset with
+@@ -202,26 +192,29 @@ async function main() {
+       );
+       console.log('This may indicate a previous attempt partially succeeded.');
+ 
+-      // Check if the remote version is already the expected bump
+-      const remoteVersion = await getVersion('remote');
+-      console.log(`Remote version: ${remoteVersion}`);
+-
+-      // Check if there are changesets to process
+-      const changesetCount = countChangesets();
+-
+-      if (changesetCount === 0) {
+-        console.log('No changesets to process and remote has advanced.');
+-        console.log(
+-          'Assuming version bump was already completed in a previous attempt.'
++      // A rerun may recover an already-pushed version-only child. Source or
++      // dependency changes require a new validation run on the current main.
++      try {
++        await assertValidatedRelease({
++          parentSha: process.env.GITHUB_SHA,
++          headRef: 'origin/main',
++          jsRoot,
++        });
++      } catch (error) {
++        throw new Error(
++          'Remote main changed after validation; rerun CI on current main.',
++          {
++            cause: error,
++          }
+         );
+-        setOutput('version_committed', 'false');
+-        setOutput('already_released', 'true');
+-        setOutput('new_version', remoteVersion);
+-        return;
+-      } else {
+-        console.log('Rebasing on remote main to incorporate changes...');
+-        await $`git rebase origin/main`;
+       }
++      const remoteVersion = await getVersion('remote');
++      console.log(`Remote version: ${remoteVersion}`);
++      await $`git merge --ff-only origin/main`;
++      setOutput('version_committed', 'false');
++      setOutput('already_released', 'true');
++      setOutput('new_version', remoteVersion);
++      return;
+     }
+ 
+     // Get current version before bump
+@@ -264,8 +257,8 @@ async function main() {
+     if (status) {
+       console.log('Changes detected, committing...');
+ 
+-      // Stage all changes (package.json, package-lock.json, CHANGELOG.md, deleted changesets)
+-      await $`git add -A`;
++      // Only release metadata may enter this commit.
++      await stageReleaseMetadata();
+ 
+       // A failure here aborts the release before anything is written.
+       await checkStagedFormatting();
+@@ -273,18 +266,10 @@ async function main() {
+       // Commit with version number as message
+       await runStrict('git', ['commit', '-m', newVersion]);
+ 
+-      // Push directly to main, rebasing and retrying if another main writer won
+-      // the race between this commit and the push, and landing the commit
+-      // through a pull request when a repository ruleset declines direct
+-      // pushes to main (link-foundation/js-ai-driven-development-pipeline-template#143).
+-      //
+-      // The helper exits non-zero only when it could not land the commit
+-      // through any of its strategies; errexit turns that exit into a
+-      // rejection, and reporting version_committed=true for a push that never
+-      // landed would let the publish job work from a version that exists only
+-      // in the runner.
++      // Push directly with bounded recovery for the attested metadata commit.
++      // Source races and permanent rules fail before publication.
+       try {
+-        await $`node scripts/push-main-with-rebase-retry.mjs origin main --label ${newVersion}`.run(
++        await $`node scripts/push-main-with-rebase-retry.mjs origin main --label ${newVersion} --release-parent ${process.env.GITHUB_SHA}`.run(
+           { capture: true, mirror: true }
+         );
+       } catch (error) {
+diff --git a/scripts/version-lock.mjs b/scripts/version-lock.mjs
+index 5884419..7d0eac3 100644
+--- a/scripts/version-lock.mjs
++++ b/scripts/version-lock.mjs
+@@ -19,6 +19,10 @@ function nonVersionLock(lock) {
+ export function captureVersionTree(jsRoot) {
+   const manifest = readJson(join(jsRoot, 'package.json'));
+   const lock = readJson(join(jsRoot, 'package-lock.json'));
++  validateVersionTree({ manifest, lock });
++  return { manifest, lock };
++}
++export function validateVersionTree({ manifest, lock }) {
+   if (
+     ![2, 3].includes(lock.lockfileVersion) ||
+     !lock.packages?.[''] ||
+@@ -34,12 +38,9 @@ export function captureVersionTree(jsRoot) {
+       'Invalid package/lock names, root record, version, or unsupported lockfile (requires npm v2/v3)'
+     );
+   }
+-  return { manifest, lock };
+ }
+ /** Versioning may change only the manifest version and two root lock versions. */
+-export function syncVersionLock(jsRoot, before) {
+-  const manifest = readJson(join(jsRoot, 'package.json'));
+-  const lock = readJson(join(jsRoot, 'package-lock.json'));
++export function assertVersionOnlyChanges(before, { manifest, lock }) {
+   assert.deepEqual(
+     nonVersionManifest(manifest),
+     nonVersionManifest(before.manifest),
+@@ -50,6 +51,11 @@ export function syncVersionLock(jsRoot, before) {
+     nonVersionLock(before.lock),
+     'Package configuration changed after validation: package-lock.json'
+   );
++}
++export function syncVersionLock(jsRoot, before) {
++  const manifest = readJson(join(jsRoot, 'package.json'));
++  const lock = readJson(join(jsRoot, 'package-lock.json'));
++  assertVersionOnlyChanges(before, { manifest, lock });
+   if (
+     typeof manifest.version !== 'string' ||
+     !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]+)?$/.test(manifest.version)

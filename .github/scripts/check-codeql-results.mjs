@@ -13,9 +13,23 @@ function reportsIn(directory) {
   });
 }
 
+// SARIF text is printed as a JSON string literal: a raw newline in a message
+// or path would start a new log line, and a line beginning with `::` is a
+// workflow command (issue #172).
+const quote = (value) => JSON.stringify(String(value ?? '?'));
+
+function describe(location, message) {
+  return (
+    `${quote(location?.artifactLocation?.uri)}:${Number(location?.region?.startLine) || '?'}: ` +
+    quote(message)
+  );
+}
+
 export function checkCodeqlResults(directory) {
   const reports = reportsIn(directory).sort();
   if (!reports.length) throw new Error(`No SARIF reports in ${directory}`);
+  // Every problem is collected before failing, so one bad diagnostic cannot
+  // hide the findings after it (issue #172).
   const findings = [];
   for (const file of reports) {
     const data = JSON.parse(readFileSync(file, 'utf8'));
@@ -40,12 +54,19 @@ export function checkCodeqlResults(directory) {
             throw new Error(`Malformed CodeQL diagnostics: ${context}, ${key}`);
           }
           for (const item of diagnostics) {
-            if (!item || !['note', 'none'].includes(item.level)) {
-              const location = item?.locations?.[0]?.physicalLocation;
-              throw new Error(
+            // A note without a message is malformed, not harmless.
+            if (
+              !item ||
+              !['note', 'none'].includes(item.level) ||
+              typeof item.message?.text !== 'string'
+            ) {
+              findings.push(
                 `CodeQL warning/error or malformed diagnostic: ${context}, ${key}: ` +
-                  `${item?.descriptor?.id ?? '?'} ${location?.artifactLocation?.uri ?? '?'}:` +
-                  `${location?.region?.startLine ?? '?'}: ${item?.message?.text ?? 'missing diagnostic message'}`,
+                  `${quote(item?.descriptor?.id)} ` +
+                  describe(
+                    item?.locations?.[0]?.physicalLocation,
+                    item?.message?.text ?? 'missing diagnostic message',
+                  ),
               );
             }
           }
@@ -62,17 +83,20 @@ export function checkCodeqlResults(directory) {
           throw new Error(`Malformed SARIF result: ${context}`);
         }
         if (result.baselineState === 'absent') continue;
-        const location = result.locations?.[0]?.physicalLocation;
         findings.push(
-          `${context}: ${result.ruleId} (${result.level ?? 'warning'}) ` +
-            `${location?.artifactLocation?.uri ?? '?'}:${location?.region?.startLine ?? '?'}: ` +
-            `${result.message.text ?? result.message.markdown}`,
+          `${context}: ${quote(result.ruleId)} (${quote(result.level ?? 'warning')}) ` +
+            describe(
+              result.locations?.[0]?.physicalLocation,
+              result.message.text ?? result.message.markdown,
+            ),
         );
       }
     }
   }
   if (findings.length)
-    throw new Error(`${findings.length} unresolved CodeQL finding(s):\n${findings.join('\n')}`);
+    throw new Error(
+      `${findings.length} unresolved CodeQL finding(s) or diagnostic(s):\n${findings.join('\n')}`,
+    );
   return reports.length;
 }
 

@@ -1,14 +1,16 @@
 #!/usr/bin/env rust-script
 //! Detect code changes for CI/CD pipeline
 //!
-//! This script detects what types of files have changed in the latest commit
+//! This script detects what types of files a pull request or a push changes
 //! and outputs the results for use in GitHub Actions workflow conditions.
 //!
 //! Key behavior:
-//! - For PRs: detects GitHub Actions' synthetic merge commit and uses
-//!   HEAD^2^..HEAD^2 to get the per-commit diff of the actual PR head,
-//!   so a commit touching only non-code files correctly skips CI jobs
-//!   even when earlier commits in the same PR touched code files.
+//! - For PRs: detects GitHub Actions' synthetic merge commit and compares
+//!   it with the base branch (HEAD^1..HEAD), the whole change that merging
+//!   would make. A per-commit diff was a false negative (issue #172): a
+//!   final documentation-only commit skipped every Rust check while the
+//!   runs for the earlier code commits were cancelled as superseded, so
+//!   untested Rust code reached a green Pipeline Status.
 //! - For pushes: compares HEAD against HEAD^
 //! - Excludes certain folders and file types from "code changes" detection
 //!
@@ -81,21 +83,16 @@ fn is_merge_commit(repo: &Path) -> DetectionResult<bool> {
 
 fn get_changed_files(repo: &Path, event: &str) -> DetectionResult<Vec<String>> {
     // GitHub Actions checks out a synthetic merge commit for pull_request
-    // events: HEAD is the merge commit, HEAD^ is the base branch, HEAD^2
-    // is the actual PR head. To get the per-commit diff (what the latest
-    // push actually changed), we compare HEAD^2^ to HEAD^2.
+    // events: HEAD is the merge commit, HEAD^1 is the base branch and HEAD^2
+    // is the PR head. HEAD^1..HEAD is exactly what merging the PR changes,
+    // so every commit of the PR stays in scope until it is merged.
     // For push events, HEAD is the real commit, so HEAD^ to HEAD works.
     let output = if event == "pull_request" && is_merge_commit(repo)? {
         println!("Merge commit detected (pull_request event)");
-        let parent = if git(repo, &["rev-parse", "--verify", "HEAD^2^"]).is_ok() {
-            "HEAD^2^"
-        } else {
-            "HEAD^"
-        };
-        println!("Comparing {parent} to HEAD^2 (per-commit diff of PR head)");
+        println!("Comparing HEAD^1 to HEAD (whole pull request against its base)");
         git(
             repo,
-            &["diff", "--name-only", "--no-renames", parent, "HEAD^2"],
+            &["diff", "--name-only", "--no-renames", "HEAD^1", "HEAD"],
         )?
     } else if git(repo, &["rev-parse", "--verify", "HEAD^"]).is_ok() {
         // A real merge pushed to main must include the entire first-parent diff.
@@ -304,7 +301,7 @@ mod tests {
     }
 
     #[test]
-    fn main_merge_checks_all_changes_and_pr_keeps_per_commit_scope() {
+    fn main_merge_and_pr_both_check_every_change_of_the_branch() {
         let repo = Repo::new();
         repo.commit("README.md", "Initial\n");
         git(&repo.0, &["checkout", "-b", "feature"]).unwrap();
@@ -320,10 +317,12 @@ mod tests {
         assert!(get_changed_files(&repo.0, "push")
             .unwrap()
             .contains(&"rust/src/lib.rs".to_owned()));
-        assert_eq!(
-            get_changed_files(&repo.0, "pull_request").unwrap(),
-            ["README.md"]
-        );
+        // A documentation-only final commit must not hide the branch's
+        // earlier Rust change, and the base branch's own change is not the
+        // PR's (issue #172).
+        let mut pr = get_changed_files(&repo.0, "pull_request").unwrap();
+        pr.sort();
+        assert_eq!(pr, ["README.md", "rust/src/lib.rs"]);
     }
 
     #[test]

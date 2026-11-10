@@ -38,7 +38,7 @@
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { extractErrorsSection, validateLycheeReport } from './check-web-archive.mjs';
+import { extractFailureSections, validateLycheeReport } from './check-web-archive.mjs';
 
 // Environment-derived settings are read inside main(), not here: a test run
 // with a restricted environment must be able to import this module without
@@ -63,11 +63,15 @@ const ACCEPT_DEFAULT = '100..=103,200..=299';
  */
 export function parseLycheeFailures(content) {
   const failures = [];
+  // No part of a record may cross a line break: a malformed `* [ERROR` line
+  // used to swallow the next record into its marker.
   const entryPattern =
-    /^[ \t]*(?:\*|-)[ \t]+\[([^\]]+)\][ \t]+<?([^\s>|)]+)>?(?:[ \t]+\(at [^)]*\))?[ \t]*\|?[ \t]*(.*)$/gim;
+    /^[ \t]*(?:\*|-)[ \t]+\[([^\]\r\n]+)\][ \t]+<?([^\s>|)]+)>?(?:[ \t]+\(at [^)\r\n]*\))?[ \t]*\|?[ \t]*([^\r\n]*)$/gim;
 
+  // Timed-out links are failures too, listed in their own section (issue #172).
+  const section = extractFailureSections(content);
   let match;
-  while ((match = entryPattern.exec(extractErrorsSection(content))) !== null) {
+  while ((match = entryPattern.exec(section)) !== null) {
     const marker = match[1].trim();
     const url = match[2].trim().replace(/[.,;!?]+$/, '');
     const detail = match[3].trim();

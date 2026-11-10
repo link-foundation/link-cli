@@ -16,7 +16,7 @@ export async function preflight(
 ) {
   if (!['crates', 'nuget', 'npm'].includes(registry)) throw Error(`Unknown registry: ${registry}`);
   if (env.GITHUB_EVENT_NAME === 'pull_request') {
-    return 'PR advisory: publishing credentials are unavailable to untrusted changes. Main must authenticate before builds or version writes.';
+    return 'PR advisory: publishing credentials are unavailable to untrusted changes. Main must authenticate before version writes or publishing.';
   }
   if (['changeset-pr', 'changelog-pr'].includes(env.RELEASE_MODE)) {
     return 'This dispatch only creates release metadata; registry authentication is not required.';

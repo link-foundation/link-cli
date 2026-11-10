@@ -33,3 +33,20 @@ test('every workflow terminal gate depends on every other job and executes after
     assert.match(gate, /NEEDS_JSON: \$\{\{ toJSON\(needs\) \}\}/);
   }
 });
+
+test('infrastructure reruns watch every workflow with a terminal gate (issue #172)', () => {
+  const dir = new URL('../workflows/', import.meta.url);
+  const rerun = readFileSync(new URL('rerun-infrastructure-failures.yml', dir), 'utf8');
+  const watched = rerun
+    .slice(rerun.indexOf('    workflows:\n'), rerun.indexOf('    types:'))
+    .split('\n')
+    .slice(1)
+    .filter((line) => line.startsWith('      - '))
+    .map((line) => line.slice(8).trim());
+  const gated = readdirSync(dir)
+    .filter((name) => name.endsWith('.yml') && name !== 'rerun-infrastructure-failures.yml')
+    .map((name) => readFileSync(new URL(name, dir), 'utf8'))
+    .filter((text) => text.includes('\n  pipeline-status:'))
+    .map((text) => /^name: (.+)$/m.exec(text)[1].trim());
+  assert.deepEqual([...watched].sort(), [...gated].sort());
+});

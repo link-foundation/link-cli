@@ -37,9 +37,10 @@ on:
   workflow_dispatch:
 
 # Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on pull requests, while writer jobs share a never-cancelled
-# group. A workflow-level group held the whole run, including the release
-# and the registry wait, so a third push to main cancelled the queued run.
+# cancelled on every branch, main included (issue #172), while writer jobs
+# share a never-cancelled group. A workflow-level group held the whole run,
+# including the release and the registry wait, so a third push to main
+# cancelled the queued run.
 
 permissions:
   contents: read
@@ -82,8 +83,9 @@ jobs:
           cache: npm
           cache-dependency-path: js/package-lock.json
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -122,13 +124,26 @@ jobs:
           path: dist/
           if-no-files-found: error
 
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+            rust/wasm/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+
   coverage:
     name: WASM coverage
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-coverage
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -144,8 +159,15 @@ jobs:
         # layout. This pin applies only to coverage; production uses stable.
         run: |
           rustup toolchain install 1.98.0 --profile minimal --no-self-update --target wasm32-unknown-unknown --component llvm-tools-preview
-          cargo install cargo-llvm-cov --version 0.9.1 --locked
-          cargo install wasm-bindgen-cli --version 0.2.130 --locked
+
+      # Prebuilt, checksum-verified binaries. `cargo install wasm-bindgen-cli`
+      # spent 1.5 min compiling and warned that its rouille -> multipart ->
+      # buf_redux dependencies will be rejected by a future Rust
+      # (wasm-bindgen/wasm-bindgen#3356; issue #172).
+      - name: Install cargo-llvm-cov and wasm-bindgen-cli
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: cargo-llvm-cov@0.9.1,wasm-bindgen@0.2.130
 
       - name: Measure actual WebAssembly tests
         run: bash experiments/issue-138/wasm-coverage.sh

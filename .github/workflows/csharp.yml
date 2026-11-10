@@ -52,9 +52,10 @@ on:
         type: string
 
 # Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on pull requests, while writer jobs share a never-cancelled
-# group. A workflow-level group held the whole run, including the release
-# and the registry wait, so a third push to main cancelled the queued run.
+# cancelled on every branch, main included (issue #172), while writer jobs
+# share a never-cancelled group. A workflow-level group held the whole run,
+# including the release and the registry wait, so a third push to main
+# cancelled the queued run.
 
 # Least privilege by default; the publishing jobs opt into more below.
 permissions:
@@ -101,7 +102,7 @@ jobs:
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
           user: ${{ vars.NUGET_USER }}
-      - name: Prove authentication before builds or version writes
+      - name: Prove authentication before version writes or publishing
         working-directory: .
         env:
           RELEASE_MODE: ${{ inputs.release_mode }}
@@ -235,9 +236,9 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: true
-    needs: [detect-changes, release-preflight]
+    needs: [detect-changes]
     if: |
-      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -285,7 +286,7 @@ jobs:
 
       - name: Check file sizes
         working-directory: .
-        run: node csharp/scripts/check-file-size.mjs
+        run: node csharp/scripts/check-file-size.mjs --lang csharp
 
   # === TEST ON MULTIPLE OS ===
   test:
@@ -295,8 +296,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changeset-check, release-preflight, lint]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+    needs: [detect-changes, changeset-check, lint]
+    if: ${{ !cancelled() && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     permissions:
       contents: read
       id-token: write
@@ -403,7 +404,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
       cancel-in-progress: true
     if: github.event_name == 'pull_request'
-    needs: [detect-changes, lint, release-preflight]
+    needs: [detect-changes, lint]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -465,8 +466,8 @@ jobs:
   # === AUTOMATIC RELEASE ===
   release:
     name: Release
-    needs: [lint, test, build]
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
@@ -690,8 +691,8 @@ jobs:
   # === MANUAL INSTANT RELEASE ===
   instant-release:
     name: Instant Release
-    needs: [lint, test, build]
-    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a

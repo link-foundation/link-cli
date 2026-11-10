@@ -95,9 +95,10 @@ on:
         default: false
 
 # Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on pull requests, while writer jobs share a never-cancelled
-# group. A workflow-level group held the whole run, including the release
-# and the registry wait, so a third push to main cancelled the queued run.
+# cancelled on every branch, main included (issue #172), while writer jobs
+# share a never-cancelled group. A workflow-level group held the whole run,
+# including the release and the registry wait, so a third push to main
+# cancelled the queued run.
 
 # Least privilege by default; the release job opts into more below.
 permissions:
@@ -130,7 +131,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '26.x'
-      - name: Prove authentication before builds or version writes
+      - name: Prove authentication before version writes or publishing
         working-directory: .
         env:
           NPM_PACKAGE: '@link-foundation/link-cli-client'
@@ -160,7 +161,6 @@ jobs:
         run: node .github/scripts/verify-npm-trust.mjs
 
   unit:
-    needs: [release-preflight]
     if: inputs.verify_trusted_publishing != true
     name: Unit tests and types
     runs-on: ubuntu-24.04
@@ -270,7 +270,7 @@ jobs:
         run: npm run typecheck
 
   conformance:
-    needs: [release-preflight, unit]
+    needs: [unit]
     if: inputs.verify_trusted_publishing != true
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-24.04
@@ -336,8 +336,9 @@ jobs:
           bun test js/client/test/partitioned-chunks.test.mjs --timeout 30000
           deno test --allow-all js/client/test/partitioned-chunks.test.mjs
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -574,9 +575,22 @@ jobs:
           node examples/composition/client-and-server.mjs "$CLINK_RUST" | diff examples/composition/expected-output.txt -
           node examples/composition/client-and-server.mjs "$CLINK_CSHARP" | diff examples/composition/expected-output.txt -
 
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+            rust/wasm/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+
   release:
     name: Release to npm
-    needs: [unit, conformance]
+    needs: [release-preflight, unit, conformance]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a publish that may already be under way.

@@ -50,9 +50,10 @@ permissions:
   contents: read
 
 # Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on pull requests, while writer jobs share a never-cancelled
-# group. A workflow-level group held the whole run, including the release
-# and the registry wait, so a third push to main cancelled the queued run.
+# cancelled on every branch, main included (issue #172), while writer jobs
+# share a never-cancelled group. A workflow-level group held the whole run,
+# including the release and the registry wait, so a third push to main
+# cancelled the queued run.
 
 # The GIT_CONFIG_* entries provide Git config to actions/checkout itself;
 # checkout runs git init before any workflow step can configure Git, which
@@ -100,8 +101,9 @@ jobs:
           cache: npm
           cache-dependency-path: js/package-lock.json
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -189,6 +191,19 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+            rust/wasm/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
   deploy:
     name: Deploy to GitHub Pages

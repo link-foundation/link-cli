@@ -1,0 +1,8 @@
+ .../fix-adjacent-failures-and-source-moves.md      |  5 ++
+ .github/workflows/security.yml                     |  4 +-
+ experiments/issue-98/README.md                     | 45 ++++++++++
+ scripts/change-detection-renames.test.mjs          | 98 ++++++++++++++++++++++
+ scripts/detect-code-changes.mjs                    |  7 +-
+ scripts/recheck-broken-links.mjs                   |  3 +-
+ scripts/recheck-broken-links.test.mjs              | 71 +++++++++++++++-
+ 7 files changed, 225 insertions(+), 8 deletions(-)
