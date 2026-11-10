@@ -483,9 +483,9 @@ jobs:
         working-directory: js/client
         run: node test/conformance/run.mjs
 
-      - name: Deterministic disk, network and Raft fault simulation
+      - name: Deterministic disk, backend power loss, network and Raft fault simulation
         working-directory: js/client
-        run: node --test test/engine-simulation.test.mjs test/engine-raft-simulation.test.mjs
+        run: node --test test/engine-simulation.test.mjs test/engine-power-loss-backends.test.mjs test/engine-raft-simulation.test.mjs
 
       - name: Conformance on Bun
         working-directory: js/client
