@@ -179,6 +179,71 @@ etcd's own supported membership and backup/recovery tools, keeping engine keys
 intact. Never expire/delete keys or roll back the coordinator while applications
 are using its generations.
 
+## The Raft draft
+
+`rust/src/engine/raft.rs` is a draft of the algorithm etcd runs, for users who
+want a replicated `AtomicJournalStore` without an etcd deployment. It is
+written like etcd's `raft` package, as a pure state machine. `RaftNode` reads
+no clock, opens no socket and starts no thread. The caller passes the local
+time to `tick` and `step`, delivers the messages from `take_messages` over any
+transport, and persists `hard_state` and the log before sending them. The same
+code therefore runs in a deployment and in a deterministic simulation. The C#
+(`RaftNode.cs`) and JS (`js/client/src/raft.js`) ports follow the same steps.
+
+It implements leader election, log replication and commitment by the current
+term's entries, with a no-op entry at the start of every term. Reads go through
+the log, as etcd's older quorum reads did, so a read returns the state at its
+place in the committed order. No proposal is retried. A proposal lost on the
+way to the leader never commits, and the caller's deadline reports an unknown
+outcome, as `AtomicJournalStore` requires. Two etcd options are on by default:
+
+- **PreVote.** A node first asks whether it could win before it raises its
+  term. A replica that can send but not receive then cannot keep
+  disrupting a healthy leader.
+- **CheckQuorum.** A leader that has not heard from a majority within an
+  election timeout steps down. Followers that heard from a leader within that
+  timeout refuse votes. A leader that can send but not receive therefore stops
+  blocking an election.
+
+Safety (election safety, log matching, leader completeness, state machine
+safety) never depends on a clock. Time decides only when a node starts an
+election or a leader sends heartbeats, so skewed clocks can cost
+availability but never correctness. The draft has no membership changes, no
+snapshots or log compaction, and no ReadIndex or lease reads. Report anything
+that breaks.
+
+`rust/tests/engine_raft_simulation_tests.rs` runs three replicas under
+`ClusterEngine` members. The simulation owns everything etcd gets from the
+operating system:
+
+- **Clocks and timers.** Each replica's clock runs at its own rate (0.5x to 2x
+  real time), jumps forward and backward, and changes rate during the run.
+  Election timeouts, heartbeats and client deadlines run on these clocks.
+- **Processes.** Replicas crash and restart, keeping only their hard state and
+  log.
+- **Network.** Messages are dropped, delayed and reordered. A replica can be
+  isolated, deaf (it sends but does not receive) or mute (it receives but does
+  not send).
+
+Clients run random transactions on every member. The Elle-style checker
+searches each history for anomalies, including real-time edges, and every
+replica must end with the same committed log and state. Four tests run 20
+seeds each:
+
+| Test | Faults | Required |
+| --- | --- | --- |
+| `raft_group_stays_strictly_serializable_and_live_while_one_replica_keeps_failing` | One replica faulty at a time, never stopping | Strictly serializable. A probe reads every few ticks, and no gap between answers exceeds 1,500 real-time ticks (one lost leader costs up to about 600). |
+| `without_pre_vote_and_check_quorum_one_faulty_replica_stalls_the_group` | The same schedules with both options off | Negative control: the longest gap exceeds the bound and terms climb more than four times higher. |
+| `raft_group_stays_strictly_serializable_when_every_replica_fails` | Any replicas faulty at once | Strictly serializable. Unknown outcomes are found both committed and aborted, and some calls find no quorum. |
+| `the_same_seed_replays_the_same_raft_history` | | Identical history and counters |
+
+The Rust run prints its counters, and
+[`raft-simulation-expected.txt`](../experiments/issue-138/raft-simulation-expected.txt)
+records them. With both options on and one faulty replica, the longest
+gap was 1,189 ticks, the highest term 8, and 529 commits over 20 seeds.
+Without them on the same schedules, the gap was 2,292 ticks and the highest
+term 64. The C# and JS ports print the same numbers for the same seeds.
+
 ## Distributed transactions compared
 
 `ClusterEngine` is the optional distributed transaction: one transaction

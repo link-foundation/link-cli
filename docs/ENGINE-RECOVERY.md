@@ -231,6 +231,37 @@ both-unreadable state that power loss can leave: a torn primary next to a
 secondary that was never written. Two damaged copies, which need a second
 fault, are still refused rather than silently rolled back.
 
-The simulation covers the page device. It does not reach the journal-file,
-LSM or SQLite backends, which rely on the Docker crash test above, and it
-models no file-system metadata (directory entries, renames).
+### The journal-file and LSM backends
+
+`rust/tests/engine_power_loss_backends_tests.rs` puts the two other durable
+backends on the same disk model (`rust/tests/engine_simulation/disk.rs`):
+
+- **Journal file.** The real `FileTransitionLog` writes newline-framed entries
+  to a temporary file, and every append and sync is mirrored to a simulated
+  file. Each append is two writes, the entry and its newline, so a power loss
+  can keep an entry without its newline or a newline after a zeroed entry. At
+  power loss the simulated crash image becomes the real file. The real
+  `FileTransitionLog::open` (its torn-tail repair) and `Engine::open` then
+  recover it. The repair's truncation is itself an unsynced length change, so
+  a later power loss can undo it. Three configurations (optimistic with a sync
+  per append, pessimistic snapshot with change-encoded revisions, exclusive with
+  `require_durable_flush`) run 48 seeds of 8 crash cycles each. The checks are
+  the same as for the page device. On an honest disk no acknowledged commit is
+  lost and opening never refuses. On a lying disk the log rolls back to the
+  exact state of an earlier revision or is refused.
+- **LSM.** The real `PhysicalLsmJournalStore` keeps its checkpointed write-ahead
+  log (a root and two banks) and every sorted table on simulated devices.
+  Creating and deleting a table are durable directory operations, as the
+  namespace contract requires. Random groups of keys are compare-exchanged and
+  single keys compare-deleted, with stale guards for conflicts, between
+  flushes and compactions. Power fails at a random moment, including inside a
+  flush or compaction. The reopened store must read exactly the key state
+  after one acknowledged or attempted group. On an honest disk nothing is lost
+  or refused.
+
+SQLite is not simulated. The engine opens it in WAL mode with
+`synchronous=FULL`, which `engine_sqlite_tests.rs` asserts, and SQLite's own
+crash tests already replay power loss through a VFS that loses and tears
+unsynced sectors. The simulations model no file-system metadata beyond the
+LSM table namespace (no renames, no lost directory entries of the journal
+file).

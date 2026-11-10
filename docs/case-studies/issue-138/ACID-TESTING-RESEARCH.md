@@ -238,12 +238,19 @@ found that etcd's prober opens keep-alive connections without the sender
 header that the pipeline then reuses for `POST /raft`, so a proxy that
 classifies only the first request leaks a one-way cut.
 
-Gap: no clock faults. The engine reads no clock for correctness; commits
-compare `mod_revision`s, and time only sets request deadlines. Liveness is
-asserted for the majority side and after every heal, but not while a random
-round's faults last. The real cluster's history is checked against the stored state
-and real time. The Elle-style dependency check runs on the simulated network
-only.
+Clock faults and liveness under random faults: a real etcd cluster's clocks
+cannot be skewed from a test, so the
+[Raft draft](../../ENGINE-CLUSTERS.md#the-raft-draft) is simulated instead.
+Every replica's clock runs at 0.5x to 2x, jumps both ways and changes rate.
+Replicas crash and restart, and links drop, delay and reorder messages or make
+a replica isolated, deaf or mute. With one replica faulty at a time, faults
+never stop, yet a probe must get an answer at least every 1,500 real-time
+ticks (the longest gap over 20 seeds was 1,189). Turning PreVote and
+CheckQuorum off on the same schedules is the negative control: the gap grows
+past the bound (2,292) and terms climb from 8 to 64. With any number of
+replicas faulty at once, progress may stop, but the Elle-style checker finds
+no anomaly. The real cluster's history is checked against the stored state
+and real time.
 
 ### FoundationDB
 
@@ -261,28 +268,36 @@ messages). The real engine runs on top, single-threaded, and a seed replays
 the same history exactly. The disk simulation found a real bug in the mirror's
 metadata write order.
 
-Gap: the simulation covers the engine's storage and coordination boundaries
-(the page device and the atomic journal store), not the whole system. etcd
-itself, the operating system, timers and the other storage backends run for
-real or are covered by other tests. A FoundationDB-style simulation of every
-I/O and timer path would be a separate runtime.
+The simulation now covers the storage backends and the consensus layer as
+well as the page device. The journal file and the physical LSM store run
+their real code on the same sector-level disk model (`engine_power_loss_backends_tests.rs`).
+A Raft group simulates what etcd gets from the operating system: per-replica
+clocks and timers, process crashes and the network.
+
+Gap: the Raft group is this repository's draft of etcd's algorithm, not etcd
+itself, and the simulation does not schedule threads. Each language's engine
+is single-threaded inside the simulation, as FoundationDB's actors are.
 
 ## Summary of gaps
 
-None of these is claimed as covered:
+Closed on 2026-11-10:
 
-1. **Power loss below the file system for every backend.** Sector reordering
-   inside a flush interval and lying syncs are simulated for the page device
-   and its mirror. The journal-file, LSM and SQLite backends rely on the
-   file-level power-loss model of the Docker crash test.
-2. **Clock faults.** Links are cut (two-way or one-way) and slowed in a real
-   etcd cluster, and dropped, lost or delivered late in the simulation, but
-   no member's clock is ever skewed. The engine's correctness reads no clock
-   (only request deadlines do), so the argument is by construction, not by
-   test.
-3. **Liveness during random faults.** Progress is asserted for the majority
-   side of the fixed scenarios and after every heal. It is not asserted while
-   a random round's faults last, because etcd may legitimately make none.
-4. **Whole-system simulation.** The deterministic simulation stops at the page
-   device and the atomic journal store. etcd, the operating system and timers
-   are not simulated.
+1. **Power loss below the file system for every backend.** The page device and
+   its mirror, the journal file and the physical LSM store run on the
+   sector-level disk model. SQLite runs in WAL mode with `synchronous=FULL`,
+   which a test asserts, and SQLite's own crash VFS covers it.
+2. **Clock faults.** Skewed, jumping and rate-changing clocks drive the
+   simulated Raft group's timers and client deadlines.
+3. **Liveness during random faults.** Bounded progress is asserted while one
+   replica at a time keeps failing, with a negative control.
+4. **Whole-system simulation.** The Raft draft's timers, processes and network
+   are simulated, not only the atomic journal store.
+
+Still not claimed as covered:
+
+1. A real etcd binary under skewed clocks. Its clock comes from the operating
+   system, and only the partition runner exercises it, with real time.
+2. File-system metadata beyond the LSM table namespace, such as renames and a
+   lost directory entry of the journal file.
+3. Thread scheduling: the simulations run each engine single-threaded. The
+   concurrency tests use real threads, without a deterministic scheduler.

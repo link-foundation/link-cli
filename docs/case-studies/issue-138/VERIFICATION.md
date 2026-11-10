@@ -1,5 +1,25 @@
 # Verification record
 
+## Raft, skewed clocks and backend power loss (2026-11-10, continued)
+
+| Gap left earlier on 2026-11-10 | Evidence |
+| --- | --- |
+| Clock faults | The [Raft draft](../../ENGINE-CLUSTERS.md#the-raft-draft) (`rust/src/engine/raft.rs`, `a1d8aa70`; C# `RaftNode.cs`, JS `js/client/src/raft.js`) is a pure state machine that is given the local time from outside. `rust/tests/engine_raft_simulation_tests.rs` (`21cde63c`) gives each of three replicas its own clock running at 0.5x to 2x real time. The clocks jump forward and backward and change rate during the run, and election timeouts, heartbeats and client deadlines run on them. 20 seeds per test, checked by the Elle-style checker, real-time edges included: no anomaly. Every replica ends with the same committed log and state. |
+| Liveness while random faults last | While one replica at a time is faulty (isolated, deaf, mute, crashed or restarted) and faults never stop, a probe on a healthy replica must get an answer at least every 1,500 real-time ticks. Over 20 seeds: 529 commits, 85 leaders, highest term 8, longest gap 1,189. Negative control on the same schedules with PreVote and CheckQuorum off: longest gap 2,292, highest term 64. With any replicas faulty at once: 470 commits, and unknown outcomes are found both committed (9) and aborted (126), with no anomaly. Reference counts: [`raft-simulation-expected.txt`](../../../experiments/issue-138/raft-simulation-expected.txt) (`58042f3d`). The C# and JS ports must print the same counts. |
+| Simulation of etcd, the operating system and timers | The same Raft simulation owns the timers, processes and network. Hard state and log survive a restart, as an fsynced store would keep them; everything else is lost. |
+| Simulated power loss for the journal-file and LSM backends | `rust/tests/engine_power_loss_backends_tests.rs` (`a07a9779`) runs the real `FileTransitionLog` repair and `Engine::open`, and the real `PhysicalLsmJournalStore`, on the sector-level disk model of the page-device simulation. Journal file: 3 configurations × 48 seeds × 8 cycles. Per configuration there were 384 crashes and 553 / 775 / 729 commits, 26 / 52 / 54 unsynced sectors lost and 8 / 15 / 13 torn, with no refusal and no lost acknowledged commit. A lying disk rolls back to an exact revision or is refused. LSM: 24 seeds × 8 cycles gave 192 crashes, 487 acknowledged groups, 34 conflicts, 59 flushes, 28 compactions, 273 tables, 144 sectors lost and 33 torn, with no refusal and no loss. SQLite is not simulated. It runs in WAL mode with `synchronous=FULL`, asserted by `engine_sqlite_tests.rs`, and SQLite's crash VFS tests it upstream. |
+
+Reproduce:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test engine_raft_simulation_tests -- --nocapture --test-threads 1
+cargo test --manifest-path rust/Cargo.toml --features physical-lsm --test engine_power_loss_backends_tests -- --nocapture
+```
+
+Still not covered: a real etcd binary under skewed clocks, file-system
+metadata beyond the LSM table namespace, and deterministic thread
+scheduling. See [ACID-TESTING-RESEARCH.md](ACID-TESTING-RESEARCH.md#summary-of-gaps).
+
 ## Deterministic simulation and real partitions (2026-11-10, continued)
 
 | Gap left earlier on 2026-11-10 | Evidence |

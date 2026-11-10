@@ -23,9 +23,15 @@ lies about unsynced sectors under the page device and its mirror, and it found
 a metadata ordering bug in the mirror, now fixed. It also runs cluster members
 over a faulty simulated network, checked for strict serializability. A real
 etcd cluster is partitioned link by link (two-way, one-way, a bridge) and has
-links slowed past the election timeout. Still untested: skewed clocks,
-liveness while random faults last, sector-level power loss for the
-journal-file, LSM and SQLite backends, and a whole-system simulation.
+links slowed past the election timeout. Later, a draft Raft replica
+(etcd's algorithm with PreVote and CheckQuorum) was added in Rust, C# and JS.
+It is simulated with skewed and jumping clocks, crashes and isolated, deaf
+and mute replicas, and checked for strict serializability and for bounded
+liveness while one replica at a time keeps failing, with a negative control.
+The journal file and the physical LSM store now run on the sector-level
+disk model too. SQLite relies on WAL with `synchronous=FULL` and its own crash
+VFS. Still untested: a real etcd binary under skewed clocks, file-system
+metadata beyond the LSM table namespace, and deterministic thread scheduling.
 
 Online backup (R2/R5/R7/R11) copies a consistent cut of the current or a retained
 revision to an empty log while commits continue, in Rust, C# and actual-WASM JS.
