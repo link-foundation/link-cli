@@ -9,13 +9,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { gzipSync } from 'node:zlib';
 
-import {
-  asOperand,
-  gunzip,
-  isCompressed,
-  isTarball,
-  readTarEntries,
-} from './check-secrets.mjs';
+import { asOperand, gunzip, isCompressed, isTarball, readTarEntries } from './check-secrets.mjs';
 
 const script = new URL('./check-secrets.mjs', import.meta.url).pathname;
 const secretlint = new URL('../../js/node_modules/secretlint/bin/secretlint.js', import.meta.url)
@@ -60,19 +54,23 @@ test('every gzip archive is decompressed and tarballs are unpacked', () => {
   assert.throws(() => gunzip(Buffer.from('not gzip')));
 });
 
-test('a secret inside a compressed archive fails the scan', {
-  skip: !existsSync(secretlint) && 'secretlint is not installed (npm ci --prefix js)',
-}, () => {
-  const dir = mkdtempSync(join(tmpdir(), 'check-secrets-test-'));
-  try {
-    const scan = (name, content) => {
-      writeFileSync(join(dir, name), content);
-      return spawnSync(process.execPath, [script, join(dir, name)], { encoding: 'utf8' });
-    };
-    assert.equal(scan('clean.tar.gz', tarball({ 'a.txt': 'nothing here' })).status, 0);
-    assert.notEqual(scan('leak.tar.gz', tarball({ 'docs/key.pem': leakedToken })).status, 0);
-    assert.notEqual(scan('leak.json.gz', gzipSync(leakedToken)).status, 0);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+test(
+  'a secret inside a compressed archive fails the scan',
+  {
+    skip: !existsSync(secretlint) && 'secretlint is not installed (npm ci --prefix js)',
+  },
+  () => {
+    const dir = mkdtempSync(join(tmpdir(), 'check-secrets-test-'));
+    try {
+      const scan = (name, content) => {
+        writeFileSync(join(dir, name), content);
+        return spawnSync(process.execPath, [script, join(dir, name)], { encoding: 'utf8' });
+      };
+      assert.equal(scan('clean.tar.gz', tarball({ 'a.txt': 'nothing here' })).status, 0);
+      assert.notEqual(scan('leak.tar.gz', tarball({ 'docs/key.pem': leakedToken })).status, 0);
+      assert.notEqual(scan('leak.json.gz', gzipSync(leakedToken)).status, 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+);
