@@ -367,19 +367,71 @@ try {
     'PASS independent consensus groups: unavailable west publishes nothing; east still commits',
   );
 
-  const status = await Promise.all(
-    endpoints.map(async (endpoint) =>
-      (
-        await fetch(`${endpoint}/v3/maintenance/status`, {
-          method: 'POST',
-          body: '{}',
-          signal: AbortSignal.timeout(2000),
-        })
-      ).json(),
-    ),
+  // The member each reachable endpoint names as leader, as an index.
+  async function leaderOf(indices) {
+    const status = await Promise.all(
+      indices.map(async (i) =>
+        (
+          await fetch(`${endpoints[i]}/v3/maintenance/status`, {
+            method: 'POST',
+            body: '{}',
+            signal: AbortSignal.timeout(2000),
+          })
+        ).json(),
+      ),
+    );
+    const leaders = new Set(status.map((item) => item.leader));
+    assert.equal(leaders.size, 1, 'reachable members agree on one leader');
+    const index = status.findIndex((item) => item.header.member_id === item.leader);
+    return index >= 0 ? indices[index] : null;
+  }
+
+  // A paused leader. SIGSTOP freezes it, so its peers stop hearing from it as
+  // if a partition cut it off, and on SIGCONT it comes back still believing it
+  // leads, as after a healed partition (Jepsen's "pause" fault). A transaction
+  // staged before the pause must not commit after it: the majority moved on.
+  const paused = await leaderOf([0, 1, 2]);
+  assert.ok(paused !== null);
+  const beforePause = await engine.begin(['a', 'b']);
+  await beforePause.shard('a').setName(1, 'staged before the pause');
+  nodes[paused].child.kill('SIGSTOP');
+  try {
+    const majority = await ready(() => engine.begin(['a', 'b']));
+    await majority.shard('b').setName(1, 'majority while the leader is paused');
+    await majority.commit();
+    const others = [0, 1, 2].filter((i) => i !== paused);
+    const elected = await ready(async () => {
+      const leader = await leaderOf(others);
+      if (leader === null) throw new Error('no leader among the majority yet');
+      return leader;
+    });
+    assert.notEqual(elected, paused);
+  } finally {
+    nodes[paused].child.kill('SIGCONT');
+  }
+  // A conflict, or a timeout while the resumed member catches up. Either way
+  // the compare names the old revision, so it cannot apply; the read below
+  // checks that it did not.
+  await assert.rejects(beforePause.commit(), (error) =>
+    ['failed', 'unknown'].includes(error.outcome),
   );
-  const leader = status.findIndex((item) => item.header.member_id === item.leader);
-  assert.ok(leader >= 0);
+  // Read through the resumed member alone: it serves the majority's history.
+  const throughResumed = new ClusterEngine(
+    binding,
+    new EtcdJournalStore([endpoints[paused]], options),
+    checkpointOptions,
+  );
+  const healed = await ready(() => throughResumed.begin(['a', 'b']));
+  assert.equal(await healed.shard('b').getName(1), 'majority while the leader is paused');
+  assert.notEqual(await healed.shard('a').getName(1), 'staged before the pause');
+  await healed.close();
+  assert.notEqual(await ready(() => leaderOf([0, 1, 2])), paused);
+  console.log(
+    `PASS real etcd: paused leader n${paused}; the majority elected another and committed, the stale transaction was refused, and the resumed member serves the new history`,
+  );
+
+  const leader = await leaderOf([0, 1, 2]);
+  assert.ok(leader !== null);
   await stop(nodes[leader]);
   const after = await ready(() => engine.begin(['a', 'b']));
   assert.equal(await after.shard('a').count(), 1n);
