@@ -16,8 +16,10 @@ files. Neither provider steals a live or stale owner automatically.
 
 A flush writes each new immutable page to both devices, then synchronizes both
 data files. Only after both successful data syncs does it write the alternating
-metadata decision to both devices and synchronize both decisions. Acknowledgement
-follows both metadata syncs. Any mutation failure fences the device/log. Recovery
+metadata decision: first to the primary device, then a sync of that copy, and
+only then to the secondary device and a sync of the second copy. Power loss
+can therefore tear at most one copy of a decision. Acknowledgement follows both
+metadata syncs, so a flush still costs two metadata writes and two syncs. Any mutation failure fences the device/log. Recovery
 can discover the old or complete new group after an uncertain outcome; it never
 publishes part of a group. Empty flushes perform no I/O.
 
@@ -27,7 +29,11 @@ checksummed unsupported formats, differing identities and conflicting bytes at
 equal generation reject. The ordinary log then selects the newest decision
 across alternating slots, applying the same conflict and portable-count rules.
 Both unreadable copies of a nonempty slot reject rather than silently dropping
-a potentially acknowledged decision.
+a potentially acknowledged decision, with one exception that only power loss
+can produce: a torn primary copy next to a secondary copy that was never
+written. That decision was interrupted before it could be acknowledged, so it
+is treated like a torn slot on one device and the other slot is used. Garbage
+in both copies, or a read error, needs a second fault and still rejects.
 
 Starting at that root, each data page must match the expected checksum from the
 decision or next page. A locally valid stale checksum is insufficient. One exact

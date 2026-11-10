@@ -174,10 +174,63 @@ JS, run `wasm-pack build --target web --out-dir ../../js/pkg rust/wasm`. If
 your Docker host itself runs in a container, append `--storage-driver=vfs` to
 the `docker:dind` command.
 
-What it does not cover: a disk that acknowledges a flush it did not do, a real
-power cut (the power-loss rounds model one at the file level, the way LazyFS or
-dm-flakey would, but in the driver, not below the file system), lost directory
-entries, and a machine whose clock or kernel misbehaves. SIGKILL ends the
-process but leaves the page cache in place, so the kill rounds check the
-engine's write and flush order, not the disk's. The engine's unit tests cover
-flush failures with fault logs instead.
+What it does not cover: a real power cut (the power-loss rounds model one at
+the file level, the way LazyFS or dm-flakey would, but in the driver, not below
+the file system), lost directory entries, and a machine whose clock or kernel
+misbehaves. SIGKILL ends the process but leaves the page cache in place, so the
+kill rounds check the engine's write and flush order, not the disk's. The
+engine's unit tests cover flush failures with fault logs instead, and the
+simulation below covers reordering inside a flush interval and disks that lie.
+
+## The deterministic disk simulation
+
+FoundationDB and TigerBeetle run their real storage code against a simulated
+disk driven by one seeded random source, so every fault schedule replays
+exactly. `rust/tests/engine_simulation_tests.rs`,
+`csharp/Foundation.Data.Doublets.Cli.Tests/EngineSimulationTests.cs` and
+`js/client/test/engine-simulation.test.mjs` (on the WASM engine) do the same for
+the [native page format](ENGINE-NATIVE-PAGES.md). They share one random
+generator (splitmix64), the same seeds and the same fault model.
+
+A simulated `PageDevice` keeps three files (pages and two metadata slots).
+Each file holds its durable bytes and the writes issued since its last sync. A
+simulated power loss keeps, for every 512-byte sector independently, the
+durable bytes or any prefix of the pending writes to that sector, sometimes
+half of the next one (a torn sector), and a file length from any prefix of the
+pending operations. That is every reordering and loss a volatile disk cache may
+perform within a flush interval. Writes and syncs also fail at random, and the
+failed call may or may not have reached the cache. Three clients commit through
+the real paged log and engine until the power fails at a random moment.
+Recovery itself truncates and repairs, so injected errors can hit it too; the
+power then fails again and recovery is retried. 24 seeds run 8 crash cycles each, under four configurations
+(optimistic and pessimistic concurrency, exclusive concurrency with
+`require_durable_flush`, change-encoded revisions, shared and sorted-run
+states, bounded history).
+
+After every crash the database is reopened, and it must hold the exact state
+of one revision between the last acknowledged and the last attempted commit:
+
+- **Honest disk.** No acknowledged commit is lost and opening never refuses.
+  Commits whose flush failed are found both applied and not applied.
+- **Lying disk** (half of its syncs are acknowledged but persist nothing). No
+  engine can keep its promise on such a disk. The test requires the next best
+  thing: recovery either refuses the damaged database or opens the exact state
+  of an earlier revision, never a mixture of two.
+- **Mirror** ([mirrored mode](protocol/native-pages-mirrored.md)) of two disks,
+  one of which may lie. No acknowledged commit is lost. With an honest primary
+  the mirror always opens, because the secondary copy of a metadata decision is
+  written only after the primary copy is durable, so power loss alone tears at
+  most one copy.
+
+The simulation found this ordering problem. Mirrors used to write both
+metadata copies before syncing either, so a power loss could tear both copies
+of an unacknowledged decision. Opening then refused a database whose other
+slot still held the acknowledged decision.
+The fix orders the writes and opens the other slot only in the one
+both-unreadable state that power loss can leave: a torn primary next to a
+secondary that was never written. Two damaged copies, which need a second
+fault, are still refused rather than silently rolled back.
+
+The simulation covers the page device. It does not reach the journal-file,
+LSM or SQLite backends, which rely on the Docker crash test above, and it
+models no file-system metadata (directory entries, renames).

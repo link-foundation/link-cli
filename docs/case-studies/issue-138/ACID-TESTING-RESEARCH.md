@@ -103,9 +103,13 @@ Ours:
   Trailing lines holding a NUL byte are now dropped as torn in Rust, C# and JS,
   as etcd's WAL does with a last record holding a zeroed sector.
 
-Gap: the power-loss model runs in the driver, on the files, after the writer is
-dead. It does not reorder writes inside one flush interval of a live system,
-and it cannot model a disk that acknowledges a flush it did not do.
+Gap closed for the page device: the Docker power-loss model runs in the
+driver, on the files, after the writer is dead, so it cannot reorder writes
+inside a flush interval or model a disk that acknowledges a flush it did not
+do. The [deterministic disk simulation](../../ENGINE-RECOVERY.md#the-deterministic-disk-simulation)
+does both, in Rust, C# and JS, for the native page format and its mirror. The
+journal-file, LSM and SQLite backends are still covered only by the Docker
+model.
 
 ### RocksDB
 
@@ -196,8 +200,11 @@ Read committed shows G-single (and, under pessimistic concurrency, G2, which
 it also allows); snapshot shows only G2, as Adya's levels allow. Serializable shows neither, and read-set validation commits more than
 revision validation.
 
-Gap: the histories come from one engine in one process, so they check the
-isolation levels, not a distributed history under network faults.
+Distributed histories: the [network simulation](../../ENGINE-CLUSTERS.md#reproduce-verification)
+feeds the same checker with histories from three `ClusterEngine` members whose
+links to the journal store drop requests, lose replies, deliver late and are
+cut. It must find no anomaly, including real-time edges between members, so
+the cluster is checked to be strictly serializable.
 
 ### etcd
 
@@ -218,8 +225,21 @@ must elect another leader and commit. A transaction staged before the pause
 must not commit after it, and a read through the resumed member alone must
 show the majority's write.
 
-Gap: no real network partitions (dropped or one-way links), no clock faults,
-and no history checked against a model beyond the stored state.
+Network partitions: `experiments/issue-138/etcd-partition.mjs` cuts the Raft
+links of the real cluster through per-member proxies that classify connections
+by etcd's `X-Server-From` header. It runs a two-way isolation of the leader,
+one-way cuts in both directions, a bridge, and six seeded random rounds with
+a second fault injected mid-round while four clients commit. Every member must
+agree. Acknowledged transactions must be kept, refused ones absent, and
+unknown ones all or nothing, and reads must respect real time. Building it
+found that etcd's prober opens keep-alive connections without the sender
+header that the pipeline then reuses for `POST /raft`, so a proxy that
+classifies only the first request leaks a one-way cut.
+
+Gap: no clock faults and no slowed links, and liveness during partitions is
+not asserted. The real cluster's history is checked against the stored state
+and real time. The Elle-style dependency check runs on the simulated network
+only.
 
 ### FoundationDB
 
@@ -230,21 +250,32 @@ repeatability". It injects faults such as "swizzle-clogging" of the network.
 
 Ours: the crash test is seeded, so a failing run can be replayed with the same
 seed, but the process schedule and the operating system are not deterministic.
+The simulation tests are deterministic. One splitmix64 source, the same in
+Rust, C# and JS, drives the disk (sector reordering, torn sectors, failed and
+lying syncs, power loss) and the network (dropped, lost, late and partitioned
+messages). The real engine runs on top, single-threaded, and a seed replays
+the same history exactly. The disk simulation found a real bug in the mirror's
+metadata write order.
 
-Gap: there is no deterministic simulation of the whole system. Building one
-would mean writing every I/O and timer path against a simulated runtime. That
-is a large separate project, not a test we can add.
+Gap: the simulation covers the engine's storage and coordination boundaries
+(the page device and the atomic journal store), not the whole system. etcd
+itself, the operating system, timers and the other storage backends run for
+real or are covered by other tests. A FoundationDB-style simulation of every
+I/O and timer path would be a separate runtime.
 
 ## Summary of gaps
 
 None of these is claimed as covered:
 
-1. **Power loss below the file system.** Lost and zeroed unsynced bytes are
-   simulated on the files after each kill. Reordering inside a live flush
-   interval and disks that lie about flushes are not tested.
-2. **Distributed histories.** Long histories are checked for dependency cycles
-   on one engine. Histories across cluster members are not.
-3. **Network faults.** Members are killed, and a paused leader stands in for
-   one cut off by a partition, but links are not cut, made one-way or slowed.
-4. **Deterministic simulation.** Seeds replay the fault plan, not the thread or
-   process schedule.
+1. **Power loss below the file system for every backend.** Sector reordering
+   inside a flush interval and lying syncs are simulated for the page device
+   and its mirror. The journal-file, LSM and SQLite backends rely on the
+   file-level power-loss model of the Docker crash test.
+2. **Clock faults and slow links.** Links are cut (two-way or one-way) in a
+   real etcd cluster, and dropped, lost or delivered late in the simulation,
+   but clocks are never skewed and links are never just slowed.
+3. **Liveness under partitions.** Safety is asserted. Progress during a fault
+   is not, because etcd may legitimately make none.
+4. **Whole-system simulation.** The deterministic simulation stops at the page
+   device and the atomic journal store. etcd, the operating system and timers
+   are not simulated.

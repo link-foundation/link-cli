@@ -42,6 +42,16 @@ the same grouped generation CAS, keeps defaults unchanged and retains old
 partitioned objects. History All and full-snapshot checkpoint costs remain
 explicit; it does not increase the coordinator's throughput or request limits.
 
+etcd keeps every revision of a key until it is compacted, and its default
+backend quota is 2 GiB. Each commit without a checkpoint interval writes the
+complete journal again, so a long-running writer must pair a checkpoint
+interval with etcd's `--auto-compaction-*` settings and a quota that fits. The
+partition test below filled a 16 MiB quota after about 140 commits to one key
+(each stored value had grown to about 140 KB). etcd then answers
+`etcdserver: no space` with HTTP 429, which the adapter reports as an unknown
+outcome, and every later commit fails until an operator compacts, defragments
+and disarms the alarm.
+
 ## Independent data stores
 
 `PartitionedJournalStore` implements the same atomic journal store contract in
@@ -229,6 +239,62 @@ native writers, injects a lost commit response and a data-group outage, kills th
 elected catalog leader, verifies a surviving-majority commit, and then checks
 that majority loss refuses a fresh read. All children are killed
 and reaped in `finally`. The JS CI conformance job runs this experiment.
+
+The [partition runner](../experiments/issue-138/etcd-partition.mjs) cuts the
+Raft links of a real three-member etcd cluster without root. Each member
+advertises a peer URL served by a [proxy](../experiments/issue-138/etcd-peer-network.mjs)
+that reads etcd's `X-Server-From` header and so knows which directed link every
+peer connection carries: `POST /raft` connections carry the dialer's messages,
+and `GET /raft/stream/...` connections carry messages back to the dialer. A cut
+link's connections are destroyed and new ones are held open without
+forwarding a byte, so a partition can be two-way, one-way in either direction,
+or a bridge, which iptables cannot do for TCP. etcd's prober opens keep-alive
+connections without the header and the pipeline later reuses them for
+`POST /raft`, so the proxy keeps scanning each connection until a request
+names its sender. Without that, a one-way cut leaked messages and the cut
+leader kept replicating.
+
+The runner checks these scenarios, committing every transaction across two
+shards:
+
+1. The leader isolated both ways: the majority elects a new leader and commits,
+   the cut member commits nothing, and a transaction staged through it before
+   the cut is refused after the heal.
+2. A one-way cut from the leader: its followers elect a new leader, and the old
+   leader ends up following it.
+3. A one-way cut to the leader: CheckQuorum makes it step down.
+4. A bridge member connected to both halves: commits continue.
+5. Six random rounds (seeded by `PARTITION_SEED`) of isolations, single links,
+   and all links into or out of one member, with a second fault injected
+   mid-round while four clients commit through single members and through all
+   members.
+
+Afterwards every member must return the same state. Every acknowledged
+transaction must be present in both shards and every refused one absent. A
+transaction with an unknown outcome must be all or nothing. Each transaction's
+first read must include every commit acknowledged before it started (real
+time). CI runs seeds 138 and 2026 and uploads the members' logs. Seed 138
+acknowledged 295 commits, refused 194 and left 3 unknown (1 applied).
+
+The test does not assert liveness. In seed 2026, two rounds committed nothing
+while their faults lasted, which etcd allows. Clocks are not skewed, and links
+are cut, not slowed.
+
+A deterministic simulation complements the real cluster:
+`rust/tests/engine_simulation/network.rs`,
+`csharp/Foundation.Data.Doublets.Cli.Tests/EngineSimulationTests.cs` and
+`js/client/test/engine-simulation.test.mjs` (on the WASM engine). In it, three
+`ClusterEngine` members reach one atomic journal store through simulated links
+that drop requests, lose replies, deliver requests late (after other
+transactions ran), and are cut or made one-way. Five clients run 80
+transactions per history over two shards, 30 seeds in all. The Elle-style
+checker shared with the history tests (including real-time edges between
+members) must find no anomaly. Commits with unknown outcomes are resolved from
+the store's own log, as a reconnecting client would see them. All three
+languages produce the same totals: 508 committed, 303 conflicts, 67 unknown
+outcomes that committed and 125 that did not, 32 late deliveries, and 1370
+transactions that could not start because their member could not reach the
+store. A seed replays the same history exactly.
 
 Primary references: [etcd API](https://etcd.io/docs/v3.6/learning/api/),
 [JSON gateway](https://etcd.io/docs/v3.6/dev-guide/api_grpc_gateway/),

@@ -1,5 +1,29 @@
 # Verification record
 
+## Deterministic simulation and real partitions (2026-11-10, continued)
+
+| Gap left earlier on 2026-11-10 | Evidence |
+| --- | --- |
+| Reordering inside a live flush interval, and disks that lie about flushes | Deterministic disk simulation: Rust `2f277e2a` (`rust/tests/engine_simulation_tests.rs`), C# `c21ed84c` (`EngineSimulationTests.cs`), JS `2145a7c5` (`js/client/test/engine-simulation.test.mjs`, on the WASM engine, CI step "Deterministic disk and network fault simulation" added in `3090796f`). The real paged log and engine run on a simulated `PageDevice` that loses, reorders and tears unsynced 512-byte sectors at power loss and fails writes and syncs at random. Four configurations run 24 seeds of 8 crash cycles each. An honest disk loses nothing. A lying disk is refused or rolls back to an exact earlier revision, never a mixture. A mirror with one lying disk keeps every acknowledged commit. See [ENGINE-RECOVERY.md](../../ENGINE-RECOVERY.md#the-deterministic-disk-simulation). |
+| A bug the disk simulation found | A mirror wrote both metadata copies before syncing either, so power loss could tear both copies of an unacknowledged decision, and opening then refused a database whose other slot held the acknowledged decision. The fix writes the secondary copy only after the primary copy is durable, in Rust, C# and JS (`0a1c7901`, after the narrower `1fa7c320`). A torn primary next to a never-written secondary opens the other slot; any other double damage is still refused. Regression tests are in `engine_mirrored_pages_tests.rs`, `MirroredPagedTests.cs` and `engine-mirrored-pages.test.mjs`. |
+| Histories across cluster members | The network simulation (`rust/tests/engine_simulation/network.rs`, and the same tests in C# and JS) runs three `ClusterEngine` members over links that drop requests, lose replies, deliver late and are cut or one-way. 30 seeds of 80 transactions over two shards must have no anomaly in the Elle-style checker, including real-time edges, so the cluster is strictly serializable. All three languages produce the same totals: 508 committed, 303 conflicts, 67 and 125 unknown outcomes resolved as committed and not committed, 32 late deliveries, 1370 transactions that could not start. |
+| Cut and one-way network links | `experiments/issue-138/etcd-partition.mjs` with `etcd-peer-network.mjs` (`00be81b1`; CI step "Verify actual consensus and language interoperability", seeds 138 and 2026, member logs uploaded). Scenarios: the leader isolated both ways, one-way cuts from and to the leader, a bridge, and six random rounds with a second fault mid-round. Locally, seed 138 gave 295 acknowledged, 194 refused, 3 unknown (1 applied) and 39 not started. Seed 2026 gave 253 acknowledged, 141 refused, 0 unknown and 60 not started. Both pass every check: members agree, acknowledged kept, refused absent, unknown atomic, no stale reads. |
+| Findings while building the partition test | etcd's prober opens keep-alive peer connections without `X-Server-From`, and the pipeline reuses them for `POST /raft`. The proxy therefore scans every request for the sender. The full-journal-per-commit cost filled a 16 MiB etcd quota after about 140 commits (`etcdserver: no space`, HTTP 429, an unknown outcome). This is documented in [ENGINE-CLUSTERS.md](../../ENGINE-CLUSTERS.md#backends-and-costs), and the test uses a checkpoint interval, auto-compaction and a 64 MiB quota. |
+
+Reproduce:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test engine_simulation_tests
+dotnet test csharp/Foundation.Data.Doublets.Cli.Tests --filter "FullyQualifiedName~EngineSimulation"
+CLINK_WASM=$PWD/js/pkg node --test js/client/test/engine-simulation.test.mjs
+ETCD_BIN=/path/to/etcd PARTITION_SEED=138 node experiments/issue-138/etcd-partition.mjs
+```
+
+Still not covered: clock faults and slowed links, liveness during partitions,
+simulated power loss for the journal-file, LSM and SQLite backends (they rely
+on the Docker model), and a simulation of etcd, the operating system and
+timers themselves. See [ACID-TESTING-RESEARCH.md](ACID-TESTING-RESEARCH.md#summary-of-gaps).
+
 ## Long histories and power loss (2026-11-10)
 
 | Gap left on 2026-11-09 | Evidence |
@@ -9,9 +33,10 @@
 | A leader cut off, then back | `experiments/issue-138/etcd-cluster.mjs` (`77858be5`, CI step "Verify actual consensus and language interoperability") pauses the real etcd leader with SIGSTOP. The two others must elect a new leader and commit. A transaction staged before the pause must be refused after SIGCONT, and a read through the resumed member must show the majority's write. Six local runs pass, two with journal checkpoints. |
 | A bug the power-loss rounds found | A record that was never flushed can keep its newline while a sector inside it reads back as zeros. Opening refused such a journal, so the writer could not restart. Reproduce: build the Rust writer at `6a6da43d` and, with the current driver, run `node .github/scripts/docker-crash.mjs --target rust --seed 138 --rounds 2 --power-losses 16`; it fails, and with the fix it passes (seeds 138, 139, 140 checked locally; C# and JS with `--rounds 3 --power-losses 12 --seed 140`). The fix drops trailing lines that hold a NUL byte as torn and refuses NUL in appends: Rust `1fb9b0b5`, C# `3518562f`, JS `2b25c4dd`. Regression tests: `file::trailing_lines_zeroed_by_power_loss_are_torn` in `engine_recovery_tests.rs`, `TrailingLinesZeroedByPowerLossAreTorn` in `EngineJournalRecoveryTests.cs`, and `engine-file-log.test.mjs` / `engine-journal-repair.test.mjs` in JS. Each also checks that a NUL line in front of an intact line is still refused. |
 
-Still not covered: reordering inside a live flush interval, disks that
-acknowledge flushes they did not do, histories across cluster members, cut or
-one-way network links and deterministic simulation.
+Not covered at that point: reordering inside a live flush interval, disks
+that acknowledge flushes they did not do, histories across cluster members,
+cut or one-way network links and deterministic simulation. All five were added
+later on 2026-11-10 (above).
 
 ## ACID crash, repair and interleaving tests (2026-11-09)
 
