@@ -277,7 +277,6 @@ try {
     network.partition(others.map((other) => [leader, other]));
     await commitThrough(others, 3);
     const deposed = await until('the old leader to follow the new one', async () => {
-      for (const other of others) await leaderSeenBy(other).catch(() => {});
       const seen = await leaderSeenBy(leader);
       return seen !== null && seen !== leader && seen;
     });

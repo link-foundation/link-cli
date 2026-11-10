@@ -273,8 +273,10 @@ Afterwards every member must return the same state. Every acknowledged
 transaction must be present in both shards and every refused one absent. A
 transaction with an unknown outcome must be all or nothing. Each transaction's
 first read must include every commit acknowledged before it started (real
-time). CI runs seeds 138 and 2026 and uploads the members' logs. Seed 138
-acknowledged 295 commits, refused 194 and left 3 unknown (1 applied).
+time). CI runs seeds 138 and 2026 and uploads the members' logs. The seed fixes
+the fault plan, but etcd's timing is real, so the counts differ between runs:
+two local runs of seed 138 acknowledged 295 and 258 commits, refused 194 and
+174, and left 3 and 2 outcomes unknown.
 
 The test does not assert liveness. In seed 2026, two rounds committed nothing
 while their faults lasted, which etcd allows. Clocks are not skewed, and links
