@@ -63,8 +63,10 @@ const ACCEPT_DEFAULT = '100..=103,200..=299';
  */
 export function parseLycheeFailures(content) {
   const failures = [];
+  // No part of a record may cross a line break: a malformed `* [ERROR` line
+  // used to swallow the next record into its marker.
   const entryPattern =
-    /^[ \t]*(?:\*|-)[ \t]+\[([^\]]+)\][ \t]+<?([^\s>|)]+)>?(?:[ \t]+\(at [^)]*\))?[ \t]*\|?[ \t]*(.*)$/gim;
+    /^[ \t]*(?:\*|-)[ \t]+\[([^\]\r\n]+)\][ \t]+<?([^\s>|)]+)>?(?:[ \t]+\(at [^)\r\n]*\))?[ \t]*\|?[ \t]*([^\r\n]*)$/gim;
 
   // Timed-out links are failures too, listed in their own section (issue #172).
   const section = extractFailureSections(content);

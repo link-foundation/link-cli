@@ -146,3 +146,20 @@ test('timed-out links are failures that must be rechecked (issue #172)', () => {
     assert.throws(() => validateLycheeReport(mixed, code), /not a link-failure result/);
   }
 });
+
+test('a lychee record never borrows text from the next line (issue #172)', () => {
+  const report = [
+    '## Errors per input',
+    '### Errors in README.md',
+    '* [ERROR',
+    '* [404] https://example.com/missing | Rejected status code: 404',
+    '* [404]',
+    'https://example.com/next-line',
+    '',
+  ].join('\n');
+  assert.deepEqual(
+    parseLycheeFailures(report).map(({ marker, url }) => [marker, url]),
+    [['404', 'https://example.com/missing']],
+  );
+  assert.deepEqual(extractBrokenLinks(report).urls, ['https://example.com/missing']);
+});

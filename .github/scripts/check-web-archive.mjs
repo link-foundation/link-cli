@@ -99,14 +99,19 @@ function extractFailureSections(content) {
  *   links that cannot be looked up in the Wayback Machine (local files,
  *   unresolvable root-relative links, ...)
  */
+// A fresh global RegExp per caller, so no `lastIndex` is shared between them.
+const LYCHEE_ENTRY_PATTERN = () =>
+  /^[ \t]*(?:\*|-)[ \t]+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\][ \t]+<?([^\s>|)]+)>?/gim;
+
 function extractBrokenLinks(content) {
   const section = extractFailureSections(content);
   const urls = [];
   const others = [];
 
   // One bullet per broken link; the status marker is always present.
-  const entryPattern =
-    /^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?([^\s>|)]+)>?/gim;
+  // Horizontal whitespace only: `\s` also matches a newline, so a bare
+  // `* [404]` bullet would have taken the URL from the line below it.
+  const entryPattern = LYCHEE_ENTRY_PATTERN();
   let match;
   while ((match = entryPattern.exec(section)) !== null) {
     const link = match[1].trim().replace(/[.,;!?]+$/, '');
@@ -139,10 +144,8 @@ export function splitRecoveredUrls(urls, recoveredText) {
 export function validateLycheeReport(content, exitCode = process.env.LYCHEE_EXIT_CODE) {
   const count = (kind) => {
     const section = extractErrorsSection(content, kind);
-    const entries = section.match(
-      /^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?[^\s>|)]+>?/gim,
-    );
-    const bullets = section.match(/^\s*(?:\*|-)\s+\[/gm);
+    const entries = section.match(LYCHEE_ENTRY_PATTERN());
+    const bullets = section.match(/^[ \t]*(?:\*|-)[ \t]+\[/gm);
     const reported = new RegExp(`\\|[^|\\n]*${kind}\\s*\\|\\s*(\\d+)\\s*\\|`).exec(content);
     return {
       entries: entries?.length ?? 0,
