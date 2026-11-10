@@ -26,6 +26,7 @@ Defects:
 | 10 | rust: the release source guard rejects sibling-language release commits in a monorepo | no link-cli counterpart |
 | 11 | csharp: SHA pins carry major-only `# vN` comments | no link-cli counterpart |
 | 12 | a failed release-credential preflight skips the lint, test and build jobs | yes |
+| 13 | pull-request change detection diffs only the newest commit, so a cancelled earlier run plus a docs-only commit skips the checks | yes |
 
 Results by template:
 
@@ -43,8 +44,9 @@ Results by template:
 | 10 | confirmed | N/A | N/A | N/A | N/A |
 | 11 | N/A | confirmed (22 pins) | N/A | N/A | N/A |
 | 12 | absent | confirmed | absent | N/A (no preflight job) | absent |
+| 13 | confirmed | N/A (no change detection) | absent (full PR diff unless the previous head passed; per-commit only without `GITHUB_BASE_SHA`) | N/A (no change detection) | N/A (no change detection) |
 
-**Duplicates.** `gh issue list --state all --search ...` was run for every defect in every repository. No open or closed issue duplicates any confirmed item. The related closed issues each draft cites are:
+**Duplicates.** `gh issue list --state all --search ...` was run for every defect in every repository. No open or closed issue duplicates any confirmed item except defect 13, which is already open as rust#235; the link-cli evidence was added there as a comment instead of a new issue. The related closed issues each draft cites are:
 
 | Template | Related closed issues |
 |---|---|
@@ -58,7 +60,7 @@ Draft files:
 
 | File | Items |
 |---|---|
-| `rust.md` | 1, 3, 4, 5, 10 |
+| `rust.md` | 1, 3, 4, 5, 10, 13 |
 | `csharp.md` | 12, 7, 1, 6, 3, 5, 11 |
 | `js.md` | 2, 3, 4, 8 |
 | `java.md` | 9, 5 |

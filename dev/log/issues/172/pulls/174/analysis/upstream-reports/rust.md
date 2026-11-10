@@ -184,6 +184,33 @@ The Rust release then exits 1 with "Let the newer commit's own CI run release it
 
 ---
 
+## 13. Pull-request change detection diffs only the newest commit, so a docs-only follow-up commit skips every Rust check
+
+**Where.** [`scripts/detect-code-changes.rs#L116-L131`](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/blob/88fd935f69e303ac20f02d414bf92ab32d99a104/scripts/detect-code-changes.rs#L116-L131) compares `HEAD^2^` with `HEAD^2` on `pull_request` events: the last commit of the PR head, not the whole PR.
+
+**Why it is a false negative.** The run for the previous head is not guaranteed to have passed, or even to have finished. Every job in `release.yml` uses `cancel-in-progress: true` (for example [L68](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/blob/88fd935f69e303ac20f02d414bf92ab32d99a104/.github/workflows/release.yml#L68)), so pushing a second commit cancels the run that was testing the first one. If the second commit only touches Markdown, the new run reports `rs-changed=false`, skips lint, tests and build, and the PR shows green. The Rust change from the first commit was never tested.
+
+**Already reported.** This is the open template issue [#235](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/235), so no new issue was filed; the link-cli evidence below was added to it as [a comment](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/235#issuecomment-6779540622). The per-commit diff was introduced on purpose by closed issue [#34](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/34), to avoid running every job for a docs-only follow-up commit. Any fix has to keep that trade-off in view.
+
+**Observed in link-cli.** PR #174 changes many Rust files. Its run for head `067cb2c3` (Rust CI/CD Pipeline run 42898138563) succeeded with Rust lint and test **skipped**, because that commit changed only a Python helper.
+
+**Reproduction** (needs only git):
+
+```sh
+git init -q r && cd r && git commit -q --allow-empty -m base && git branch -M main
+git switch -q -c pr && mkdir src && echo 'fn a(){}' > src/lib.rs && git add . && git commit -qm code
+echo docs > README.md && git add . && git commit -qm docs
+git switch -q main && git merge -q --no-ff --no-edit pr     # the synthetic merge GitHub checks out
+git diff --name-only HEAD^2^ HEAD^2   # template: README.md  -> rs-changed=false
+git diff --name-only HEAD^1 HEAD      # whole PR: README.md src/lib.rs
+```
+
+**Workaround.** Re-run the PR workflow after touching a Rust file, or push an empty commit after the earlier run has finished successfully.
+
+**Suggested fix.** On `pull_request` merge commits, diff the base parent against the merge commit (`git diff --name-only --no-renames HEAD^1 HEAD`), which is exactly what the PR changes. link-cli did this in [`rust/scripts/detect-code-changes.rs`](https://github.com/link-foundation/link-cli/blob/38ef331a/rust/scripts/detect-code-changes.rs), with the regression test `main_merge_and_pr_both_check_every_change_of_the_branch`, which fails on the old per-commit diff. If the per-commit optimisation should stay, follow the JS template: it uses the push range only when the previous head has a successful run, and otherwise diffs the full PR (`getPullRequestDiffArgs` in [`scripts/detect-code-changes.mjs#L236-L263`](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/blob/34415b00490262a8582028099139fe913e7e0cb3/scripts/detect-code-changes.mjs#L236-L263)).
+
+---
+
 ## Checked and not affected
 - **2:** compressed evidence is scanned. `.github/scripts/check-secrets.mjs` gunzips tracked `.gz` files. Minor note: `.tgz`, `.zip` and `.xz` files would be passed through raw, but none are tracked.
 - **6:** the rerun workflow list is complete.

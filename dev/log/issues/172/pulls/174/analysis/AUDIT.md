@@ -9,7 +9,7 @@ Baseline: `main` at `199a07b`, the run table in the issue, and the flattened ann
 
 | # | Requirement (issue text) | Where it is met |
 | --- | --- | --- |
-| R1 | Find and fix every false positive, false negative, warning and error in CI/CD | Findings F1–F17 below |
+| R1 | Find and fix every false positive, false negative, warning and error in CI/CD | Findings F1–F19 below |
 | R2 | Compare every file of the five pipeline templates and reuse their best practices | [Template comparison](#template-comparison) |
 | R3 | When a defect also exists in a template, report it there | [Upstream reports](upstream-reports/SUMMARY.md) |
 | R4 | Follow `CI-CD-BEST-PRACTICES.md` (hive-mind) | [Best practices](#best-practices-cross-check) |
@@ -34,10 +34,12 @@ Baseline: `main` at `199a07b`, the run table in the issue, and the flattened ann
 | F11 | false negative (security) | Secrets in committed `.tar.gz`/`.json.gz` evidence were never scanned | `check-secrets.mjs` decompressed only `.log.gz`. secretlint received other archives as binary. | Every `.gz` is decompressed under a 128 MiB cap. Tarballs are unpacked and their files scanned. Symlinks and option-like names are handled (`cd975442`). 499 files inside tarballs are now scanned. | `check-secrets.test.mjs` (a planted token in a `.tar.gz` failed to be detected before) |
 | F12 | false negative (security) | CodeQL SARIF text was printed raw. A newline followed by `::` in a message could forge a workflow command. Only the first malformed diagnostic was reported, and an empty `note` was accepted. | Unquoted untrusted output; throw-on-first | All SARIF text is JSON-quoted and all problems are collected (`a4d61615`) | `check-codeql-results.test.mjs` |
 | F13 | false positive | A `Crash tests` job that never got a macOS/Windows runner stayed red, with no retry | `rerun-infrastructure-failures.yml` did not list `Crash tests` | Added (`26133a71`) | `pipeline-status.test.mjs`: the rerun list must equal the set of workflows with a `pipeline-status` gate |
-| F14 | warning | `Dependencies` warned that new releases exist: System.CommandLine, Microsoft.Data.Sqlite, Microsoft.NET.Test.Sdk, cargo-audit, rustls-pki-types | Releases after the last update | Updated. The C# build has 0 warnings and all 3439 tests pass (`a2de1e79`). | The Dependencies workflow itself |
+| F14 | warning | `Dependencies` warned that new releases exist: System.CommandLine, Microsoft.Data.Sqlite, Microsoft.NET.Test.Sdk, cargo-audit, rustls-pki-types | Releases after the last update | Updated. The C# build has 0 warnings and all 3439 tests pass (`a2de1e79`). cargo-audit is now held at 0.22.2 (see F19). | The Dependencies workflow itself |
 | F15 | warning | `cargo install wasm-bindgen-cli` printed a future-incompatibility warning (`buf_redux`, `multipart` via `rouille`) and compiled for ~1.5 min | Upstream wasm-bindgen/wasm-bindgen#3356 (already reported upstream) | Prebuilt, pinned binaries via `taiki-e/install-action` (SHA-pinned, already used in `security.yml`) (`5b729db4`) | actionlint and zizmor in `Workflows` |
 | F16 | notice (not actionable here) | "`ubuntu-latest` will migrate to Ubuntu 26" | Comes only from GitHub's own Dependabot jobs (`42145172271`, `42877436505`). Every workflow in this repository already pins `ubuntu-24.04`. | None needed. `workflow-policy.test.mjs` "hosted runners use pinned OS labels" already enforces the pin. | existing |
 | F17 | notice (infrastructure) | "jobs targeting macOS arm64 runners may experience longer queue times" | GitHub capacity | Covered by the infrastructure rerun workflow (F13) | existing |
+| F18 | false negative | Found while verifying this PR. The Rust CI/CD Pipeline run for head `067cb2c3` (`42898138563`) succeeded, but Rust lint and test were **skipped** (`rs-changed=false`) although the PR changes many Rust files | `rust/scripts/detect-code-changes.rs` diffed only the last commit of the PR head (`HEAD^2^..HEAD^2`). That commit changed only a Python helper, and the runs for the earlier Rust commits had been superseded | `pull_request` merge commits now diff `HEAD^1..HEAD`, the whole PR against its base. This matches the C# detector, which already compares base...head (`38ef331a`). | `rust/scripts/detect-code-changes.rs` test `main_merge_and_pr_both_check_every_change_of_the_branch`, run by `rust/scripts/test-scripts.sh` (fails on the old code with `["README.md"]`) |
+| F19 | warning | Found while verifying this PR. `Security` run `42898137431` warned that `cargo-audit@0.23.0` had no verified manifest in `taiki-e/install-action` and fell back to an unverified `cargo-binstall` download | F14 bumped cargo-audit to a crates.io release newer than the pinned install-action's manifest | Pinned `cargo-audit@0.22.2`, the newest version the action verifies, with a blocker comment that points at tracking issue #176. `check-latest-dependencies.mjs` reports it as *held*, not outdated, while #176 is open, and flags it again once #176 is closed (`b373d4bb`). | Dependencies workflow (held-dependency mechanism) and the `Security` annotations |
 
 Formatting fallout from the new tests was fixed in `6fbe4167`: the `Workflows` lint job rejected their prettier formatting.
 
@@ -78,7 +80,7 @@ Changes considered but not adopted:
 
 Defects that exist in the templates themselves are listed in [upstream-reports/SUMMARY.md](upstream-reports/SUMMARY.md). One issue was filed per template:
 
-- rust: link-foundation/rust-ai-driven-development-pipeline-template#236
+- rust: link-foundation/rust-ai-driven-development-pipeline-template#236. F18 was already open there as #235, so the link-cli evidence and fix were [added as a comment](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/235#issuecomment-6779540622).
 - csharp: link-foundation/csharp-ai-driven-development-pipeline-template#100
 - js: link-foundation/js-ai-driven-development-pipeline-template#297
 - java: link-foundation/java-ai-driven-development-pipeline-template#22
@@ -90,7 +92,7 @@ The `wasm-bindgen-cli` warning (F15) was already reported upstream as wasm-bindg
 
 Checked against `research/CI-CD-BEST-PRACTICES.md`:
 
-- **Fail fast on a real cause, never on infrastructure.** F3 and F13 remove false positives. F2, F7, F8 and F10 remove false negatives.
+- **Fail fast on a real cause, never on infrastructure.** F3 and F13 remove false positives. F2, F7, F8, F10 and F18 remove false negatives.
 - **Make warnings visible and actionable.** F4–F6 and F14 bring the warnings of `199a07b` to zero, with tests. F15 removes the compiler warning.
 - **Pin, cache and keep secrets safe.** F3 splits cache restore from save. F11 and F12 harden scanning. F15 uses verified prebuilt binaries.
 - **Human actions are explicit.** F1 makes the message precise; the PR passes and `main` fails with remediation.
@@ -112,6 +114,7 @@ These were run locally on the final tree:
 
 - `node --test .github/scripts/*.test.mjs`: 264 pass, 0 fail.
 - `node --test csharp/scripts/*.test.mjs`: 47 pass, 0 fail.
+- `rust-script --test rust/scripts/detect-code-changes.rs`: 5 pass, 0 fail.
 - `npm --prefix js run lint`: 299 files, 0 findings, 0 files near the line limit.
 - actionlint: exit 0.
 - C#: `dotnet build` (0 warnings) and `dotnet test`: 3439 pass.

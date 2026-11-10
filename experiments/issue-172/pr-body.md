@@ -28,10 +28,12 @@ All evidence is in [`dev/log/issues/172/pulls/174`](https://github.com/link-foun
 | F11 | false negative (security) | Secrets in committed `.tar.gz` / `.json.gz` were never scanned | Only `.log.gz` was decompressed | Every `.gz` is decompressed (capped) and tarballs are unpacked (`cd975442`) | `check-secrets.test.mjs` |
 | F12 | false negative (security) | CodeQL SARIF text was printed raw (it could forge workflow commands); only the first problem was reported | Unquoted untrusted output; the check threw on the first problem | Text is JSON-quoted and all problems are collected (`a4d61615`) | `check-codeql-results.test.mjs` |
 | F13 | false positive | `Crash tests` jobs that never got a runner stayed red | Missing from the infrastructure-rerun list | Added (`26133a71`) | `pipeline-status.test.mjs` (rerun list = gated workflows) |
-| F14 | warning | Dependencies reported 5 outdated packages | New upstream releases | Updated; C# build has 0 warnings and 3439 tests pass (`a2de1e79`) | Dependencies workflow |
+| F14 | warning | Dependencies reported 5 outdated packages | New upstream releases | Updated; C# build has 0 warnings and 3439 tests pass (`a2de1e79`). cargo-audit is held at 0.22.2 (F19) | Dependencies workflow |
 | F15 | warning | `cargo install wasm-bindgen-cli` printed a future-incompatibility warning and compiled for ~1.5 min | wasm-bindgen/wasm-bindgen#3356 (already reported upstream) | Prebuilt, pinned binaries via `taiki-e/install-action` (`5b729db4`) | actionlint + zizmor |
 | F16 | notice | `ubuntu-latest` migration notice | Only from GitHub's own Dependabot jobs; every workflow here already pins `ubuntu-24.04` | none needed | existing pin test |
 | F17 | notice | macOS arm64 queue-time notice | GitHub capacity | Covered by the infrastructure rerun (F13) | existing |
+| F18 | false negative | Found while verifying this PR: a green Rust run for head `067cb2c3` had **skipped** Rust lint and test, although the PR changes Rust | PR change detection diffed only the last commit (`HEAD^2^..HEAD^2`), whose earlier runs had been superseded | Diff the whole PR against its base (`HEAD^1..HEAD`), as the C# detector already does (`38ef331a`) | `detect-code-changes.rs` test `main_merge_and_pr_both_check_every_change_of_the_branch` |
+| F19 | warning | Found while verifying this PR: `Security` warned that install-action cannot verify `cargo-audit@0.23.0` and fell back to an unverified download | F14's bump outran the pinned action's manifest | Held at `0.22.2` with a blocker comment that points at #176, so the Dependencies check reports it as held, not outdated (`b373d4bb`) | Dependencies workflow, `Security` annotations |
 
 ## Blocked on a maintainer
 
@@ -61,6 +63,7 @@ The five `*-ai-driven-development-pipeline-template` repositories were compared 
 The template defects found here were reported upstream:
 
 - link-foundation/rust-ai-driven-development-pipeline-template#236: lychee timeouts and exit codes, CodeQL output quoting, PR cache eviction, size-check coverage, and release sync in monorepos
+- link-foundation/rust-ai-driven-development-pipeline-template#235 already reported F18, so the link-cli evidence and fix were [added there as a comment](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/235#issuecomment-6779540622)
 - link-foundation/csharp-ai-driven-development-pipeline-template#100: preflight skips lint/test/build, a NuGet 403 passes the preflight, lychee, Security missing from the rerun list, CodeQL, size check, and pin comments
 - link-foundation/js-ai-driven-development-pipeline-template#297: compressed logs not scanned for secrets, CodeQL message injection, PR cache writes, and lychee checksum source
 - link-foundation/java-ai-driven-development-pipeline-template#22: the freshness gate conflicts with Dependabot cooldown and SHA pins, curl retries, and size-check coverage
@@ -74,6 +77,7 @@ Drafts with permalinks, reproductions, workarounds and suggested fixes are in [`
 - Run the tests locally:
   - `node --test .github/scripts/*.test.mjs` (264 pass)
   - `node --test csharp/scripts/*.test.mjs` (47 pass)
+  - `rust-script --test rust/scripts/detect-code-changes.rs` (5 pass)
   - `npm --prefix js run lint` (0 findings)
   - actionlint: `docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint`
 - Changesets: `csharp/.changeset/issue-172-ci-audit.md` and `rust/changelog.d/20261110_200000_issue-172-ci-audit.md` (patch).
