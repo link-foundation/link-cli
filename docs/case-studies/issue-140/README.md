@@ -181,6 +181,10 @@ and an existing JavaScript client. Buffers and connection workers are bounded;
 each accepted session owns its resources. Fresh private endpoint directories
 prevent deleting preexisting data. Normal close removes owned paths/handles;
 after an uncatchable kill a stale endpoint directory requires operator cleanup.
+Windows listener cleanup waits, within its configured deadline, for peer-held
+mapping/file handles to close before removing the endpoint directory. CI caught
+the EOF-versus-handle-release race; a test deliberately holds those handles
+open while the listener closes, then releases them and verifies cleanup.
 This is local IPC security inherited from OS ownership/ACLs, not encryption or
 a replacement for the server's existing authentication/permissions.
 

@@ -191,6 +191,11 @@ class ProtocolTests(unittest.TestCase):
             self.assertEqual(read_text(stream), b"(count: 0)\n")
             stream.shutdown_write()
             self.assertEqual(stream.recv(), b"")
+        local = self.gateway("tcp:127.0.0.1:0", "exec:" + json.dumps(argv))
+        for protocol in ("text", "binary"):
+            self.assertEqual(self.invoke(local, "(count: ())", protocol), "(count: 0)")
+            self.assertIn("((1: 0 0))", self.invoke(local, "(create: (0 0))", protocol))
+            self.assertIn("()", self.invoke(local, "(delete: 1)", protocol))
 
     def test_existing_javascript_client(self):
         native = self.gateway(

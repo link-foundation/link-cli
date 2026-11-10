@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -207,7 +208,7 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(failures, [])
         self.addCleanup(client.close)
         self.addCleanup(accepted[0].close)
-        return client, accepted[0]
+        return client, accepted[0], listener
 
     def test_mailbox_payload_uses_requested_native_storage(self):
         import mmap
@@ -215,7 +216,7 @@ class TransportTests(unittest.TestCase):
 
         for kind in ("shm", "mmap", "file"):
             with self.subTest(kind=kind):
-                client, server = self.pair(kind)
+                client, server, _ = self.pair(kind)
                 slot = client.channel.outgoing
                 if kind == "shm":
                     self.assertIsInstance(slot.shared, SharedMemory)
@@ -231,14 +232,14 @@ class TransportTests(unittest.TestCase):
                 self.assertEqual(server.recv(), b"native payload")
 
     def test_full_mailbox_times_out_without_overwriting_bytes(self):
-        client, server = self.pair("shm", timeout=0.2)
+        client, server, _ = self.pair("shm", timeout=0.2)
         client.sendall(b"first")
         with self.assertRaises(TimeoutError):
             client.sendall(b"second")
         self.assertEqual(server.recv(), b"first")
 
     def test_close_unblocks_waiting_native_reader(self):
-        client, _ = self.pair("mmap")
+        client, _, _ = self.pair("mmap")
         failures = []
 
         def read():
@@ -253,6 +254,29 @@ class TransportTests(unittest.TestCase):
         reader.join(3)
         self.assertFalse(reader.is_alive())
         self.assertEqual(failures, ["closed"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows defers unlink of open mappings")
+    def test_listener_cleanup_waits_for_peer_handles(self):
+        client, server, listener = self.pair("mmap")
+        server.close()
+        failures = []
+
+        def close():
+            try:
+                listener.close()
+            except OSError as error:
+                failures.append(error)
+
+        closer = threading.Thread(target=close)
+        closer.start()
+        # Hold the mapping open after the listener starts removing its paths.
+        time.sleep(0.1)
+        self.assertTrue(closer.is_alive(), "listener did not wait for mapped handles")
+        client.close()
+        closer.join(3)
+        self.assertFalse(closer.is_alive())
+        self.assertEqual(failures, [])
+        self.assertFalse(listener.root.exists())
 
     def test_extension_contract(self):
         from link_ipc import register

@@ -227,7 +227,20 @@ class NativeListener:
 
     def close(self):
         self.control.close()
-        shutil.rmtree(self.root, ignore_errors=True)
+        # Windows cannot unlink files while the peer still has mappings or
+        # lock handles open. EOF can reach us just before that peer closes.
+        # Wait for actual handle release, bounded by the configured deadline.
+        end = time.monotonic() + self.options.timeout
+        while True:
+            try:
+                shutil.rmtree(self.root)
+                return
+            except OSError:
+                if not self.root.exists():
+                    return
+                if os.name != "nt" or time.monotonic() >= end:
+                    raise
+                time.sleep(self.options.poll)
 
 
 def checked_pid(pid):
