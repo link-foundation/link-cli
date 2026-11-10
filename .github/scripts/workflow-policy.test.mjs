@@ -661,3 +661,35 @@ test('the Rust test cache is saved before the long test run, under its own key',
   assert.ok(save < test.body.indexOf('- name: Run tests'));
   assert.match(test.body, /key: \$\{\{ runner\.os \}\}-cargo-test-/);
 });
+
+// A failed credential preflight on main used to skip lint, test and build, so
+// a registry problem also hid whether the code was broken (issue #172). Only
+// the jobs that publish may wait on the preflight; the gate still fails main.
+test('a failed release preflight blocks publishing but never the code checks', () => {
+  const publishers = {
+    'csharp.yml': ['release', 'instant-release'],
+    'rust.yml': ['auto-release', 'manual-release'],
+    'js-client.yml': ['release'],
+  };
+  const checks = ['lint', 'test', 'fresh-merge', 'build', 'unit', 'conformance'];
+  for (const [name, releaseJobs] of Object.entries(publishers)) {
+    const { text } = workflows.find((workflow) => workflow.name === name);
+    const jobs = readJobs(text);
+    for (const job of jobs.filter(({ name: job }) => checks.includes(job))) {
+      assert.doesNotMatch(
+        job.body,
+        /release-preflight/,
+        `${name} ${job.name} waits on the preflight`,
+      );
+    }
+    for (const releaseJob of releaseJobs) {
+      const job = jobs.find(({ name: job }) => job === releaseJob);
+      assert.ok(job, `${name} has no ${releaseJob} job`);
+      assert.match(job.body, /needs: \[release-preflight, /, `${name} ${releaseJob}`);
+      const condition = /^ {4}if: (.*)$/m.exec(job.body)?.[1];
+      if (condition) assert.match(condition, /needs\.release-preflight\.result == 'success'/);
+    }
+    const gate = jobs.find(({ name: job }) => job === 'pipeline-status');
+    assert.match(gate.body, /- release-preflight/, `${name} gate ignores the preflight`);
+  }
+});

@@ -87,7 +87,7 @@ jobs:
         if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
         id: preflight_auth
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
-      - name: Prove authentication before builds or version writes
+      - name: Prove authentication before version writes or publishing
         working-directory: .
         env:
           RELEASE_MODE: ${{ inputs.release_mode }}
@@ -197,9 +197,9 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: true
-    needs: [detect-changes, release-preflight]
+    needs: [detect-changes]
     if: |
-      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -304,8 +304,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changelog, release-preflight, lint]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+    needs: [detect-changes, changelog, lint]
+    if: ${{ !cancelled() && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -445,7 +445,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
       cancel-in-progress: true
     if: github.event_name == 'pull_request'
-    needs: [detect-changes, lint, release-preflight]
+    needs: [detect-changes, lint]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -545,8 +545,8 @@ jobs:
   # === AUTO RELEASE ===
   auto-release:
     name: Auto Release
-    needs: [lint, test, build]
-    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a
@@ -661,8 +661,8 @@ jobs:
   # === MANUAL RELEASE ===
   manual-release:
     name: Manual Release
-    needs: [lint, test, build]
-    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a

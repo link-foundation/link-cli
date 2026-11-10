@@ -131,7 +131,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '26.x'
-      - name: Prove authentication before builds or version writes
+      - name: Prove authentication before version writes or publishing
         working-directory: .
         env:
           NPM_PACKAGE: '@link-foundation/link-cli-client'
@@ -161,7 +161,6 @@ jobs:
         run: node .github/scripts/verify-npm-trust.mjs
 
   unit:
-    needs: [release-preflight]
     if: inputs.verify_trusted_publishing != true
     name: Unit tests and types
     runs-on: ubuntu-24.04
@@ -271,7 +270,7 @@ jobs:
         run: npm run typecheck
 
   conformance:
-    needs: [release-preflight, unit]
+    needs: [unit]
     if: inputs.verify_trusted_publishing != true
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-24.04
@@ -591,7 +590,7 @@ jobs:
 
   release:
     name: Release to npm
-    needs: [unit, conformance]
+    needs: [release-preflight, unit, conformance]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a publish that may already be under way.
