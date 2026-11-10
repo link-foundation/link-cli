@@ -2,7 +2,8 @@ using static Foundation.Data.Doublets.Cli.Engine.PageFormat;
 namespace Foundation.Data.Doublets.Cli.Engine;
 
 /// <summary>Optional two-copy repair over caller-owned exclusive devices.
-/// Both data syncs precede either metadata write. Repair follows full logical
+/// Both data syncs precede either metadata write; the primary metadata copy is
+/// durable before the secondary is written. Repair follows full logical
 /// prefix validation. Mutation failure fences this owner until reopen.</summary>
 public class MirroredPageDevice : IPageDevice
 {
@@ -40,11 +41,22 @@ public class MirroredPageDevice : IPageDevice
     public byte[]? ReadMetadata(int slot)
     {
         Check(); if (slot is not (0 or 1)) throw Invalid("mirror metadata slot");
-        var raw = _devices.Select(d => { try { return d.ReadMetadata(slot); } catch (IOException) { return new byte[1]; } }).ToArray();
+        bool failed = false;
+        var raw = _devices.Select(d => { try { return d.ReadMetadata(slot); } catch (IOException) { failed = true; return new byte[1]; } }).ToArray();
         var states = raw.Select(bytes => Metadata.Decode(bytes, 1)).ToArray();
         if (states[0] is { } a && states[1] is { } b && (!a.Identity.AsSpan().SequenceEqual(b.Identity) || (a.Generation == b.Generation && !raw[0]!.AsSpan().SequenceEqual(raw[1]!)))) throw Invalid("conflicting mirror metadata copies");
         if (states[0] is null && states[1] is null)
-        { if (raw.Any(bytes => bytes is { Length: > 0 })) throw Invalid("both mirror metadata copies are unreadable"); return null; }
+        {
+            bool[] absent = raw.Select(bytes => bytes is not { Length: > 0 }).ToArray();
+            if (absent[0] && absent[1]) return null;
+            // The secondary copy is written only after the primary copy is
+            // durable. A torn primary next to a never written secondary is a
+            // decision interrupted before its acknowledgement: report the
+            // invalid bytes like one device so the other slot is used.
+            // Garbage in both copies needs a second fault and is refused.
+            if (!failed && absent[1]) { _metadata.Remove(slot); return raw[0]; }
+            throw Invalid("both mirror metadata copies are unreadable");
+        }
         int side = states[0] is null || (states[1] is not null && states[1]!.Generation >= states[0]!.Generation) ? 1 : 0;
         byte[] bytes = raw[side]!.ToArray();
         _metadata[slot] = new(bytes, Enumerable.Range(0, 2).Where(i => raw[i] is null || !raw[i]!.AsSpan().SequenceEqual(bytes)).ToArray());
@@ -80,7 +92,16 @@ public class MirroredPageDevice : IPageDevice
     });
     public void WritePage(ulong index, ReadOnlySpan<byte> bytes) => BothWrite(bytes, (d, b) => d.WritePage(index, b));
     public void SyncData() => Both(d => d.SyncData());
-    public void WriteMetadata(int slot, ReadOnlySpan<byte> bytes) => BothWrite(bytes, (d, b) => d.WriteMetadata(slot, b));
-    public void SyncMetadata(int slot) => Both(d => d.SyncMetadata(slot));
+    /// <summary>The secondary copy is written only after the primary copy is
+    /// durable, so power loss tears at most one copy of a decision.</summary>
+    public void WriteMetadata(int slot, ReadOnlySpan<byte> bytes)
+    {
+        Check();
+        try { _devices[0].WriteMetadata(slot, bytes); _devices[0].SyncMetadata(slot); _devices[1].WriteMetadata(slot, bytes); }
+        catch { Fence(); throw; }
+    }
+    /// <summary>Only the secondary copy can be unsynced: writes and repairs
+    /// sync the primary copy before anything else is written.</summary>
+    public void SyncMetadata(int slot) => Mutate(() => _devices[1].SyncMetadata(slot));
     public void TruncateData(long length) => Both(d => d.TruncateData(length));
 }

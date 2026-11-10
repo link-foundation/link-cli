@@ -132,7 +132,7 @@ public partial class CheckpointPagesTests
             string[] replacement = { string.Concat(Enumerable.Repeat("雪", 700)), "\ufeff\0😀", "" };
             var success = RootSetup(images, flags); success.Trace.Calls.Clear(); success.Log.Replace(replacement);
             int operations = success.Trace.Calls.Count; Assert.InRange(operations, 18, 80);
-            Assert.Equal(new[] { "device0.writeMetadata1", "device5.writeMetadata1", "device0.syncMetadata1", "device5.syncMetadata1" }, success.Trace.Calls.TakeLast(4));
+            Assert.Equal(new[] { "device0.writeMetadata1", "device0.syncMetadata1", "device5.writeMetadata1", "device5.syncMetadata1" }, success.Trace.Calls.TakeLast(4));
             for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
             {
                 var current = RootSetup(images, flags); current.Trace.Calls.Clear(); current.Trace.Fault = (at, after); bool acknowledged = false;

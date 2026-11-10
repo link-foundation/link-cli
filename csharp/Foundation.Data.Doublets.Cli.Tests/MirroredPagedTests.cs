@@ -92,6 +92,27 @@ public class MirroredPagedTests
         var both = new Pair(image, image); foreach (var device in both.Devices) device.ReadError = true;
         Assert.Throws<IOException>(() => both.Open()); Assert.Empty(both.Mutations.Calls);
     }
+    // The secondary copy of a decision is written only after the primary copy is durable, so power loss
+    // during the first write to a slot can leave a torn primary next to a never written secondary: that
+    // decision was never acknowledged and the other slot opens. Garbage in both copies needs a second fault
+    // (media damage or a lying sync) and is refused before any repair.
+    [Fact]
+    public void ATornPrimaryWhoseSecondaryWasNeverWrittenOpensTheOtherSlot()
+    {
+        var (healthy, records) = MirroredFixture("oneGroup"); var slot = healthy.Metadata[0]!;
+        var torn = slot.ToArray(); Array.Clear(torn, 64, torn.Length - 64); var flipped = slot.ToArray(); flipped[120] ^= 1;
+        Pair With(byte[]? first, byte[]? second) { var a = healthy.Copy(); var b = healthy.Copy(); a.Metadata[0] = first; b.Metadata[0] = second; return new Pair(a, b); }
+        foreach (var primary in new[] { new byte[128], torn, flipped, new byte[3] })
+        {
+            var pair = With(primary, null); Assert.Equal(records, pair.Open().Read()); pair.Following(records);
+        }
+        foreach (var (first, second) in new (byte[]?, byte[]?)[] { (new byte[128], new byte[128]), (torn, new byte[128]), (flipped, flipped), (null, torn) })
+        {
+            var pair = With(first, second); Assert.Contains("unreadable", Assert.Throws<IOException>(() => pair.Open()).Message); Assert.Empty(pair.Mutations.Calls);
+        }
+        var ordered = new Pair(new(), new()); var log = ordered.Open(); ordered.Mutations.Calls.Clear(); log.Append("next"); log.Flush();
+        Assert.Equal(new[] { "0:writeMetadata1", "0:syncMetadata1", "1:writeMetadata1", "1:syncMetadata1" }, ordered.Mutations.Calls.Where(c => c.Contains("Metadata", StringComparison.Ordinal)));
+    }
     [Fact]
     public void ChangedSourcesInvalidLengthsUnsupportedFlagsAndStaleDecisionsAreChecked()
     {

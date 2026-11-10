@@ -220,8 +220,8 @@ test('both publication copies synchronize before acknowledgment at every finite 
     assert.ok(operations >= 18 && operations <= 80);
     assert.deepEqual(success.trace.calls.slice(-4), [
       'device0.writeMetadata1',
-      'device5.writeMetadata1',
       'device0.syncMetadata1',
+      'device5.writeMetadata1',
       'device5.syncMetadata1',
     ]);
     for (let at = 1; at <= operations; at++)

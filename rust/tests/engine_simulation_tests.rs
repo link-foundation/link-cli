@@ -22,8 +22,10 @@
 //! A *lying* disk acknowledges syncs without persisting anything. Over such a
 //! disk no engine can keep its promise, so the test requires the next best
 //! thing: recovery either refuses the damaged database or returns the exact
-//! state of an earlier revision, never a mixture. A mirror of an honest and a
-//! lying disk must recover every acknowledged commit.
+//! state of an earlier revision, never a mixture. A mirror that includes a
+//! lying disk must recover every acknowledged commit; with an honest primary
+//! it must also always open, because power loss alone never tears both
+//! copies of a metadata decision.
 //!
 //! **Network.** Several `ClusterEngine` members reach one atomic journal store
 //! through simulated links that drop requests, lose replies, deliver requests
@@ -389,6 +391,17 @@ fn crash_run<D: PageDevice>(
     let mut states: BTreeMap<u64, State> = BTreeMap::from([(0, State::new())]);
     let (mut acked, mut attempted) = (0_u64, 0_u64);
     let mut value = FIRST_WRITE;
+    // Create the database without injected errors: power loss during the
+    // very first metadata write leaves no decision at all, and an unreadable
+    // log is refused rather than treated as new.
+    let errors: Vec<u64> = disks
+        .iter()
+        .map(|disk| std::mem::take(&mut disk.lock().unwrap().errors))
+        .collect();
+    drop(PagedLog::open(device()).map_err(|e| e.to_string())?);
+    for (disk, errors) in disks.iter().zip(errors) {
+        disk.lock().unwrap().errors = errors;
+    }
     for _ in 0..cycles {
         let db = match PagedLog::open(device())
             .and_then(|log| Engine::<u32, _>::open(log, options.clone()))
@@ -644,16 +657,12 @@ fn lying_disk_is_detected_or_rolls_back_to_an_exact_earlier_revision_never_a_mix
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn mirror_of_honest_and_lying_disks_keeps_every_acknowledged_commit() {
-    for lying_first in [true, false] {
+    // (primary lies, secondary lies)
+    for lies in [(false, false), (false, true), (true, false)] {
         let runs: Vec<CrashStats> = (1..=DISK_SEEDS)
             .map(|seed| {
-                let honest = disk(seed.wrapping_mul(31), 0, 10);
-                let lying = disk(seed.wrapping_mul(37), 500, 10);
-                let (first, second) = if lying_first {
-                    (lying.clone(), honest.clone())
-                } else {
-                    (honest.clone(), lying.clone())
-                };
+                let first = disk(seed.wrapping_mul(31), if lies.0 { 500 } else { 0 }, 10);
+                let second = disk(seed.wrapping_mul(37), if lies.1 { 500 } else { 0 }, 10);
                 crash_run(
                     seed,
                     &EngineOptions::default(),
@@ -665,8 +674,16 @@ fn mirror_of_honest_and_lying_disks_keeps_every_acknowledged_commit() {
             })
             .collect();
         let sum = total(runs.into_iter());
-        assert_eq!((sum.refused, sum.lost), (0, 0), "{sum:?}");
-        assert!(sum.lied > 100 && sum.commits > 300, "{sum:?}");
+        assert_eq!(sum.lost, 0, "{lies:?} {sum:?}");
+        assert!(sum.commits > 300, "{lies:?} {sum:?}");
+        assert_eq!(sum.lied > 100, lies != (false, false), "{lies:?} {sum:?}");
+        // The secondary copy of a decision is written only after the primary
+        // copy is durable, so power loss alone never tears both copies. Only
+        // a primary that lies about its sync can leave both torn; that
+        // second fault is refused, never a silent rollback.
+        if !lies.0 {
+            assert_eq!(sum.refused, 0, "{lies:?} {sum:?}");
+        }
     }
 }
 

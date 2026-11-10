@@ -72,10 +72,12 @@ export class MirroredPageDevice {
   }
   readMetadata(slot) {
     this.#check();
+    let failed = false;
     const raw = this.#devices.map((device) => {
       try {
         return device.readMetadata(slot);
       } catch {
+        failed = true;
         return new Uint8Array(1);
       }
     });
@@ -84,9 +86,18 @@ export class MirroredPageDevice {
       .map((state, side) => ({ state, side }))
       .filter(({ state }) => state !== null && state !== undefined);
     if (valid.length === 0) {
-      if (raw.some((bytes) => bytes !== undefined && bytes.length !== 0))
-        invalid('both metadata copies are unreadable');
-      return undefined;
+      const absent = raw.map((bytes) => bytes === undefined || bytes.length === 0);
+      if (absent[0] && absent[1]) return undefined;
+      // The secondary copy is written only after the primary copy is durable.
+      // A torn primary next to a never written secondary is a decision
+      // interrupted before its acknowledgement: report the invalid bytes like
+      // one device so the other slot is used. Garbage in both copies needs a
+      // second fault and is refused.
+      if (!failed && absent[1]) {
+        this.#metadata.delete(slot);
+        return raw[0];
+      }
+      invalid('both metadata copies are unreadable');
     }
     if (
       valid.length === 2 &&
@@ -151,11 +162,20 @@ export class MirroredPageDevice {
   syncData() {
     this.#both('syncData');
   }
+  // The secondary copy is written only after the primary copy is durable, so
+  // power loss tears at most one copy of a decision.
   writeMetadata(slot, bytes) {
-    this.#both('writeMetadata', slot, bytes);
+    this.#mutate(() => {
+      const [primary, secondary] = this.#devices;
+      finish(primary.writeMetadata(slot, bytes));
+      finish(primary.syncMetadata(slot));
+      finish(secondary.writeMetadata(slot, bytes));
+    });
   }
+  // Only the secondary copy can be unsynced: writes and repairs sync the
+  // primary copy before anything else is written.
   syncMetadata(slot) {
-    this.#both('syncMetadata', slot);
+    this.#mutate(() => finish(this.#devices[1].syncMetadata(slot)));
   }
   truncateData(length) {
     this.#both('truncateData', length);

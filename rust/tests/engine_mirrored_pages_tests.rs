@@ -263,41 +263,79 @@ fn a_log_whose_metadata_no_copy_can_read_is_refused_rather_than_treated_as_new()
     assert!(pair.trace.borrow().calls.is_empty());
 }
 
-/// Power loss while both copies of the next, unacknowledged decision were
-/// being written can leave both torn or zero-filled. The other slot still holds
-/// the acknowledged decision, so the mirror opens it, as one device would.
-/// Found by `engine_simulation_tests.rs`.
+/// The mirror writes the secondary copy of a decision only after the primary
+/// copy is durable. Power loss during the first write to a slot therefore can
+/// leave a torn primary next to a secondary that was never written: that
+/// decision was never acknowledged, so the mirror uses the other slot as one
+/// device would. Garbage in both copies needs a second fault (media damage or
+/// a lying sync) and is refused. Found by `engine_simulation_tests.rs`.
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
-fn both_copies_of_the_unacknowledged_slot_torn_by_power_loss_open_the_other_slot(
-) -> Result<(), LinkError> {
+fn a_torn_primary_whose_secondary_was_never_written_opens_the_other_slot() -> Result<(), LinkError>
+{
     let (image, expected) = fixture("oneGroup");
     let healthy = image.metadata[0].clone().unwrap();
     let mut torn = healthy.clone();
     torn[64..].fill(0);
-    for copies in [
-        [vec![0; 128], vec![0; 128]],
-        [torn.clone(), vec![0; 128]],
-        [healthy.clone(), torn.clone()].map(|bytes| {
-            let mut bytes = bytes;
-            bytes[120] ^= 1;
-            bytes
-        }),
-    ] {
-        let images = copies.map(|bytes| {
+    let mut flipped = healthy.clone();
+    flipped[120] ^= 1;
+    let pair_of = |copies: [Option<Vec<u8>>; 2]| {
+        Pair::new(copies.map(|bytes| {
             let mut damaged = image.clone();
-            damaged.metadata[0] = Some(bytes);
+            damaged.metadata[0] = bytes;
             damaged
-        });
-        let pair = Pair::new(images);
+        }))
+    };
+    for primary in [vec![0; 128], torn.clone(), flipped.clone(), vec![0; 3]] {
+        let pair = pair_of([Some(primary), None]);
         assert_eq!(pair.open()?.read_log_entries()?, expected);
         following(&pair, &expected)?;
     }
-    // With neither slot decodable there is no decision to fall back to.
-    let mut lost = image.clone();
-    lost.metadata = [Some(vec![0; 128]), Some(vec![0; 128])];
-    let pair = Pair::new([lost.clone(), lost]);
-    assert!(pair.open().is_err());
+    for copies in [
+        [Some(vec![0; 128]), Some(vec![0; 128])],
+        [Some(torn.clone()), Some(vec![0; 128])],
+        [Some(flipped.clone()), Some(flipped.clone())],
+        [None, Some(torn.clone())],
+    ] {
+        let pair = pair_of(copies);
+        let refusal = pair.open().err().unwrap().to_string();
+        assert!(
+            refusal.contains("both mirror metadata copies are unreadable"),
+            "{refusal}"
+        );
+        assert!(pair.trace.borrow().calls.is_empty());
+    }
+    Ok(())
+}
+
+/// Each decision is durable on the primary before the secondary is touched,
+/// and a flush still costs two metadata writes and two metadata syncs.
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn the_secondary_metadata_copy_is_written_only_after_the_primary_is_durable(
+) -> Result<(), LinkError> {
+    let pair = Pair::new(Default::default());
+    let mut log = pair.open()?;
+    pair.clear();
+    log.append_log_entry("next")?;
+    log.flush_log()?;
+    let calls: Vec<String> = pair
+        .trace
+        .borrow()
+        .calls
+        .iter()
+        .filter(|c| c.contains("Metadata"))
+        .cloned()
+        .collect();
+    assert_eq!(
+        calls,
+        [
+            "0:writeMetadata1",
+            "0:syncMetadata1",
+            "1:writeMetadata1",
+            "1:syncMetadata1"
+        ]
+    );
     Ok(())
 }
 

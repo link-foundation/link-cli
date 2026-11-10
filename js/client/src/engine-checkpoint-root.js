@@ -60,10 +60,12 @@ export class MirroredCheckpointRoot {
   }
   readMetadata(slot) {
     this.#slot(slot);
+    let failed = false;
     const raw = this.#devices.map((device) => {
       try {
         return device.readMetadata(slot);
       } catch {
+        failed = true;
         return new Uint8Array(1);
       }
     });
@@ -77,10 +79,15 @@ export class MirroredCheckpointRoot {
     )
       fail('conflicting checkpoint root copies');
     if (a === undefined && b === undefined) {
-      if (raw.some((bytes) => bytes !== undefined && bytes.length !== 0))
+      const absent = raw.map((bytes) => bytes === undefined || bytes.length === 0);
+      // A torn primary next to a never written secondary is a decision
+      // interrupted before its acknowledgement: report the invalid bytes like
+      // one device so the other slot is used. Garbage in both copies needs a
+      // second fault and is refused.
+      if (!(absent[0] && absent[1]) && (failed || !absent[1]))
         fail('both checkpoint root copies are unreadable');
       this.#repairs.delete(slot);
-      return undefined;
+      return absent[0] ? undefined : raw[0];
     }
     const source = a === undefined || (b !== undefined && b.epoch > a.epoch) ? 1 : 0;
     const bytes = raw[source].slice(),
@@ -110,12 +117,21 @@ export class MirroredCheckpointRoot {
     this.#slot(slot);
     if (decodeDecision(bytes, slot, this.#flags) === undefined)
       fail('invalid checkpoint root publication');
-    this.#both('writeMetadata', slot, bytes);
+    // The secondary copy is written only after the primary copy is durable,
+    // so power loss tears at most one copy of a decision.
+    this.#mutate(() => {
+      const [primary, secondary] = this.#devices;
+      finish(primary.writeMetadata(slot, bytes));
+      finish(primary.syncMetadata(slot));
+      finish(secondary.writeMetadata(slot, bytes));
+    });
     this.#repairs.delete(slot);
   }
+  // Only the secondary copy can be unsynced: writes and repairs sync the
+  // primary copy before anything else is written.
   syncMetadata(slot) {
     this.#slot(slot);
-    this.#both('syncMetadata', slot);
+    this.#mutate(() => finish(this.#devices[1].syncMetadata(slot)));
   }
   syncData() {
     this.#both('syncData');

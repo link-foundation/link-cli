@@ -100,10 +100,13 @@ impl<D: PageDevice> PageDevice for MirroredCheckpointRoot<D> {
     }
     fn read_metadata(&mut self, slot: usize) -> Result<Option<Vec<u8>>, LinkError> {
         self.slot(slot)?;
-        let raw = self
-            .devices
-            .each_mut()
-            .map(|device| device.read_metadata(slot).unwrap_or_else(|_| Some(vec![0])));
+        let mut failed = false;
+        let raw = self.devices.each_mut().map(|device| {
+            device.read_metadata(slot).unwrap_or_else(|_| {
+                failed = true;
+                Some(vec![0])
+            })
+        });
         let states = [
             Decision::decode(raw[0].as_deref().unwrap_or_default(), slot, self.flags)?,
             Decision::decode(raw[1].as_deref().unwrap_or_default(), slot, self.flags)?,
@@ -115,11 +118,24 @@ impl<D: PageDevice> PageDevice for MirroredCheckpointRoot<D> {
         }
         let source = match &states {
             [None, None] => {
-                if raw.iter().flatten().any(|bytes| !bytes.is_empty()) {
-                    return Err(invalid("both checkpoint root copies are unreadable"));
-                }
-                self.repairs.remove(&slot);
-                return Ok(None);
+                let absent = raw
+                    .each_ref()
+                    .map(|b| b.as_deref().is_none_or(<[u8]>::is_empty));
+                return match absent {
+                    [true, true] => {
+                        self.repairs.remove(&slot);
+                        Ok(None)
+                    }
+                    // A torn primary next to a never written secondary is a
+                    // decision interrupted before its acknowledgement: report
+                    // the invalid bytes like one device so the other slot is
+                    // used. Garbage in both copies needs a second fault.
+                    [false, true] if !failed => {
+                        self.repairs.remove(&slot);
+                        Ok(raw[0].clone())
+                    }
+                    _ => Err(invalid("both checkpoint root copies are unreadable")),
+                };
             }
             [Some(_), None] => 0,
             [None, Some(_)] => 1,
@@ -169,13 +185,22 @@ impl<D: PageDevice> PageDevice for MirroredCheckpointRoot<D> {
         if Decision::decode(bytes, slot, self.flags)?.is_none() {
             return Err(invalid("invalid checkpoint root publication"));
         }
-        self.both(|device| device.write_metadata(slot, bytes))?;
+        // The secondary copy is written only after the primary copy is
+        // durable, so power loss tears at most one copy of a decision.
+        self.mutate(|s| {
+            let [primary, secondary] = &mut s.devices;
+            primary.write_metadata(slot, bytes)?;
+            primary.sync_metadata(slot)?;
+            secondary.write_metadata(slot, bytes)
+        })?;
         self.repairs.remove(&slot);
         Ok(())
     }
+    /// Only the secondary copy can be unsynced: `write_metadata` and repair
+    /// sync the primary copy before anything else is written.
     fn sync_metadata(&mut self, slot: usize) -> Result<(), LinkError> {
         self.slot(slot)?;
-        self.both(|device| device.sync_metadata(slot))
+        self.mutate(|s| s.devices[1].sync_metadata(slot))
     }
     fn sync_data(&mut self) -> Result<(), LinkError> {
         self.both(PageDevice::sync_data)

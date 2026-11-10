@@ -339,8 +339,8 @@ fn every_publication_cut_recovers_complete_old_or_new_and_preserves_acknowledgem
             &trace.borrow().calls[operations - 4..],
             [
                 "root.writeMetadata1",
-                "rootMirror.writeMetadata1",
                 "root.syncMetadata1",
+                "rootMirror.writeMetadata1",
                 "rootMirror.syncMetadata1"
             ]
         );

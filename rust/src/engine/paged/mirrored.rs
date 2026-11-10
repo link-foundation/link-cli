@@ -115,15 +115,24 @@ impl<D: RepairPageDevice> PageDevice for MirroredPageDevice<D> {
         }
         let side = match &states {
             [None, None] => {
-                if failed {
-                    return Err(invalid("both mirror metadata copies are unreadable"));
-                }
-                // Power loss while both copies of the next, unacknowledged
-                // decision were being written can tear or zero both. Like one
-                // device, report the readable but invalid bytes: the log then
-                // uses the other slot, or refuses when neither decodes.
-                self.metadata.remove(&slot);
-                return Ok(raw.iter().flatten().find(|b| !b.is_empty()).cloned());
+                let absent = raw
+                    .each_ref()
+                    .map(|b| b.as_deref().is_none_or(<[u8]>::is_empty));
+                return match absent {
+                    [true, true] => Ok(None),
+                    // The secondary copy is written only after the primary
+                    // copy is durable. A torn primary next to a secondary
+                    // that was never written is a decision that power loss
+                    // interrupted before it was acknowledged: like one
+                    // device, report the invalid bytes so the other slot
+                    // is used. Garbage in both copies needs a second fault
+                    // and is refused.
+                    [false, true] if !failed => {
+                        self.metadata.remove(&slot);
+                        Ok(raw[0].clone())
+                    }
+                    _ => Err(invalid("both mirror metadata copies are unreadable")),
+                };
             }
             [Some(_), None] => 0,
             [None, Some(_)] => 1,
@@ -208,10 +217,19 @@ impl<D: RepairPageDevice> PageDevice for MirroredPageDevice<D> {
         self.both(PageDevice::sync_data)
     }
     fn write_metadata(&mut self, slot: usize, bytes: &[u8; 128]) -> Result<(), LinkError> {
-        self.both(|d| d.write_metadata(slot, bytes))
+        // The secondary copy is written only after the primary copy is
+        // durable, so power loss tears at most one copy of a decision.
+        self.mutate(|s| {
+            let [primary, secondary] = &mut s.devices;
+            primary.write_metadata(slot, bytes)?;
+            primary.sync_metadata(slot)?;
+            secondary.write_metadata(slot, bytes)
+        })
     }
+    /// Only the secondary copy can be unsynced: `write_metadata` and repair
+    /// sync the primary copy before anything else is written.
     fn sync_metadata(&mut self, slot: usize) -> Result<(), LinkError> {
-        self.both(|d| d.sync_metadata(slot))
+        self.mutate(|s| s.devices[1].sync_metadata(slot))
     }
     fn truncate_data(&mut self, length: u64) -> Result<(), LinkError> {
         self.both(|d| d.truncate_data(length))

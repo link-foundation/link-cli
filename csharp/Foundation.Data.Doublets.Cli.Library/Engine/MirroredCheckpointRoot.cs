@@ -4,7 +4,8 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 
 /// <summary>Selected two-copy checkpoint roots over exclusive caller-owned raw
 /// devices. Selection never repairs. The checkpoint log validates its selected
-/// bank before completing root recovery. Both copies synchronize before ACK.</summary>
+/// bank before completing root recovery. Both copies synchronize before ACK;
+/// the primary copy is durable before the secondary is written.</summary>
 public sealed class MirroredCheckpointRoot : IPageDevice
 {
     private readonly IPageDevice[] _devices;
@@ -33,14 +34,21 @@ public sealed class MirroredCheckpointRoot : IPageDevice
     public byte[]? ReadMetadata(int slot)
     {
         Slot(slot);
-        var raw = _devices.Select(d => { try { return d.ReadMetadata(slot); } catch (IOException) { return new byte[1]; } }).ToArray();
+        bool failed = false;
+        var raw = _devices.Select(d => { try { return d.ReadMetadata(slot); } catch (IOException) { failed = true; return new byte[1]; } }).ToArray();
         var states = raw.Select(bytes => CheckpointDecision.Decode(bytes, slot, _flags)).ToArray();
         if (states[0] is { } a && states[1] is { } b && (!a.Identity.AsSpan().SequenceEqual(b.Identity)
             || Math.Max(a.Epoch, b.Epoch) - Math.Min(a.Epoch, b.Epoch) > 2)) throw Invalid("conflicting checkpoint root copies");
         if (states[0] is null && states[1] is null)
         {
-            if (raw.Any(bytes => bytes is { Length: > 0 })) throw Invalid("both checkpoint root copies are unreadable");
-            _repairs.Remove(slot); return null;
+            bool[] absent = raw.Select(bytes => bytes is not { Length: > 0 }).ToArray();
+            if (absent[0] && absent[1]) { _repairs.Remove(slot); return null; }
+            // A torn primary next to a never written secondary is a decision
+            // interrupted before its acknowledgement: report the invalid bytes
+            // like one device so the other slot is used. Garbage in both
+            // copies needs a second fault and is refused.
+            if (!failed && absent[1]) { _repairs.Remove(slot); return raw[0]; }
+            throw Invalid("both checkpoint root copies are unreadable");
         }
         int source = states[0] is null || (states[1] is not null && states[1]!.Epoch > states[0]!.Epoch) ? 1 : 0;
         byte[] bytes = raw[source]!.ToArray();
@@ -64,9 +72,14 @@ public sealed class MirroredCheckpointRoot : IPageDevice
     {
         Slot(slot); byte[] copy = bytes.ToArray();
         if (CheckpointDecision.Decode(copy, slot, _flags) is null) throw Invalid("invalid checkpoint root publication");
-        Both(d => d.WriteMetadata(slot, copy)); _repairs.Remove(slot);
+        // The secondary copy is written only after the primary copy is
+        // durable, so power loss tears at most one copy of a decision.
+        Mutate(() => { _devices[0].WriteMetadata(slot, copy); _devices[0].SyncMetadata(slot); _devices[1].WriteMetadata(slot, copy); });
+        _repairs.Remove(slot);
     }
-    public void SyncMetadata(int slot) { Slot(slot); Both(d => d.SyncMetadata(slot)); }
+    /// <summary>Only the secondary copy can be unsynced: writes and repairs
+    /// sync the primary copy before anything else is written.</summary>
+    public void SyncMetadata(int slot) { Slot(slot); Mutate(() => _devices[1].SyncMetadata(slot)); }
     public void SyncData() => Both(d => d.SyncData());
     public void TruncateData(long length) { Check(); if (length != 0) throw Invalid("checkpoint root data must be empty"); Both(d => d.TruncateData(0)); }
     public byte[] ReadPage(ulong index) { Check(); throw Invalid("checkpoint root has no data pages"); }

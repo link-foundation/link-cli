@@ -254,8 +254,8 @@ test('mirroring costs are selected and only new groups are written', () => {
       '0:syncData',
       '1:syncData',
       `0:writeMetadata${(history + 1) % 2}`,
-      `1:writeMetadata${(history + 1) % 2}`,
       `0:syncMetadata${(history + 1) % 2}`,
+      `1:writeMetadata${(history + 1) % 2}`,
       `1:syncMetadata${(history + 1) % 2}`,
     ]);
     p.devices.forEach((device, side) =>
@@ -375,4 +375,43 @@ test('unpublished tails and synchronous I/O failures fence the selected device',
   for (const device of readFailure.devices) device.readError = true;
   assert.throws(() => log.read(), /checksum/);
   assert.throws(() => log.flush(), /fenced/);
+});
+
+// The secondary copy of a decision is written only after the primary copy is
+// durable. Power loss during the first write to a slot can leave a torn
+// primary next to a never written secondary: that decision was never
+// acknowledged, so the other slot opens as on one device. Garbage in both
+// copies needs a second fault (media damage or a lying sync) and is refused.
+test('a torn primary whose secondary was never written opens the other slot', () => {
+  const healthy = fixture('oneGroup').metadata[0];
+  const torn = healthy.slice();
+  torn.fill(0, 64);
+  const flipped = healthy.slice();
+  flipped[120] ^= 1;
+  const withSlot0 = (copies) =>
+    pair(
+      copies.map((bytes) => {
+        const image = fixture('oneGroup');
+        image.metadata[0] = bytes;
+        return image;
+      }),
+    );
+  for (const primary of [new Uint8Array(128), torn, flipped, new Uint8Array(3)]) {
+    const p = withSlot0([primary, undefined]);
+    const log = p.open();
+    assert.deepEqual(records(log), wire.oneGroup.records);
+    log.append('following');
+    log.flush();
+    assert.deepEqual(records(crashed(p).open()), [...wire.oneGroup.records, 'following']);
+  }
+  for (const copies of [
+    [new Uint8Array(128), new Uint8Array(128)],
+    [torn, new Uint8Array(128)],
+    [flipped, flipped],
+    [undefined, torn],
+  ]) {
+    const p = withSlot0(copies);
+    assert.throws(() => p.open(), /both metadata copies are unreadable/);
+    assert.deepEqual(p.trace.calls, []);
+  }
 });
