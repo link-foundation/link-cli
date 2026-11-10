@@ -424,6 +424,8 @@ jobs:
           RECLAMATION_CHUNKS=1 node experiments/issue-138/etcd-reclamation.mjs
           node experiments/issue-138/etcd-cluster.mjs
           CLUSTER_JOURNAL_CHECKPOINT_INTERVAL=1 node experiments/issue-138/etcd-cluster.mjs
+          node experiments/issue-138/etcd-partition.mjs
+          PARTITION_SEED=2026 node experiments/issue-138/etcd-partition.mjs
 
       - name: Verify finite checkpoint payloads with actual WASM
         run: |
@@ -474,6 +476,7 @@ jobs:
             experiments/issue-138/etcd/run-*/*.log
             experiments/issue-138/etcd/maintenance-*/*.log
             experiments/issue-138/etcd/reclamation-*/*.log
+            experiments/issue-138/etcd/partition-*/*.log
           if-no-files-found: ignore
 
       - name: Conformance on Node.js
