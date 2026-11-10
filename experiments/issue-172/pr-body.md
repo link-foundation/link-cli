@@ -4,12 +4,12 @@ Fixes #172
 
 This PR audits every warning, error, false positive and false negative in the `main` runs at `199a07b` listed in the issue, finds the root cause of each and fixes it. Each fix has a regression test, except one configuration-only change. Everything is in one PR. The only item left needs a maintainer: the NuGet credential, described [below](#blocked-on-a-maintainer).
 
-All evidence is in [`dev/log/issues/172/pulls/174`](dev/log/issues/172/pulls/174/README.md):
+All evidence is in [`dev/log/issues/172/pulls/174`](https://github.com/link-foundation/link-cli/blob/issue-172-4d10c904b01e/dev/log/issues/172/pulls/174/README.md):
 
 - full CI logs, run and job metadata, and per-job annotations
 - template trees and diffs
 - primary sources: lychee's report writer, NuGetGallery's scope attributes, and the CI/CD best-practices document
-- the [audit](dev/log/issues/172/pulls/174/analysis/AUDIT.md) and the [timeline](dev/log/issues/172/pulls/174/analysis/timeline.md)
+- the [audit](https://github.com/link-foundation/link-cli/blob/issue-172-4d10c904b01e/dev/log/issues/172/pulls/174/analysis/AUDIT.md) and the [timeline](https://github.com/link-foundation/link-cli/blob/issue-172-4d10c904b01e/dev/log/issues/172/pulls/174/analysis/timeline.md)
 
 ## Findings and fixes
 
@@ -48,7 +48,7 @@ Until then:
 
 ## Template comparison and upstream reports
 
-The five `*-ai-driven-development-pipeline-template` repositories were compared file by file; see the [audit](dev/log/issues/172/pulls/174/analysis/AUDIT.md#template-comparison).
+The five `*-ai-driven-development-pipeline-template` repositories were compared file by file; see the [audit](https://github.com/link-foundation/link-cli/blob/issue-172-4d10c904b01e/dev/log/issues/172/pulls/174/analysis/AUDIT.md#template-comparison).
 
 - **Adopted:**
   - horizontal-whitespace lychee parsing, from the csharp template
@@ -66,7 +66,7 @@ The template defects found here were reported upstream:
 - link-foundation/java-ai-driven-development-pipeline-template#22: the freshness gate conflicts with Dependabot cooldown and SHA pins, curl retries, and size-check coverage
 - link-foundation/python-ai-driven-development-pipeline-template#145: the rebase retry is unreachable, PR cache writes, size-check coverage, and lychee checksum source
 
-Drafts with permalinks, reproductions, workarounds and suggested fixes are in [`upstream-reports/`](dev/log/issues/172/pulls/174/analysis/upstream-reports/SUMMARY.md). The wasm-bindgen warning (F15) was already reported as wasm-bindgen/wasm-bindgen#3356.
+Drafts with permalinks, reproductions, workarounds and suggested fixes are in [`upstream-reports/`](https://github.com/link-foundation/link-cli/blob/issue-172-4d10c904b01e/dev/log/issues/172/pulls/174/analysis/upstream-reports/SUMMARY.md). The wasm-bindgen warning (F15) was already reported as wasm-bindgen/wasm-bindgen#3356.
 
 ## How to reproduce and verify
 
