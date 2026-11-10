@@ -92,10 +92,20 @@ Ours:
 - **Coverage.** CI measures coverage in every language; see
   [COVERAGE-METHOD.md](COVERAGE-METHOD.md) for what is measured.
 
-Gap: SQLite's crash VFS reorders and drops writes that were never synced, which
-is what a power loss does. SIGKILL leaves the operating system's page cache in
-place, so our crash test checks the engine's write and flush order, but not a
-disk that loses or reorders unsynced writes.
+- **Power loss.** SQLite's crash VFS reorders and drops writes that were never
+  synced, which is what a power loss does. SIGKILL alone leaves the page cache
+  in place, so the crash test adds power-loss rounds
+  ([details](../../ENGINE-RECOVERY.md#the-crash-test)): after a kill, every byte
+  past the durable bound may be cut off, and each 512-byte sector past it reads
+  back as zeros with probability 1/2. That lets a record's newline survive
+  while a sector of the record itself does not. The first run of this model
+  (seed 138) found a real bug: the writers refused to reopen such a journal.
+  Trailing lines holding a NUL byte are now dropped as torn in Rust, C# and JS,
+  as etcd's WAL does with a last record holding a zeroed sector.
+
+Gap: the power-loss model runs in the driver, on the files, after the writer is
+dead. It does not reorder writes inside one flush interval of a live system,
+and it cannot model a disk that acknowledges a flush it did not do.
 
 ### RocksDB
 
@@ -163,10 +173,31 @@ Real threads: `rust/tests/engine_lock_wait_tests.rs` and
 `EngineLockWaitTests.cs` check bounded waiting and deadlock refusal of
 pessimistic writes with native threads.
 
-Gap: Elle checks long random histories of many transactions for dependency
-cycles. Our check is exhaustive but only for two short transactions, and it
-compares against serial orders by brute force rather than building a
-dependency graph.
+Long histories: `rust/tests/engine_history_tests.rs`, `EngineHistoryTests.cs`
+and `js/client/test/conformance/history.mjs` (on the compiled WASM engine) do
+what Elle does. A seeded scheduler runs 4 clients over 3 links, 60 transactions
+per history and 20 seeds per configuration. Every write stores a unique value,
+so each read names the transaction it saw, and commit revisions give each
+link's version order. From these the checker builds Adya's dependency graph
+(`ww`, `wr`, `rw` and real-time edges) and searches it for cycles. It reports
+G1a, G1b, reads of values nobody wrote, lost writes, G0/G1c (a cycle without an
+`rw` edge), G-single (exactly one `rw` edge) and G2 (any other cycle). As in the
+interleaving tests, an anomaly a level allows must show up in some history.
+The counts are pinned and equal in all three languages (committed transactions
+/ histories with G-single / with G2, out of 20 histories):
+
+| Concurrency | Read committed | Snapshot | Serializable (revision) | Serializable (read-set) |
+| --- | --- | --- | --- | --- |
+| Optimistic | 847 / 19 / 0 | 847 / 0 / 20 | 573 / 0 / 0 | 662 / 0 / 0 |
+| Pessimistic | 635 / 17 / 2 | 635 / 0 / 19 | 453 / 0 / 0 | 515 / 0 / 0 |
+| Exclusive | 148 / 0 / 0 | 148 / 0 / 0 | 148 / 0 / 0 | 148 / 0 / 0 |
+
+Read committed shows G-single (and, under pessimistic concurrency, G2, which
+it also allows); snapshot shows only G2, as Adya's levels allow. Serializable shows neither, and read-set validation commits more than
+revision validation.
+
+Gap: the histories come from one engine in one process, so they check the
+isolation levels, not a distributed history under network faults.
 
 ### etcd
 
@@ -203,10 +234,11 @@ is a large separate project, not a test we can add.
 
 None of these is claimed as covered:
 
-1. **Power loss below the file system.** We test process death; reordered or
-   dropped unsynced writes and disks that lie about flushes are not tested.
-2. **Long histories.** Serializability is checked exhaustively for two short
-   transactions, not by dependency-cycle search over long random histories.
+1. **Power loss below the file system.** Lost and zeroed unsynced bytes are
+   simulated on the files after each kill. Reordering inside a live flush
+   interval and disks that lie about flushes are not tested.
+2. **Distributed histories.** Long histories are checked for dependency cycles
+   on one engine. Histories across cluster members are not.
 3. **Network faults.** Members are killed, but networks are not partitioned or
    slowed.
 4. **Deterministic simulation.** Seeds replay the fault plan, not the thread or

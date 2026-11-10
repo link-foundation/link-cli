@@ -12,6 +12,7 @@ how CI kills and damages the engine on purpose to check it.
 | Damage | What opening does |
 | ------ | ----------------- |
 | A writer killed mid-append (torn final line, no newline) | The exclusive file logs (`FileTransitionLog`, `FileCommitLog`) drop the incomplete last line. That commit was never acknowledged, because acknowledgement follows the flush. |
+| Power loss that kept the newline of a record that was never flushed while a sector before it reads back as zeros | Records never contain NUL (appends refuse it), so the exclusive file logs drop trailing lines that hold one, like a torn final line. etcd's WAL treats a last record with a zeroed sector the same way (`isTornEntry`). A NUL line in front of an intact line is damage: opening refuses it and repair decides. |
 | A flipped bit, a zeroed sector, invalid UTF-8, a reordered or foreign record | Refused: `journal checksum mismatch`, or the revision, allocator, address or constraint rule that failed. The checksum is 16 lowercase hex digits, and a checksum that differs only in letter case is refused too. |
 | A primary that lost a tail its replica still holds (a truncated file, an old backup) | `ReplicatedLog` / `ReplicatedCommitLog` refuse to open: `replica 0 holds N records the primary lacks; repair the primary from it before writing`. Writing on top would fork the history and lose those commits for good. An unreadable or divergent replica is ignored here, because it proves nothing about the primary. |
 | A full disk | The append or flush fails as an **indeterminate commit**: the engine stops accepting writes, and reopening shows whether the commit landed. Once space returns, the writer resumes. |
@@ -127,7 +128,21 @@ transaction shows up as a link pointing at nothing.
    hold every acknowledged revision plus at most the one being written, and the
    replica must hold every acknowledged revision. Both must open without a torn
    transaction.
-2. **Damage**, each checked to be refused, then repaired, with the damaged bytes
+2. **Power loss** (`--power-losses`, 8 by default): more kills, each
+   followed by the damage a power cut could leave in the files. Bytes before the durable bound survive. Past it, the file keeps
+   none of its tail, all of it, or a random-length part (one third each). Each
+   512-byte sector past the bound then reads back as zeros with probability
+   1/2, so a newline can survive while the record before it does not. The
+   replica's bound is the end of `max(acknowledged, replica revision)`. The
+   primary's bound is the end of `max(acknowledged, primary revision, newest
+   intact replica record)`, because a commit reaches the replica only after
+   the primary flushed it. The replica is cut first. The driver predicts the
+   revision each file must open at and checks that the writer's verifier agrees.
+   If the replica then refuses to open, the driver checks the refusal and
+   repairs it from the primary. With `--seed 138 --rounds 2 --power-losses 16`,
+   the Rust writer from before the trailing-NUL fix refuses to reopen its
+   journal; the fixed writer passes.
+3. **Damage**, each checked to be refused, then repaired, with the damaged bytes
    kept:
    - `bit-flip`: a flipped bit in a record that is not the last;
    - `zeroed-sector`: a zeroed 512-byte sector;
@@ -138,7 +153,7 @@ transaction shows up as a link pointing at nothing.
    After them, the restarted writer must rebuild the replica, and three more
    kills follow. One clean commit must then leave the two files byte for byte
    identical.
-3. **Full disk**: the writer runs on a 64 KiB tmpfs. It must stop with an
+4. **Full disk**: the writer runs on a 64 KiB tmpfs. It must stop with an
    indeterminate-commit error, both files must open at acknowledged revisions,
    and after space is freed the writer must continue from where it stopped.
 
@@ -159,9 +174,10 @@ JS, run `wasm-pack build --target web --out-dir ../../js/pkg rust/wasm`. If
 your Docker host itself runs in a container, append `--storage-driver=vfs` to
 the `docker:dind` command.
 
-What it does not cover: lost or reordered writes below the file system (a disk
-that acknowledges a flush it did not do), power loss as opposed to process
-death, and a machine whose clock or kernel misbehaves. SIGKILL ends the process
-but leaves the page cache in place, so it checks the engine's write and flush
-order, not the disk's. The engine's unit tests cover flush failures with fault
-logs instead.
+What it does not cover: a disk that acknowledges a flush it did not do, a real
+power cut (the power-loss rounds model one at the file level, the way LazyFS or
+dm-flakey would, but in the driver, not below the file system), lost directory
+entries, and a machine whose clock or kernel misbehaves. SIGKILL ends the
+process but leaves the page cache in place, so the kill rounds check the
+engine's write and flush order, not the disk's. The engine's unit tests cover
+flush failures with fault logs instead.
