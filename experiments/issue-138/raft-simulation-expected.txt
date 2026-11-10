@@ -1,0 +1,8 @@
+# Reference output of rust/tests/engine_raft_simulation_tests.rs (cargo test -- --nocapture --test-threads 1).
+# Each Stats line is followed by the longest probe gap of seeds 1..=20. C# and JS ports must print identical values.
+Minority pre-vote/check-quorum=true: Stats { committed: 529, conflicts: 335, unknown_committed: 6, unknown_aborted: 99, unavailable: 605, sim: SimStats { delivered: 111972, dropped: 22581, faults: 254, restarts: 60, clock_jumps: 96, leaders: 85, max_term: 8, probes: 5203, longest_gap: 1189 } }
+longest stall per seed: [617, 367, 634, 636, 638, 314, 611, 624, 349, 1189, 323, 611, 628, 1103, 624, 610, 931, 640, 469, 554]
+Any pre-vote/check-quorum=true: Stats { committed: 470, conflicts: 289, unknown_committed: 9, unknown_aborted: 126, unavailable: 682, sim: SimStats { delivered: 87923, dropped: 19118, faults: 330, restarts: 74, clock_jumps: 147, leaders: 106, max_term: 10, probes: 3764, longest_gap: 3656 } }
+longest stall per seed: [1422, 1332, 2990, 1245, 2539, 314, 1948, 2219, 2574, 3195, 307, 3370, 1980, 1191, 1505, 1005, 1005, 2899, 1141, 3656]
+Minority pre-vote/check-quorum=false: Stats { committed: 492, conflicts: 333, unknown_committed: 9, unknown_aborted: 133, unavailable: 607, sim: SimStats { delivered: 106356, dropped: 25660, faults: 298, restarts: 69, clock_jumps: 132, leaders: 184, max_term: 64, probes: 4665, longest_gap: 2292 } }
+longest stall per seed: [751, 623, 702, 648, 1313, 313, 2292, 606, 1003, 1739, 341, 476, 926, 1046, 675, 741, 1185, 1390, 962, 635]
