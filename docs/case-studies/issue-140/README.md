@@ -112,6 +112,9 @@ created by `exec:` is terminated/reaped; no shell evaluates the argv.
 [Windows named pipes](https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipes)
 use Python's existing native `multiprocessing.connection` implementation with
 bytes-only messages, never pickle or object deserialization.
+Windows `pipe:name` identifiers do not depend on a process's working directory.
+A reproducing regression checks that identity, and the native Windows test
+connects processes launched from different directories with the same bare URI.
 
 [POSIX message queues](https://man7.org/linux/man-pages/man7/mq_overview.7.html)
 have kernel size/count quotas and persist until unlink. Linux endpoints use

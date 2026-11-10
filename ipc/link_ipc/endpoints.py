@@ -90,7 +90,9 @@ def host_port(address):
 
 
 def pipe_name(address):
-    digest = hashlib.sha256(os.path.abspath(address).encode()).hexdigest()[:32]
+    # Windows pipe names are shared identifiers, not relative filesystem paths.
+    # Native control endpoints already supply an absolute rendezvous path.
+    digest = hashlib.sha256(address.encode()).hexdigest()[:32]
     return rf"\\.\pipe\clink-ipc-{digest}"
 
 

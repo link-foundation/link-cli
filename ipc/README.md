@@ -33,6 +33,8 @@ On Windows, use a fresh absolute directory such as `shm:C:\Temp\clink-memory`
 at both ends. Choose `pipe:my-database` for a native Windows named pipe, or
 `copydata:C:\Temp\clink-copy` for paired WM_COPYDATA windows. POSIX `pipe:`
 selects paired FIFOs; `fifo:` names that mechanism explicitly.
+Windows pipe identifiers are independent of each process's working directory;
+use the same `pipe:` address at both ends.
 
 | Endpoint | Payload mechanism | Platforms |
 | --- | --- | --- |

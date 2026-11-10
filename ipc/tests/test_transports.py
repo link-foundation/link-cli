@@ -1,5 +1,6 @@
 """Cross-process byte, EOF, native-resource and composition regressions."""
 
+import contextlib
 import faulthandler
 import json
 import os
@@ -71,6 +72,9 @@ class TransportTests(unittest.TestCase):
             if kind not in ("tcp", "udp")
             else f"{kind}:127.0.0.1:0"
         )
+        if kind == "pipe" and os.name == "nt":
+            # The peer runs from ipc/, while this client uses the repo root.
+            endpoint = "pipe:" + self.root.name
         child, endpoint = self.peer(endpoint)
         with connect(endpoint, OPTIONS) as stream:
             # Drain concurrently so bounded queues never depend on payload size.
@@ -108,6 +112,18 @@ class TransportTests(unittest.TestCase):
         for kind in kinds:
             with self.subTest(kind=kind):
                 self.check_kind(kind)
+
+    def test_windows_pipe_name_is_independent_of_working_directory(self):
+        from link_ipc.endpoints import pipe_name
+
+        client, server = self.root / "client", self.root / "server"
+        client.mkdir()
+        server.mkdir()
+        with contextlib.chdir(client):
+            incoming = pipe_name("configured-database")
+        with contextlib.chdir(server):
+            outgoing = pipe_name("configured-database")
+        self.assertEqual(incoming, outgoing)
 
     def test_anonymous_pipes(self):
         # exec and stdio are the two sides of real inherited anonymous pipes.

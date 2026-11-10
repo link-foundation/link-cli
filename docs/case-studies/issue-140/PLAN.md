@@ -42,7 +42,7 @@ Keep every source file below the repository's 1000-line Python limit.
 
 ## Verification record
 
-- Local native suite: 16 tests pass, covering ten Linux mechanisms including
+- Local native suite: 17 tests pass, covering ten Linux mechanisms including
   anonymous pipes, composition, registration and failure regressions. Four
   actual-server integration tests are deliberately supplied a built CLI by CI.
 - Local workflow helper/policy suite: 268 tests pass. Ruff checks and formatting
@@ -73,3 +73,7 @@ Keep every source file below the repository's 1000-line Python limit.
   must pass before PR #175 is marked ready. Their authoritative final record
   and run URLs are maintained in the PR description, which can be updated
   after CI without changing the code under test.
+- Windows pipe identifiers are independent of the client's/server's working
+  directory. A regression fails before removing filesystem normalization from
+  named-pipe identifiers and passes afterward; the Windows cross-process test
+  also uses a bare pipe name from different working directories.
