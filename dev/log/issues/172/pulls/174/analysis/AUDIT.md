@@ -76,7 +76,15 @@ Changes considered but not adopted:
 - **Exact `# vX.Y.Z` comments on SHA pins.** This repository's SHA pins already carry exact versions. Trusted namespaces stay on major tags by the deliberate `.github/zizmor.yml` policy.
 - **Rust template: `cancel-in-progress: true` everywhere.** Already true for every read-only check here; writer groups intentionally never cancel.
 
-Defects that exist in the templates themselves are listed in [upstream-reports/SUMMARY.md](upstream-reports/SUMMARY.md).
+Defects that exist in the templates themselves are listed in [upstream-reports/SUMMARY.md](upstream-reports/SUMMARY.md). One issue was filed per template:
+
+- rust: link-foundation/rust-ai-driven-development-pipeline-template#236
+- csharp: link-foundation/csharp-ai-driven-development-pipeline-template#100
+- js: link-foundation/js-ai-driven-development-pipeline-template#297
+- java: link-foundation/java-ai-driven-development-pipeline-template#22
+- python: link-foundation/python-ai-driven-development-pipeline-template#145
+
+The `wasm-bindgen-cli` warning (F15) was already reported upstream as wasm-bindgen/wasm-bindgen#3356, so no new report was filed.
 
 ## Best-practices cross-check
 
@@ -103,7 +111,8 @@ Checked against `research/CI-CD-BEST-PRACTICES.md`:
 These were run locally on the final tree:
 
 - `node --test .github/scripts/*.test.mjs`: 264 pass, 0 fail.
-- `npm --prefix js run lint`: 0 findings.
+- `node --test csharp/scripts/*.test.mjs`: 47 pass, 0 fail.
+- `npm --prefix js run lint`: 299 files, 0 findings, 0 files near the line limit.
 - actionlint: exit 0.
 - C#: `dotnet build` (0 warnings) and `dotnet test`: 3439 pass.
 
