@@ -233,8 +233,16 @@ fault, are still refused rather than silently rolled back.
 
 ### The journal-file and LSM backends
 
-`rust/tests/engine_power_loss_backends_tests.rs` puts the two other durable
-backends on the same disk model (`rust/tests/engine_simulation/disk.rs`):
+`rust/tests/engine_power_loss_backends_tests.rs`,
+`csharp/Foundation.Data.Doublets.Cli.Tests/EnginePowerLossBackendsTests.cs` and
+`js/client/test/engine-power-loss-backends.test.mjs` put the two other durable
+backends on the same disk model. The shared pieces are in
+`rust/tests/engine_simulation/disk.rs`, `EngineSimulationDisk.cs` and
+`js/client/test/engine-simulation-disk.mjs`. The LSM run prints the same
+counts in all three languages: 192 crashes, 487 acknowledged groups, 59
+flushes, 28 compactions, 144 lost and 33 torn sectors, nothing refused or
+lost. The C# and JS file logs have no sync-per-append option, so their first
+journal configuration differs from Rust's.
 
 - **Journal file.** The real `FileTransitionLog` writes newline-framed entries
   to a temporary file, and every append and sync is mirrored to a simulated
