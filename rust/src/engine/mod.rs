@@ -51,6 +51,7 @@ pub mod partitioned;
 mod pessimistic;
 mod query_reservation;
 mod query_scratch;
+pub mod raft;
 pub mod reclaiming;
 pub mod recovery;
 pub mod replication;
