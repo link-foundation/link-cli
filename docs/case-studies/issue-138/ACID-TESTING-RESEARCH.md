@@ -228,16 +228,20 @@ show the majority's write.
 Network partitions: `experiments/issue-138/etcd-partition.mjs` cuts the Raft
 links of the real cluster through per-member proxies that classify connections
 by etcd's `X-Server-From` header. It runs a two-way isolation of the leader,
-one-way cuts in both directions, a bridge, and six seeded random rounds with
-a second fault injected mid-round while four clients commit. Every member must
+one-way cuts in both directions, a bridge, slowed links (50 ms on every link,
+then the leader's links 1500 ms late, past the election timeout), and six
+seeded random rounds of cuts and delays with a second fault injected
+mid-round while four clients commit. Every member must
 agree. Acknowledged transactions must be kept, refused ones absent, and
 unknown ones all or nothing, and reads must respect real time. Building it
 found that etcd's prober opens keep-alive connections without the sender
 header that the pipeline then reuses for `POST /raft`, so a proxy that
 classifies only the first request leaks a one-way cut.
 
-Gap: no clock faults and no slowed links, and liveness during partitions is
-not asserted. The real cluster's history is checked against the stored state
+Gap: no clock faults. The engine reads no clock for correctness; commits
+compare `mod_revision`s, and time only sets request deadlines. Liveness is
+asserted for the majority side and after every heal, but not while a random
+round's faults last. The real cluster's history is checked against the stored state
 and real time. The Elle-style dependency check runs on the simulated network
 only.
 
@@ -271,11 +275,14 @@ None of these is claimed as covered:
    inside a flush interval and lying syncs are simulated for the page device
    and its mirror. The journal-file, LSM and SQLite backends rely on the
    file-level power-loss model of the Docker crash test.
-2. **Clock faults and slow links.** Links are cut (two-way or one-way) in a
-   real etcd cluster, and dropped, lost or delivered late in the simulation,
-   but clocks are never skewed and links are never just slowed.
-3. **Liveness under partitions.** Safety is asserted. Progress during a fault
-   is not, because etcd may legitimately make none.
+2. **Clock faults.** Links are cut (two-way or one-way) and slowed in a real
+   etcd cluster, and dropped, lost or delivered late in the simulation, but
+   no member's clock is ever skewed. The engine's correctness reads no clock
+   (only request deadlines do), so the argument is by construction, not by
+   test.
+3. **Liveness during random faults.** Progress is asserted for the majority
+   side of the fixed scenarios and after every heal. It is not asserted while
+   a random round's faults last, because etcd may legitimately make none.
 4. **Whole-system simulation.** The deterministic simulation stops at the page
    device and the atomic journal store. etcd, the operating system and timers
    are not simulated.

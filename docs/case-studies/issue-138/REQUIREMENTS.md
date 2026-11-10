@@ -18,8 +18,14 @@ followed by simulated power loss that cuts and zeroes unsynced bytes. That
 found a writer that could not reopen its journal, now fixed in all three
 languages. A paused etcd leader stands in for one cut off by a partition: the
 majority moves on, and a transaction staged before the pause is refused.
-Still untested: reordering inside a live flush interval, disks that lie about
-flushes, cut or one-way network links and deterministic simulation.
+Since then, a deterministic simulation in Rust, C# and WASM reorders, tears and
+lies about unsynced sectors under the page device and its mirror, and it found
+a metadata ordering bug in the mirror, now fixed. It also runs cluster members
+over a faulty simulated network, checked for strict serializability. A real
+etcd cluster is partitioned link by link (two-way, one-way, a bridge) and has
+links slowed past the election timeout. Still untested: skewed clocks,
+liveness while random faults last, sector-level power loss for the
+journal-file, LSM and SQLite backends, and a whole-system simulation.
 
 Online backup (R2/R5/R7/R11) copies a consistent cut of the current or a retained
 revision to an empty log while commits continue, in Rust, C# and actual-WASM JS.

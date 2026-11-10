@@ -252,7 +252,9 @@ or a bridge, which iptables cannot do for TCP. etcd's prober opens keep-alive
 connections without the header and the pipeline later reuses them for
 `POST /raft`, so the proxy keeps scanning each connection until a request
 names its sender. Without that, a one-way cut leaked messages and the cut
-leader kept replicating.
+leader kept replicating. A link can also be slowed instead of cut: the proxy
+then delays every byte on that link's connections, in order, so messages
+arrive late rather than not at all.
 
 The runner checks these scenarios, committing every transaction across two
 shards:
@@ -264,10 +266,16 @@ shards:
    leader ends up following it.
 3. A one-way cut to the leader: CheckQuorum makes it step down.
 4. A bridge member connected to both halves: commits continue.
-5. Six random rounds (seeded by `PARTITION_SEED`) of isolations, single links,
-   and all links into or out of one member, with a second fault injected
-   mid-round while four clients commit through single members and through all
-   members.
+5. Slow links: with every link 50 ms late (etcd sends heartbeats every 100 ms
+   and starts an election after 1000 ms), commits continue through every
+   member. With the leader's outgoing links 1500 ms late, longer than the
+   election timeout, its heartbeats arrive from a term the others may already
+   have ended, and the majority must still commit. In local runs the majority
+   elected a new leader.
+6. Six random rounds (seeded by `PARTITION_SEED`) of isolations, single links,
+   all links into or out of one member, and one member's outgoing links slowed
+   by 100 to 2000 ms, with a second fault injected mid-round while four clients
+   commit through single members and through all members.
 
 Afterwards every member must return the same state. Every acknowledged
 transaction must be present in both shards and every refused one absent. A
@@ -276,11 +284,26 @@ first read must include every commit acknowledged before it started (real
 time). CI runs seeds 138 and 2026 and uploads the members' logs. The seed fixes
 the fault plan, but etcd's timing is real, so the counts differ between runs:
 two local runs of seed 138 acknowledged 295 and 258 commits, refused 194 and
-174, and left 3 and 2 outcomes unknown.
+174, and left 3 and 2 outcomes unknown. With slow links added, one run of seed
+138 acknowledged 344, refused 217 and left 6 unknown, and one run of seed 2026
+acknowledged 309, refused 203 and left 1 unknown.
 
-The test does not assert liveness. In seed 2026, two rounds committed nothing
-while their faults lasted, which etcd allows. Clocks are not skewed, and links
-are cut, not slowed.
+Liveness is asserted in bounded form. In scenarios 1 to 5 the side that holds
+a majority must commit within 200 attempts. After every heal, every member
+must follow one leader within about 100 polls and then commit a transaction
+through itself alone. Liveness is not asserted while a random round's faults
+last: in seed 2026, round 3 committed nothing while two members' links were
+cut, which etcd allows.
+
+Clocks are not skewed. Correctness here does not read a clock. A commit is an
+etcd transaction that compares every selected key's `mod_revision` with the
+snapshot it read (`EtcdJournalStore.compareExchange` in
+`js/client/src/cluster.js`, and the Rust and C# stores). Time is used only for
+request deadlines (`AbortSignal.timeout`), and the engine uses no etcd leases.
+A wrong clock therefore can only expire a deadline early or late. That gives
+a failed or unknown outcome, which these tests already produce. etcd's own
+Raft timers count ticks of Go's monotonic clock. Skewing a member's wall
+clock (with libfaketime or a VM) is not tested here.
 
 A deterministic simulation complements the real cluster:
 `rust/tests/engine_simulation/network.rs`,
