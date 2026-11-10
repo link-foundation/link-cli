@@ -2,7 +2,11 @@
 
 /**
  * Check for files exceeding the maximum allowed line count
- * Exits with error code 1 if any files exceed the limit
+ * Exits with error code 1 if any files exceed the limit, and emits a
+ * non-failing `::warning` annotation for files above the warning threshold
+ * (issue #172: the C# check had no warning band, unlike
+ * rust/scripts/check-file-size.rs and the C# pipeline template, so files
+ * could silently grow to 986 lines before the hard limit failed a merge)
  *
  * Usage:
  *   node csharp/scripts/check-file-size.mjs [--lang csharp|rust|all] [--dir path]
@@ -17,6 +21,7 @@ import { join, relative, extname, resolve, sep } from 'path';
 import { pathToFileURL } from 'url';
 
 export const MAX_LINES = 1000;
+export const WARN_LINES = 900;
 // Matched against whole path components, never substrings (issue #134):
 // `path.includes('bin')` used to skip rust/examples/lino_binary_dump.rs and
 // `'target'` skipped rust/src/sequences/target_matcher.rs, so those files
@@ -130,36 +135,76 @@ export function countLines(filePath) {
 }
 
 /**
+ * Classify a line count against the configured thresholds.
+ * @param {number} lineCount
+ * @returns {'within-limit' | 'warning' | 'violation'}
+ */
+export function classifyLineCount(lineCount) {
+  if (lineCount > MAX_LINES) {
+    return 'violation';
+  }
+  if (lineCount > WARN_LINES) {
+    return 'warning';
+  }
+  return 'within-limit';
+}
+
+/**
  * Check files for a specific language
  * @param {string} baseDir
  * @param {object} config
- * @returns {{ files: number, violations: Array }}
+ * @returns {{ files: number, warnings: Array, violations: Array }}
  */
 export function checkLanguage(baseDir, config) {
   const searchDir = join(baseDir, config.baseDir);
   const files = findFiles(searchDir, config.extensions, baseDir);
+  const warnings = [];
   const violations = [];
 
   for (const file of files) {
     const lineCount = countLines(file);
-    if (lineCount > MAX_LINES) {
-      violations.push({
-        file: relative(baseDir, file),
-        lines: lineCount,
-      });
+    const finding = { file: relative(baseDir, file), lines: lineCount };
+    const status = classifyLineCount(lineCount);
+    if (status === 'violation') {
+      violations.push(finding);
+    } else if (status === 'warning') {
+      warnings.push(finding);
     }
   }
 
-  return { files: files.length, violations };
+  return { files: files.length, warnings, violations };
+}
+
+/**
+ * Build a GitHub Actions warning annotation for a warning-band finding,
+ * matching the wording of rust/scripts/check-file-size.rs.
+ * @param {{ file: string, lines: number }} finding
+ * @returns {string}
+ */
+export function warningAnnotation(finding) {
+  const file = finding.file
+    .replaceAll('\\', '/')
+    .replaceAll('%', '%25')
+    .replaceAll('\r', '%0D')
+    .replaceAll('\n', '%0A')
+    .replaceAll(':', '%3A')
+    .replaceAll(',', '%2C');
+  return (
+    `::warning file=${file}::File has ${finding.lines} lines (approaching limit of ${MAX_LINES}). ` +
+    `Consider extracting code to keep at or below ${WARN_LINES} lines and prevent concurrent PR merge limit violations.`
+  );
 }
 
 function main() {
   try {
     const { lang, dir } = parseArgs();
 
-    console.log(`\nChecking files for maximum ${MAX_LINES} lines...\n`);
+    console.log(
+      `\nChecking files for maximum ${MAX_LINES} lines (warning above ${WARN_LINES})...\n`,
+    );
 
     let totalFiles = 0;
+    let allWarnings = [];
     let allViolations = [];
 
     const languagesToCheck = lang === 'all' ? Object.keys(LANGUAGE_CONFIG) : [lang];
@@ -172,13 +217,24 @@ function main() {
       }
 
       console.log(`Checking ${config.name} files in ${config.baseDir}/...`);
-      const { files, violations } = checkLanguage(dir, config);
+      const { files, warnings, violations } = checkLanguage(dir, config);
       totalFiles += files;
+      allWarnings = allWarnings.concat(warnings);
       allViolations = allViolations.concat(violations);
       console.log(`  Found ${files} ${config.name} file(s)`);
     }
 
     console.log('');
+
+    for (const warning of allWarnings) {
+      console.log(warningAnnotation(warning));
+      console.log(
+        `WARNING: ${warning.file} has ${warning.lines} lines (approaching limit of ${MAX_LINES}, warning threshold: ${WARN_LINES})`,
+      );
+    }
+    if (allWarnings.length > 0) {
+      console.log('');
+    }
 
     if (allViolations.length === 0) {
       console.log(`Checked ${totalFiles} file(s) - all within the line limit\n`);
