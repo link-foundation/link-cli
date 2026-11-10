@@ -486,11 +486,29 @@ fn configurations() -> Vec<EngineOptions> {
     all
 }
 
+/// Per configuration, in `configurations()` order: transactions committed and
+/// histories with G-single and with G2. The C# and JS/WASM ports pin the same
+/// numbers, so each port commits and refuses exactly the same transactions.
+const EXPECTED: [(usize, usize, usize); 12] = [
+    (847, 19, 0),
+    (847, 0, 20),
+    (573, 0, 0),
+    (662, 0, 0),
+    (635, 17, 2),
+    (635, 0, 19),
+    (453, 0, 0),
+    (515, 0, 0),
+    (148, 0, 0),
+    (148, 0, 0),
+    (148, 0, 0),
+    (148, 0, 0),
+];
+
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn long_random_histories_show_only_the_anomalies_each_isolation_level_allows() {
     let mut total = 0;
-    for options in configurations() {
+    for (options, expected) in configurations().into_iter().zip(EXPECTED) {
         let context = format!(
             "{:?} {:?} {:?}",
             options.concurrency, options.isolation, options.serializable_validation
@@ -540,6 +558,12 @@ fn long_random_histories_show_only_the_anomalies_each_isolation_level_allows() {
                 "{context}: the allowed {anomaly:?} never occurred"
             );
         }
+        let count = |anomaly| seen.get(&anomaly).copied().unwrap_or(0);
+        assert_eq!(
+            (committed, count(Anomaly::GSingle), count(Anomaly::G2)),
+            expected,
+            "{context}: differs from the other ports"
+        );
         total += attempted;
     }
     assert_eq!(total, 12 * SEEDS as usize * TRANSACTIONS);
