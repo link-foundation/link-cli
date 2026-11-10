@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.3] - 2026-11-10
 
-Update the locked rustls-pki-types dependency. Optional native IPC adapters are
+Update the locked rustls-pki-types and webpki-roots dependencies. Optional native IPC adapters are
 available in `ipc/` without changing the existing LiNo commands (#140).
 
 ## [2.1.2] - 2026-11-06

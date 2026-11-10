@@ -213,7 +213,8 @@ quality and all repository workflows remain required on the final PR head.
 
 The first CI pass also found existing dependency-freshness failures: cargo-audit,
 System.CommandLine, Microsoft.Data.Sqlite, Microsoft.NET.Test.Sdk and the locked
-rustls-pki-types. Those are refreshed in a separate commit, with patch release
+rustls-pki-types. A subsequent registry check also required webpki-roots 1.0.12.
+Those are refreshed in separate commits, with patch release
 versions for the affected existing packages. Python IPC starts at version 0.1.0.
 CI logs were downloaded for diagnosis rather than assuming an old passing run
 validated a newer commit. Final verification is recorded in [PLAN.md](PLAN.md).
