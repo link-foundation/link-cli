@@ -446,6 +446,14 @@ zero retains no objects. Catalog reads and publication checks always stay fresh;
 every hit returns an independent array. See [cache costs and ownership](../../docs/ENGINE-OBJECT-CACHE.md)
 and [coordinated network engines](../../docs/ENGINE-CLUSTERS.md).
 
+`RaftNode` is a draft etcd-style Raft replica (PreVote, CheckQuorum, reads
+through the log) that keeps the journals of an atomic journal store. It is a
+pure state machine, a port of the Rust `engine::raft` module: the caller passes
+local time to `tick(now)` and `step(now, envelope)`, delivers `takeMessages()`
+over any transport, and persists `hardState` and `log` before sending. Read
+outcomes use the `{ generation, entries }` versions of `ClusterEngine`. Membership
+changes, snapshots and lease reads are not implemented.
+
 `await ReclaimingPartitionedJournalStore.open(catalog, partitions, route, options)`
 selects explicit epoch-fenced reclamation on dedicated maintenance-capable
 namespaces. Call `collectGarbage()` to retire old unreferenced objects; the default

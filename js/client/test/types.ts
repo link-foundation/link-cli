@@ -432,3 +432,19 @@ const savepointReleased: Promise<void> = savepointSession.releaseSavepoint(1n);
 void savepointToken;
 void savepointRestored;
 void savepointReleased;
+
+import { RaftConfig, RaftNode, RaftRole, type RaftCommand, type RaftOutcome } from '../types/index.js';
+function raftTypes() {
+  const config = new RaftConfig(0, 3);
+  config.seed = 7n;
+  const node = new RaftNode(config, 0);
+  const command: RaftCommand = { type: 'read', id: 1, keys: ['a'] };
+  const proposed: boolean = node.propose(0, command);
+  const outcome: RaftOutcome | undefined = node.takeOutcome(1);
+  for (const envelope of node.takeMessages()) node.step(1, envelope);
+  const leading: boolean = node.role === RaftRole.Leader;
+  // @ts-expect-error A compare-exchange carries the versions it expects.
+  node.propose(0, { type: 'compareExchange', id: 2, keys: ['a'], updates: [null] });
+  return [proposed, outcome, leading, node.state.journals.get('a')?.generation];
+}
+void raftTypes;

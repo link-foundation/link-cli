@@ -638,6 +638,15 @@ export class ClusterTransaction {
   close(): Promise<void>;
   [Symbol.asyncDispose](): Promise<void>;
 }
+export type {
+  RaftCommand,
+  RaftEntry,
+  RaftEnvelope,
+  RaftHardState,
+  RaftMessage,
+  RaftOutcome,
+} from './raft.js';
+export { JournalState, RaftConfig, RaftNode, RaftRole } from './raft.js';
 /** Bounded immutable journal chunk write policy, independent of read caching. */
 export interface JournalChunkOptions {
   /** Positive record limit, at most 65,536; default 64. */

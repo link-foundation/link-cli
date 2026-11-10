@@ -36,6 +36,7 @@ export { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './frami
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
 
 export { ClusterEngine, ClusterTransaction, EtcdJournalStore } from './cluster.js';
+export { JournalState, RaftConfig, RaftNode, RaftRole } from './raft.js';
 export { PartitionedJournalStore } from './partitioned.js';
 export { DeltaCommitLog } from './engine-delta.js';
 
