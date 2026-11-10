@@ -3,6 +3,10 @@
 # npmjs.com returns 403 to link checkers because of bot protection.
 https://www\.npmjs\.com
 
+# dev.mysql.com returns 403 to every non-browser client (bot protection),
+# including lychee and curl with a browser User-Agent.
+https://dev\.mysql\.com
+
 # DocFX generates csharp/docs/api/*.yml into the build output; the files are
 # deliberately not committed, so the relative link from csharp/docs/index.md
 # cannot be resolved from a source checkout.
