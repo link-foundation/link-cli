@@ -414,6 +414,9 @@ pkg-bundler/
 js/pkg/
 
 # Local AI investigation artifacts
+__pycache__/
+*.egg-info/
+.ruff_cache/
 ci-logs/
 gh-data/
 experiments/

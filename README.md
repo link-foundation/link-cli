@@ -601,6 +601,11 @@ details.
 
 ## Serve a database over TCP
 
+For optional native IPC layers (shared memory, mapped files, Unix sockets,
+UDP, pipes, queues, signals and Windows mechanisms), see the
+[IPC configuration guide](ipc/README.md) and [runnable example](examples/ipc/README.md).
+The same adapters compose on the client and server and preserve both protocols.
+
 `--serve` exposes a database over TCP. `--connect` sends one query to a
 served database and prints the reply:
 
