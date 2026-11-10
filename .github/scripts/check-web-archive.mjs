@@ -154,6 +154,12 @@ export function validateLycheeReport(content, exitCode = process.env.LYCHEE_EXIT
   const timeouts = count('Timeouts');
   const entries = errors.entries + timeouts.entries;
   const failed = exitCode !== undefined && exitCode !== '0';
+  // lychee exits 2 when links fail. Any other non-zero code (1: runtime
+  // error, 3: config error) means the check itself broke, so recovering the
+  // links its partial report lists must not pass the job (issue #172).
+  if (failed && exitCode !== '2') {
+    throw new Error(`lychee exited with ${exitCode}, not a link-failure result; fix the run`);
+  }
   if (
     !content.trim() ||
     [errors, timeouts].some(

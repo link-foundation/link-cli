@@ -22,7 +22,7 @@ test('missing or incomplete link evidence never turns a failed checker green', (
     '| Errors | 0 |',
     '## Errors per input\n* [WAT] https://example.com',
   ]) {
-    assert.throws(() => validateLycheeReport(content, '1'), /report/);
+    assert.throws(() => validateLycheeReport(content, '2'), /report/);
   }
   const root = mkdtempSync(join(tmpdir(), 'missing-lychee-'));
   try {
@@ -141,4 +141,8 @@ test('timed-out links are failures that must be rechecked (issue #172)', () => {
 
   const miscounted = mixed.replace('⏳ Timeouts    | 1', '⏳ Timeouts    | 2');
   assert.throws(() => validateLycheeReport(miscounted, '2'), /report/);
+  // A crashed or misconfigured run is never a recoverable link failure.
+  for (const code of ['1', '3']) {
+    assert.throws(() => validateLycheeReport(mixed, code), /not a link-failure result/);
+  }
 });

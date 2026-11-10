@@ -22,6 +22,10 @@ on:
       - '.github/scripts/*web-archive*'
       - '.github/scripts/recheck-broken-links*'
       - '.lycheeignore'
+  schedule:
+    # External pages disappear without any change here; push and pull_request
+    # only run when Markdown changes, so link rot went unnoticed (issue #172).
+    - cron: '41 5 * * 1'
   workflow_dispatch:
 
 # Least-privilege default; jobs escalate individually when needed.
