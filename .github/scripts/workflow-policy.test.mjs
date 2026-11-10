@@ -631,8 +631,14 @@ test('caches are restored everywhere but saved only by main pushes on a miss', (
       for (const [index, save] of saves.entries()) {
         const id = /^\s+id: (\S+)$/m.exec(restores[index].text)?.[1];
         assert.ok(id, `${name} ${job.name}: the restore step needs an id`);
-        assert.match(save.text, /github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
-        assert.ok(save.text.includes(`steps.${id}.outputs.cache-hit != 'true'`), `${name} ${job.name}`);
+        assert.match(
+          save.text,
+          /github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/,
+        );
+        assert.ok(
+          save.text.includes(`steps.${id}.outputs.cache-hit != 'true'`),
+          `${name} ${job.name}`,
+        );
         assert.ok(save.text.includes(`key: \${{ steps.${id}.outputs.cache-primary-key }}`));
         const paths = (step) =>
           /path: \|\n([\s\S]*?)\n\s+key:/

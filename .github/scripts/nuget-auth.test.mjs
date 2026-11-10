@@ -81,6 +81,9 @@ test('a 403 is a key without push scope and a 401 is an unaccepted key (issue #1
   assert.match(denied.detail, /HTTP 403: .*no push scope/);
   const rejected = await probe(401, new Headers({ 'X-NuGet-Warning': 'The API key has expired.' }));
   assert.equal(rejected.authenticated, false);
-  assert.match(rejected.detail, /invalid, expired or revoked.*NuGet warning: The API key has expired\./);
+  assert.match(
+    rejected.detail,
+    /invalid, expired or revoked.*NuGet warning: The API key has expired\./,
+  );
   assert.equal(describeVerificationDenial(502).result.status, 'unknown');
 });
