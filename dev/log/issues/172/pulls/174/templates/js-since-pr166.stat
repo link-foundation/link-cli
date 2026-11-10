@@ -1,0 +1,71 @@
+ .changeset/javascript-first-rust-integration.md    |   9 +
+ .changeset/release-and-ci-integrity.md             |   5 +
+ .changeset/tidy-checks-hooks-links.md              |   5 +
+ .../actions/artifact-transport/package-lock.json   |  37 ++--
+ .github/actions/artifact-transport/package.json    |   4 +-
+ .github/workflows/example-app.yml                  |  49 ++++++
+ .github/workflows/javascript-first-example.yml     |   3 +
+ .github/workflows/javascript-first-gate.yml        |   6 +
+ .github/workflows/links.yml                        |  71 ++++----
+ .github/workflows/release.yml                      |  27 +--
+ .github/workflows/security.yml                     |   2 +
+ AGENTS.md                                          |   4 +
+ deno.lock                                          |  12 +-
+ docs/CONTRIBUTING.md                               |  19 ++
+ docs/issue-287/plan.md                             |  36 ++++
+ docs/issue-287/research.md                         | 112 ++++++++++++
+ docs/issue-287/verification.md                     |  53 ++++++
+ docs/issue-292/plan.md                             |  31 ++++
+ docs/issue-292/research.md                         |  43 +++++
+ docs/issue-292/verification.md                     |  49 ++++++
+ docs/javascript-first.md                           |  44 +++++
+ .../example-app/example-app-en-dark.png            | Bin 118934 -> 116764 bytes
+ .../example-app/example-app-en-light.png           | Bin 118934 -> 116764 bytes
+ .../example-app/example-app-ru-dark.png            | Bin 118934 -> 116764 bytes
+ .../example-app/example-app-ru-light.png           | Bin 118934 -> 116764 bytes
+ docs/screenshots/example-app/example-app.png       | Bin 118934 -> 116764 bytes
+ examples/javascript-first/README.md                |   7 +
+ examples/universal-app/package-lock.json           | 150 ++++++++--------
+ examples/universal-app/package.json                |   4 +-
+ experiments/issue-230-plan.md                      |  63 +++++++
+ experiments/issue-287/reproduce.mjs                | 113 ++++++++++++
+ package-lock.json                                  |  27 ++-
+ package.json                                       |   7 +-
+ scripts/check-ci-workflows.mjs                     |  45 +++++
+ scripts/check-codeql-results.mjs                   |  69 +++++++-
+ scripts/check-preview-tools.sh                     |  33 ++++
+ scripts/check-web-archive.mjs                      |  25 +--
+ scripts/install-git-hooks.mjs                      |   2 +-
+ scripts/install-lychee.sh                          |  62 +++++++
+ scripts/lychee-report.mjs                          |  22 +++
+ scripts/npm-audit-report.mjs                       |  97 ++++++++--
+ scripts/publish-to-npm.mjs                         |  10 +-
+ scripts/push-failure-classifier.mjs                |  18 +-
+ scripts/push-main-with-rebase-retry.mjs            |  65 ++++++-
+ scripts/recheck-broken-links.mjs                   |  13 +-
+ scripts/release-metadata.mjs                       |  89 ++++++++--
+ scripts/release-publication.mjs                    |  66 +++++++
+ scripts/setup-preview-gh.sh                        |  29 +++
+ scripts/version-and-commit.mjs                     |  77 ++++----
+ scripts/version-lock.mjs                           |  14 +-
+ tests/archive-and-discovery.test.js                |   1 +
+ tests/codeql-results.test.js                       |  84 +++++++++
+ tests/install-git-hooks.test.js                    |  13 ++
+ tests/issue-228-regressions.test.js                |   8 +-
+ tests/issue-287-policy.test.js                     | 125 +++++++++++++
+ tests/javascript-first-adoption.test.js            |  69 ++++++++
+ tests/javascript-first-gate.test.js                |  30 ++--
+ tests/links-workflow.test.js                       |  13 ++
+ tests/lychee-install.test.js                       | 134 ++++++++++++++
+ tests/lychee-step.test.js                          | 140 +++++++++++++++
+ tests/npm-audit-report.test.js                     |  74 +++++++-
+ tests/pipeline-status.test.js                      |  57 ++++--
+ tests/preview-tools.test.js                        | 133 ++++++++++++++
+ tests/recheck-broken-links.test.js                 |  39 +++++
+ tests/release-metadata.test.js                     |  27 ++-
+ tests/release-publication.test.js                  | 121 +++++++++++++
+ tests/release-push-recovery.test.js                | 195 +++++++++++++++++++++
+ tests/status-gate-coverage.test.js                 |   2 +-
+ tests/version-and-commit.test.js                   |   2 +-
+ tests/workflow-reliability.test.js                 |  46 ++++-
+ 70 files changed, 2730 insertions(+), 311 deletions(-)

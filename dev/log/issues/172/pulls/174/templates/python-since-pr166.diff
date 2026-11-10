@@ -1,0 +1,2094 @@
+diff --git a/.github/workflows/docs.yml b/.github/workflows/docs.yml
+index 9035688..fa493ae 100644
+--- a/.github/workflows/docs.yml
++++ b/.github/workflows/docs.yml
+@@ -42,10 +42,6 @@ on:
+ permissions:
+   contents: read
+ 
+-concurrency:
+-  group: ${{ github.workflow }}-${{ github.ref }}
+-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-
+ env:
+   GIT_CONFIG_COUNT: '1'
+   GIT_CONFIG_KEY_0: init.defaultBranch
+@@ -54,12 +50,13 @@ env:
+ jobs:
+   build:
+     name: Build docs
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-build
++      cancel-in-progress: true
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     permissions:
+       contents: read
+-      # actions/configure-pages enables the Pages site on push to main.
+-      pages: write
+     outputs:
+       # Empty unless the Pages artifact was uploaded; deploy only runs then.
+       pages-artifact-id: ${{ steps.pages-artifact.outputs.artifact-id }}
+@@ -93,10 +90,6 @@ jobs:
+         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES != 'true'
+         run: echo "::notice::Skipping GitHub Pages deployment. To enable publishing, set Settings -> Pages -> Source = GitHub Actions, then add repository variable DEPLOY_GITHUB_PAGES=true."
+ 
+-      - name: Configure GitHub Pages
+-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+-        uses: actions/configure-pages@v6
+-
+       - name: Upload GitHub Pages artifact
+         id: pages-artifact
+         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+@@ -109,6 +102,10 @@ jobs:
+ 
+   deploy:
+     name: Deploy to GitHub Pages
++    concurrency:
++      group: main-writer-${{ github.repository }}-main
++      cancel-in-progress: false
++      queue: max
+     needs: [build]
+     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+     runs-on: ubuntu-24.04
+@@ -122,6 +119,9 @@ jobs:
+       name: github-pages
+       url: ${{ steps.deployment.outputs.page_url }}
+     steps:
++      - name: Configure GitHub Pages
++        uses: actions/configure-pages@v6
++
+       - name: Deploy Pages artifact
+         id: deployment
+         uses: $/.github/actions/deploy-pages
+diff --git a/.github/workflows/links.yml b/.github/workflows/links.yml
+index de6911c..6ded0b0 100644
+--- a/.github/workflows/links.yml
++++ b/.github/workflows/links.yml
+@@ -12,6 +12,8 @@ on:
+       - '.lycheeignore'
+       - 'scripts/check_web_archive.py'
+       - 'scripts/recheck_broken_links.py'
++      - 'scripts/install-lychee.sh'
++      - 'scripts/check-links.sh'
+   pull_request:
+     types: [opened, synchronize, reopened]
+     paths:
+@@ -22,6 +24,8 @@ on:
+       - '.lycheeignore'
+       - 'scripts/check_web_archive.py'
+       - 'scripts/recheck_broken_links.py'
++      - 'scripts/install-lychee.sh'
++      - 'scripts/check-links.sh'
+   workflow_dispatch:
+   # Links rot without commits: recheck weekly even when no Markdown or HTML
+   # changed, so a dead external URL is caught by the schedule instead of the
+@@ -67,11 +71,15 @@ jobs:
+           key: cache-lychee-${{ steps.link-cache.outputs.day }}-${{ github.sha }}
+           restore-keys: cache-lychee-${{ steps.link-cache.outputs.day }}-
+ 
++      - name: Install pinned lychee with retries
++        run: bash scripts/install-lychee.sh
++        env:
++          LYCHEE_VERSION: v0.24.2
++
+       - name: Check links with lychee
+         id: lychee
+-        uses: lycheeverse/lychee-action@v2
+-        with:
+-          args: >-
++        run: >-
++            bash scripts/check-links.sh
+             --config lychee.toml
+             --verbose
+             --no-progress
+@@ -84,9 +92,6 @@ jobs:
+             --exclude-path docs/case-studies
+             --exclude-path scripts/fixtures
+             .
+-          fail: false
+-          output: lychee/out.md
+-          jobSummary: true
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
+@@ -118,6 +123,7 @@ jobs:
+       - name: Fail if broken links were found
+         if: >-
+           always() &&
++          steps.lychee.outcome == 'success' &&
+           steps.lychee.outputs.exit_code != 0 &&
+           steps.recheck.outputs.all_recovered != 'true'
+         run: |
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 959eab8..a8613d9 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -44,8 +44,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
++      cancel-in-progress: true
+     if: github.event_name != 'workflow_dispatch'
+     outputs:
+       any-code-changed: ${{ steps.changes.outputs.any-code-changed }}
+@@ -106,8 +106,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 20
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-lint
++      cancel-in-progress: true
+     needs: [detect-changes]
+     # !cancelled() lets this job evaluate even though detect-changes is skipped
+     # for workflow_dispatch while still propagating workflow cancellation.
+@@ -209,8 +209,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-validate-docs
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-validate-docs
++      cancel-in-progress: true
+     needs: [detect-changes]
+     # !cancelled() lets this job evaluate even though detect-changes is skipped
+     # for workflow_dispatch while still propagating workflow cancellation.
+@@ -240,6 +240,9 @@ jobs:
+   # gate on `result == 'success'` rather than on the run being green.
+   release-preflight:
+     name: Release Preflight (credentials)
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
++      cancel-in-progress: true
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     permissions:
+@@ -275,8 +278,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-test
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-test
++      cancel-in-progress: true
+     needs: [detect-changes]
+     env:
+       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+@@ -364,8 +367,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 20
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-build
++      cancel-in-progress: true
+     needs: [detect-changes, lint, test]
+     # Build change-bearing automatic events and all manually dispatched releases.
+     if: |
+@@ -441,8 +444,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-changelog
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-changelog
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true'
+     steps:
+@@ -497,8 +500,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 60
+     concurrency:
+-      group: ${{ github.workflow }}-${{ github.ref }}-docker-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      group: check-${{ github.workflow }}-${{ github.ref }}-docker-build
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true'
+     steps:
+@@ -545,7 +548,7 @@ jobs:
+       released: ${{ steps.github_release.outputs.released }}
+       version: ${{ steps.github_release.outputs.version }}
+     concurrency:
+-      group: ${{ github.workflow }}-main-write
++      group: main-writer-${{ github.repository }}-main
+       cancel-in-progress: false
+       queue: max
+     if: |
+@@ -662,7 +665,7 @@ jobs:
+       released: ${{ steps.github_release.outputs.released }}
+       version: ${{ steps.github_release.outputs.version }}
+     concurrency:
+-      group: ${{ github.workflow }}-main-write
++      group: main-writer-${{ github.repository }}-main
+       cancel-in-progress: false
+       queue: max
+     # !cancelled() prevents the skipped detect-changes dependency from propagating
+@@ -684,7 +687,7 @@ jobs:
+       id-token: write
+     steps:
+       # The only checkout in this repository that keeps credentials in
+-      # .git/config: scripts/version_and_commit.py runs `git push origin main`
++      # .git/config: scripts/version_and_commit.py runs `git push origin HEAD:refs/heads/main`
+       # to publish the version bump, which needs the token wired into the
+       # remote. Every other checkout sets persist-credentials: false.
+       - uses: actions/checkout@v7
+@@ -728,7 +731,7 @@ jobs:
+         run: |
+           cd "$PYTHON_ROOT"
+           python -m pip install --upgrade pip
+-          pip install build twine "scriv[toml]"
++          pip install build twine "scriv[toml]" uv
+ 
+       - name: Configure git
+         run: |
+@@ -740,6 +743,7 @@ jobs:
+         env:
+           BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+           DESCRIPTION: ${{ github.event.inputs.description }}
++          VALIDATED_SHA: ${{ github.sha }}
+         run: |
+           cd "$PYTHON_ROOT"
+           python scripts/version_and_commit.py \
+@@ -807,6 +811,10 @@ jobs:
+   # DOCKERHUB_TOKEN secret to enable it in repositories that ship a Dockerfile.
+   docker-publish-config:
+     name: Configure Docker Hub Publish
++    concurrency:
++      group: main-writer-${{ github.repository }}-main
++      cancel-in-progress: false
++      queue: max
+     needs: [auto-release, manual-release, release-preflight]
+     if: |
+       !cancelled() &&
+@@ -849,10 +857,15 @@ jobs:
+             } >> "$GITHUB_OUTPUT"
+           fi
+ 
+-  # Native runners build both architectures in parallel and push immutable
+-  # digests. This avoids the performance and reliability cost of QEMU.
++  # Native runners build both architectures and push immutable digests.
++  # Publishing shares the repository writer queue, including matrix entries.
++  # Native builds avoid the performance and reliability cost of QEMU.
+   docker-publish-build:
+     name: Build Docker Image (${{ matrix.platform }})
++    concurrency:
++      group: main-writer-${{ github.repository }}-main
++      cancel-in-progress: false
++      queue: max
+     needs: [docker-publish-config, release-preflight]
+     if: |
+       needs.release-preflight.result == 'success' &&
+@@ -911,6 +924,10 @@ jobs:
+ 
+   docker-publish:
+     name: Publish Multi-Architecture Docker Image
++    concurrency:
++      group: main-writer-${{ github.repository }}-main
++      cancel-in-progress: false
++      queue: max
+     needs: [docker-publish-config, docker-publish-build, release-preflight]
+     if: |
+       needs.release-preflight.result == 'success' &&
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index 1bf02d9..26165de 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -112,6 +112,9 @@ jobs:
+ 
+   dependency-review:
+     name: Dependency Review
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-dependency-review
++      cancel-in-progress: true
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     permissions:
+diff --git a/experiments/issue-138/reproduce_original.py b/experiments/issue-138/reproduce_original.py
+new file mode 100644
+index 0000000..097c9d2
+--- /dev/null
++++ b/experiments/issue-138/reproduce_original.py
+@@ -0,0 +1,84 @@
++#!/usr/bin/env python3
++"""Offline, finite reproductions using immutable original template helpers.
++
++Run from the repository root: python experiments/issue-138/reproduce_original.py
++Only `git show` reads real Git state; all release helper Git calls are mocked.
++"""
++
++import subprocess
++import tempfile
++import types
++from pathlib import Path
++from unittest.mock import patch
++
++REF = "78f2fdf5e085871387555bc066071f0aedd24479"
++
++
++def original(name):
++    source = subprocess.run(
++        ["git", "show", f"{REF}:scripts/{name}.py"],
++        check=True,
++        capture_output=True,
++        text=True,
++    ).stdout
++    module = types.ModuleType(name)
++    exec(compile(source, f"{REF}:scripts/{name}.py", "exec"), module.__dict__)
++    return module
++
++
++release = original("version_and_commit")
++sarif = original("check_codeql_results")
++assert (
++    release.classify_push_failure("remote: fatal error in commit_refs_rules")
++    is release.PushFailure.OTHER
++)
++print("REPRODUCED: internal push error classified OTHER instead of transient")
++payload = {
++    "version": "2.1.0",
++    "runs": [
++        {
++            "tool": {"driver": {"name": "CodeQL"}},
++            "results": [],
++            "invocations": [
++                {
++                    "executionSuccessful": True,
++                    "toolExecutionNotifications": [
++                        {"level": "error", "message": {"text": "Extraction failed"}},
++                    ],
++                }
++            ],
++        }
++    ],
++}
++assert sarif.validate_report(payload) == []
++print("REPRODUCED: successful invocation hides extraction errors")
++
++with tempfile.TemporaryDirectory() as directory:
++    manifest = Path(directory) / "pyproject.toml"
++    manifest.write_text('[project]\nversion = "1.0.0"\n')
++    for remote_version in ("1.0.0", "1.0.1"):
++        calls = []
++
++        def fake_command(cmd, **kwargs):
++            calls.append(cmd)
++            output = ""
++            if cmd[1:] == ["rev-parse", "HEAD"]:
++                output = "validated"
++            elif cmd[1:] == ["rev-parse", "origin/main"]:
++                output = "unvalidated-source-and-dependencies"
++            elif cmd[1] == "show":
++                output = f'[project]\nversion = "{remote_version}"\n'
++            return subprocess.CompletedProcess(cmd, 0, stdout=output, stderr="")
++
++        with patch.object(release, "run_command", fake_command):
++            released, _ = release.check_remote_changes(manifest, "pyproject.toml")
++        if remote_version == "1.0.0":
++            assert released
++            print(
++                "REPRODUCED: matching version accepts unvalidated remote without adopting it"
++            )
++        else:
++            assert ["git", "rebase", "origin/main"] in calls
++            print(
++                "REPRODUCED: different version rebases without source/lock attestation"
++            )
+diff --git a/experiments/issue-138/verify_uv_lock.py b/experiments/issue-138/verify_uv_lock.py
+new file mode 100644
+index 0000000..864745b
+--- /dev/null
++++ b/experiments/issue-138/verify_uv_lock.py
+@@ -0,0 +1,31 @@
++#!/usr/bin/env python3
++"""Verify real uv lock refreshes alter only the local project version offline."""
++
++import shutil
++import subprocess
++import sys
++import tempfile
++import tomllib
++from pathlib import Path
++
++uv = shutil.which("uv")
++if not uv:
++    raise SystemExit("Install uv before running this offline experiment")
++with tempfile.TemporaryDirectory() as directory:
++    root = Path(directory)
++    manifest = root / "pyproject.toml"
++    manifest.write_text(
++        '[project]\nname = "Example_Project"\nversion = "1.0.0"\nrequires-python = ">=3.9"\n'
++    )
++    for version in ("1.0.0", "1.0.1"):
++        manifest.write_text(manifest.read_text().replace("1.0.0", version))
++        subprocess.run(
++            [uv, "lock", "--offline", "--python", sys.executable], cwd=root, check=True
++        )
++        shutil.copy2(root / "uv.lock", root / f"{version}.lock")
++    old = tomllib.loads((root / "1.0.0.lock").read_text())
++    new = tomllib.loads((root / "1.0.1.lock").read_text())
++    assert old["package"][0].pop("version") == "1.0.0"
++    assert new["package"][0].pop("version") == "1.0.1"
++    assert old == new
++    print("Verified: real uv offline refresh preserves all non-version lock content")
+diff --git a/experiments/issue-142/reproduce_concurrency.py b/experiments/issue-142/reproduce_concurrency.py
+new file mode 100644
+index 0000000..98a86e5
+--- /dev/null
++++ b/experiments/issue-142/reproduce_concurrency.py
+@@ -0,0 +1,24 @@
++"""Prove the issue-140 regression test rejects the original workflow snapshot."""
++
++import subprocess
++import tempfile
++from pathlib import Path
++
++from tests.test_issue_140_concurrency import test_all_job_policies
++
++original = subprocess.run(
++    ["git", "show", "d359342:.github/workflows/release.yml"],
++    check=True,
++    capture_output=True,
++    text=True,
++).stdout
++with tempfile.TemporaryDirectory() as directory:
++    workflow = Path(directory) / "release.yml"
++    workflow.write_text(original)
++    for ref in ("refs/heads/main", "refs/pull/143/head"):
++        try:
++            test_all_job_policies(workflow, ref)
++        except AssertionError as error:
++            print(f"Original policy rejected on {ref}: {error}")
++        else:
++            raise AssertionError("Regression test unexpectedly accepted old workflow")
+diff --git a/scripts/check-links.sh b/scripts/check-links.sh
+new file mode 100644
+index 0000000..d6657f5
+--- /dev/null
++++ b/scripts/check-links.sh
+@@ -0,0 +1,43 @@
++#!/usr/bin/env bash
++# Preserve the lychee-action report/output contract without its installer.
++set -euo pipefail
++[[ "${LYCHEE_CHECK_DEBUG:-}" != 1 ]] || set -x
++
++report=lychee/out.md
++mkdir -p lychee
++# Never mistake a previous report for a successful scan.
++rm -f "$report"
++exit_code=0
++lychee --format markdown --output "$report" "$@" || exit_code=$?
++echo "exit_code=$exit_code" >> "${GITHUB_OUTPUT:?}"
++
++if [[ ! -s "$report" ]]; then
++  echo "::error title=lychee scan::No report was produced (exit $exit_code). Check arguments or scanner errors."
++  exit 1
++fi
++cat "$report"
++cat "$report" >> "${GITHUB_STEP_SUMMARY:?}"
++
++# A valid Markdown report must contain a positive link count. Treat malformed
++# output as a scanner failure, not as broken links eligible for recovery.
++if ! python3 - "$report" <<'PY'
++import re
++import sys
++from pathlib import Path
++
++report = Path(sys.argv[1]).read_text()
++match = re.search(r"^\|\s*(?:🔍\s*)?Total\s*\|\s*(\d+)\s*\|", report, re.MULTILINE)
++if not match or int(match.group(1)) == 0:
++    print("::error title=lychee scan::No links were checked or report total is missing.")
++    raise SystemExit(1)
++PY
++then
++  exit 1
++fi
++
++# Exit 2 with a report means broken links. Downstream transport retries and
++# archive suggestions own that outcome; all other scanner errors fail here.
++if [[ "$exit_code" != 0 && "$exit_code" != 2 ]]; then
++  echo "::error title=lychee scan::Scanner failed with exit $exit_code."
++  exit 1
++fi
+diff --git a/scripts/check_codeql_results.py b/scripts/check_codeql_results.py
+index f032d6b..eab13a6 100644
+--- a/scripts/check_codeql_results.py
++++ b/scripts/check_codeql_results.py
+@@ -8,6 +8,94 @@ import sys
+ from pathlib import Path
+ 
+ 
++def valid_reference(reference: object) -> bool:
++    """Validate a SARIF descriptor reference without requiring optional IDs."""
++    if not isinstance(reference, dict) or not any(
++        key in reference for key in ("id", "index", "guid")
++    ):
++        return False
++    for key in ("id", "guid"):
++        if key in reference and (
++            not isinstance(reference[key], str) or not reference[key]
++        ):
++            return False
++    if "index" in reference and (
++        type(reference["index"]) is not int or reference["index"] < 0
++    ):
++        return False
++    return "toolComponent" not in reference or isinstance(
++        reference["toolComponent"], dict
++    )
++
++
++def valid_notification(notification: object) -> bool:
++    """Validate diagnostic records even when their severity is informational."""
++    if not isinstance(notification, dict):
++        return False
++    message = notification.get("message")
++    if not isinstance(message, dict) or not any(
++        isinstance(message.get(key), str) for key in ("text", "markdown", "id")
++    ):
++        return False
++    if any(
++        key in message and not isinstance(message[key], str)
++        for key in ("text", "markdown", "id")
++    ):
++        return False
++    if "arguments" in message and (
++        not isinstance(message["arguments"], list)
++        or any(not isinstance(item, str) for item in message["arguments"])
++    ):
++        return False
++    for key in ("descriptor", "associatedRule"):
++        if key in notification and not valid_reference(notification[key]):
++            return False
++    locations = notification.get("locations", [])
++    if not isinstance(locations, list):
++        return False
++    for location in locations:
++        if not isinstance(location, dict):
++            return False
++        physical = location.get("physicalLocation", {})
++        if not isinstance(physical, dict):
++            return False
++        for key in ("artifactLocation", "region", "contextRegion"):
++            if key in physical and not isinstance(physical[key], dict):
++                return False
++        artifact = physical.get("artifactLocation", {})
++        if "uri" in artifact and not isinstance(artifact["uri"], str):
++            return False
++        for key in ("region", "contextRegion"):
++            region = physical.get(key, {})
++            for coordinate in ("startLine", "startColumn", "endLine", "endColumn"):
++                if coordinate in region and (
++                    type(region[coordinate]) is not int or region[coordinate] < 1
++                ):
++                    return False
++    return True
++
++
++def validate_notifications(invocation: dict, prefix: str) -> list[str]:
++    """An invocation can succeed while extraction/configuration is incomplete."""
++    errors = []
++    for key in ("toolExecutionNotifications", "toolConfigurationNotifications"):
++        notifications = invocation.get(key, [])
++        if not isinstance(notifications, list):
++            errors.append(f"{prefix}: malformed {key} array")
++            continue
++        for index, notification in enumerate(notifications):
++            valid = valid_notification(notification)
++            level = notification.get("level", "warning") if valid else None
++            if not valid or level not in ("note", "none"):
++                # Include every descriptor/location/message, JSON escaped so
++                # untrusted newlines cannot become workflow commands.
++                errors.append(
++                    f"{prefix}: {key}[{index}]: warning/error or malformed "
++                    f"notification: {json.dumps(notification)}"
++                )
++    return errors
++
++
+ def validate_report(payload: object) -> list[str]:
+     """Check every run without filtering by severity or suppressing results."""
+     if not isinstance(payload, dict) or payload.get("version") != "2.1.0":
+@@ -33,6 +121,14 @@ def validate_report(payload: object) -> list[str]:
+             for invocation in invocations
+         ):
+             errors.append(f"{prefix}: unsuccessful or invalid tool invocation")
++        if isinstance(invocations, list):
++            for invocation_index, invocation in enumerate(invocations):
++                if isinstance(invocation, dict):
++                    errors.extend(
++                        validate_notifications(
++                            invocation, f"{prefix}, invocation {invocation_index + 1}"
++                        )
++                    )
+         results = run.get("results")
+         if not isinstance(results, list):
+             errors.append(f"{prefix}: missing or invalid results")
+diff --git a/scripts/install-lychee.sh b/scripts/install-lychee.sh
+new file mode 100644
+index 0000000..e0deedb
+--- /dev/null
++++ b/scripts/install-lychee.sh
+@@ -0,0 +1,64 @@
++#!/usr/bin/env bash
++# Install a pinned lychee release with retries and a SHA-256 check.
++#
++# Issue #141: retry release downloads and verify the published checksum.
++# Adapted from link-assistant/hive-mind PR #4026 (Unlicense).
++#
++# Usage: LYCHEE_VERSION=v0.24.2 scripts/install-lychee.sh [install-dir]
++# Debug:  LYCHEE_INSTALL_DEBUG=1 prints every command.
++set -euo pipefail
++[ "${LYCHEE_INSTALL_DEBUG:-}" = 1 ] && set -x
++
++version="${LYCHEE_VERSION:?LYCHEE_VERSION is required, e.g. v0.24.2}"
++if ! [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
++  echo "::error title=lychee install::LYCHEE_VERSION must be a pinned release such as v0.24.2, got '$version'." >&2
++  exit 1
++fi
++install_dir="${1:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/lychee/bin}"
++case "$(uname -m)" in
++  x86_64 | amd64) arch=x86_64 ;;
++  aarch64 | arm64) arch=aarch64 ;;
++  *)
++    echo "::error title=lychee install::Unsupported architecture $(uname -m)." >&2
++    exit 1
++    ;;
++esac
++asset="lychee-${arch}-unknown-linux-gnu.tar.gz"
++base_url="${LYCHEE_DOWNLOAD_BASE_URL:-https://github.com/lycheeverse/lychee/releases/download}/lychee-${version}"
++
++work="$(mktemp -d)"
++trap 'rm -rf "$work"' EXIT
++
++# --retry-all-errors also retries HTTP 5xx/429 and dropped connections; --fail
++# keeps an error page from being saved as the archive.
++fetch() {
++  curl --fail --silent --show-error --location \
++    --retry "${LYCHEE_DOWNLOAD_RETRIES:-5}" --retry-all-errors --retry-delay "${LYCHEE_DOWNLOAD_RETRY_DELAY:-5}" \
++    --connect-timeout 20 --max-time 120 \
++    --output "$2" "$1"
++}
++
++echo "Downloading ${base_url}/${asset}"
++if ! fetch "${base_url}/${asset}" "$work/$asset" || ! fetch "${base_url}/${asset}.sha256" "$work/$asset.sha256"; then
++  echo "::error title=lychee install::Could not download lychee ${version} (${asset}) after retries. GitHub's release download service may be unavailable; re-run the job." >&2
++  exit 1
++fi
++
++expected="$(awk '{print $1; exit}' "$work/$asset.sha256")"
++actual="$(sha256sum "$work/$asset" | awk '{print $1}')"
++if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
++  echo "::error title=lychee install::Checksum mismatch for ${asset}: expected '${expected}', got '${actual}'." >&2
++  exit 1
++fi
++
++tar -xzf "$work/$asset" -C "$work"
++binary="$(find "$work" -type f -name lychee -perm -u+x | head -n 1)"
++if [ -z "$binary" ]; then
++  echo "::error title=lychee install::No lychee binary in ${asset}; the archive layout changed." >&2
++  exit 1
++fi
++install -D -m 0755 "$binary" "$install_dir/lychee"
++if [[ -n "${GITHUB_PATH:-}" ]]; then
++  echo "$install_dir" >> "$GITHUB_PATH"
++fi
++"$install_dir/lychee" --version
+diff --git a/scripts/version_and_commit.py b/scripts/version_and_commit.py
+index 8f4dbec..3ebd06a 100755
+--- a/scripts/version_and_commit.py
++++ b/scripts/version_and_commit.py
+@@ -14,12 +14,16 @@ Example:
+ 
+ Environment variables:
+     GITHUB_OUTPUT: Path to GitHub Actions output file
++    VALIDATED_SHA: Immutable commit validated by CI (defaults to starting HEAD locally)
++    RELEASE_DEBUG: Set to 1 for push attempt/classification diagnostics
+ """
+ 
+ import argparse
+ import os
++import re
+ import subprocess
+ import sys
++import time
+ import tomllib
+ from enum import Enum, auto
+ from pathlib import Path
+@@ -127,15 +131,21 @@ class PushFailure(Enum):
+ 
+     REPOSITORY_RULES = auto()
+     LOST_RACE = auto()
++    TRANSIENT = auto()
+     OTHER = auto()
+ 
+ 
+ def classify_push_failure(raw_output: str) -> PushFailure:
+-    """Classify a git push failure so only a genuine race is retried."""
++    """Separate permanent policy failures, transient server failures and races."""
+     haystack = raw_output.lower()
+     # Rules first: a ruleset rejection also contains the word "rejected".
+     if any(pattern in haystack for pattern in REPOSITORY_RULE_PATTERNS):
+         return PushFailure.REPOSITORY_RULES
++    if "fatal error in commit_refs_rules" in haystack or re.search(
++        r"\b(?:http(?:/\d(?:\.\d)?)?\s+|returned error:\s*)(?:429|5\d\d)\b",
++        haystack,
++    ):
++        return PushFailure.TRANSIENT
+     if any(pattern in haystack for pattern in NON_FAST_FORWARD_PATTERNS):
+         return PushFailure.LOST_RACE
+     return PushFailure.OTHER
+@@ -147,20 +157,44 @@ def run_git_capturing(cmd: list[str]) -> subprocess.CompletedProcess:
+     return subprocess.run(cmd, capture_output=True, text=True, check=False)
+ 
+ 
+-def push_branch_with_rebase_retry(branch: str, *, max_attempts: int = 3) -> None:
++def push_branch_with_rebase_retry(
++    branch: str,
++    *,
++    max_attempts: int = 3,
++    validated_sha: str | None = None,
++    pyproject_git_path: str = "pyproject.toml",
++) -> None:
+     """Push to a branch, retrying a lost race with a rebase (issue #73).
+ 
+-    A repository-ruleset refusal or any other failure is reported as what it
+-    is instead of being masked as a merge conflict; only a lost non-fast-
+-    forward race is fixed by rebasing onto the new remote tip.
++    Transient server failures retry the unchanged commit with backoff. Policy
++    errors remain permanent. Remote recovery and rebases must retain the
++    validated source and dependency tree. Local callers default to starting HEAD.
+     """
++    if not 1 <= max_attempts <= 3:
++        raise ValueError("Push attempts must be between 1 and 3")
++    validated_sha = validated_sha or git_text(
++        ["rev-parse", os.environ.get("VALIDATED_SHA", "HEAD")]
++    )
++    retry_head = git_text(["rev-parse", "HEAD"])
+     for attempt in range(1, max_attempts + 1):
+-        completed = run_git_capturing(["git", "push", "origin", branch])
++        assert_clean_checkout()
++        if git_text(["rev-parse", "HEAD"]) != retry_head:
++            raise ValueError("Release commit changed during push retry")
++        attest_release(validated_sha, "HEAD", pyproject_git_path)
++        completed = run_git_capturing(
++            ["git", "push", "origin", f"HEAD:refs/heads/{branch}"]
++        )
+         if completed.returncode == 0:
+             return
+ 
+         push_error = f"{completed.stdout}{completed.stderr}".strip()
+         failure = classify_push_failure(push_error)
++        print(push_error, file=sys.stderr)
++        if os.environ.get("RELEASE_DEBUG") == "1":
++            print(
++                f"Release push attempt {attempt}/{max_attempts}: {failure.name}",
++                file=sys.stderr,
++            )
+ 
+         if failure is PushFailure.REPOSITORY_RULES:
+             print(
+@@ -186,6 +220,27 @@ def push_branch_with_rebase_retry(branch: str, *, max_attempts: int = 3) -> None
+             )
+             sys.exit(1)
+ 
++        if failure is PushFailure.TRANSIENT:
++            time.sleep(2 ** (attempt - 1))
++            continue
++
++        run_command(["git", "fetch", "origin", branch])
++        remote = f"origin/{branch}"
++        attest_release(validated_sha, remote, pyproject_git_path)
++        if git_text(["rev-parse", remote]) != validated_sha:
++            # A lost response may have published an equivalent release.
++            local_version = parse_version(
++                git_text(["show", f"HEAD:{pyproject_git_path}"])
++            )
++            remote_version = parse_version(
++                git_text(["show", f"{remote}:{pyproject_git_path}"])
++            )
++            if local_version != remote_version:
++                raise ValueError(
++                    "Remote release version differs; rerun CI on the new revision"
++                )
++            run_command(["git", "reset", "--hard", remote])
++            return
+         print(
+             f"Push rejected as non-fast-forward (attempt {attempt}/"
+             f"{max_attempts}); the remote branch moved. Rebasing and retrying...",
+@@ -197,6 +252,8 @@ def push_branch_with_rebase_retry(branch: str, *, max_attempts: int = 3) -> None
+             print(f"Error during pull --rebase: {rebase_error}", file=sys.stderr)
+             run_git_capturing(["git", "rebase", "--abort"])
+             sys.exit(1)
++        attest_release(validated_sha, "HEAD", pyproject_git_path)
++        retry_head = git_text(["rev-parse", "HEAD"])
+ 
+ 
+ def configure_git() -> None:
+@@ -210,15 +267,136 @@ def configure_git() -> None:
+     )
+ 
+ 
++def git_text(args: list[str]) -> str:
++    """Read Git evidence, failing closed on missing objects or failed commands."""
++    return run_command(["git", *args], capture=True).stdout.strip()
++
++
++def assert_clean_checkout() -> None:
++    """Never reset or publish an uncommitted source/dependency change."""
++    if git_text(["status", "--porcelain", "--untracked-files=all"]):
++        raise ValueError("Release checkout is dirty; rerun CI on committed source")
++
++
++def release_tree(ref: str) -> dict[str, tuple[str, str]]:
++    """Inventory every tracked path, including its mode and blob/submodule SHA."""
++    entries = git_text(["ls-tree", "--full-tree", "-rz", ref]).split("\0")
++    tree = {}
++    for entry in entries:
++        if entry:
++            metadata, path = entry.split("\t", 1)
++            mode, _, oid = metadata.split()
++            tree[path] = (mode, oid)
++    return tree
++
++
++def normalized_manifest(ref: str, path: str) -> tuple[dict, str]:
++    """Ignore only project.version, never dependencies or other version keys."""
++    content = git_text(["show", f"{ref}:{path}"])
++    version = parse_version(content)
++    document = tomllib.loads(content)
++    del document["project"]["version"]
++    return document, version
++
++
++def normalized_lock(ref: str, path: str, manifest: dict, version: str) -> dict:
++    """Normalize only this project's uv package version, preserving resolution."""
++    document = tomllib.loads(git_text(["show", f"{ref}:{path}"]))
++    packages = document.get("package")
++    if not isinstance(packages, list):
++        raise ValueError("Invalid uv.lock package array")
++    own_packages = []
++    for package in packages:
++        if not isinstance(package, dict):
++            raise ValueError("Invalid uv.lock package")
++        project_name = re.sub(
++            r"[-_.]+", "-", manifest["project"].get("name", "")
++        ).lower()
++        if package.get("name") == project_name and package.get("source") in (
++            {"editable": "."},
++            {"virtual": "."},
++        ):
++            own_packages.append(package)
++    if len(own_packages) != 1 or own_packages[0].get("version") != version:
++        raise ValueError(
++            "uv.lock must contain exactly one matching local project version"
++        )
++    del own_packages[0]["version"]
++    return document
++
++
++def attest_release(validated_sha: str, candidate: str, manifest_path: str) -> None:
++    """Allow the validated commit or its sole metadata-only release child.
++
++    This is a full repository comparison, also for a package under python/.
++    A missing/replaced validated parent, merge, dependency drift, file-mode
++    change, or unrelated path fails closed and requires CI on the new revision.
++    """
++    validated = git_text(["rev-parse", "--verify", f"{validated_sha}^{{commit}}"])
++    head = git_text(["rev-parse", "--verify", f"{candidate}^{{commit}}"])
++    if head == validated:
++        return
++    parents = git_text(["show", "-s", "--format=%P", head]).split()
++    if parents != [validated]:
++        raise ValueError(
++            "Release must retain the original validated commit as its sole parent; rerun CI"
++        )
++    before, after = release_tree(validated), release_tree(head)
++    root = Path(manifest_path).parent
++    lock_path = (root / "uv.lock").as_posix()
++    changelog_path = (root / "CHANGELOG.md").as_posix()
++    fragment_dir = (root / "changelog.d").as_posix()
++    old_manifest, old_version = normalized_manifest(validated, manifest_path)
++    new_manifest, new_version = normalized_manifest(head, manifest_path)
++    if old_manifest != new_manifest:
++        raise ValueError("Release manifest source/dependency drift; rerun CI")
++    if lock_path in before or lock_path in after:
++        if (
++            lock_path not in before
++            or lock_path not in after
++            or normalized_lock(validated, lock_path, old_manifest, old_version)
++            != normalized_lock(head, lock_path, new_manifest, new_version)
++        ):
++            raise ValueError("Release locked dependency drift; rerun CI")
++    for path in before.keys() | after.keys():
++        if before.get(path) == after.get(path):
++            continue
++        if path in (manifest_path, lock_path, changelog_path):
++            if (
++                path not in after
++                or after[path][0] != "100644"
++                or (path in before and before[path][0] != after[path][0])
++            ):
++                raise ValueError(f"Invalid release metadata mode/deletion: {path}")
++            continue
++        fragment = Path(path)
++        if (
++            fragment.parent.as_posix() == fragment_dir
++            and fragment.suffix == ".md"
++            and fragment.name != "README.md"
++            and path in before
++            and path not in after
++            and before[path][0] == "100644"
++        ):
++            continue
++        raise ValueError(f"Release source/dependency drift at {path}; rerun CI")
++    if old_version == new_version:
++        raise ValueError("Release metadata child must change project.version; rerun CI")
++
++
+ def check_remote_changes(
+     pyproject_path: Path,
+     pyproject_git_path: str,
++    validated_sha: str | None = None,
+ ) -> tuple[bool, str]:
+     """
+     Check if remote main has advanced (handles re-runs).
+     Returns (already_released, remote_version).
+     """
+     print("\nChecking for remote changes...")
++    assert_clean_checkout()
++    validated_sha = validated_sha or git_text(["rev-parse", "HEAD"])
++    attest_release(validated_sha, "HEAD", pyproject_git_path)
+     run_command(["git", "fetch", "origin", "main"])
+ 
+     # Get commit SHAs
+@@ -236,7 +414,16 @@ def check_remote_changes(
+         print(f"Remote main has advanced (local: {local_head}, remote: {remote_head})")
+         print("This may indicate a previous attempt partially succeeded.")
+ 
+-        # Get remote version
++        attest_release(validated_sha, remote_head, pyproject_git_path)
++        if remote_head == validated_sha:
++            # A prior attempt committed locally but did not publish its child.
++            push_branch_with_rebase_retry(
++                "main",
++                validated_sha=validated_sha,
++                pyproject_git_path=pyproject_git_path,
++            )
++            return True, get_current_version(pyproject_path)
++        # Get remote version only after the complete source/lock attestation.
+         remote_content = run_command(
+             ["git", "show", f"origin/main:{pyproject_git_path}"],
+             capture=True,
+@@ -250,16 +437,12 @@ def check_remote_changes(
+ 
+         print(f"Remote version: {remote_version}")
+ 
+-        # Check if versions differ (indicating work was done)
+-        local_version = get_current_version(pyproject_path)
+-        if local_version != remote_version:
+-            print("Local and remote versions differ, rebasing...")
+-            run_command(["git", "rebase", "origin/main"])
+-            return False, remote_version
+-        else:
+-            print("Versions match, assuming previous run completed successfully")
+-            return True, remote_version
++        print("Adopting attested metadata-only release commit")
++        run_command(["git", "reset", "--hard", remote_head])
++        return True, remote_version
+ 
++    if remote_head != validated_sha:
++        return True, get_current_version(pyproject_path)
+     return False, ""
+ 
+ 
+@@ -294,6 +477,15 @@ def main() -> int:
+         return 1
+ 
+     try:
++        validated_sha = git_text(
++            [
++                "rev-parse",
++                "--verify",
++                f"{os.environ.get('VALIDATED_SHA', 'HEAD')}^{{commit}}",
++            ]
++        )
++        assert_clean_checkout()
++        attest_release(validated_sha, "HEAD", pyproject_git_path)
+         # Configure git
+         configure_git()
+ 
+@@ -301,6 +493,7 @@ def main() -> int:
+         already_released, remote_version = check_remote_changes(
+             pyproject_path,
+             pyproject_git_path,
++            validated_sha,
+         )
+ 
+         if already_released:
+@@ -337,6 +530,8 @@ def main() -> int:
+         # Get new version
+         new_version = get_current_version(pyproject_path)
+         print(f"New version: {new_version}")
++        if (project_root / "uv.lock").exists():
++            run_command(["uv", "lock", "--offline", "--project", str(project_root)])
+ 
+         if fragments:
+             print(f"Collecting {len(fragments)} changelog fragment(s)...")
+@@ -361,7 +556,11 @@ def main() -> int:
+             run_command(["git", "commit", "-m", new_version])
+ 
+             # Push to main; only a genuine lost race is retried (issue #73)
+-            push_branch_with_rebase_retry("main")
++            push_branch_with_rebase_retry(
++                "main",
++                validated_sha=validated_sha,
++                pyproject_git_path=pyproject_git_path,
++            )
+ 
+             print(
+                 f"\n✅ Version bump committed and pushed: {old_version} → {new_version}"
+diff --git a/tests/test_check_codeql_results.py b/tests/test_check_codeql_results.py
+index ba48935..09f875e 100644
+--- a/tests/test_check_codeql_results.py
++++ b/tests/test_check_codeql_results.py
+@@ -83,3 +83,167 @@ def test_rejects_invalid_or_unsuccessful_reports(tmp_path, payload):
+ def test_rejects_missing_reports(tmp_path):
+     assert gate(tmp_path).returncode != 0
+     assert gate(tmp_path / "missing").returncode != 0
++
++
++NOTIFICATION_KEYS = ["toolExecutionNotifications", "toolConfigurationNotifications"]
++
++
++@pytest.mark.parametrize("key", NOTIFICATION_KEYS)
++@pytest.mark.parametrize("level", ["error", "warning", None, "unknown", 1, []])
++def test_rejects_notifications_despite_successful_execution(tmp_path, key, level):
++    notification = {
++        "descriptor": {"id": "extractor/failure"},
++        "message": {"text": "Extraction failed"},
++        "locations": [
++            {
++                "physicalLocation": {
++                    "artifactLocation": {"uri": "src/example.py"},
++                    "region": {"startLine": 42},
++                }
++            }
++        ],
++    }
++    if level is not None:
++        notification["level"] = level
++    payload = report(
++        invocations=[
++            {"executionSuccessful": True},
++            {"executionSuccessful": True, key: [notification]},
++        ]
++    )
++    (tmp_path / "extraction.sarif").write_text(json.dumps(payload))
++    result = gate(tmp_path)
++    assert result.returncode != 0
++    for detail in (
++        key,
++        "extractor/failure",
++        "src/example.py",
++        "42",
++        "Extraction failed",
++    ):
++        assert detail in result.stdout
++
++
++@pytest.mark.parametrize("key", NOTIFICATION_KEYS)
++@pytest.mark.parametrize(
++    "notifications",
++    [
++        None,
++        {},
++        "bad",
++        [None],
++        [1],
++        [[]],
++        [{}],
++        [{"level": "note"}],
++        [{"level": "none", "message": "bad"}],
++        [{"level": "note", "message": {"text": 42}}],
++        [{"level": "note", "message": {"text": "ok"}, "locations": "bad"}],
++        [{"level": "note", "message": {"text": "ok"}, "descriptor": []}],
++    ],
++)
++def test_rejects_malformed_notification_evidence(tmp_path, key, notifications):
++    payload = report(invocations=[{"executionSuccessful": True, key: notifications}])
++    (tmp_path / "malformed.sarif").write_text(json.dumps(payload))
++    assert gate(tmp_path).returncode != 0
++
++
++@pytest.mark.parametrize("key", NOTIFICATION_KEYS)
++@pytest.mark.parametrize("level", ["note", "none"])
++def test_allows_informational_notifications(tmp_path, key, level):
++    payload = report(
++        invocations=[
++            {
++                "executionSuccessful": True,
++                key: [
++                    {"level": level, "message": {"text": "Analysis progress"}},
++                    {"level": level, "message": {"id": "localizedMessage"}},
++                ],
++            }
++        ]
++    )
++    (tmp_path / "information.sarif").write_text(json.dumps(payload))
++    assert gate(tmp_path).returncode == 0
++
++
++@pytest.mark.parametrize("key", NOTIFICATION_KEYS)
++@pytest.mark.parametrize(
++    "fields",
++    [
++        {"descriptor": {"id": 1, "index": 0}},
++        {"descriptor": {"index": True}},
++        {"associatedRule": "bad"},
++        {"locations": [{"physicalLocation": {"artifactLocation": {"uri": 1}}}]},
++        {"locations": [{"physicalLocation": {"region": {"startLine": "42"}}}]},
++        {"message": {"text": "ok", "arguments": [1]}},
++    ],
++)
++def test_informational_level_does_not_hide_malformed_diagnostic_fields(
++    tmp_path, key, fields
++):
++    notification = {"level": "note", "message": {"text": "info"}, **fields}
++    (tmp_path / "malformed.sarif").write_text(
++        json.dumps(
++            report(
++                invocations=[
++                    {"executionSuccessful": True, key: [notification]},
++                ]
++            )
++        )
++    )
++    assert gate(tmp_path).returncode != 0
++
++
++def test_notification_diagnostics_escape_workflow_commands(tmp_path):
++    notification = {
++        "level": "error",
++        "message": {"text": "failed\n::warning::injected"},
++    }
++    payload = report()
++    payload["runs"].append(
++        report(
++            invocations=[
++                {
++                    "executionSuccessful": True,
++                    "toolExecutionNotifications": [notification],
++                }
++            ]
++        )["runs"][0]
++    )
++    (tmp_path / "later-run.sarif").write_text(json.dumps(payload))
++    result = gate(tmp_path)
++    assert result.returncode != 0
++    assert "run 2" in result.stdout
++    assert "\\n::warning::injected" in result.stdout
++    assert "\n::warning::injected" not in result.stdout
++
++
++@pytest.mark.parametrize("key", NOTIFICATION_KEYS)
++@pytest.mark.parametrize("level", ["note", "none"])
++def test_accepts_codeql_empty_informational_message(tmp_path, key, level):
++    notification = {
++        "message": {"text": ""},
++        "level": level,
++        "descriptor": {
++            "id": "py/diagnostics/successfully-extracted-files",
++            "index": 1,
++            "toolComponent": {"index": 0},
++        },
++        "locations": [
++            {
++                "physicalLocation": {
++                    "artifactLocation": {"uri": "src/example.py", "index": 0},
++                }
++            }
++        ],
++    }
++    (tmp_path / "success.sarif").write_text(
++        json.dumps(
++            report(
++                invocations=[
++                    {"executionSuccessful": True, key: [notification]},
++                ]
++            )
++        )
++    )
++    assert gate(tmp_path).returncode == 0
+diff --git a/tests/test_issue_140_concurrency.py b/tests/test_issue_140_concurrency.py
+new file mode 100644
+index 0000000..f3c6fe0
+--- /dev/null
++++ b/tests/test_issue_140_concurrency.py
+@@ -0,0 +1,93 @@
++"""Evaluate real concurrency policies and status gates on main and PR refs."""
++
++from __future__ import annotations
++
++import json
++import os
++import re
++import subprocess
++
++import pytest
++
++from tests.test_check_pipeline_status import read_values
++from tests.workflow_helpers import (
++    ROOT,
++    WORKFLOWS,
++    read_workflow,
++    workflow_job_block,
++    workflow_job_names,
++)
++
++WRITERS = {
++    "release.yml": {
++        "auto-release",
++        "manual-release",
++        "docker-publish-config",
++        "docker-publish-build",
++        "docker-publish",
++    },
++    "docs.yml": {"deploy"},
++}
++
++
++@pytest.mark.parametrize("ref", ["refs/heads/main", "refs/pull/143/head"])
++@pytest.mark.parametrize("path", sorted(WORKFLOWS.glob("*.yml")))
++def test_all_job_policies(path, ref):
++    """Check concrete effective policies, identity isolation and writer gates."""
++    workflow = path.read_text()
++    assert "\nconcurrency:\n" not in workflow.split("\njobs:\n")[0]
++    jobs = workflow_job_names(workflow)
++    policies = read_values(path, *jobs)
++    writers = WRITERS.get(path.name, set())
++    groups = set()
++    for job in jobs:
++        block = workflow_job_block(workflow, job)
++        if job == "pipeline-status":
++            continue
++        if job in writers:
++            assert policies[job] == "false", (path.name, ref, job)
++            assert "group: main-writer-${{ github.repository }}-main" in block
++            assert "queue: max" in block
++        else:
++            assert policies[job] == "true", (path.name, ref, job)
++            group = re.search(r"^      group: (.+)$", block, re.MULTILINE)[1]
++            evaluated = group.replace("${{ github.ref }}", ref).replace(
++                "${{ github.workflow }}", path.stem
++            )
++            assert evaluated not in groups
++            groups.add(evaluated)
++            assert job in group or (
++                job == "artifact-roundtrip" and "artifacts" in group
++            )
++            if "matrix:" in block:
++                matrix = block.split("      matrix:\n", 1)[1].split("    steps:", 1)[0]
++                axes = re.findall(r"^        ([a-z-]+):", matrix, re.MULTILINE)
++                assert all(f"matrix.{axis}" in group for axis in axes)
++
++        result = subprocess.run(
++            ["bash", str(ROOT / "scripts/check-pipeline-status.sh")],
++            env={
++                **os.environ,
++                "WORKFLOW_FILE": str(path),
++                "HEAD_REF": ref,
++                "RUN_SHA": "a" * 40,
++                "BRANCH_HEAD_SHA": "b" * 40,
++                "NEEDS_JSON": json.dumps({job: {"result": "cancelled"}}),
++            },
++            text=True,
++            capture_output=True,
++            check=False,
++            timeout=10,
++        )
++        assert result.returncode == (1 if job in writers else 0), result.stdout
++
++
++def test_pages_build_has_no_configuration_writes():
++    """Only the serialized deploy job may configure the Pages site."""
++    workflow = read_workflow("docs.yml")
++    build = workflow_job_block(workflow, "build")
++    deploy = workflow_job_block(workflow, "deploy")
++    assert "pages: write" not in build
++    assert "configure-pages" not in build
++    assert "configure-pages" in deploy
++    assert "needs: [build]" in deploy
+diff --git a/tests/test_lychee_install_and_scan.py b/tests/test_lychee_install_and_scan.py
+new file mode 100644
+index 0000000..0d2d206
+--- /dev/null
++++ b/tests/test_lychee_install_and_scan.py
+@@ -0,0 +1,213 @@
++"""Offline regression coverage for the actual installer and workflow command."""
++
++from __future__ import annotations
++
++import hashlib
++import http.server
++import io
++import os
++import re
++import subprocess
++import tarfile
++import threading
++
++import pytest
++
++from tests.workflow_helpers import (
++    ROOT,
++    read_workflow,
++    workflow_job_block,
++    workflow_step_block,
++)
++
++
++@pytest.fixture
++def release_server():
++    """Serve a tiny release, failing once for each download URL."""
++    archive = io.BytesIO()
++    with tarfile.open(fileobj=archive, mode="w:gz") as bundle:
++        binary = b"#!/bin/sh\necho 'lychee 0.24.2'\n"
++        entry = tarfile.TarInfo("lychee-v0.24.2/lychee")
++        entry.size = len(binary)
++        entry.mode = 0o755
++        bundle.addfile(entry, io.BytesIO(binary))
++    payload = archive.getvalue()
++    state = {"requests": {}, "bad_checksum": False, "always_fail": False}
++
++    class Handler(http.server.BaseHTTPRequestHandler):
++        def do_GET(self):
++            counts = state["requests"]
++            counts[self.path] = counts.get(self.path, 0) + 1
++            if counts[self.path] == 1 or state["always_fail"]:
++                self.send_error(503)
++                return
++            body = payload
++            if self.path.endswith(".sha256"):
++                digest = (
++                    "0" * 64
++                    if state["bad_checksum"]
++                    else hashlib.sha256(payload).hexdigest()
++                )
++                body = f"{digest}  release.tar.gz\n".encode()
++            self.send_response(200)
++            self.end_headers()
++            self.wfile.write(body)
++
++        def log_message(self, *_args):
++            pass
++
++    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
++    thread = threading.Thread(target=server.serve_forever, daemon=True)
++    thread.start()
++    try:
++        yield f"http://127.0.0.1:{server.server_port}", state
++    finally:
++        server.shutdown()
++        thread.join()
++        server.server_close()
++
++
++def install(tmp_path, url, **overrides):
++    """Run production installer with short, finite retries against loopback."""
++    return subprocess.run(
++        ["bash", str(ROOT / "scripts/install-lychee.sh"), str(tmp_path / "bin")],
++        env={
++            **os.environ,
++            "LYCHEE_VERSION": "v0.24.2",
++            "LYCHEE_DOWNLOAD_BASE_URL": url,
++            "LYCHEE_DOWNLOAD_RETRY_DELAY": "1",
++            "LYCHEE_DOWNLOAD_RETRIES": "1",
++            "GITHUB_PATH": str(tmp_path / "path"),
++            **overrides,
++        },
++        capture_output=True,
++        text=True,
++        check=False,
++        timeout=15,
++    )
++
++
++def test_installer_retries_both_assets_and_adds_verified_binary_to_path(
++    tmp_path, release_server
++):
++    url, state = release_server
++    # Reproduce the upstream one-shot failure before running the replacement.
++    original = subprocess.run(
++        ["curl", "-sfL", url + "/original", "-o", str(tmp_path / "original")],
++        capture_output=True,
++        check=False,
++        timeout=5,
++    )
++    assert original.returncode == 22
++    result = install(tmp_path, url)
++    assert result.returncode == 0, result.stderr
++    assert "lychee 0.24.2" in result.stdout
++    assert (tmp_path / "path").read_text().strip() == str(tmp_path / "bin")
++    downloads = {
++        path: count for path, count in state["requests"].items() if path != "/original"
++    }
++    assert len(downloads) == 2
++    assert set(downloads.values()) == {2}
++
++
++@pytest.mark.parametrize("failure", ["bad_checksum", "always_fail"])
++def test_installer_fails_closed(tmp_path, release_server, failure):
++    url, state = release_server
++    state[failure] = True
++    result = install(tmp_path, url)
++    assert result.returncode != 0
++    assert not (tmp_path / "bin/lychee").exists()
++    assert not (tmp_path / "path").exists()
++    assert (
++        "Checksum mismatch" if failure == "bad_checksum" else "after retries"
++    ) in result.stderr
++
++
++@pytest.mark.parametrize("version", ["latest", "v0.24", "", "v0.24.2/other"])
++def test_installer_rejects_unpinned_version(tmp_path, version):
++    result = install(tmp_path, "http://127.0.0.1:1", LYCHEE_VERSION=version)
++    assert result.returncode != 0
++    assert not (tmp_path / "bin").exists()
++
++
++@pytest.mark.parametrize(
++    ("exit_code", "report", "expected"),
++    [
++        (0, "| 🔍 Total | 12 |", 0),
++        (2, "| 🔍 Total | 12 |\n## Errors\n* [404] https://invalid.example", 0),
++        (0, "| 🔍 Total | 0 |", 1),
++        (2, "| 🔍 Total | 0 |", 1),
++        (2, "", 1),
++        (0, "", 1),
++        (1, "| 🔍 Total | 12 |", 1),
++        (101, "", 1),
++        (0, "unrecognized output", 1),
++    ],
++)
++def test_real_workflow_scan_command(tmp_path, exit_code, report, expected):
++    """Execute the exact workflow command, stubbing only the lychee process."""
++    binary = tmp_path / "lychee-stub"
++    binary.mkdir()
++    stub = binary / "lychee"
++    stub.write_text(
++        "#!/usr/bin/env python3\n"
++        "import json, os, sys\n"
++        "from pathlib import Path\n"
++        "Path('args.json').write_text(json.dumps(sys.argv[1:]))\n"
++        "if os.environ['STUB_REPORT']:\n"
++        "    Path(sys.argv[sys.argv.index('--output')+1]).write_text(os.environ['STUB_REPORT'])\n"
++        "sys.exit(int(os.environ['STUB_EXIT']))\n"
++    )
++    stub.chmod(0o755)
++    output = tmp_path / "outputs"
++    summary = tmp_path / "summary"
++    summary.write_text("Earlier summary\n")
++    # Ensure a previous report cannot hide a failed invocation.
++    (tmp_path / "lychee").mkdir()
++    (tmp_path / "lychee/out.md").write_text("| 🔍 Total | 999 |")
++    job = workflow_job_block(read_workflow("links.yml"), "link-checker")
++    step = workflow_step_block(job, "Check links with lychee")
++    command = step.split("run: >-\n", 1)[1].split("        env:", 1)[0]
++    command = " ".join(line.strip() for line in command.splitlines())
++    command = command.replace(
++        "scripts/check-links.sh", str(ROOT / "scripts/check-links.sh")
++    )
++    result = subprocess.run(
++        ["bash", "-e", "-c", command],
++        cwd=tmp_path,
++        env={
++            **os.environ,
++            "PATH": f"{binary}:{os.environ['PATH']}",
++            "GITHUB_OUTPUT": str(output),
++            "GITHUB_STEP_SUMMARY": str(summary),
++            "STUB_REPORT": report,
++            "STUB_EXIT": str(exit_code),
++        },
++        capture_output=True,
++        text=True,
++        check=False,
++        timeout=10,
++    )
++    assert result.returncode == expected, result.stdout + result.stderr
++    assert output.read_text() == f"exit_code={exit_code}\n"
++    assert summary.read_text() == "Earlier summary\n" + report
++    args = (tmp_path / "args.json").read_text()
++    for flag in [
++        "--config",
++        "--hidden",
++        "--cache",
++        "--extensions",
++        "--max-retries",
++        "--format",
++    ]:
++        assert flag in args
++    assert "scripts/fixtures" in args
++    assert re.search(r"steps.lychee.outcome == 'success'", job)
++
++
++def test_workflow_triggers_when_installer_or_scan_changes():
++    workflow = read_workflow("links.yml")
++    assert workflow.count("- 'scripts/install-lychee.sh'") == 2
++    assert workflow.count("- 'scripts/check-links.sh'") == 2
++    assert "LYCHEE_VERSION: v0.24.2" in workflow
++    assert "lycheeverse/lychee-action@" not in workflow
+diff --git a/tests/test_release_integrity.py b/tests/test_release_integrity.py
+new file mode 100644
+index 0000000..e55b944
+--- /dev/null
++++ b/tests/test_release_integrity.py
+@@ -0,0 +1,308 @@
++"""Release recovery must preserve the entire validated source/dependency tree."""
++
++from __future__ import annotations
++
++import subprocess
++from pathlib import Path
++
++import pytest
++
++from scripts import version_and_commit as release
++
++
++def git(*args):
++    return subprocess.run(
++        ["git", *args], check=True, capture_output=True, text=True
++    ).stdout.strip()
++
++
++def commit(message="metadata"):
++    git("add", "-A")
++    git("commit", "-m", message)
++    return git("rev-parse", "HEAD")
++
++
++def manifest(version="1.0.0", dependency="dep==1"):
++    return f'[project]\nname = "example"\nversion = "{version}"\ndependencies = ["{dependency}"]\n[tool.other]\nversion = "preserve"\n'
++
++
++def lock(version="1.0.0", dependency="1.0.0"):
++    return f"""version = 1
++[[package]]
++name = "example"
++version = "{version}"
++source = {{ editable = "." }}
++[[package]]
++name = "dep"
++version = "{dependency}"
++source = {{ registry = "https://pypi.org/simple" }}
++"""
++
++
++@pytest.fixture(params=[".", "python"])
++def repository(tmp_path, monkeypatch, request):
++    repo = tmp_path / "repo"
++    repo.mkdir()
++    monkeypatch.chdir(repo)
++    git("init", "--initial-branch=main")
++    git("config", "user.name", "Test")
++    git("config", "user.email", "test@example.com")
++    root = Path(request.param)
++    root.mkdir(exist_ok=True)
++    (root / "pyproject.toml").write_text(manifest())
++    (root / "uv.lock").write_text(lock())
++    (root / "source.py").write_text("validated = True\n")
++    (root / "CHANGELOG.md").write_text("# Changelog\n")
++    (root / "changelog.d").mkdir()
++    (root / "changelog.d" / "fix.md").write_text("### Fixed\n- Bug\n")
++    (root / "changelog.d" / "README.md").write_text("keep\n")
++    Path("outside.txt").write_text("also validated\n")
++    return root, commit("validated")
++
++
++def metadata_child(root):
++    (root / "pyproject.toml").write_text(manifest("1.0.1"))
++    (root / "uv.lock").write_text(lock("1.0.1"))
++    (root / "CHANGELOG.md").write_text("# Changelog\nRelease 1.0.1\n")
++    (root / "changelog.d" / "fix.md").unlink()
++    return commit()
++
++
++def test_accepts_validated_commit_and_metadata_child(repository, monkeypatch):
++    root, validated = repository
++    release.attest_release(validated, "HEAD", (root / "pyproject.toml").as_posix())
++    metadata_child(root)
++    # Run from the nested package too: attestation must still cover the full repo.
++    monkeypatch.chdir(root.resolve())
++    release.attest_release(validated, "HEAD", (root / "pyproject.toml").as_posix())
++
++
++@pytest.mark.parametrize("version", ["1.0.0", "1.0.1"])
++@pytest.mark.parametrize(
++    "drift",
++    [
++        "source",
++        "manifest",
++        "lock",
++        "outside",
++        "mode",
++        "fragment",
++        "readme",
++        "lock-delete",
++        "lock-version",
++        "tool-version",
++    ],
++)
++def test_rejects_source_or_dependency_drift_even_with_matching_versions(
++    repository, version, drift
++):
++    root, validated = repository
++    (root / "pyproject.toml").write_text(manifest(version))
++    (root / "uv.lock").write_text(lock(version))
++    if drift == "source":
++        (root / "source.py").write_text("validated = False\n")
++    elif drift == "manifest":
++        (root / "pyproject.toml").write_text(manifest(version, "dep==2"))
++    elif drift == "lock":
++        (root / "uv.lock").write_text(lock(version, "2.0.0"))
++    elif drift == "outside":
++        Path("outside.txt").write_text("unvalidated\n")
++    elif drift == "mode":
++        (root / "source.py").chmod(0o755)
++    elif drift == "fragment":
++        (root / "changelog.d" / "fix.md").write_text("unvalidated change")
++    elif drift == "readme":
++        (root / "changelog.d" / "README.md").unlink()
++    elif drift == "lock-delete":
++        (root / "uv.lock").unlink()
++    elif drift == "lock-version":
++        (root / "uv.lock").write_text(lock("9.9.9"))
++    elif drift == "tool-version":
++        path = root / "pyproject.toml"
++        path.write_text(path.read_text().replace('"preserve"', '"changed"'))
++    commit()
++    with pytest.raises(ValueError):
++        release.attest_release(validated, "HEAD", (root / "pyproject.toml").as_posix())
++
++
++def test_rejects_lost_validated_parent(repository):
++    root, validated = repository
++    metadata_child(root)
++    (root / "CHANGELOG.md").write_text("another release")
++    commit()
++    with pytest.raises(ValueError, match="sole parent"):
++        release.attest_release(validated, "HEAD", (root / "pyproject.toml").as_posix())
++
++
++def remote_for(repository, tmp_path):
++    root, validated = repository
++    remote = tmp_path / "remote.git"
++    git("init", "--bare", "--initial-branch=main", str(remote))
++    git("remote", "add", "origin", str(remote))
++    git("push", "origin", "main")
++    return root, validated
++
++
++def test_remote_recovery_adopts_verified_child(repository, tmp_path):
++    root, validated = remote_for(repository, tmp_path)
++    child = metadata_child(root)
++    git("push", "origin", "main")
++    git("reset", "--hard", validated)
++    assert release.check_remote_changes(
++        root / "pyproject.toml", (root / "pyproject.toml").as_posix(), validated
++    ) == (True, "1.0.1")
++    assert git("rev-parse", "HEAD") == child
++    assert (root / "pyproject.toml").read_text() == manifest("1.0.1")
++
++
++@pytest.mark.parametrize("version", ["1.0.0", "1.0.1"])
++def test_remote_recovery_rejects_unvalidated_source(repository, tmp_path, version):
++    root, validated = remote_for(repository, tmp_path)
++    (root / "source.py").write_text("unvalidated\n")
++    (root / "pyproject.toml").write_text(manifest(version))
++    (root / "uv.lock").write_text(lock(version))
++    commit()
++    git("push", "origin", "main")
++    git("reset", "--hard", validated)
++    with pytest.raises(ValueError, match="drift"):
++        release.check_remote_changes(
++            root / "pyproject.toml", (root / "pyproject.toml").as_posix(), validated
++        )
++    assert git("rev-parse", "HEAD") == validated
++
++
++def test_push_race_rejects_remote_source_before_rebase(
++    repository, tmp_path, monkeypatch
++):
++    root, validated = remote_for(repository, tmp_path)
++    (root / "source.py").write_text("unvalidated\n")
++    remote_child = commit("unvalidated")
++    git("push", "origin", "main")
++    git("reset", "--hard", validated)
++    local_child = metadata_child(root)
++    with pytest.raises(ValueError, match="drift"):
++        release.push_branch_with_rebase_retry(
++            "main",
++            validated_sha=validated,
++            pyproject_git_path=(root / "pyproject.toml").as_posix(),
++        )
++    assert git("rev-parse", "HEAD") == local_child
++    assert git("rev-parse", "origin/main") == remote_child
++
++
++def test_dirty_checkout_is_not_reset_or_pushed(repository, tmp_path):
++    root, validated = remote_for(repository, tmp_path)
++    Path("untracked.py").write_text("not validated")
++    with pytest.raises(ValueError, match="dirty"):
++        release.check_remote_changes(
++            root / "pyproject.toml", (root / "pyproject.toml").as_posix(), validated
++        )
++    assert Path("untracked.py").exists()
++
++
++def test_manual_workflow_carries_validated_sha():
++    workflow = Path(__file__).resolve().parents[1] / ".github/workflows/release.yml"
++    assert "VALIDATED_SHA: ${{ github.sha }}" in workflow.read_text()
++
++
++def test_rebase_result_is_attested_before_another_push(
++    repository, tmp_path, monkeypatch
++):
++    root, validated = remote_for(repository, tmp_path)
++    metadata_child(root)
++    calls = []
++
++    def fake_git(cmd):
++        calls.append(cmd)
++        if cmd[:2] == ["git", "push"]:
++            return subprocess.CompletedProcess(
++                cmd, 1, stdout="", stderr="! [rejected] (fetch first)"
++            )
++        assert cmd[:3] == ["git", "pull", "--rebase"]
++        # Simulate a second remote movement arriving with pull's own fetch.
++        (root / "source.py").write_text("unvalidated during rebase")
++        git("add", "-A")
++        git("commit", "--amend", "--no-edit")
++        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
++
++    monkeypatch.setattr(release, "run_git_capturing", fake_git)
++    with pytest.raises(ValueError, match="drift"):
++        release.push_branch_with_rebase_retry(
++            "main",
++            validated_sha=validated,
++            pyproject_git_path=(root / "pyproject.toml").as_posix(),
++        )
++    assert len(calls) == 2
++
++
++def test_push_race_adopts_verified_equivalent_release(repository, tmp_path):
++    root, validated = remote_for(repository, tmp_path)
++    child = metadata_child(root)
++    git("push", "origin", "main")
++    git("reset", "--hard", validated)
++    metadata_child(root)
++    git("commit", "--amend", "-m", "different metadata commit identity")
++    assert git("rev-parse", "HEAD") != child
++    release.push_branch_with_rebase_retry(
++        "main",
++        validated_sha=validated,
++        pyproject_git_path=(root / "pyproject.toml").as_posix(),
++    )
++    assert git("rev-parse", "HEAD") == child
++
++
++def test_missing_validated_commit_fails_closed(repository):
++    root, _ = repository
++    with pytest.raises(SystemExit):
++        release.attest_release("0" * 40, "HEAD", (root / "pyproject.toml").as_posix())
++
++
++def test_nested_checkout_cannot_hide_source_drift_outside_package(
++    repository, monkeypatch
++):
++    root, validated = repository
++    Path("outside.txt").write_text("unvalidated")
++    commit()
++    monkeypatch.chdir(root.resolve())
++    with pytest.raises(ValueError, match="outside.txt"):
++        release.attest_release(validated, "HEAD", (root / "pyproject.toml").as_posix())
++
++
++def test_local_metadata_child_resumes_push_without_another_bump(repository, tmp_path):
++    root, validated = remote_for(repository, tmp_path)
++    child = metadata_child(root)
++    assert release.check_remote_changes(
++        root / "pyproject.toml", (root / "pyproject.toml").as_posix(), validated
++    ) == (True, "1.0.1")
++    assert git("rev-parse", "HEAD") == child
++    assert git("rev-parse", "origin/main") == child
++
++
++def test_unrelated_metadata_commit_is_not_a_prior_release(repository):
++    root, validated = repository
++    (root / "CHANGELOG.md").write_text("unrelated docs edit")
++    commit()
++    with pytest.raises(ValueError, match="must change project.version"):
++        release.attest_release(validated, "HEAD", (root / "pyproject.toml").as_posix())
++
++
++def test_push_publishes_attested_head_from_detached_checkout(repository, tmp_path):
++    root, validated = remote_for(repository, tmp_path)
++    git("checkout", "--detach")
++    child = metadata_child(root)
++    assert git("rev-parse", "main") == validated
++    release.push_branch_with_rebase_retry(
++        "main",
++        validated_sha=validated,
++        pyproject_git_path=(root / "pyproject.toml").as_posix(),
++    )
++    assert git("rev-parse", "origin/main") == child
++
++
++def test_merge_child_cannot_replace_validated_parent(repository):
++    root, validated = repository
++    tree = git("rev-parse", "HEAD^{tree}")
++    other = git("commit-tree", tree, "-m", "unrelated parent")
++    merged = git("commit-tree", tree, "-p", validated, "-p", other, "-m", "merge")
++    with pytest.raises(ValueError, match="sole parent"):
++        release.attest_release(validated, merged, (root / "pyproject.toml").as_posix())
+diff --git a/tests/test_release_workflow.py b/tests/test_release_workflow.py
+index 77baa4c..376bf9e 100644
+--- a/tests/test_release_workflow.py
++++ b/tests/test_release_workflow.py
+@@ -35,7 +35,7 @@ def test_changelog_check_safely_requires_a_fragment() -> None:
+ 
+ 
+ def test_release_workflow_separates_check_and_write_concurrency() -> None:
+-    """Checks supersede off main while release writes share one group."""
++    """Checks supersede on every ref while release writes share one group."""
+     workflow = read_workflow("release.yml")
+     workflow_header = workflow.split("\njobs:\n", maxsplit=1)[0]
+ 
+@@ -51,15 +51,15 @@ def test_release_workflow_separates_check_and_write_concurrency() -> None:
+     ):
+         block = workflow_job_block(workflow, job_name)
+         expected_group = (
+-            "group: ${{ github.workflow }}-${{ github.ref }}-" f"{job_name}"
++            "group: check-${{ github.workflow }}-${{ github.ref }}-" f"{job_name}"
+         )
+         assert expected_group in block
+-        assert "cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}" in block
++        assert "cancel-in-progress: true" in block
+ 
+     write_concurrency = "\n".join(
+         (
+             "    concurrency:",
+-            "      group: ${{ github.workflow }}-main-write",
++            "      group: main-writer-${{ github.repository }}-main",
+             "      cancel-in-progress: false",
+         )
+     )
+diff --git a/tests/test_version_and_commit.py b/tests/test_version_and_commit.py
+index b1b246c..82bd265 100644
+--- a/tests/test_version_and_commit.py
++++ b/tests/test_version_and_commit.py
+@@ -23,6 +23,14 @@ sys.modules[spec.name] = module
+ spec.loader.exec_module(module)  # type: ignore[union-attr]
+ 
+ 
++def mock_push_attestation(monkeypatch):
++    """Isolate subprocess retry policy; real Git attestation has its own suite."""
++    monkeypatch.setattr(module, "git_text", lambda args: "validated")
++    monkeypatch.setattr(module, "assert_clean_checkout", lambda: None)
++    monkeypatch.setattr(module, "attest_release", lambda *args: None)
++    monkeypatch.setattr(module, "run_command", lambda *args, **kwargs: None)
++
++
+ def test_parse_version_reads_project_table_not_other_tables() -> None:
+     """A version key in another table must not shadow project.version."""
+     content = """
+@@ -194,12 +202,13 @@ def test_lost_race_is_rebased_and_push_succeeds(monkeypatch, capsys) -> None:
+             return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=LOST_RACE)
+         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+ 
++    mock_push_attestation(monkeypatch)
+     monkeypatch.setattr(module, "run_git_capturing", fake_run)
+     module.push_branch_with_rebase_retry("main")
+ 
+-    assert commands[0] == ["git", "push", "origin", "main"]
++    assert commands[0] == ["git", "push", "origin", "HEAD:refs/heads/main"]
+     assert commands[1] == ["git", "pull", "--rebase", "origin", "main"]
+-    assert commands[2] == ["git", "push", "origin", "main"]
++    assert commands[2] == ["git", "push", "origin", "HEAD:refs/heads/main"]
+     assert "Rebasing and retrying" in capsys.readouterr().err
+ 
+ 
+@@ -215,6 +224,7 @@ def test_repository_rules_exit_without_retrying(monkeypatch, capsys) -> None:
+             )
+         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+ 
++    mock_push_attestation(monkeypatch)
+     monkeypatch.setattr(module, "run_git_capturing", fake_run)
+     with pytest.raises(SystemExit) as exc_info:
+         module.push_branch_with_rebase_retry("main")
+@@ -235,6 +245,7 @@ def test_other_failures_exit_without_retrying(monkeypatch, capsys) -> None:
+             return subprocess.CompletedProcess(cmd, 128, stdout="", stderr=REAL_ERROR)
+         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+ 
++    mock_push_attestation(monkeypatch)
+     monkeypatch.setattr(module, "run_git_capturing", fake_run)
+     with pytest.raises(SystemExit) as exc_info:
+         module.push_branch_with_rebase_retry("main")
+@@ -253,6 +264,7 @@ def test_persistent_race_gives_up_after_max_attempts(monkeypatch, capsys) -> Non
+             return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=LOST_RACE)
+         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+ 
++    mock_push_attestation(monkeypatch)
+     monkeypatch.setattr(module, "run_git_capturing", fake_run)
+     with pytest.raises(SystemExit) as exc_info:
+         module.push_branch_with_rebase_retry("main", max_attempts=3)
+@@ -278,6 +290,7 @@ def test_failed_rebase_aborts_and_exits(monkeypatch, capsys) -> None:
+             return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=LOST_RACE)
+         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+ 
++    mock_push_attestation(monkeypatch)
+     monkeypatch.setattr(module, "run_git_capturing", fake_run)
+     with pytest.raises(SystemExit) as exc_info:
+         module.push_branch_with_rebase_retry("main")
+@@ -285,3 +298,98 @@ def test_failed_rebase_aborts_and_exits(monkeypatch, capsys) -> None:
+     assert exc_info.value.code == 1
+     assert ["git", "rebase", "--abort"] in commands
+     assert "Error during pull --rebase:" in capsys.readouterr().err
++
++
++INTERNAL_ERROR = "remote: fatal error in commit_refs_rules\n! [remote rejected] HEAD -> main (fatal error in commit_refs_rules)"
++
++
++@pytest.mark.parametrize(
++    "error",
++    [
++        INTERNAL_ERROR,
++        "fatal: HTTP 429",
++        "error: RPC failed; HTTP 503 curl 22",
++        "fatal: unable to access: The requested URL returned error: 502",
++    ],
++)
++def test_classifies_explicit_transient_failures(error):
++    assert module.classify_push_failure(error) is module.PushFailure.TRANSIENT
++
++
++@pytest.mark.parametrize("code", ["GH006", "GH013"])
++def test_policy_precedes_internal_and_http_errors(code):
++    assert (
++        module.classify_push_failure(f"{code}: {INTERNAL_ERROR} HTTP 503")
++        is module.PushFailure.REPOSITORY_RULES
++    )
++
++
++@pytest.mark.parametrize("succeed", [True, False])
++def test_transient_push_retries_identical_commit_with_bounded_backoff(
++    monkeypatch, capsys, succeed
++):
++    commands = []
++    sleeps = []
++
++    def fake_run(cmd):
++        commands.append(cmd)
++        ok = succeed and len(commands) == 2
++        return subprocess.CompletedProcess(
++            cmd, 0 if ok else 1, stdout="", stderr="" if ok else INTERNAL_ERROR
++        )
++
++    mock_push_attestation(monkeypatch)
++    monkeypatch.setattr(module, "run_git_capturing", fake_run)
++    monkeypatch.setattr(module.time, "sleep", sleeps.append)
++    if succeed:
++        module.push_branch_with_rebase_retry("main")
++    else:
++        with pytest.raises(SystemExit):
++            module.push_branch_with_rebase_retry("main")
++    assert commands == [["git", "push", "origin", "HEAD:refs/heads/main"]] * (
++        2 if succeed else 3
++    )
++    assert sleeps == ([1] if succeed else [1, 2])
++    assert INTERNAL_ERROR in capsys.readouterr().err
++
++
++@pytest.mark.parametrize("debug", [False, True])
++def test_attempt_diagnostics_are_default_off(monkeypatch, capsys, debug):
++    monkeypatch.delenv("RELEASE_DEBUG", raising=False)
++    if debug:
++        monkeypatch.setenv("RELEASE_DEBUG", "1")
++    responses = iter(
++        [
++            subprocess.CompletedProcess([], 1, stdout="", stderr=INTERNAL_ERROR),
++            subprocess.CompletedProcess([], 0, stdout="", stderr=""),
++        ]
++    )
++    mock_push_attestation(monkeypatch)
++    monkeypatch.setattr(module, "run_git_capturing", lambda cmd: next(responses))
++    monkeypatch.setattr(module.time, "sleep", lambda seconds: None)
++    module.push_branch_with_rebase_retry("main")
++    output = capsys.readouterr().err
++    assert ("Release push attempt 1/3: TRANSIENT" in output) is debug
++    assert INTERNAL_ERROR in output
++
++
++@pytest.mark.parametrize(
++    "message",
++    [
++        "HTTP 401",
++        "HTTP 403",
++        "HTTP 404",
++        "HTTP 5000",
++        "error 503",
++        "commit_refs_rules",
++        "permission denied",
++    ],
++)
++def test_unrelated_errors_are_not_transient(message):
++    assert module.classify_push_failure(message) is module.PushFailure.OTHER
++
++
++@pytest.mark.parametrize("attempts", [0, 4])
++def test_retry_budget_cannot_exceed_three_or_skip_push(attempts):
++    with pytest.raises(ValueError, match="between 1 and 3"):
++        module.push_branch_with_rebase_retry("main", max_attempts=attempts)
+diff --git a/tests/test_workflows.py b/tests/test_workflows.py
+index b6ddf5f..a5ca94f 100644
+--- a/tests/test_workflows.py
++++ b/tests/test_workflows.py
+@@ -115,11 +115,11 @@ def test_links_workflow_fails_for_every_broken_live_link() -> None:
+     assert "timeout-minutes: 10" in link_job
+     assert "cancel-in-progress: true" in link_job
+     assert "uses: actions/checkout@v7" in link_job
+-    assert "uses: lycheeverse/lychee-action@v2" in lychee_step
++    assert "bash scripts/check-links.sh" in lychee_step
+     assert "--exclude-path docs/case-studies" in lychee_step
+     assert "examples/universal-app/index.html" not in lychee_step
+-    assert "fail: false" in lychee_step
+-    assert "output: lychee/out.md" in lychee_step
++    assert "lycheeverse/lychee-action@" not in workflow
++    assert "LYCHEE_VERSION: v0.24.2" in link_job
+     # Issue #78: --max-retries cannot retry a connect-phase reset
+     # (lycheeverse/lychee#2297), so unanswered failures are re-asked
+     # outside lychee before anything is declared broken.
+@@ -207,7 +207,7 @@ def test_docs_workflow_deploys_pages_only_when_opted_in() -> None:
+     workflow = read_workflow("docs.yml")
+     build_job = workflow_job_block(workflow, "build")
+     deploy_job = workflow_job_block(workflow, "deploy")
+-    configure_step = workflow_step_block(build_job, "Configure GitHub Pages")
++    configure_step = workflow_step_block(deploy_job, "Configure GitHub Pages")
+     upload_step = workflow_step_block(build_job, "Upload GitHub Pages artifact")
+     skip_step = workflow_step_block(build_job, "Report skipped GitHub Pages deployment")
+ 
+@@ -222,7 +222,7 @@ def test_docs_workflow_deploys_pages_only_when_opted_in() -> None:
+         "vars.DEPLOY_GITHUB_PAGES != 'true'"
+     )
+ 
+-    assert f"if: {deploy_condition}" in configure_step
++    assert "uses: actions/configure-pages@v6" in configure_step
+     assert f"if: {deploy_condition}" in upload_step
+     assert f"if: {deploy_condition}" in deploy_job
+     assert f"if: {skip_condition}" in skip_step
