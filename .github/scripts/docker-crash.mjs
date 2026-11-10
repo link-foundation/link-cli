@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Starts the engine in a Docker container, kills it with SIGKILL at random
-// moments, damages its files on purpose and repairs them, then checks that no
-// acknowledged commit was lost or torn. Each language ships a writer that
+// moments, simulates power loss on what it never flushed, damages its files on
+// purpose and repairs them, then checks that no acknowledged commit was lost or
+// torn. Each language ships a writer that
 // speaks one protocol (rust/examples/engine_crash_writer.rs documents it):
 //
 //   node .github/scripts/docker-crash.mjs --target rust|csharp|js
-//     [--rounds N] [--seed S] [--artifact PATH] [--image IMAGE] [--report FILE]
+//     [--rounds N] [--power-losses N] [--seed S] [--artifact PATH] [--image IMAGE] [--report FILE]
 //     [--work DIR]
 //
 // Build the writer first (cargo build --release --example engine_crash_writer,
@@ -131,6 +132,61 @@ export function recordAt(starts, offset) {
   return record;
 }
 
+/** Bytes a disk may persist in a 512-byte sector write are all or nothing. */
+export const SECTOR = 512;
+
+/**
+ * The file a power loss may leave behind. Bytes before `durable` reached the
+ * disk before an acknowledged flush and survive. Past it nothing was flushed:
+ * the file keeps any length up to its current one (all of the tail is lost a
+ * third of the time, all of it is kept a third of the time, otherwise it is
+ * cut at a random byte), and each sector past `durable` reads back as zeros
+ * half of the time, as a disk that reordered writes no flush ordered leaves
+ * it. Returns the new bytes and what was lost, for the report.
+ */
+export function losePower(bytes, durable, next) {
+  if (durable > bytes.length) throw new Error(`durable ${durable} beyond ${bytes.length} bytes`);
+  const choice = next.below(3);
+  const length =
+    choice === 0
+      ? durable
+      : choice === 1
+        ? bytes.length
+        : durable + next.below(bytes.length - durable + 1);
+  const result = Buffer.from(bytes.subarray(0, length));
+  const zeroed = [];
+  for (let sector = durable - (durable % SECTOR); sector < length; sector += SECTOR) {
+    if (next() < 0.5) continue;
+    result.fill(0, Math.max(sector, durable), Math.min(sector + SECTOR, length));
+    zeroed.push(sector / SECTOR);
+  }
+  return { bytes: result, cut: bytes.length - length, zeroed };
+}
+
+/**
+ * What a file journal opens at, as its tail repair reads it: complete lines
+ * count, a final fragment and trailing lines holding a NUL byte are torn, and
+ * a NUL line in front of an intact one is damage that opening refuses
+ * (`revision` is null). `end` is the byte offset just past the last intact
+ * line before the torn tail, `zeroedLines` counts the torn lines with a NUL.
+ */
+export function openedRevision(bytes) {
+  const lines = [];
+  let start = 0;
+  for (let index = bytes.indexOf(10); index !== -1; index = bytes.indexOf(10, start)) {
+    if (index > start) lines.push([start, index]);
+    start = index + 1;
+  }
+  const holdsNul = ([from, to]) => bytes.subarray(from, to).includes(0);
+  let zeroedLines = 0;
+  for (; lines.length && holdsNul(lines.at(-1)); zeroedLines++) lines.pop();
+  return {
+    revision: lines.some(holdsNul) ? null : lines.length,
+    end: lines.length ? lines.at(-1)[1] + 1 : 0,
+    zeroedLines,
+  };
+}
+
 function docker(args, { allowFailure = false } = {}) {
   const result = spawnSync('docker', args, { encoding: 'utf8', timeout: 300_000 });
   if (result.error) throw result.error;
@@ -151,6 +207,7 @@ class Harness {
     this.primary = join(this.data, 'primary');
     this.replica = join(this.data, 'replica');
     this.revision = 0;
+    this.replicaRevision = 0;
     // The newest revision some writer printed `ack` for: every revision up to
     // it was durable on both files when the caller was told so.
     this.acknowledged = 0;
@@ -218,6 +275,7 @@ class Harness {
     this.revision = checkAcks(result.acks, this.revision);
     if (result.acks.length !== commits) throw new Error(`write acknowledged ${result.acks}`);
     this.acknowledged = this.revision;
+    this.replicaRevision = this.revision;
   }
 
   removeWriterLocks() {
@@ -226,8 +284,9 @@ class Harness {
       rmSync(`${path}.writer`, { recursive: true, force: true });
   }
 
-  /** Starts a writer, kills it with SIGKILL and checks what survived. */
-  async crash(round) {
+  /** Starts a writer, kills it with SIGKILL and checks what survived. With
+   * `powerLoss`, the files then lose what no acknowledged flush covered. */
+  async crash(round, { powerLoss = false } = {}) {
     const started = docker([
       ...this.run({ detach: true }),
       ...this.target.command,
@@ -260,13 +319,83 @@ class Harness {
     this.removeWriterLocks();
     const last = checkAcks(output.acks, this.revision);
     const acknowledged = output.acks.length ? last : this.acknowledged;
+    const lost = powerLoss ? this.losePower(acknowledged) : undefined;
     const primary = this.revisionOf('primary');
-    const replica = this.revisionOf('replica');
+    const replica = lost?.replicaRepaired ?? this.revisionOf('replica');
+    if (lost && (primary !== lost.primary || (!lost.replicaRepaired && replica !== lost.replica)))
+      throw new Error(
+        `round ${round}: opened at ${primary}/${replica}, expected ${lost.primary}/${lost.replica}`,
+      );
     checkSurvivors({ last, acknowledged, primary, replica });
     this.revision = primary;
     this.replicaRevision = replica;
     this.acknowledged = Math.max(this.acknowledged, acknowledged);
-    return { round, early, acks: output.acks.length, acknowledged, primary, replica };
+    return {
+      round,
+      early,
+      acks: output.acks.length,
+      acknowledged,
+      primary,
+      replica,
+      ...(lost && { powerLoss: lost }),
+    };
+  }
+
+  /**
+   * Simulates a power loss right after the kill. Revisions up to the newest
+   * acknowledgement, and those both files held when the round started, are
+   * durable. A writer flushes a commit to the primary before it writes it to
+   * the replica, so a commit that reached the replica's disk is durable on
+   * the primary too: the replica loses power first and bounds the primary.
+   * The kernel is assumed to have written everything earlier rounds left
+   * behind; only the unflushed tail of this round is lost.
+   */
+  losePower(acknowledged) {
+    const original = {
+      primary: readFileSync(this.primary),
+      replica: readFileSync(this.replica),
+    };
+    const starts = {
+      primary: recordStarts(original.primary),
+      replica: recordStarts(original.replica),
+    };
+    const lose = (file, revision) => {
+      const result = losePower(original[file], starts[file][revision], this.next);
+      writeFileSync(this[file], result.bytes);
+      return { result, opened: openedRevision(result.bytes) };
+    };
+    const replica = lose('replica', Math.max(acknowledged, this.replicaRevision));
+    // The newest replica record that reached the disk intact, even behind a
+    // zeroed one, was flushed on the primary first.
+    const reached = starts.replica.indexOf(replica.opened.end);
+    if (reached < 0) throw new Error(`replica line end ${replica.opened.end} is not a record end`);
+    const primary = lose('primary', Math.max(acknowledged, this.revision, reached));
+    if (primary.opened.revision === null)
+      throw new Error('power loss left a primary that refuses to open');
+    const report = {
+      primary: primary.opened.revision,
+      replica: replica.opened.revision,
+      cut: [primary.result.cut, replica.result.cut],
+      zeroedSectors: [primary.result.zeroed.length, replica.result.zeroed.length],
+      // Complete lines with a hole that opening drops, the case only power
+      // loss produces.
+      zeroedLines: [primary.opened.zeroedLines, replica.opened.zeroedLines],
+    };
+    if (replica.opened.revision === null) {
+      // A catch-up writes several replica records under one flush; a hole in
+      // one of them followed by an intact one is damage, as a mid-file hole
+      // is, and the primary restores it.
+      const refused = this.verify('replica');
+      if (typeof refused === 'number')
+        throw new Error(`a replica with a hole before an intact record opened at ${refused}`);
+      const result = this.writer('repair', '/data/replica', '/data/primary');
+      const match = /^repaired (\d+) changed true$/.exec(result.other.join(' '));
+      if (result.status !== 0 || !match)
+        throw new Error(`replica repair: ${result.other.join(' ')} ${result.stderr.trim()}`);
+      report.replicaRefused = refused.refused;
+      report.replicaRepaired = Number(match[1]);
+    }
+    return report;
   }
 
   /** Damage written by `damage(bytes)` must be refused, then repaired. */
@@ -440,6 +569,7 @@ async function main() {
     options: {
       target: { type: 'string' },
       rounds: { type: 'string', default: '12' },
+      'power-losses': { type: 'string', default: '8' },
       seed: { type: 'string', default: String(Date.now() % 4294967296) },
       artifact: { type: 'string' },
       image: { type: 'string' },
@@ -454,6 +584,7 @@ async function main() {
     throw new Error(`build the ${values.target} writer first: ${artifact}`);
   const seed = Number(values.seed);
   const rounds = Number(values.rounds);
+  const powerLosses = Number(values['power-losses']);
   const label = `link-cli-crash=${process.pid}`;
   const harness = new Harness({
     target,
@@ -478,6 +609,19 @@ async function main() {
           `acknowledged ${result.acknowledged}, primary ${result.primary}, replica ${result.replica}`,
       );
     }
+    for (let round = rounds + 1; round <= rounds + powerLosses; round++) {
+      const result = await harness.crash(round, { powerLoss: true });
+      report.crashes.push(result);
+      const lost = result.powerLoss;
+      console.log(
+        `power loss ${round}${result.early ? ' (early)' : ''}: ${result.acks} acks, ` +
+          `acknowledged ${result.acknowledged}, primary ${result.primary}, replica ${result.replica} ` +
+          `(cut ${lost.cut.join('/')} bytes, zeroed ${lost.zeroedSectors.join('/')} sectors, ` +
+          `dropped ${lost.zeroedLines.join('/')} complete lines with a hole` +
+          (lost.replicaRefused ? `, replica refused and repaired to ${lost.replicaRepaired}` : '') +
+          ')',
+      );
+    }
     for (const result of harness.phases()) {
       report.damage.push(result);
       console.log(
@@ -487,7 +631,7 @@ async function main() {
           (result.dropped ? `, dropped ${result.dropped} unacknowledged` : ''),
       );
     }
-    for (let round = rounds + 1; round <= rounds + 3; round++)
+    for (let round = rounds + powerLosses + 1; round <= rounds + powerLosses + 3; round++)
       report.crashes.push(await harness.crash(round));
     harness.write(1);
     if (!readFileSync(harness.primary).equals(readFileSync(harness.replica)))
@@ -517,7 +661,9 @@ async function main() {
       appendFileSync(
         process.env.GITHUB_STEP_SUMMARY,
         `### Crash test: ${values.target}\n\n${report.ok ? 'passed' : `failed: ${report.error}`} ` +
-          `(seed ${seed}, ${report.crashes.length} kills, ${report.damage.length} damage phases)\n\n`,
+          `(seed ${seed}, ${report.crashes.length} kills, ` +
+          `${report.crashes.filter((crash) => crash.powerLoss).length} with power loss, ` +
+          `${report.damage.length} damage phases)\n\n`,
       );
   }
 }

@@ -2,8 +2,11 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import test from 'node:test';
 import {
+  SECTOR,
   checkAcks,
   checkSurvivors,
+  losePower,
+  openedRevision,
   parseOutput,
   random,
   recordAt,
@@ -78,6 +81,56 @@ test('record boundaries locate the record a damaged byte belongs to', { timeout:
   assert.deepEqual(torn, [0, 3]);
   assert.equal(recordAt(torn, 4), 1);
 });
+
+test(
+  'power loss keeps every durable byte and only cuts or zeroes the rest',
+  { timeout: 10000 },
+  () => {
+    const bytes = Buffer.alloc(5 * SECTOR + 100, 'x');
+    const durable = SECTOR + 37;
+    const next = random(11);
+    const seen = { lengths: new Set(), zeroed: 0, kept: 0 };
+    for (let trial = 0; trial < 300; trial++) {
+      const { bytes: after, cut, zeroed } = losePower(bytes, durable, next);
+      assert.equal(after.length, bytes.length - cut);
+      assert.ok(after.length >= durable && after.length <= bytes.length);
+      assert.ok(after.subarray(0, durable).equals(bytes.subarray(0, durable)));
+      for (let offset = durable; offset < after.length; offset++) {
+        const sector = Math.floor(offset / SECTOR);
+        assert.equal(after[offset], zeroed.includes(sector) ? 0 : bytes[offset], `byte ${offset}`);
+      }
+      // The sector holding the bound is zeroed only past it.
+      assert.ok(zeroed.every((sector) => sector >= 1 && sector * SECTOR < after.length));
+      seen.lengths.add(
+        after.length === durable ? 'none' : after.length === bytes.length ? 'all' : 'some',
+      );
+      seen.zeroed += zeroed.length;
+      seen.kept += zeroed.length === 0 && after.length === bytes.length ? 1 : 0;
+    }
+    assert.deepEqual([...seen.lengths].sort(), ['all', 'none', 'some']);
+    assert.ok(seen.zeroed > 0 && seen.kept > 0);
+    // Nothing past the durable bound: nothing to lose.
+    assert.deepEqual(losePower(bytes, bytes.length, random(1)).bytes, bytes);
+    assert.throws(() => losePower(bytes, bytes.length + 1, random(1)), /beyond/);
+  },
+);
+
+test(
+  'a journal opens at its intact lines and refuses a hole before one',
+  { timeout: 10000 },
+  () => {
+    const open = (text) => openedRevision(Buffer.from(text));
+    assert.deepEqual(open(''), { revision: 0, end: 0, zeroedLines: 0 });
+    assert.deepEqual(open('ab\ncd\n'), { revision: 2, end: 6, zeroedLines: 0 });
+    assert.deepEqual(open('ab\ncd\nef'), { revision: 2, end: 6, zeroedLines: 0 });
+    assert.deepEqual(open('ab\nc\0\n'), { revision: 1, end: 3, zeroedLines: 1 });
+    assert.deepEqual(open('ab\nc\0\n\0\0\n\0'), { revision: 1, end: 3, zeroedLines: 2 });
+    assert.deepEqual(open('\0b\nc\0\n'), { revision: 0, end: 0, zeroedLines: 2 });
+    // A zeroed line in front of an intact one is refused; the intact one still
+    // tells which record reached the disk.
+    assert.deepEqual(open('ab\nc\0\nef\n'), { revision: null, end: 9, zeroedLines: 0 });
+  },
+);
 
 test(
   'every target names a pinned image, a writer and its default artifact',
