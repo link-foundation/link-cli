@@ -13,13 +13,19 @@ the existing text/binary protocols and client/server behavior. Never merge the P
 - [x] Cover shared memory, mapped files, Unix sockets, TCP, UDP, anonymous
   pipes, named pipes, ALPC, WM_COPYDATA, mailslots, POSIX message queues,
   signals and disk files; expose an extension contract for similar mechanisms.
-- [ ] Add focused automated native cross-process, failure and stacking tests,
+- [x] Add focused automated native cross-process, failure and stacking tests,
   and run real text/binary conversations against both existing servers.
 - [x] Document configuration, platform restrictions and runnable examples.
-- [ ] Commit atomic changes, merge latest main, push only the prepared branch,
-  review the full PR diff and resolve all CI failures on the current commit.
-- [ ] Replace WIP title/body, preserve `Fixes #140`, mark PR #175 ready,
-  verify clean working tree and report concrete results and any blocked criteria.
+- [x] Commit atomic changes, merge latest main, push only the prepared branch,
+  and review the full PR diff for scope and regressions.
+- [x] Replace WIP title/body and preserve `Fixes #140`.
+
+Final publication protocol: resolve every CI failure on the current commit,
+verify the working tree is clean and main is included, update the PR's final
+verification record, then mark PR #175 ready and report its URL. Never merge.
+These final gates are tracked in the PR description and GitHub check results
+so that they refer to the code actually tested, without a documentation-only
+commit making the recorded CI result stale.
 
 Implementation decision: supply an optional, dependency-free Python IPC adapter
 package. Its relay decorates the existing TCP boundary of every Rust/C#/JS
@@ -53,6 +59,11 @@ Keep every source file below the repository's 1000-line Python limit.
   anonymous-pipe binary conversations and delayed mapping-handle cleanup.
   macOS exposed Darwin's 31-byte shared-memory name limit. A reproducing
   regression failed before shortening names to fit and passes afterward.
+- At `259ded94`, all six IPC matrix jobs pass: native Linux/macOS/Windows
+  and real Rust/Linux plus C#/Linux/Windows conversations. The latter include
+  both protocols, anonymous pipes, JavaScript and mixed-stack subscriptions.
+  A subsequent commit refreshes webpki-roots for the existing freshness gate;
+  all final-head checks remain required by the publication protocol above.
 - Final current-head native/protocol jobs and all existing repository checks
   must pass before PR #175 is marked ready. Their authoritative final record
   and run URLs are maintained in the PR description, which can be updated
