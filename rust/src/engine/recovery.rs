@@ -157,9 +157,17 @@ mod file {
             .iter()
             .rposition(|byte| *byte == b'\n')
             .map_or(0, |end| end + 1);
-        bytes[..complete]
+        let mut lines: Vec<&[u8]> = bytes[..complete]
             .split(|byte| *byte == b'\n')
             .filter(|line| !line.is_empty())
+            .collect();
+        // Trailing lines with a NUL byte are torn by power loss, as
+        // `FileTransitionLog` drops them; one further back is damage.
+        while lines.last().is_some_and(|line| line.contains(&0)) {
+            lines.pop();
+        }
+        lines
+            .into_iter()
             .map(|line| String::from_utf8_lossy(line).into_owned())
             .collect()
     }

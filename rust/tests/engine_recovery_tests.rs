@@ -311,6 +311,92 @@ mod file {
         assert!(!again.changed && again.preserved.is_none());
     }
 
+    /// Power loss can persist the newline of a never-flushed record while a
+    /// sector before it reads back as zeros. Trailing lines holding a NUL are
+    /// therefore torn; a NUL in front of an intact record is still damage.
+    #[test]
+    fn trailing_lines_zeroed_by_power_loss_are_torn() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("links.journal");
+        let entries = journal(4, RevisionEncoding::Snapshot);
+        let intact = |count: usize| -> Vec<u8> {
+            entries[..count]
+                .iter()
+                .flat_map(|entry| format!("{entry}\n").into_bytes())
+                .collect()
+        };
+        let zeroed = |entry: &str| -> Vec<u8> {
+            let mut bytes = entry.as_bytes().to_vec();
+            let middle = bytes.len() / 2;
+            bytes[middle..middle + 4].fill(0);
+            bytes.push(b'\n');
+            bytes
+        };
+        let cases: Vec<(Vec<u8>, u64)> = vec![
+            // A zeroed hole in the last record, its newline kept.
+            ([intact(3), zeroed(&entries[3])].concat(), 3),
+            // Two trailing records with holes, a blank line between them.
+            (
+                [
+                    intact(2),
+                    zeroed(&entries[2]),
+                    b"\n".to_vec(),
+                    zeroed(&entries[3]),
+                ]
+                .concat(),
+                2,
+            ),
+            // A record that is all zeros, then zeros past the last newline.
+            (
+                [intact(4), vec![0; 40], b"\n".to_vec(), vec![0; 7]].concat(),
+                4,
+            ),
+            // Only zeroed lines.
+            (
+                [vec![0; 9], b"\n".to_vec(), zeroed(&entries[0])].concat(),
+                0,
+            ),
+        ];
+        for (bytes, revision) in cases {
+            std::fs::write(&path, &bytes).unwrap();
+            assert_eq!(
+                read_journal_file_lossy(&path).unwrap(),
+                entries[..revision as usize]
+            );
+            assert_eq!(open_revision(&path), revision);
+            assert_eq!(std::fs::read(&path).unwrap(), intact(revision as usize));
+            // The writer continues after the cut.
+            let log = FileTransitionLog::open_exclusive(&path).unwrap();
+            let db = Engine::<u64, _>::open(log, EngineOptions::default()).unwrap();
+            let mut tx = db.begin().unwrap();
+            let id = tx.create_link(0, 0).unwrap();
+            tx.update_link(id, id, id).unwrap();
+            tx.commit().unwrap();
+            drop((tx, db));
+            assert_eq!(open_revision(&path), revision + 1);
+        }
+        // A hole in front of an intact record is damage: opening refuses it,
+        // the lossy reader keeps it for repair to judge.
+        let bytes = [
+            zeroed(&entries[0]),
+            intact(2)[entries[0].len() + 1..].to_vec(),
+        ]
+        .concat();
+        std::fs::write(&path, &bytes).unwrap();
+        assert_eq!(read_journal_file_lossy(&path).unwrap().len(), 2);
+        assert!(Engine::<u64, _>::open(
+            FileTransitionLog::open_exclusive(&path).unwrap(),
+            EngineOptions::default()
+        )
+        .is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), bytes, "damage is not cut");
+        let repair = repair_journal_file::<u64>(&path, &[], &EngineOptions::default()).unwrap();
+        assert_eq!(repair.recovery.revision, 0);
+        // Appends refuse NUL, so a record can never end up holding one.
+        let mut log = FileTransitionLog::open_exclusive(&path).unwrap();
+        assert!(log.append_log_entry("a\0b").is_err());
+    }
+
     #[test]
     fn torn_tails_invalid_utf8_and_missing_files_are_read_leniently() {
         let directory = tempfile::tempdir().unwrap();

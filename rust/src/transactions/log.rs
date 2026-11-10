@@ -12,8 +12,9 @@
 //!   the same format the C# port uses.
 //! * [`FileTransitionLog`] — a plain append-only text file, one entry
 //!   per line, `fsync`ed on every append by default. Cheaper than a
-//!   links database. An incomplete final line is discarded on open or
-//!   before reusing a writer after an I/O error.
+//!   links database. An incomplete final line, or trailing lines with a
+//!   NUL byte that power loss left, is discarded on open or before reusing
+//!   a writer after an I/O error.
 //!
 //! Reading takes `&mut self` because the links-backed log resolves
 //! names through [`NamedTypes::get_name`], which needs mutable access
@@ -203,9 +204,9 @@ impl TransitionLogStore for FileTransitionLog {
         true
     }
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
-        if entry.contains('\n') || entry.contains('\r') {
+        if entry.contains(['\n', '\r', '\0']) {
             return Err(LinkError::InvalidFormat(
-                "transition log entries must not contain line breaks".to_string(),
+                "transition log entries must not contain line breaks or NUL".to_string(),
             ));
         }
         self.repair_if_needed()?;
@@ -243,12 +244,20 @@ impl TransitionLogStore for FileTransitionLog {
     }
 }
 
-/// Shrinks `file` to its last complete (newline-terminated) line.
+/// Shrinks `file` to its last complete (newline-terminated) line that holds no
+/// NUL byte.
 ///
 /// A crash can leave the log ending in a fragment of an entry. Appending
 /// after that fragment would concatenate the next entry onto it, turning
 /// one lost transition into two, so the fragment is dropped when the log
 /// is opened or its live writer recovers from an I/O error.
+///
+/// Power loss can also keep the newline of an entry that was never flushed
+/// while a sector before it was never written: a disk may reorder writes no
+/// flush ordered, and an unwritten sector reads back as zeros. Entries never
+/// contain NUL (appends refuse it), so trailing lines holding one are torn
+/// as well, as etcd's WAL treats a last record with a zeroed sector. A NUL
+/// before an intact line is damage; opening refuses it and repair decides.
 fn truncate_torn_tail(file: &File) -> Result<(), LinkError> {
     let len = file.metadata()?.len();
     if len == 0 {
@@ -256,25 +265,47 @@ fn truncate_torn_tail(file: &File) -> Result<(), LinkError> {
     }
     let mut file = file;
     let mut end = len;
+    // End of the line being scanned, just past its newline; None while still
+    // in the fragment after the last newline. Blank lines are skipped, as
+    // reading skips them.
+    let mut complete: Option<u64> = None;
+    let mut newer_newline = len;
+    let mut zeroed = false;
     let mut buffer = [0u8; 8192];
-    while end > 0 {
+    let keep = 'scan: loop {
+        if end == 0 {
+            // The first line of the file is reached.
+            break 'scan if zeroed { 0 } else { complete.unwrap_or(0) };
+        }
         let chunk = std::cmp::min(end, buffer.len() as u64);
         let start = end - chunk;
         file.seek(SeekFrom::Start(start))?;
         let slice = &mut buffer[..chunk as usize];
         file.read_exact(slice)?;
-        if let Some(offset) = slice.iter().rposition(|byte| *byte == b'\n') {
-            let complete = start + offset as u64 + 1;
-            if complete != len {
-                file.set_len(complete)?;
-                file.sync_all()?;
+        for (offset, byte) in slice.iter().enumerate().rev() {
+            let position = start + offset as u64;
+            match (*byte, complete) {
+                (b'\n', None) => complete = Some(position + 1),
+                (b'\n', Some(_)) if newer_newline == position + 1 => {}
+                (b'\n', Some(line_end)) => {
+                    if !zeroed {
+                        break 'scan line_end;
+                    }
+                    complete = Some(position + 1);
+                    zeroed = false;
+                }
+                (0, Some(_)) => zeroed = true,
+                _ => {}
             }
-            return Ok(());
+            if *byte == b'\n' {
+                newer_newline = position;
+            }
         }
         end = start;
+    };
+    if keep != len {
+        file.set_len(keep)?;
+        file.sync_all()?;
     }
-    // No newline anywhere: the whole file is one torn entry.
-    file.set_len(0)?;
-    file.sync_all()?;
     Ok(())
 }
