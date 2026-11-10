@@ -211,10 +211,15 @@ consensus and language interoperability" in `.github/workflows/js-client.yml`)
 starts a real three-member etcd v3.7.3 cluster. It commits distributed
 transactions from Rust, C# and JS, kills the leader with SIGKILL, checks that the
 surviving majority elects a leader and commits, and checks that a group without
-a majority publishes nothing.
+a majority publishes nothing. Before that, it pauses the leader with SIGSTOP
+(Jepsen's "pause" fault). To its peers a paused leader looks cut off by a
+partition, and on SIGCONT it returns still believing it leads. The majority
+must elect another leader and commit. A transaction staged before the pause
+must not commit after it, and a read through the resumed member alone must
+show the majority's write.
 
-Gap: no network partitions or clock faults, and no history checked against a
-model beyond the stored state.
+Gap: no real network partitions (dropped or one-way links), no clock faults,
+and no history checked against a model beyond the stored state.
 
 ### FoundationDB
 
@@ -239,7 +244,7 @@ None of these is claimed as covered:
    interval and disks that lie about flushes are not tested.
 2. **Distributed histories.** Long histories are checked for dependency cycles
    on one engine. Histories across cluster members are not.
-3. **Network faults.** Members are killed, but networks are not partitioned or
-   slowed.
+3. **Network faults.** Members are killed, and a paused leader stands in for
+   one cut off by a partition, but links are not cut, made one-way or slowed.
 4. **Deterministic simulation.** Seeds replay the fault plan, not the thread or
    process schedule.

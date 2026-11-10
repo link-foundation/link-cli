@@ -6,11 +6,12 @@
 | --- | --- |
 | Long random histories, checked like Elle | `rust/tests/engine_history_tests.rs` (`fd93dec2`), `EngineHistoryTests.cs` (`5bc26694`) and `js/client/test/conformance/history.mjs` (`6a6da43d`, Node, Bun and Deno). 4 clients, 3 links, 60 transactions, 20 seeds, 12 configurations. Adya's `ww`/`wr`/`rw`/real-time graph is searched for G0/G1c, G-single and G2 cycles, plus G1a, G1b and lost writes. Each language pins the same counts; see [ACID-TESTING-RESEARCH.md](ACID-TESTING-RESEARCH.md#jepsen-elle). |
 | Power loss that drops or zeroes unsynced writes | The crash test's power-loss rounds (`7af7b889`, `--power-losses`, 8 per CI run per language) cut each file anywhere past its durable bound and zero 512-byte sectors past it at random, then check the predicted revisions. [ENGINE-RECOVERY.md](../../ENGINE-RECOVERY.md#the-crash-test). |
+| A leader cut off, then back | `experiments/issue-138/etcd-cluster.mjs` (`77858be5`, CI step "Verify actual consensus and language interoperability") pauses the real etcd leader with SIGSTOP. The two others must elect a new leader and commit. A transaction staged before the pause must be refused after SIGCONT, and a read through the resumed member must show the majority's write. Six local runs pass, two with journal checkpoints. |
 | A bug the power-loss rounds found | A record that was never flushed can keep its newline while a sector inside it reads back as zeros. Opening refused such a journal, so the writer could not restart. Reproduce: build the Rust writer at `6a6da43d` and, with the current driver, run `node .github/scripts/docker-crash.mjs --target rust --seed 138 --rounds 2 --power-losses 16`; it fails, and with the fix it passes (seeds 138, 139, 140 checked locally; C# and JS with `--rounds 3 --power-losses 12 --seed 140`). The fix drops trailing lines that hold a NUL byte as torn and refuses NUL in appends: Rust `1fb9b0b5`, C# `3518562f`, JS `2b25c4dd`. Regression tests: `file::trailing_lines_zeroed_by_power_loss_are_torn` in `engine_recovery_tests.rs`, `TrailingLinesZeroedByPowerLossAreTorn` in `EngineJournalRecoveryTests.cs`, and `engine-file-log.test.mjs` / `engine-journal-repair.test.mjs` in JS. Each also checks that a NUL line in front of an intact line is still refused. |
 
 Still not covered: reordering inside a live flush interval, disks that
-acknowledge flushes they did not do, histories across cluster members, network
-partitions and deterministic simulation.
+acknowledge flushes they did not do, histories across cluster members, cut or
+one-way network links and deterministic simulation.
 
 ## ACID crash, repair and interleaving tests (2026-11-09)
 
