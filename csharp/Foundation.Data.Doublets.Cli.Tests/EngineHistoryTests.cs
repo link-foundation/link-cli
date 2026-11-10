@@ -17,7 +17,7 @@ public class EngineHistoryTests(Xunit.Abstractions.ITestOutputHelper output)
     private const uint FirstWrite = 1000;
 
     /// <summary>splitmix64: the same sequence in Rust, C# and JS.</summary>
-    private sealed class Random(ulong state)
+    internal sealed class Random(ulong state)
     {
         public ulong Next()
         {
