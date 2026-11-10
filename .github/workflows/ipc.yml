@@ -39,6 +39,11 @@ jobs:
           python-version: '3.14'
       - name: Test independent processes and native mechanisms
         run: python -m unittest discover -s ipc/tests -p test_transports.py -v
+      - name: Verify optional package installation
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          python -m pip install --no-deps ./ipc
+          python -I -m link_ipc --help
 
   protocol:
     name: LiNo over IPC (${{ matrix.backend }}, ${{ matrix.os }})
@@ -64,6 +69,9 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
       - name: Setup Rust
         if: matrix.backend == 'rust'
         shell: bash
@@ -92,7 +100,9 @@ jobs:
 
   pipeline-status:
     name: Pipeline Status (ipc)
-    needs: [native, protocol]
+    needs:
+      - native
+      - protocol
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

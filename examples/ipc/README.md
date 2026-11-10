@@ -21,6 +21,10 @@ clink-ipc --listen tcp:127.0.0.1:7778 --connect shm:/tmp/example-links
 
 Any existing Rust, C# or JS client can now connect to `127.0.0.1:7778`:
 
+With an empty database, the existing JavaScript client can run the automated
+example with `node examples/ipc/javascript-client.mjs 127.0.0.1:7778`.
+It creates, reads and deletes a link through the stack. CLI examples:
+
 ```sh
 clink --connect 127.0.0.1:7778 --protocol text '(create: (0 0))'
 clink --connect 127.0.0.1:7778 --protocol binary '(count: ())'

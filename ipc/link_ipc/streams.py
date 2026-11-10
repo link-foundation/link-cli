@@ -160,15 +160,23 @@ class FileStream(Stream):
                 kernel.CloseHandle(handle)
 
     def recv(self, size=CHUNK):
+        try:
+            return self._recv(size)
+        except (OSError, ValueError):
+            if self.closed.is_set():
+                return b""
+            raise
+
+    def _recv(self, size):
         while not self.closed.is_set():
             if os.name == "nt":
                 import _winapi
                 import msvcrt
 
                 try:
-                    _, available, _ = _winapi.PeekNamedPipe(
-                        msvcrt.get_osfhandle(self.reader.fileno()), 0
-                    )
+                    available = _winapi.PeekNamedPipe(
+                        msvcrt.get_osfhandle(self.reader.fileno())
+                    )[0]
                 except BrokenPipeError:
                     return b""
                 if available:

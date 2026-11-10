@@ -23,13 +23,14 @@ def loopback_address(address):
     from .endpoints import host_port
 
     host, port = host_port(address)
-    if not ipaddress.ip_address(host).is_loopback:
+    ip = ipaddress.ip_address(host)
+    if not ip.is_loopback:
         raise ValueError("UDP IPC requires a numeric loopback address")
-    return host, port
+    return str(ip), port
 
 
 class UdpChannel:
-    def __init__(self, sock, peer, token, options, on_close=None):
+    def __init__(self, sock, peer, token, options, on_close=None, welcome=False):
         self.socket, self.peer, self.token, self.options = sock, peer, token, options
         self.on_close = on_close
         self.closed = threading.Event()
@@ -39,6 +40,7 @@ class UdpChannel:
         self.sent = self.received = self.acked = 0
         self.last_seen = time.monotonic()
         self.error = None
+        self.welcome = welcome
         sock.settimeout(0.1)
         self.thread = threading.Thread(target=self._receive)
         self.thread.start()
@@ -52,6 +54,8 @@ class UdpChannel:
         last_ping = 0
         try:
             while not self.closed.is_set():
+                if self.welcome:
+                    self._transmit(b"W")
                 now = time.monotonic()
                 if now - self.last_seen > self.options.timeout:
                     raise TimeoutError(
@@ -73,6 +77,7 @@ class UdpChannel:
                 if magic != MAGIC or token != self.token:
                     continue
                 self.last_seen = time.monotonic()
+                self.welcome = False
                 if kind == b"P":
                     self._transmit(b"Q")
                 elif kind == b"A":
@@ -175,7 +180,9 @@ class UdpListener:
                     with self.lock:
                         self.sessions.pop(key, None)
 
-                channel = UdpChannel(sock, peer, token, self.options, remove)
+                channel = UdpChannel(
+                    sock, peer, token, self.options, remove, welcome=True
+                )
                 self.sessions[(peer, token)] = channel
                 channel._transmit(b"W")
                 return MessageStream(channel)

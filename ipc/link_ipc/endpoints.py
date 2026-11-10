@@ -321,14 +321,17 @@ class PipeListener:
 class StdioListener:
     address = "stdio:"
 
-    def __init__(self):
+    def __init__(self, options):
         self.used = False
+        self.options = options
 
     def accept(self):
         if self.used:
             raise OSError("stdio accepts one connection")
         self.used = True
-        return FileStream(sys.stdin.buffer, sys.stdout.buffer)
+        return FileStream(
+            sys.stdin.buffer, sys.stdout.buffer, timeout=self.options.timeout
+        )
 
     def close(self):
         pass
@@ -345,7 +348,7 @@ def listen(endpoint, options=DEFAULT_OPTIONS):
     if kind == "pipe":
         return PipeListener(address)
     if kind == "stdio":
-        return StdioListener()
+        return StdioListener(options)
     if kind == "udp":
         from .udp import UdpListener
 

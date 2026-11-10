@@ -4,6 +4,7 @@ CLINK_COMMAND is a JSON argv array (Rust executable or dotnet + clink.dll).
 No source build is triggered by this test. CI supplies the built command.
 """
 
+import faulthandler
 import json
 import os
 import queue
@@ -23,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[2]
 @unittest.skipUnless(os.environ.get("CLINK_COMMAND"), "CI supplies a built clink")
 class ProtocolTests(unittest.TestCase):
     def setUp(self):
+        faulthandler.dump_traceback_later(180, exit=True)
+        self.addCleanup(faulthandler.cancel_dump_traceback_later)
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.command = json.loads(os.environ["CLINK_COMMAND"])
@@ -188,6 +191,20 @@ class ProtocolTests(unittest.TestCase):
             self.assertEqual(read_text(stream), b"(count: 0)\n")
             stream.shutdown_write()
             self.assertEqual(stream.recv(), b"")
+
+    def test_existing_javascript_client(self):
+        native = self.gateway(
+            "mmap:" + str(self.root / "javascript"), "tcp:" + self.server_address
+        )
+        local = self.gateway("tcp:127.0.0.1:0", native)
+        result = subprocess.run(
+            ["node", "examples/ipc/javascript-client.mjs", local.removeprefix("tcp:")],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 def read_text(stream):

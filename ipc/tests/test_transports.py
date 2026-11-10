@@ -1,5 +1,6 @@
 """Cross-process byte, EOF, native-resource and composition regressions."""
 
+import faulthandler
 import json
 import os
 import signal
@@ -9,6 +10,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from link_ipc import Options, connect, listen, relay
 from link_ipc.endpoints import split_endpoint
@@ -31,6 +33,8 @@ def read_all(stream):
 
 class TransportTests(unittest.TestCase):
     def setUp(self):
+        faulthandler.dump_traceback_later(60, exit=True)
+        self.addCleanup(faulthandler.cancel_dump_traceback_later)
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.addCleanup(self.temp.cleanup)
@@ -120,11 +124,21 @@ class TransportTests(unittest.TestCase):
             [sys.executable, "-c", "import time; time.sleep(20)"]
         )
         stream = connect(endpoint, OPTIONS)
-        reader = threading.Thread(target=stream.recv)
+        received, failures = [], []
+
+        def receive():
+            try:
+                received.append(stream.recv())
+            except Exception as error:
+                failures.append(error)
+
+        reader = threading.Thread(target=receive)
         reader.start()
         stream.close()
         reader.join(3)
         self.assertFalse(reader.is_alive())
+        self.assertEqual(failures, [])
+        self.assertEqual(received, [b""])
 
     @unittest.skipIf(os.name == "nt", "SIGUSR1 is POSIX-only")
     def test_signal_handler_does_not_acquire_python_locks(self):
@@ -304,6 +318,34 @@ class TransportTests(unittest.TestCase):
             client.close()
             server.close()
             listener.close()
+
+    def test_udp_lost_welcome_does_not_require_another_accept(self):
+        from link_ipc.udp import UdpChannel
+
+        listener = listen("udp:127.0.0.1:0", OPTIONS)
+        accepted, count = [], 0
+        original = UdpChannel._transmit
+
+        def drop_welcome(channel, kind, sequence=0, data=b""):
+            nonlocal count
+            if kind == b"W":
+                count += 1
+                if count <= 2:
+                    return
+            original(channel, kind, sequence, data)
+
+        with patch.object(UdpChannel, "_transmit", drop_welcome):
+            worker = threading.Thread(target=lambda: accepted.append(listener.accept()))
+            worker.start()
+            try:
+                with connect(listener.address, OPTIONS) as client:
+                    worker.join(3)
+                    client.sendall(b"connected after loss")
+                    self.assertEqual(accepted[0].recv(), b"connected after loss")
+                    self.assertGreater(count, 2)
+            finally:
+                listener.close()
+                worker.join(3)
 
 
 if __name__ == "__main__":
