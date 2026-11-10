@@ -2,7 +2,7 @@
 // ETCD_BIN=/path/to/etcd PARTITION_SEED=138 node experiments/issue-138/etcd-partition.mjs
 //
 // Peer traffic runs through `PeerNetwork` proxies (etcd-peer-network.mjs), so
-// links can be cut both ways or only one way while clients keep talking to
+// links can be cut both ways or only one way, or slowed, while clients keep talking to
 // every member directly. Clients run `ClusterEngine` transactions through
 // single members and through all of them. Each transaction creates one named
 // link in each of two shards. After the network heals, the final state is
@@ -319,8 +319,33 @@ try {
     );
   }
 
-  // 5. Random partitions under concurrent clients (Jepsen's partition
-  // nemesis), with one client per member and one using every member.
+  // 5. Slow links, not cut. Every link 50 ms late (heartbeats every 100 ms,
+  // elections after 1000 ms): commits continue through every member. Then
+  // the leader's messages 1500 ms late, longer than the election timeout:
+  // they arrive, in order, from a term the others may already have ended,
+  // and the others must still commit.
+  {
+    const all = [];
+    for (let a = 0; a < size; a++) for (let b = 0; b < size; b++) if (a !== b) all.push([a, b]);
+    network.slow(all, 50);
+    for (let i = 0; i < size; i++) await commitThrough([i], 2);
+    await heal();
+    const leader = await until('a leader', () => leaderSeenBy(0));
+    const others = [0, 1, 2].filter((i) => i !== leader);
+    network.slow(
+      others.map((other) => [leader, other]),
+      1500,
+    );
+    const records = await commitThrough(others, 3);
+    const now = await leaderSeenBy(others[0]).catch(() => null);
+    await heal();
+    console.log(
+      `PASS slow links: 50 ms everywhere, commits through every member; leader n${leader} 1500 ms late, the majority committed (${JSON.stringify(outcomes(records))}, n${others[0]} then followed ${now === null ? 'none' : `n${now}`})`,
+    );
+  }
+
+  // 6. Random partitions and delays under concurrent clients (Jepsen's
+  // partition nemesis), with one client per member and one using every member.
   const faults = [
     () => network.isolate([below(size)], size),
     () => {
@@ -335,6 +360,13 @@ try {
       const from = below(size);
       network.partition([0, 1, 2].filter((i) => i !== from).map((to) => [from, to]));
     },
+    () => {
+      const from = below(size);
+      network.slow(
+        [0, 1, 2].filter((i) => i !== from).map((to) => [from, to]),
+        100 + below(1900),
+      );
+    },
     () => network.heal(),
   ];
   for (let round = 0; round < rounds; round++) {
@@ -343,10 +375,10 @@ try {
     const [first, second] = [faults[below(faults.length)], faults[below(faults.length)]];
     const at = 500 + below(1500);
     first();
-    const cuts = [network.cuts.join(' ') || 'none'];
+    const cuts = [network.describe()];
     const timer = setTimeout(() => {
       second();
-      cuts.push(network.cuts.join(' ') || 'none');
+      cuts.push(network.describe());
     }, at);
     const deadline = performance.now() + 3000;
     const clients = [[0], [1], [2], [0, 1, 2]].map(async (members) => {

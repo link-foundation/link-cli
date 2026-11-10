@@ -16,6 +16,11 @@
 // byte (a black hole: the dialer sees a timeout, not a refusal). Messages from
 // b to a still flow, so a cut can be one-way, which iptables cannot do for TCP.
 // Healing destroys the held connections; etcd redials at once.
+//
+// A slowed link a -> b delays every byte, both ways, on the connections that
+// carry messages from a to b: the messages arrive late and in order instead of
+// not at all, so a delay longer than the election timeout delivers heartbeats
+// and votes from a term that has already ended.
 import net from 'node:net';
 
 const HEADER_LIMIT = 16384;
@@ -24,6 +29,7 @@ export class PeerNetwork {
   #proxies = [];
   #connections = new Set();
   #cut = new Set();
+  #slow = new Map();
   #ids = new Map();
   #trace = () => {};
   #senders = new Set();
@@ -61,13 +67,27 @@ export class PeerNetwork {
       for (let b = 0; b < size; b++) if (inside.has(a) !== inside.has(b)) links.push([a, b]);
     this.partition(links);
   }
+  /** Delay each directed link `[from, to]` by `ms`, replacing the previous delays. */
+  slow(links, ms) {
+    this.#slow = new Map(links.map(([from, to]) => [`${from}>${to}`, ms]));
+    this.#trace(`slow ${this.slowed.join(' ') || 'nothing'}`);
+  }
+  /** Remove every cut and every delay. */
   heal() {
     this.#cut = new Set();
+    this.#slow = new Map();
     this.#trace(`heal`);
     for (const connection of this.#connections) if (connection.held) connection.destroy();
   }
   get cuts() {
     return [...this.#cut];
+  }
+  get slowed() {
+    return [...this.#slow].map(([link, ms]) => `${link}~${ms}ms`);
+  }
+  /** The current faults, for logs. */
+  describe() {
+    return [...this.cuts, ...this.slowed].join(' ') || 'none';
   }
   /** Senders seen in X-Server-From that `learn` was not told about. */
   get strangers() {
@@ -80,6 +100,30 @@ export class PeerNetwork {
   }
   #isCut(link) {
     return link !== null && this.#cut.has(`${link[0]}>${link[1]}`);
+  }
+  // Forwards chunks to `destination` after the connection's current delay,
+  // in arrival order. Returns false when the caller should wait for 'drain'.
+  #sender(connection, destination) {
+    const queue = [];
+    let timer = null;
+    const pump = () => {
+      timer = null;
+      const now = performance.now();
+      while (queue.length > 0 && queue[0].at <= now) {
+        const { chunk } = queue.shift();
+        if (!destination.destroyed) destination.write(chunk);
+      }
+      if (queue.length > 0) timer = setTimeout(pump, queue[0].at - now);
+    };
+    connection.timers.push(() => clearTimeout(timer));
+    return (chunk) => {
+      const link = this.#link(connection);
+      const ms = link === null ? 0 : (this.#slow.get(`${link[0]}>${link[1]}`) ?? 0);
+      if (ms === 0 && queue.length === 0) return destination.write(chunk);
+      queue.push({ chunk, at: performance.now() + ms });
+      if (timer === null) timer = setTimeout(pump, Math.max(0, queue[0].at - performance.now()));
+      return true;
+    };
   }
   async #listen(index, target) {
     const server = net.createServer((socket) => this.#accept(index, target, socket));
@@ -96,9 +140,11 @@ export class PeerNetwork {
       stream: false,
       held: false,
       sockets: [socket],
+      timers: [],
     };
     connection.destroy = () => {
       for (const s of connection.sockets) s.destroy();
+      for (const clear of connection.timers) clear();
       this.#connections.delete(connection);
     };
     this.#connections.add(connection);
@@ -129,7 +175,14 @@ export class PeerNetwork {
       connection.sockets.push(upstream);
       upstream.on('error', () => {});
       upstream.on('close', () => connection.destroy());
-      upstream.pipe(socket);
+      const toDialer = this.#sender(connection, socket);
+      upstream.on('data', (chunk) => {
+        if (!toDialer(chunk)) {
+          upstream.pause();
+          socket.once('drain', () => upstream.resume());
+        }
+      });
+      const toMember = this.#sender(connection, upstream);
       // etcd's prober shares the pipeline's HTTP transport, so a keep-alive
       // connection opened by an unlabeled `GET /raft/probing` later carries
       // `POST /raft` messages. Until a request names its sender, scan what
@@ -153,7 +206,7 @@ export class PeerNetwork {
             }
           }
         }
-        if (!upstream.write(chunk)) {
+        if (!toMember(chunk)) {
           socket.pause();
           upstream.once('drain', () => socket.resume());
         }
