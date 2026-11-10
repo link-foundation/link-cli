@@ -42,8 +42,8 @@ function readExactly(fd, bytes, length, position) {
 
 /** A single writer, fenced by atomic directory creation. A crashed owner's
  * lock is NEVER stolen automatically: recovery must first fence the old owner.
- * Incomplete final lines are repaired on open and before reuse after an I/O
- * error; complete records remain available for uncertain-outcome discovery.
+ * Incomplete final lines, and trailing lines with a NUL byte that power loss
+ * left, are repaired on open and before reuse after an I/O error; complete records remain available for uncertain-outcome discovery.
  * The caller owns this adapter and closes it after all engine sessions. */
 export class FileCommitLog {
   #fd;
@@ -68,21 +68,45 @@ export class FileCommitLog {
   }
   // Only uncertain writes trigger a rescan; the buffer stays bounded even
   // when the failed record is large. Clear admission only after durable repair.
+  // Power loss can also keep the newline of a record that was never flushed
+  // while a sector before it reads back as zeros (the disk reordered writes no
+  // flush ordered). Records never contain NUL (append refuses it), so trailing
+  // lines holding one are torn too, as etcd's WAL treats a last record with a
+  // zeroed sector. A NUL before an intact line is damage that reading refuses.
   #repairTail() {
     const buffer = new Uint8Array(8192);
     let end = fstatSync(this.#fd).size;
-    let complete = 0;
-    while (end > 0) {
-      const length = Math.min(end, buffer.length);
-      readExactly(this.#fd, buffer, length, end - length);
-      const offset = buffer.subarray(0, length).lastIndexOf(10);
-      if (offset >= 0) {
-        complete = end - length + offset + 1;
+    let complete = null; // End of the line being scanned, past its newline.
+    let newerNewline = end;
+    let zeroed = false;
+    let keep = -1;
+    while (keep < 0) {
+      if (end === 0) {
+        keep = zeroed ? 0 : (complete ?? 0);
         break;
       }
-      end -= length;
+      const length = Math.min(end, buffer.length);
+      const start = end - length;
+      readExactly(this.#fd, buffer, length, start);
+      for (let offset = length - 1; offset >= 0 && keep < 0; offset--) {
+        const position = start + offset;
+        const byte = buffer[offset];
+        if (byte === 10) {
+          // Blank lines are skipped, as reading the journal skips them.
+          if (complete === null) complete = position + 1;
+          else if (newerNewline !== position + 1) {
+            if (!zeroed) keep = complete;
+            else {
+              complete = position + 1;
+              zeroed = false;
+            }
+          }
+          newerNewline = position;
+        } else if (byte === 0 && complete !== null) zeroed = true;
+      }
+      end = start;
     }
-    if (complete !== fstatSync(this.#fd).size) ftruncateSync(this.#fd, complete);
+    if (keep !== fstatSync(this.#fd).size) ftruncateSync(this.#fd, keep);
     fsyncSync(this.#fd);
   }
   #repairIfNeeded() {
@@ -108,8 +132,8 @@ export class FileCommitLog {
   }
   append(record) {
     this.#check();
-    if (typeof record !== 'string' || /[\r\n]/.test(record))
-      throw new TypeError('journal records must be strings without line breaks');
+    if (typeof record !== 'string' || /[\r\n\0]/.test(record))
+      throw new TypeError('journal records must be strings without line breaks or NUL');
     this.#repairIfNeeded();
     const bytes = encode.encode(record + '\n');
     this.#tailMayBeTorn = true;
@@ -156,10 +180,13 @@ function lines(bytes) {
   const records = [];
   let start = 0;
   for (let index = bytes.indexOf(10); index !== -1; index = bytes.indexOf(10, start)) {
-    if (index > start) records.push(lenient.decode(bytes.subarray(start, index)));
+    if (index > start) records.push(bytes.subarray(start, index));
     start = index + 1;
   }
-  return records;
+  // Trailing lines with a NUL byte are torn by power loss, as FileCommitLog
+  // drops them; one further back is damage.
+  while (records.length > 0 && records.at(-1).includes(0)) records.pop();
+  return records.map((record) => lenient.decode(record));
 }
 
 function writeAll(fd, bytes) {
@@ -174,8 +201,8 @@ function writeAll(fd, bytes) {
 
 /** Complete lines of a file journal as `FileCommitLog` reads them, tolerating
  * damage it would reject: invalid UTF-8 becomes U+FFFD (so the checksum flags
- * that record), blank lines are skipped, a torn final line is ignored and a
- * missing file is empty. */
+ * that record), blank lines are skipped, a torn final line and trailing lines
+ * with a NUL byte are ignored and a missing file is empty. */
 export function readJournalFileLossy(path) {
   return lines(readBytes(path));
 }

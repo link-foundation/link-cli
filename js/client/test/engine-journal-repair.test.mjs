@@ -51,6 +51,9 @@ test('lossy reading keeps complete lines and marks invalid UTF-8', (context) => 
   writeFileSync(path, Uint8Array.from([0x61, 10, 10, 0xff, 0x62, 10, 0x63]));
   assert.deepEqual(readJournalFileLossy(path), ['a', '�b']);
   assert.throws(() => readJournalFileLossy(directory), /EISDIR/);
+  // Trailing lines zeroed by power loss are torn; an earlier one is damage.
+  writeFileSync(path, 'a\0\nb\nc\0\n\n\0\0\n\0');
+  assert.deepEqual(readJournalFileLossy(path), ['a\0', 'b']);
 });
 
 test('repair keeps the valid prefix, preserves every original and reports no-ops', (context) => {

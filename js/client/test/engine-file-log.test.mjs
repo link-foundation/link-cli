@@ -119,3 +119,41 @@ test('truncation during a read is reported and an entirely torn tail is discarde
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+// Power loss can persist the newline of a never-flushed record while a sector
+// before it reads back as zeros. Trailing lines holding a NUL are therefore
+// torn; a NUL in front of an intact record is still damage.
+test('trailing lines zeroed by power loss are torn, earlier ones are kept', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'engine-power-loss-'));
+  const path = join(directory, 'journal');
+  const long = 'y'.repeat(20000);
+  const cases = [
+    ['one\ntwo\nth\0\0ee\n', ['one', 'two'], 'one\ntwo\n'],
+    ['one\nt\0o\n\nth\0ee\n', ['one'], 'one\n'],
+    ['one\n' + '\0'.repeat(40) + '\n' + '\0'.repeat(7), ['one'], 'one\n'],
+    ['\0'.repeat(9) + '\n' + 'o\0e\n', [], ''],
+    // A hole far from the newline, across scan chunks.
+    [`one\n${long}\0${long}\n`, ['one'], 'one\n'],
+    ['one\ntwo\n\n', ['one', 'two', ''], 'one\ntwo\n\n'],
+  ];
+  try {
+    for (const [content, records, kept] of cases) {
+      writeFileSync(path, content);
+      {
+        using log = new FileCommitLog(path);
+        assert.deepEqual(JSON.parse(log.read()), records);
+        assert.equal(fs.readFileSync(path, 'utf8'), kept);
+        log.append('next');
+        log.flush();
+      }
+      assert.equal(fs.readFileSync(path, 'utf8'), kept + 'next\n');
+    }
+    // Damage in front of an intact record is left for repair to judge.
+    writeFileSync(path, 'o\0e\ntwo\n');
+    using damaged = new FileCommitLog(path);
+    assert.deepEqual(JSON.parse(damaged.read()), ['o\0e', 'two']);
+    assert.throws(() => damaged.append('a\0b'), /NUL/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
