@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { WasmEngine } from "../../src/index.js";
+import assert from 'node:assert/strict';
+import { WasmEngine } from '../../src/index.js';
 
 /**
  * Long random histories on the compiled engine, checked for isolation
@@ -63,13 +63,10 @@ const transaction = (began = 0) => ({
 async function step(engine, client, op, counter) {
   client.session ??= engine.begin();
   const { session, record } = client;
-  if (op.read)
-    observe(record, op.read, (await session.each([op.read]))[0].target);
-  else if (op.lock)
-    observe(record, op.lock, (await session.lockForUpdate(op.lock)).target);
+  if (op.read) observe(record, op.read, (await session.each([op.read]))[0].target);
+  else if (op.lock) observe(record, op.lock, (await session.lockForUpdate(op.lock)).target);
   else if (op.scan)
-    for (const link of await session.each())
-      observe(record, link.index, link.target);
+    for (const link of await session.each()) observe(record, link.index, link.target);
   else if (op.write) {
     const value = ++counter.value;
     await session.update(op.write, op.write, value);
@@ -95,7 +92,7 @@ export async function generate(binding, options, seed) {
     await setup.close();
     const transactions = [initial];
     const rng = random(seed);
-    const pessimistic = options.concurrency === "pessimistic";
+    const pessimistic = options.concurrency === 'pessimistic';
     const clients = Array(Number(CLIENTS)).fill(undefined);
     let started = 0;
     let finished = 0;
@@ -119,11 +116,7 @@ export async function generate(binding, options, seed) {
       try {
         await step(engine, client, op, counter);
       } catch (error) {
-        if (
-          error instanceof TypeError ||
-          error instanceof assert.AssertionError
-        )
-          throw error;
+        if (error instanceof TypeError || error instanceof assert.AssertionError) throw error;
         // A refused step ends the transaction, as a client would roll back.
         failed = true;
       }
@@ -136,9 +129,7 @@ export async function generate(binding, options, seed) {
         finished++;
       }
     }
-    const finalState = new Map(
-      engine.snapshot().rows.map((row) => [row.index, row.target]),
-    );
+    const finalState = new Map(engine.snapshot().rows.map((row) => [row.index, row.target]));
     return { transactions, finalState };
   } finally {
     engine.close();
@@ -181,16 +172,7 @@ function cycleIn(graph) {
   return undefined;
 }
 
-export const ANOMALIES = [
-  "Garbage",
-  "G1a",
-  "G1b",
-  "Internal",
-  "LostWrite",
-  "G1c",
-  "GSingle",
-  "G2",
-];
+export const ANOMALIES = ['Garbage', 'G1a', 'G1b', 'Internal', 'LostWrite', 'G1c', 'GSingle', 'G2'];
 
 /** Every anomaly in the history, each with one example: the transactions involved. */
 export function check({ transactions, finalState }) {
@@ -207,16 +189,12 @@ export function check({ transactions, finalState }) {
       }),
     ),
   );
-  const committed = transactions.flatMap((t, id) =>
-    t.revision === undefined ? [] : [id],
-  );
+  const committed = transactions.flatMap((t, id) => (t.revision === undefined ? [] : [id]));
   const versions = new Map();
   for (const id of [...committed].sort((a, b) =>
     transactions[a].revision < transactions[b].revision ? -1 : 1,
   ))
-    for (const link of new Set(
-      transactions[id].writes.map(([written]) => written),
-    )) {
+    for (const link of new Set(transactions[id].writes.map(([written]) => written))) {
       if (!versions.has(link)) versions.set(link, []);
       versions.get(link).push(id);
     }
@@ -224,62 +202,52 @@ export function check({ transactions, finalState }) {
     const expected = transactions[writers.at(-1)].writes.findLast(
       ([written]) => written === link,
     )[1];
-    if (finalState.get(link) !== expected) report("LostWrite", writers);
+    if (finalState.get(link) !== expected) report('LostWrite', writers);
   }
   const dependencies = transactions.map(() => new Set());
   const anti = [];
   for (const writers of versions.values())
-    for (let i = 0; i + 1 < writers.length; i++)
-      dependencies[writers[i]].add(writers[i + 1]);
+    for (let i = 0; i + 1 < writers.length; i++) dependencies[writers[i]].add(writers[i + 1]);
   for (const id of committed) {
     const { reads, ownReads } = transactions[id];
-    if (ownReads.some(([, read, written]) => read !== written))
-      report("Internal", [id]);
+    if (ownReads.some(([, read, written]) => read !== written)) report('Internal', [id]);
     for (const [link, value] of reads) {
       const source = writer.get(value);
-      if (source === undefined) report("Garbage", [id]);
-      else if (transactions[source.id].revision === undefined)
-        report("G1a", [source.id, id]);
-      else if (!source.last) report("G1b", [source.id, id]);
-      else if (source.id === id) report("Internal", [id]);
+      if (source === undefined) report('Garbage', [id]);
+      else if (transactions[source.id].revision === undefined) report('G1a', [source.id, id]);
+      else if (!source.last) report('G1b', [source.id, id]);
+      else if (source.id === id) report('Internal', [id]);
       else {
         dependencies[source.id].add(id);
         const order = versions.get(link);
         const following = order[order.indexOf(source.id) + 1];
-        if (following !== undefined && following !== id)
-          anti.push([id, following]);
+        if (following !== undefined && following !== id) anti.push([id, following]);
       }
     }
   }
   // Real time: a transaction that committed before another began precedes it.
   for (const earlier of committed)
     for (const later of committed)
-      if (transactions[earlier].ended < transactions[later].began)
-        dependencies[earlier].add(later);
+      if (transactions[earlier].ended < transactions[later].began) dependencies[earlier].add(later);
   const cycle = cycleIn(dependencies);
-  if (cycle) report("G1c", cycle);
+  if (cycle) report('G1c', cycle);
   const reach = new Map();
   for (const [from, to] of anti) {
     if (!reach.has(to)) reach.set(to, reachableFrom(dependencies, to));
-    if (reach.get(to)[from]) report("GSingle", [from, to]);
+    if (reach.get(to)[from]) report('GSingle', [from, to]);
   }
-  if (!found.has("GSingle") && !found.has("G1c")) {
+  if (!found.has('GSingle') && !found.has('G1c')) {
     const all = dependencies.map((edges) => new Set(edges));
     for (const [from, to] of anti) all[from].add(to);
     const longer = cycleIn(all);
-    if (longer) report("G2", longer);
+    if (longer) report('G2', longer);
   }
-  return new Map(
-    ANOMALIES.filter((anomaly) => found.has(anomaly)).map((a) => [
-      a,
-      found.get(a),
-    ]),
-  );
+  return new Map(ANOMALIES.filter((anomaly) => found.has(anomaly)).map((a) => [a, found.get(a)]));
 }
 
 function allowed({ concurrency, isolation }) {
-  if (concurrency === "exclusive" || isolation === "serializable") return [];
-  return isolation === "snapshot" ? ["G2"] : ["GSingle", "G2"];
+  if (concurrency === 'exclusive' || isolation === 'serializable') return [];
+  return isolation === 'snapshot' ? ['G2'] : ['GSingle', 'G2'];
 }
 
 /** Committed transactions and histories with G-single and with G2, pinned to
@@ -334,10 +302,7 @@ function checkerSelfTest() {
   const both = [r(1, 1000), r(2, 1001)];
   assert.deepEqual(
     kinds(
-      [
-        committedAt(1, [r(1, 1)], [r(1, 1000)]),
-        committedAt(2, [r(1, 1000)], [r(2, 1001)]),
-      ],
+      [committedAt(1, [r(1, 1)], [r(1, 1000)]), committedAt(2, [r(1, 1000)], [r(2, 1001)])],
       both,
     ),
     [],
@@ -346,13 +311,10 @@ function checkerSelfTest() {
   // Write skew.
   assert.deepEqual(
     kinds(
-      [
-        committedAt(1, initial, [r(1, 1000)], true),
-        committedAt(2, initial, [r(2, 1001)], true),
-      ],
+      [committedAt(1, initial, [r(1, 1000)], true), committedAt(2, initial, [r(2, 1001)], true)],
       both,
     ),
-    ["G2"],
+    ['G2'],
   );
   // Lost update.
   assert.deepEqual(
@@ -363,26 +325,17 @@ function checkerSelfTest() {
       ],
       [r(1, 1001), r(2, 2)],
     ),
-    ["GSingle"],
+    ['GSingle'],
   );
   // Read skew.
   assert.deepEqual(
-    kinds(
-      [
-        committedAt(1, [], both, true),
-        committedAt(2, [r(1, 1), r(2, 1001)], [], true),
-      ],
-      both,
-    ),
-    ["GSingle"],
+    kinds([committedAt(1, [], both, true), committedAt(2, [r(1, 1), r(2, 1001)], [], true)], both),
+    ['GSingle'],
   );
   // A stale read after the writer committed.
   assert.deepEqual(
-    kinds(
-      [committedAt(1, [], [r(1, 1000)]), committedAt(2, [r(1, 1)], [])],
-      [r(1, 1000), r(2, 2)],
-    ),
-    ["GSingle"],
+    kinds([committedAt(1, [], [r(1, 1000)]), committedAt(2, [r(1, 1)], [])], [r(1, 1000), r(2, 2)]),
+    ['GSingle'],
   );
   // Circular information flow.
   assert.deepEqual(
@@ -393,7 +346,7 @@ function checkerSelfTest() {
       ],
       both,
     ),
-    ["G1c"],
+    ['G1c'],
   );
   // Aborted, intermediate and unknown values read.
   const aborted = committedAt(1, [], [r(1, 1000)]);
@@ -407,7 +360,7 @@ function checkerSelfTest() {
       ],
       [r(1, 1), r(2, 1002)],
     ),
-    ["Garbage", "G1a", "G1b"],
+    ['Garbage', 'G1a', 'G1b'],
   );
   // A lost committed write and a read that missed the transaction's own write.
   const own = committedAt(1, [], [r(1, 1000), r(1, 1001)]);
@@ -415,7 +368,7 @@ function checkerSelfTest() {
     [1n, 1001n, 1001n],
     [1n, 1000n, 1001n],
   ];
-  assert.deepEqual(kinds([own], initial), ["Internal", "LostWrite"]);
+  assert.deepEqual(kinds([own], initial), ['Internal', 'LostWrite']);
 }
 
 export async function historyConformance(binding) {
@@ -424,21 +377,17 @@ export async function historyConformance(binding) {
   assert.equal(random(1n).next(), 0x910a2dec89025cc1n);
   const replay = async (seed) =>
     JSON.stringify(await generate(binding, {}, seed), (_, value) =>
-      typeof value === "bigint"
-        ? `${value}`
-        : value instanceof Map
-          ? [...value]
-          : value,
+      typeof value === 'bigint' ? `${value}` : value instanceof Map ? [...value] : value,
     );
   assert.equal(await replay(7n), await replay(7n));
   assert.notEqual(await replay(7n), await replay(8n));
   let index = 0;
-  for (const concurrency of ["optimistic", "pessimistic", "exclusive"])
+  for (const concurrency of ['optimistic', 'pessimistic', 'exclusive'])
     for (const [isolation, serializableValidation] of [
-      ["read-committed", "revision"],
-      ["snapshot", "revision"],
-      ["serializable", "revision"],
-      ["serializable", "read-set"],
+      ['read-committed', 'revision'],
+      ['snapshot', 'revision'],
+      ['serializable', 'revision'],
+      ['serializable', 'read-set'],
     ]) {
       const options = { concurrency, isolation, serializableValidation };
       const context = `${concurrency} ${isolation} ${serializableValidation}`;
@@ -446,9 +395,7 @@ export async function historyConformance(binding) {
       let committed = 0;
       for (let seed = 1n; seed <= SEEDS; seed++) {
         const history = await generate(binding, options, seed);
-        committed += history.transactions
-          .slice(1)
-          .filter((t) => t.revision !== undefined).length;
+        committed += history.transactions.slice(1).filter((t) => t.revision !== undefined).length;
         for (const [anomaly, example] of check(history)) {
           assert.ok(
             allowed(options).includes(anomaly),
@@ -460,19 +407,13 @@ export async function historyConformance(binding) {
       const attempted = Number(SEEDS) * TRANSACTIONS;
       // Refusing everything would pass the check above, so a share must
       // commit: a tenth under exclusive admission, a quarter otherwise.
-      const share = concurrency === "exclusive" ? 10 : 4;
-      assert.ok(
-        committed * share >= attempted,
-        `${context}: ${committed} committed`,
-      );
+      const share = concurrency === 'exclusive' ? 10 : 4;
+      assert.ok(committed * share >= attempted, `${context}: ${committed} committed`);
       const [weakest] = allowed(options);
       if (weakest)
-        assert.ok(
-          seen.has(weakest),
-          `${context}: the allowed ${weakest} never occurred`,
-        );
+        assert.ok(seen.has(weakest), `${context}: the allowed ${weakest} never occurred`);
       assert.deepEqual(
-        [committed, seen.get("GSingle") ?? 0, seen.get("G2") ?? 0],
+        [committed, seen.get('GSingle') ?? 0, seen.get('G2') ?? 0],
         EXPECTED[index++],
         `${context}: differs from the Rust and C# ports`,
       );
