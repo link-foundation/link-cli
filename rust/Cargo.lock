@@ -196,9 +196,9 @@ checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "doublets"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6f1b764302c8920c2af1a02ed5a7e223ea306c744b1a4954730a49a9869fa21"
+checksum = "c5351057b0c379efcac9e4ca8ecd89b41827e7f82ef9a34e0f6f41ec6e425104"
 dependencies = [
  "cfg-if",
  "leak_slice",
@@ -292,9 +292,9 @@ checksum = "39c29a617ce3df32c08497bdc1ab6e2376e0b17948ac166a2fbe5977c5954cd9"
 
 [[package]]
 name = "links-notation"
-version = "0.31.0"
+version = "0.31.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e249b2289a216ec250079802299be9abe8b5856159a5730cbf85ea413eb491d8"
+checksum = "b7c9656daddfe14ca33be9874693dfd69cae73d2c35adb93cdfdaa911c59ddc1"
 dependencies = [
  "links-notation-macro",
  "nom",

@@ -28,7 +28,7 @@ thiserror = "2.0.21"
 anyhow = "1.0.104"
 # Issue 67 Rust basis crates:
 # Source: http://github.com/linksplatform/doublets-rs
-doublets = "0.20.0"
+doublets = "0.21.0"
 # Source: http://github.com/link-foundation/links-notation
 links-notation = "0.31.0"
 # Source: http://github.com/link-foundation/lino-arguments
