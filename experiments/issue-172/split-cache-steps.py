@@ -11,6 +11,7 @@ repository quota, and the Windows test job spent 3-5 minutes compressing a
 ~3 GB archive inside its 45-minute budget (run 42877437350 was cancelled in
 that post step after every test passed).
 """
+
 import re
 import sys
 
@@ -31,7 +32,8 @@ def job_end(lines, start):
             # Back up over trailing blank lines and section comments.
             end = index
             while end > start and (
-                lines[end - 1].strip() == "" or lines[end - 1].lstrip().startswith("#")
+                lines[end - 1].strip() == ""
+                or lines[end - 1].lstrip().startswith("#")
                 and len(lines[end - 1]) - len(lines[end - 1].lstrip()) <= 2
             ):
                 end -= 1
@@ -47,7 +49,11 @@ def rewrite(text):
     count = 0
     while True:
         uses = next(
-            (i for i, l in enumerate(lines) if re.match(r"\s+uses: actions/cache@v\d+\s*$", l)),
+            (
+                i
+                for i, line in enumerate(lines)
+                if re.match(r"\s+uses: actions/cache@v\d+\s*$", line)
+            ),
             None,
         )
         if uses is None:
@@ -62,17 +68,24 @@ def rewrite(text):
         index = uses + 1
         block = []
         while index < len(lines) and (
-            lines[index].strip() == "" and False
+            lines[index].strip() == ""
+            and False
             or len(lines[index]) - len(lines[index].lstrip()) > len(dash_indent)
         ):
             block.append(lines[index])
             index += 1
         text_block = "\n".join(block)
-        step_id = "cache-%d" % count
-        path_match = re.search(r"\n?(\s+path: [\s\S]*?)(?=\n\s+key:)", "\n" + text_block)
+        step_id = f"cache-{count}"
+        path_match = re.search(
+            r"\n?(\s+path: [\s\S]*?)(?=\n\s+key:)", "\n" + text_block
+        )
         assert path_match, text_block
-        lines[name_line] = f"{dash_indent}- name: Restore {name_match.group(2)[0].lower()}{name_match.group(2)[1:]}"
-        lines[uses] = f"{dash_indent}  id: {step_id}\n{dash_indent}  uses: actions/cache/restore@{version}"
+        lines[name_line] = (
+            f"{dash_indent}- name: Restore {name_match.group(2)[0].lower()}{name_match.group(2)[1:]}"
+        )
+        lines[uses] = (
+            f"{dash_indent}  id: {step_id}\n{dash_indent}  uses: actions/cache/restore@{version}"
+        )
         end = job_end(lines, uses)
         save = [
             "",
