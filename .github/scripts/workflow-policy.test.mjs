@@ -612,3 +612,84 @@ test('Dependabot watches every directory the dependency check reads', () => {
     }
   }
 });
+
+// The combined `actions/cache` saved in its post step on every pull request
+// miss. Pull request caches are scoped to their merge ref, so nothing else
+// could restore them, and multi-GB rust/target archives kept evicting main's
+// caches under the 10 GB repository quota. The Windows Rust test job then
+// compiled from scratch and spent 3-5 minutes compressing ~3 GB after every
+// test had passed, until run 42877437350 was cancelled in that post step at
+// its 45-minute limit (issue #172).
+test('caches are restored everywhere but saved only by main pushes on a miss', () => {
+  for (const { name, text } of workflows) {
+    assert.doesNotMatch(text, /uses: actions\/cache@/, `${name} uses the always-saving cache`);
+    for (const job of readJobs(text)) {
+      const steps = readSteps(job.body);
+      const restores = steps.filter((step) => /uses: actions\/cache\/restore@/.test(step.text));
+      const saves = steps.filter((step) => /uses: actions\/cache\/save@/.test(step.text));
+      assert.equal(saves.length, restores.length, `${name} ${job.name} restores without saving`);
+      for (const [index, save] of saves.entries()) {
+        const id = /^\s+id: (\S+)$/m.exec(restores[index].text)?.[1];
+        assert.ok(id, `${name} ${job.name}: the restore step needs an id`);
+        assert.match(
+          save.text,
+          /github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/,
+        );
+        assert.ok(
+          save.text.includes(`steps.${id}.outputs.cache-hit != 'true'`),
+          `${name} ${job.name}`,
+        );
+        assert.ok(save.text.includes(`key: \${{ steps.${id}.outputs.cache-primary-key }}`));
+        const paths = (step) =>
+          /path: \|\n([\s\S]*?)\n\s+key:/
+            .exec(step.text)?.[1]
+            .split('\n')
+            .filter((line) => !line.trim().startsWith('#'))
+            .join('\n')
+            .trim();
+        assert.equal(paths(save), paths(restores[index]), `${name} ${job.name} saves other paths`);
+      }
+    }
+  }
+});
+
+test('the Rust test cache is saved before the long test run, under its own key', () => {
+  const rust = workflows.find(({ name }) => name === 'rust.yml');
+  const test = readJobs(rust.text).find(({ name }) => name === 'test');
+  const save = test.body.indexOf('uses: actions/cache/save@');
+  assert.ok(save > test.body.indexOf('--all-features --no-run'));
+  assert.ok(save < test.body.indexOf('- name: Run tests'));
+  assert.match(test.body, /key: \$\{\{ runner\.os \}\}-cargo-test-/);
+});
+
+// A failed credential preflight on main used to skip lint, test and build, so
+// a registry problem also hid whether the code was broken (issue #172). Only
+// the jobs that publish may wait on the preflight; the gate still fails main.
+test('a failed release preflight blocks publishing but never the code checks', () => {
+  const publishers = {
+    'csharp.yml': ['release', 'instant-release'],
+    'rust.yml': ['auto-release', 'manual-release'],
+    'js-client.yml': ['release'],
+  };
+  const checks = ['lint', 'test', 'fresh-merge', 'build', 'unit', 'conformance'];
+  for (const [name, releaseJobs] of Object.entries(publishers)) {
+    const { text } = workflows.find((workflow) => workflow.name === name);
+    const jobs = readJobs(text);
+    for (const job of jobs.filter(({ name: job }) => checks.includes(job))) {
+      assert.doesNotMatch(
+        job.body,
+        /release-preflight/,
+        `${name} ${job.name} waits on the preflight`,
+      );
+    }
+    for (const releaseJob of releaseJobs) {
+      const job = jobs.find(({ name: job }) => job === releaseJob);
+      assert.ok(job, `${name} has no ${releaseJob} job`);
+      assert.match(job.body, /needs: \[release-preflight, /, `${name} ${releaseJob}`);
+      const condition = /^ {4}if: (.*)$/m.exec(job.body)?.[1];
+      if (condition) assert.match(condition, /needs\.release-preflight\.result == 'success'/);
+    }
+    const gate = jobs.find(({ name: job }) => job === 'pipeline-status');
+    assert.match(gate.body, /- release-preflight/, `${name} gate ignores the preflight`);
+  }
+});

@@ -24,3 +24,6 @@ mod protocol_transport;
 
 #[path = "../../tests/protocol_packet_tests.rs"]
 mod protocol_packet;
+
+#[path = "../../tests/protocol_packet_malformed_tests.rs"]
+mod protocol_packet_malformed;

@@ -27,6 +27,8 @@ on: # zizmor: ignore[dangerous-triggers]
       - Workflows
       - Security
       - Broken Link Checker
+      - Crash tests
+      - IPC
     types: [completed]
 
 permissions:

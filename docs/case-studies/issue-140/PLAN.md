@@ -45,7 +45,8 @@ Keep every source file below the repository's 1000-line Python limit.
 - Local native suite: 17 tests pass, covering ten Linux mechanisms including
   anonymous pipes, composition, registration and failure regressions. Four
   actual-server integration tests are deliberately supplied a built CLI by CI.
-- Local workflow helper/policy suite: 268 tests pass. Ruff checks and formatting
+- Local workflow helper/policy suite: 324 tests pass after merging main
+  (one environment-specific test is skipped). Ruff checks and formatting
   pass with the repository configuration. The bounded signal experiment
   completes 1000 notifications.
 - The first Windows native run passed ALPC, WM_COPYDATA, mailslots, named
@@ -77,3 +78,10 @@ Keep every source file below the repository's 1000-line Python limit.
   directory. A regression fails before removing filesystem normalization from
   named-pipe identifiers and passes afterward; the Windows cross-process test
   also uses a bare pipe name from different working directories.
+
+- Main advanced to `9bf97cee` during final CI. Its CI/refactoring changes are merged,
+  retaining its verified cargo-audit 0.22.2 hold (issue #176), resolving the
+  conflicting earlier freshness bump without weakening the security gate.
+- Register IPC with infrastructure reruns under the newly merged policy.
+  Use Rust/C# patch fragments as release triggers, allowing their automation
+  to update versions, lockfiles and changelogs together.

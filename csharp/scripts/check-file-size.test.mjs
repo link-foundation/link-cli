@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-import { LANGUAGE_CONFIG, MAX_LINES, checkLanguage, countLines } from './check-file-size.mjs';
+import {
+  LANGUAGE_CONFIG,
+  MAX_LINES,
+  WARN_LINES,
+  checkLanguage,
+  classifyLineCount,
+  countLines,
+  nearLimitFiles,
+} from './check-file-size.mjs';
 
 const script = new URL('./check-file-size.mjs', import.meta.url).pathname;
 
@@ -71,4 +79,48 @@ test('CLI fails when a file exceeds the limit and passes otherwise', () => {
     () => execFileSync('node', [script, '--dir', root], { encoding: 'utf8', stdio: 'pipe' }),
     (error) => error.status === 1 && /target_matcher\.rs: 1001 lines/.test(error.stdout),
   );
+});
+
+test('files above the warning threshold warn without failing (issue #172)', () => {
+  assert.equal(classifyLineCount(WARN_LINES), 'within-limit');
+  assert.equal(classifyLineCount(WARN_LINES + 1), 'warning');
+  assert.equal(classifyLineCount(MAX_LINES), 'warning');
+  assert.equal(classifyLineCount(MAX_LINES + 1), 'violation');
+
+  const root = mkdtempSync(join(tmpdir(), 'check-file-size-'));
+  writeTree(root, {
+    'csharp/App/Near.cs': 'x\n'.repeat(WARN_LINES + 86),
+    'csharp/App/Fine.cs': 'x\n'.repeat(WARN_LINES),
+  });
+  const result = checkLanguage(root, LANGUAGE_CONFIG.csharp);
+  assert.deepEqual(result.violations, []);
+  assert.deepEqual(result.warnings, [{ file: join('csharp', 'App', 'Near.cs'), lines: 986 }]);
+
+  const output = execFileSync('node', [script, '--dir', root, '--lang', 'csharp'], {
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  assert.match(
+    output,
+    /::warning file=csharp\/App\/Near\.cs::File has 986 lines \(approaching limit of 1000\)/,
+  );
+  assert.match(output, /Checked 2 file\(s\) - all within the line limit/);
+});
+
+test('the JavaScript quality check warns in the same band (issue #172)', () => {
+  const root = mkdtempSync(join(tmpdir(), 'check-file-size-'));
+  writeTree(root, {
+    'js/near.mjs': 'x\n'.repeat(WARN_LINES + 1),
+    'js/fine.mjs': 'x\n'.repeat(WARN_LINES),
+    'js/over.mjs': 'x\n'.repeat(MAX_LINES + 1),
+  });
+  assert.deepEqual(nearLimitFiles(root, ['js/near.mjs', 'js/fine.mjs', 'js/over.mjs']), [
+    { file: 'js/near.mjs', lines: WARN_LINES + 1 },
+  ]);
+  const checker = readFileSync(
+    new URL('../../.github/scripts/check-javascript-quality.mjs', import.meta.url),
+    'utf8',
+  );
+  assert.match(checker, /nearLimitFiles\(root, files\)/);
+  assert.match(checker, /console\.log\(warningAnnotation\(finding\)\)/);
 });

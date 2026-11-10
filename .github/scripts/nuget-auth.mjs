@@ -22,6 +22,30 @@ export function selectNugetCredential({ oidcOutcome = 'skipped', oidcKey = '', a
   };
 }
 
+/**
+ * Interpret a rejected `create-verification-key` request. NuGetGallery guards
+ * that endpoint with `[ApiAuthorize]` (401: no valid key; expired or revoked
+ * keys fail authentication) and `[ApiScopeRequired(PackagePush,
+ * PackagePushVersion)]` (403: an authenticated key without any push scope),
+ * so neither status is an unsupported probe. Other statuses stay unknown.
+ */
+export function describeVerificationDenial(status) {
+  if (status === 401)
+    return {
+      result: { status: 'failed', authenticated: false },
+      detail: `NUGET_API_KEY is not accepted (invalid, expired or revoked). ${NUGET_AUTH_HINT}`,
+    };
+  if (status === 403)
+    return {
+      result: { status: 'failed', authenticated: true, authorized: false },
+      detail: `NUGET_API_KEY authenticates but has no push scope, so every package push would be rejected. Create a key with the "Push new packages and package versions" scope for this package glob, or configure NuGet trusted publishing and set the NUGET_USER repository variable.`,
+    };
+  return {
+    result: { status: 'unknown' },
+    detail: `unexpected response; authentication and push authorization remain unverified. ${NUGET_AUTH_HINT}`,
+  };
+}
+
 export async function checkNugetAuthentication({
   oidcOutcome = 'skipped',
   oidcKey = '',
@@ -66,10 +90,14 @@ export async function checkNugetAuthentication({
     );
     if (!response.ok) {
       await response.body?.cancel?.();
+      // NuGet's warning header (for example an expiring key) is not secret.
+      const warning = response.headers?.get?.('x-nuget-warning');
+      const serverWarning = warning ? ` NuGet warning: ${warning}` : '';
+      const denial = describeVerificationDenial(response.status);
       return {
         ...result,
-        status: response.status === 401 ? 'failed' : 'unknown',
-        detail: `${selected.reason} Fallback verification HTTP ${response.status}. This probe may require PackageVerify scope; unsupported verification is not evidence of push rejection. ${NUGET_AUTH_HINT}`,
+        ...denial.result,
+        detail: `${selected.reason} Fallback verification HTTP ${response.status}: ${denial.detail}${serverWarning}`,
       };
     }
     const payload = await response.json();

@@ -1,0 +1,2834 @@
+diff --git a/.github/scripts/check-secrets.mjs b/.github/scripts/check-secrets.mjs
+new file mode 100644
+index 0000000..d49777d
+--- /dev/null
++++ b/.github/scripts/check-secrets.mjs
+@@ -0,0 +1,49 @@
++#!/usr/bin/env node
++// Git is the inventory: force-added evidence must be scanned even when ignored.
++import { execFileSync, spawnSync } from 'node:child_process';
++import { lstatSync, readFileSync } from 'node:fs';
++import { resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { gunzipSync } from 'node:zlib';
++
++const cli = fileURLToPath(new URL('../secretlint/node_modules/secretlint/bin/secretlint.js', import.meta.url));
++export const MAX_ARCHIVE_BYTES = 128 * 1024 * 1024;
++
++export function checkSecrets(root = process.cwd()) {
++  root = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' }).trim();
++  const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
++    .split('\0').filter(Boolean);
++  if (!files.length) throw new Error('No tracked files; secrets scan did not run');
++  const scan = (args, input) => {
++    const result = spawnSync(process.execPath, [cli, '--no-gitignore', '--no-glob', ...args], {
++      cwd: root, input, stdio: [input === undefined ? 'ignore' : 'pipe', 'inherit', 'inherit'],
++    });
++    if (result.error) throw result.error;
++    if (result.status !== 0) throw new Error(`Secretlint failed (${result.status ?? result.signal})`);
++  };
++  // Refuse links/submodules/missing paths rather than silently skipping evidence.
++  for (const file of files) {
++    if (!lstatSync(resolve(root, file)).isFile()) throw new Error(`Not a regular tracked file: ${file}`);
++  }
++  const plain = files.filter(file => !/\.gz$/i.test(file));
++  for (let offset = 0; offset < plain.length; offset += 100) {
++    scan(['--', ...plain.slice(offset, offset + 100).map(file => `./${file}`)]);
++  }
++  for (const file of files.filter(file => /\.gz$/i.test(file))) {
++    // Bound both compressed input and inflated output; process one archive at a time.
++    if (lstatSync(resolve(root, file)).size > MAX_ARCHIVE_BYTES) throw new Error(`Archive too large: ${file}`);
++    let input;
++    try {
++      input = gunzipSync(readFileSync(resolve(root, file)), { maxOutputLength: MAX_ARCHIVE_BYTES });
++    } catch (error) {
++      throw new Error(`Cannot scan compressed evidence ${file}: ${error.message}`);
++    }
++    scan(['--stdinFileName', file.slice(0, -3)], input);
++  }
++  console.log(`Secrets scan: ${files.length} tracked files checked`);
++  return files.length;
++}
++
++if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
++  try { checkSecrets(); } catch (error) { console.error(error.message); process.exitCode = 1; }
++}
+diff --git a/.github/scripts/check-secrets.test.mjs b/.github/scripts/check-secrets.test.mjs
+new file mode 100644
+index 0000000..bd7fd93
+--- /dev/null
++++ b/.github/scripts/check-secrets.test.mjs
+@@ -0,0 +1,75 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { execFileSync, spawnSync } from 'node:child_process';
++import { mkdtempSync, rmSync, writeFileSync, mkdirSync, copyFileSync, truncateSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { gzipSync } from 'node:zlib';
++import { MAX_ARCHIVE_BYTES } from './check-secrets.mjs';
++
++const cli = new URL('./check-secrets.mjs', import.meta.url).pathname;
++// Construct a nonfunctional test credential at runtime so the test source is clean.
++const secret = 'aws_secret_access_key = ' + 'A'.repeat(40);
++function fixture(fn) {
++  const dir = mkdtempSync(join(tmpdir(), 'tracked-secrets-'));
++  const git = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'pipe' });
++  try {
++    git('init', '-q');
++    writeFileSync(join(dir, '.gitignore'), '*.log\n*.gz\nexperiments/\n');
++    copyFileSync(new URL('../../.secretlintrc.json', import.meta.url), join(dir, '.secretlintrc.json'));
++    git('add', '.gitignore', '.secretlintrc.json');
++    const run = () => spawnSync(process.execPath, [cli], { cwd: dir, encoding: 'utf8', timeout: 20000 });
++    fn({ dir, git, run });
++  } finally { rmSync(dir, { recursive: true, force: true }); }
++}
++
++test('tracked ignored logs, experiments and literal paths are scanned; untracked output is skipped',
++  { timeout: 60000 }, () => fixture(({ dir, git, run }) => {
++    writeFileSync(join(dir, 'untracked.log'), secret);
++    assert.equal(run().status, 0);
++    writeFileSync(join(dir, 'baseline.log'), secret);
++    git('add', '-f', 'baseline.log');
++    const oldCommand = spawnSync(process.execPath, [
++      new URL('../secretlint/node_modules/secretlint/bin/secretlint.js', import.meta.url).pathname,
++      '--secretlintignore', '.gitignore', '**/*',
++    ], { cwd: dir, encoding: 'utf8', timeout: 20000 });
++    assert.equal(oldCommand.status, 0, oldCommand.stderr);
++    assert.equal(run().status, 1, 'the same tracked ignored credential must now fail');
++    git('rm', '-f', 'baseline.log');
++    for (const file of ['evidence.log', 'experiments/probe.txt', 'literal[1].log', '-option.log', 'space name.log', 'line\nbreak.log']) {
++      mkdirSync(join(dir, 'experiments'), { recursive: true });
++      writeFileSync(join(dir, file), secret);
++      git('add', '-f', '--', file);
++      const result = run();
++      assert.equal(result.status, 1, result.stdout + result.stderr);
++      assert.match(result.stdout, /AWS/);
++      git('rm', '-f', '--', file);
++    }
++  }));
++
++test('gzip evidence is inflated and scanned; corrupt and oversized data fail closed',
++  { timeout: 60000 }, () => fixture(({ dir, git, run }) => {
++    const file = join(dir, 'evidence.log.gz');
++    git('add', '.gitignore');
++    const member = gzipSync(Buffer.alloc(1024 * 1024, 32));
++    const oversized = Buffer.concat(Array(MAX_ARCHIVE_BYTES / (1024 * 1024) + 1).fill(member));
++    for (const [data, expected, diagnostic] of [[gzipSync('clean'), 0], [gzipSync(secret), 1],
++      [Buffer.from('corrupt'), 1, /compressed evidence/], [oversized, 1, /compressed evidence/]]) {
++      writeFileSync(file, data); git('add', '-f', 'evidence.log.gz');
++      const result = run();
++      assert.equal(result.status, expected, result.stdout + result.stderr);
++      if (diagnostic) assert.match(result.stderr, diagnostic);
++    }
++    truncateSync(file, MAX_ARCHIVE_BYTES + 1);
++    const result = run();
++    assert.equal(result.status, 1);
++    assert.match(result.stderr, /Archive too large/);
++  }));
++
++test('missing Git checkout and missing tracked files cannot report a clean scan', () => fixture(({ dir, git, run }) => {
++  writeFileSync(join(dir, 'missing.log'), 'clean'); git('add', '-f', 'missing.log');
++  rmSync(join(dir, 'missing.log'));
++  assert.equal(run().status, 1);
++  rmSync(join(dir, '.git'), { recursive: true });
++  assert.equal(run().status, 1);
++}));
+diff --git a/.github/secretlint/package-lock.json b/.github/secretlint/package-lock.json
+new file mode 100644
+index 0000000..6348275
+--- /dev/null
++++ b/.github/secretlint/package-lock.json
+@@ -0,0 +1,1126 @@
++{
++  "name": "secretlint",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "devDependencies": {
++        "@secretlint/secretlint-rule-preset-recommend": "13.0.7",
++        "secretlint": "13.0.7"
++      }
++    },
++    "node_modules/@azu/format-text": {
++      "version": "1.0.2",
++      "resolved": "https://registry.npmjs.org/@azu/format-text/-/format-text-1.0.2.tgz",
++      "integrity": "sha512-Swi4N7Edy1Eqq82GxgEECXSSLyn6GOb5htRFPzBDdUkECGXtlf12ynO5oJSpWKPwCaUssOu7NfhDcCWpIC6Ywg==",
++      "dev": true,
++      "license": "BSD-3-Clause"
++    },
++    "node_modules/@azu/style-format": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/@azu/style-format/-/style-format-1.0.1.tgz",
++      "integrity": "sha512-AHcTojlNBdD/3/KxIKlg8sxIWHfOtQszLvOpagLTO+bjC3u7SAszu1lf//u7JJC50aUSH+BVWDD/KvaA6Gfn5g==",
++      "dev": true,
++      "license": "WTFPL",
++      "dependencies": {
++        "@azu/format-text": "^1.0.1"
++      }
++    },
++    "node_modules/@babel/code-frame": {
++      "version": "7.29.7",
++      "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz",
++      "integrity": "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@babel/helper-validator-identifier": "^7.29.7",
++        "js-tokens": "^4.0.0",
++        "picocolors": "^1.1.1"
++      },
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@babel/helper-validator-identifier": {
++      "version": "7.29.7",
++      "resolved": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.29.7.tgz",
++      "integrity": "sha512-qehxGkRj55h/ff8EMaJ+cYhyaKlHIxqYDn682wQD7RNp9UujOQsHog2uS0r2vzr4pW+sXf90NeeayjcNaX3fFg==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@secretlint/config-creator": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/config-creator/-/config-creator-13.0.7.tgz",
++      "integrity": "sha512-XIUr0UZfHN5Eb5k3w2Q0DXXFJ2brnOqx6YNaX5eoNdR74gI8d/7Uv5SGfnf345drecGu5QPqeta5VX4PpsG4hQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/types": "13.0.7"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/config-loader": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/config-loader/-/config-loader-13.0.7.tgz",
++      "integrity": "sha512-0jjO646AnOwTF/iYTfe1EE/tVW2PH/VWRVlCXypffaVHBnJOP6yprL4WCjrQs9h4XUfbQgGmX+86I0MkQ5pebA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/profiler": "13.0.7",
++        "@secretlint/resolver": "13.0.7",
++        "@secretlint/types": "13.0.7",
++        "ajv": "^8.20.0",
++        "debug": "^4.4.3",
++        "rc-config-loader": "^4.1.4"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/core": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/core/-/core-13.0.7.tgz",
++      "integrity": "sha512-IcOR87MpNjp/WTO7bVMsIj3qkhVD+Qr/oNaA0Xl4Ok1LqG4bjXu5RjiY0Kid70BoR9eCJgkoq5gNHDGXPx+o1g==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/profiler": "13.0.7",
++        "@secretlint/types": "13.0.7",
++        "debug": "^4.4.3",
++        "structured-source": "^4.0.0"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/formatter": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/formatter/-/formatter-13.0.7.tgz",
++      "integrity": "sha512-oBrQzDgAOK5j0/uT0oWS8CaPkhf8E52+rfs0oTeBtcr9eKRjq9pFumnDBGi4Vnzg8OOpyt4vdthQRGD9KAbDSQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/resolver": "13.0.7",
++        "@secretlint/types": "13.0.7",
++        "@textlint/linter-formatter": "^15.7.0",
++        "@textlint/module-interop": "^15.7.0",
++        "@textlint/types": "^15.7.0",
++        "chalk": "^5.6.2",
++        "debug": "^4.4.3",
++        "pluralize": "^8.0.0",
++        "strip-ansi": "^7.2.0",
++        "table": "^6.9.0",
++        "terminal-link": "^5.0.0"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/node": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/node/-/node-13.0.7.tgz",
++      "integrity": "sha512-8uMw20Ppf1aawhL5h0zELRb2+fHnrkQqj6VrL9EWQ70s7MAouieJxc4XtCnWjlqjC7d1l8sQnNC+hj0a0744dw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/config-loader": "13.0.7",
++        "@secretlint/core": "13.0.7",
++        "@secretlint/formatter": "13.0.7",
++        "@secretlint/profiler": "13.0.7",
++        "@secretlint/source-creator": "13.0.7",
++        "@secretlint/types": "13.0.7",
++        "debug": "^4.4.3",
++        "p-map": "^7.0.8"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/profiler": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/profiler/-/profiler-13.0.7.tgz",
++      "integrity": "sha512-srhOnrrS8u6vkje+YhYZXoXXwgwZlt60x5q9C2vDjPHfkQcEXMXNDdtX7Dx1Bkw7GKuCNIn+3R5AEOphHikQ/Q==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@secretlint/resolver": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/resolver/-/resolver-13.0.7.tgz",
++      "integrity": "sha512-Ru3qBQqfi9s/uazHiVcyAvlQuq3X8q/8eXNqacZ0r/DvWtjb2JBBhIjzx/RrbfJhlsd5yjsrE6C1/Q710Em1Hw==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@secretlint/secretlint-rule-preset-recommend": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/secretlint-rule-preset-recommend/-/secretlint-rule-preset-recommend-13.0.7.tgz",
++      "integrity": "sha512-hfdYra+ZB6RmviEApxeL/YCx4ovBtpj0d9c+uhlCZaCikObjb8Sb8yqBN6g8/9tt7qD7LXGE3k9RtVvGK1fNVw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/source-creator": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/source-creator/-/source-creator-13.0.7.tgz",
++      "integrity": "sha512-agf2lHf3f5CRHl7ZSQV2NTx4niPOf9qkLnuowSGoqeWycK5PTuyinlTqp6iq0gQt6TBhvyFu3nKNkXcrB9jWxw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/types": "13.0.7",
++        "istextorbinary": "^9.5.0"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/types": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/types/-/types-13.0.7.tgz",
++      "integrity": "sha512-5DI1W8vTjBt5ZSrLXNMCX439f+36fzQLrSGi0JPu1vhBKl3QLxPu/ilPJ5x2Ul7pU3aWUrpRva9mvojSAi4h0A==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@secretlint/walker": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/@secretlint/walker/-/walker-13.0.7.tgz",
++      "integrity": "sha512-hKCYKPcWO1UF9Q3l3W5NpxOJu3bRk8X+6qOZFe6acChmOpy2L0VMQZsbxaJkmRecZcTNZ2IYMWSAw0e6tn/McQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ignore": "^7.0.10",
++        "picomatch": "^4.0.7"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@textlint/ast-node-types": {
++      "version": "15.8.0",
++      "resolved": "https://registry.npmjs.org/@textlint/ast-node-types/-/ast-node-types-15.8.0.tgz",
++      "integrity": "sha512-5CiH9COYmovWmExQgs7763DzX6Gy9zjkjJ7JxCC95wyTcjwQn/8poNF6fv3qzRlmx8CRRde8DHr9FcgAAiPzgw==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@textlint/linter-formatter": {
++      "version": "15.8.0",
++      "resolved": "https://registry.npmjs.org/@textlint/linter-formatter/-/linter-formatter-15.8.0.tgz",
++      "integrity": "sha512-+oU3A235NATv6Lzi4xa4kJ65PuNJlIxesaO4AvDhDWA9FWm7y4XKWaoQCW1esgaQQ6dwnUiFKArQ8TcJ86mC4w==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@azu/format-text": "^1.0.2",
++        "@azu/style-format": "^1.0.1",
++        "@textlint/module-interop": "15.8.0",
++        "@textlint/resolver": "15.8.0",
++        "@textlint/types": "15.8.0",
++        "debug": "^4.4.3",
++        "js-yaml": "^4.3.0",
++        "lodash": "^4.18.1",
++        "pluralize": "^2.0.0",
++        "string-width": "^4.2.3",
++        "strip-ansi": "^6.0.1",
++        "table": "^6.9.0",
++        "text-table": "^0.2.0"
++      },
++      "engines": {
++        "node": ">=20.18.0"
++      }
++    },
++    "node_modules/@textlint/linter-formatter/node_modules/ansi-regex": {
++      "version": "5.0.1",
++      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
++      "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/@textlint/linter-formatter/node_modules/pluralize": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/pluralize/-/pluralize-2.0.0.tgz",
++      "integrity": "sha512-TqNZzQCD4S42De9IfnnBvILN7HAW7riLqsCyp8lgjXeysyPlX5HhqKAcJHHHb9XskE4/a+7VGC9zzx8Ls0jOAw==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@textlint/linter-formatter/node_modules/strip-ansi": {
++      "version": "6.0.1",
++      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
++      "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^5.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/@textlint/module-interop": {
++      "version": "15.8.0",
++      "resolved": "https://registry.npmjs.org/@textlint/module-interop/-/module-interop-15.8.0.tgz",
++      "integrity": "sha512-rt+OR1WYGoLOY8HkA/aBPrqufF6yUUEsKEAh7XohTsT3lp9IyZFT6zOIbjul9P4FAzsmSPkcrYjVx3Bz/IUfkg==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@textlint/resolver": {
++      "version": "15.8.0",
++      "resolved": "https://registry.npmjs.org/@textlint/resolver/-/resolver-15.8.0.tgz",
++      "integrity": "sha512-E88tzfX3K8Jykk+38aJ9cy8RquD8ABVOPTO2rFEESq0wcg8x6/ypdAS8ZgR7OKiGqlRF0hkO/m5PbQwVfKM3VA==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@textlint/types": {
++      "version": "15.8.0",
++      "resolved": "https://registry.npmjs.org/@textlint/types/-/types-15.8.0.tgz",
++      "integrity": "sha512-Anhc6y5736YIsvqae0U6k0YmB2M/QVHkEeOv2aydAn/WIkdI69dCOiDbe3/+RagS3qstFTSFWJzNRA2lUjv19w==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@textlint/ast-node-types": "15.8.0"
++      }
++    },
++    "node_modules/@types/normalize-package-data": {
++      "version": "2.4.4",
++      "resolved": "https://registry.npmjs.org/@types/normalize-package-data/-/normalize-package-data-2.4.4.tgz",
++      "integrity": "sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/ajv": {
++      "version": "8.20.0",
++      "resolved": "https://registry.npmjs.org/ajv/-/ajv-8.20.0.tgz",
++      "integrity": "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "fast-deep-equal": "^3.1.3",
++        "fast-uri": "^3.0.1",
++        "json-schema-traverse": "^1.0.0",
++        "require-from-string": "^2.0.2"
++      },
++      "funding": {
++        "type": "github",
++        "url": "https://github.com/sponsors/epoberezkin"
++      }
++    },
++    "node_modules/ansi-escapes": {
++      "version": "7.3.0",
++      "resolved": "https://registry.npmjs.org/ansi-escapes/-/ansi-escapes-7.3.0.tgz",
++      "integrity": "sha512-BvU8nYgGQBxcmMuEeUEmNTvrMVjJNSH7RgW24vXexN4Ven6qCvy4TntnvlnwnMLTVlcRQQdbRY8NKnaIoeWDNg==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "environment": "^1.0.0"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/ansi-regex": {
++      "version": "6.5.0",
++      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.5.0.tgz",
++      "integrity": "sha512-zhvbbbdt1kbw7EJ9OQoxmQcuaNR9P5kTj7e/YdmOSU10aHWbycofJxA6jKfoEy3vlLdctOF9ZHaxLtmSm998wQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/ansi-regex?sponsor=1"
++      }
++    },
++    "node_modules/ansi-styles": {
++      "version": "4.3.0",
++      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
++      "integrity": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "color-convert": "^2.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/ansi-styles?sponsor=1"
++      }
++    },
++    "node_modules/argparse": {
++      "version": "2.0.1",
++      "resolved": "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz",
++      "integrity": "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==",
++      "dev": true,
++      "license": "Python-2.0"
++    },
++    "node_modules/astral-regex": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/astral-regex/-/astral-regex-2.0.0.tgz",
++      "integrity": "sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/binaryextensions": {
++      "version": "6.11.0",
++      "resolved": "https://registry.npmjs.org/binaryextensions/-/binaryextensions-6.11.0.tgz",
++      "integrity": "sha512-sXnYK/Ij80TO3lcqZVV2YgfKN5QjUWIRk/XSm2J/4bd/lPko3lvk0O4ZppH6m+6hB2/GTu+ptNwVFe1xh+QLQw==",
++      "dev": true,
++      "license": "Artistic-2.0",
++      "dependencies": {
++        "editions": "^6.21.0"
++      },
++      "engines": {
++        "node": ">=4"
++      },
++      "funding": {
++        "url": "https://bevry.me/fund"
++      }
++    },
++    "node_modules/boundary": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/boundary/-/boundary-2.0.0.tgz",
++      "integrity": "sha512-rJKn5ooC9u8q13IMCrW0RSp31pxBCHE3y9V/tp3TdWSLf8Em3p6Di4NBpfzbJge9YjjFEsD0RtFEjtvHL5VyEA==",
++      "dev": true,
++      "license": "BSD-2-Clause"
++    },
++    "node_modules/chalk": {
++      "version": "5.6.2",
++      "resolved": "https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz",
++      "integrity": "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": "^12.17.0 || ^14.13 || >=16.0.0"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/chalk?sponsor=1"
++      }
++    },
++    "node_modules/color-convert": {
++      "version": "2.0.1",
++      "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
++      "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "color-name": "~1.1.4"
++      },
++      "engines": {
++        "node": ">=7.0.0"
++      }
++    },
++    "node_modules/color-name": {
++      "version": "1.1.4",
++      "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
++      "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/debug": {
++      "version": "4.4.3",
++      "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
++      "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ms": "^2.1.3"
++      },
++      "engines": {
++        "node": ">=6.0"
++      },
++      "peerDependenciesMeta": {
++        "supports-color": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/editions": {
++      "version": "6.22.0",
++      "resolved": "https://registry.npmjs.org/editions/-/editions-6.22.0.tgz",
++      "integrity": "sha512-UgGlf8IW75je7HZjNDpJdCv4cGJWIi6yumFdZ0R7A8/CIhQiWUjyGLCxdHpd8bmyD1gnkfUNK0oeOXqUS2cpfQ==",
++      "dev": true,
++      "license": "Artistic-2.0",
++      "dependencies": {
++        "version-range": "^4.15.0"
++      },
++      "engines": {
++        "ecmascript": ">= es5",
++        "node": ">=4"
++      },
++      "funding": {
++        "url": "https://bevry.me/fund"
++      }
++    },
++    "node_modules/emoji-regex": {
++      "version": "8.0.0",
++      "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz",
++      "integrity": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/environment": {
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/environment/-/environment-1.1.0.tgz",
++      "integrity": "sha512-xUtoPkMggbz0MPyPiIWr1Kp4aeWJjDZ6SMvURhimjdZgsRuDplF5/s9hcgGhyXMhs+6vpnuoiZ2kFiu3FMnS8Q==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/fast-deep-equal": {
++      "version": "3.1.3",
++      "resolved": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz",
++      "integrity": "sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/fast-uri": {
++      "version": "3.1.9",
++      "resolved": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.9.tgz",
++      "integrity": "sha512-hS/0Wt3Ya043oKXs0sIxrMpKQITXhMLIrVAKKXi4gozGC9v7YRWVnXIZzjNPTO02M9BdxLCWqK1yRXgNziVyJQ==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/fastify"
++        },
++        {
++          "type": "opencollective",
++          "url": "https://opencollective.com/fastify"
++        }
++      ],
++      "license": "BSD-3-Clause"
++    },
++    "node_modules/has-flag": {
++      "version": "5.0.1",
++      "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-5.0.1.tgz",
++      "integrity": "sha512-CsNUt5x9LUdx6hnk/E2SZLsDyvfqANZSUq4+D3D8RzDJ2M+HDTIkF60ibS1vHaK55vzgiZw1bEPFG9yH7l33wA==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/hosted-git-info": {
++      "version": "9.0.3",
++      "resolved": "https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-9.0.3.tgz",
++      "integrity": "sha512-Hc+ghLoSt6QaYZUv0WBiIvmMDZuZZ7oaDvdH8MbfOO4lOsxdXLEvuC6ePoGs9H1X9oCLyq6+NVN0MKqD+ydxyg==",
++      "dev": true,
++      "license": "ISC",
++      "dependencies": {
++        "lru-cache": "^11.1.0"
++      },
++      "engines": {
++        "node": "^20.17.0 || >=22.9.0"
++      }
++    },
++    "node_modules/ignore": {
++      "version": "7.0.14",
++      "resolved": "https://registry.npmjs.org/ignore/-/ignore-7.0.14.tgz",
++      "integrity": "sha512-wCBiZ77u1tuWde6G/nfOtLaCTYcFDU5yCzARzK10y+rLhzYoL7a7yEemcopcc2Mzow7gZOIjnV2ym1NYmdiJOQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">= 4"
++      }
++    },
++    "node_modules/index-to-position": {
++      "version": "1.2.0",
++      "resolved": "https://registry.npmjs.org/index-to-position/-/index-to-position-1.2.0.tgz",
++      "integrity": "sha512-Yg7+ztRkqslMAS2iFaU+Oa4KTSidr63OsFGlOrJoW981kIYO3CGCS3wA95P1mUi/IVSJkn0D479KTJpVpvFNuw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/is-fullwidth-code-point": {
++      "version": "3.0.0",
++      "resolved": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz",
++      "integrity": "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/istextorbinary": {
++      "version": "9.5.0",
++      "resolved": "https://registry.npmjs.org/istextorbinary/-/istextorbinary-9.5.0.tgz",
++      "integrity": "sha512-5mbUj3SiZXCuRf9fT3ibzbSSEWiy63gFfksmGfdOzujPjW3k+z8WvIBxcJHBoQNlaZaiyB25deviif2+osLmLw==",
++      "dev": true,
++      "license": "Artistic-2.0",
++      "dependencies": {
++        "binaryextensions": "^6.11.0",
++        "editions": "^6.21.0",
++        "textextensions": "^6.11.0"
++      },
++      "engines": {
++        "node": ">=4"
++      },
++      "funding": {
++        "url": "https://bevry.me/fund"
++      }
++    },
++    "node_modules/js-tokens": {
++      "version": "4.0.0",
++      "resolved": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz",
++      "integrity": "sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/js-yaml": {
++      "version": "4.3.2",
++      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.2.tgz",
++      "integrity": "sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==",
++      "dev": true,
++      "funding": [
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/puzrin"
++        },
++        {
++          "type": "github",
++          "url": "https://github.com/sponsors/nodeca"
++        }
++      ],
++      "license": "MIT",
++      "dependencies": {
++        "argparse": "^2.0.1"
++      },
++      "bin": {
++        "js-yaml": "bin/js-yaml.js"
++      }
++    },
++    "node_modules/json-schema-traverse": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz",
++      "integrity": "sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/json5": {
++      "version": "2.2.3",
++      "resolved": "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz",
++      "integrity": "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==",
++      "dev": true,
++      "license": "MIT",
++      "bin": {
++        "json5": "lib/cli.js"
++      },
++      "engines": {
++        "node": ">=6"
++      }
++    },
++    "node_modules/lodash": {
++      "version": "4.18.1",
++      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.18.1.tgz",
++      "integrity": "sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lru-cache": {
++      "version": "11.5.3",
++      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.3.tgz",
++      "integrity": "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==",
++      "dev": true,
++      "license": "BlueOak-1.0.0",
++      "engines": {
++        "node": "20 || >=22"
++      }
++    },
++    "node_modules/ms": {
++      "version": "2.1.3",
++      "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
++      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/normalize-package-data": {
++      "version": "8.0.0",
++      "resolved": "https://registry.npmjs.org/normalize-package-data/-/normalize-package-data-8.0.0.tgz",
++      "integrity": "sha512-RWk+PI433eESQ7ounYxIp67CYuVsS1uYSonX3kA6ps/3LWfjVQa/ptEg6Y3T6uAMq1mWpX9PQ+qx+QaHpsc7gQ==",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "dependencies": {
++        "hosted-git-info": "^9.0.0",
++        "semver": "^7.3.5",
++        "validate-npm-package-license": "^3.0.4"
++      },
++      "engines": {
++        "node": "^20.17.0 || >=22.9.0"
++      }
++    },
++    "node_modules/p-map": {
++      "version": "7.1.1",
++      "resolved": "https://registry.npmjs.org/p-map/-/p-map-7.1.1.tgz",
++      "integrity": "sha512-6Lh3jQPLthYujSrlw6ccWXBGZTkoTCz27Hd92g79LH/kjAbgoEu0t442cCCNbegPSJsA0lwDX8z0bcKtkpA32g==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/parse-json": {
++      "version": "8.3.0",
++      "resolved": "https://registry.npmjs.org/parse-json/-/parse-json-8.3.0.tgz",
++      "integrity": "sha512-ybiGyvspI+fAoRQbIPRddCcSTV9/LsJbf0e/S85VLowVGzRmokfneg2kwVW/KU5rOXrPSbF1qAKPMgNTqqROQQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@babel/code-frame": "^7.26.2",
++        "index-to-position": "^1.1.0",
++        "type-fest": "^4.39.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/parse-json/node_modules/type-fest": {
++      "version": "4.41.0",
++      "resolved": "https://registry.npmjs.org/type-fest/-/type-fest-4.41.0.tgz",
++      "integrity": "sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "engines": {
++        "node": ">=16"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/picocolors": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
++      "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
++      "dev": true,
++      "license": "ISC"
++    },
++    "node_modules/picomatch": {
++      "version": "4.0.7",
++      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
++      "integrity": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/jonschlinkert"
++      }
++    },
++    "node_modules/pluralize": {
++      "version": "8.0.0",
++      "resolved": "https://registry.npmjs.org/pluralize/-/pluralize-8.0.0.tgz",
++      "integrity": "sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=4"
++      }
++    },
++    "node_modules/rc-config-loader": {
++      "version": "4.1.4",
++      "resolved": "https://registry.npmjs.org/rc-config-loader/-/rc-config-loader-4.1.4.tgz",
++      "integrity": "sha512-3GiwEzklkbXTDp52UR5nT8iXgYAx1V9ZG/kDZT7p60u2GCv2XTwQq4NzinMoMpNtXhmt3WkhYXcj6HH8HdwCEQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "debug": "^4.4.3",
++        "js-yaml": "^4.1.1",
++        "json5": "^2.2.3",
++        "require-from-string": "^2.0.2"
++      }
++    },
++    "node_modules/read-pkg": {
++      "version": "10.1.0",
++      "resolved": "https://registry.npmjs.org/read-pkg/-/read-pkg-10.1.0.tgz",
++      "integrity": "sha512-I8g2lArQiP78ll51UeMZojewtYgIRCKCWqZEgOO8c/uefTI+XDXvCSXu3+YNUaTNvZzobrL5+SqHjBrByRRTdg==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/normalize-package-data": "^2.4.4",
++        "normalize-package-data": "^8.0.0",
++        "parse-json": "^8.3.0",
++        "type-fest": "^5.4.4",
++        "unicorn-magic": "^0.4.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/require-from-string": {
++      "version": "2.0.2",
++      "resolved": "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz",
++      "integrity": "sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/secretlint": {
++      "version": "13.0.7",
++      "resolved": "https://registry.npmjs.org/secretlint/-/secretlint-13.0.7.tgz",
++      "integrity": "sha512-eWqojzOU+9+fgJgBQ/wR5Agkr3uBwKwWZ7ed3Jol6ZxRIPA+z2kl4t4/qSxbhXauSmE0WJ6qLNIZbAVeq0raiA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@secretlint/config-creator": "13.0.7",
++        "@secretlint/formatter": "13.0.7",
++        "@secretlint/node": "13.0.7",
++        "@secretlint/profiler": "13.0.7",
++        "@secretlint/resolver": "13.0.7",
++        "@secretlint/walker": "13.0.7",
++        "debug": "^4.4.3",
++        "read-pkg": "^10.1.0"
++      },
++      "bin": {
++        "secretlint": "bin/secretlint.js"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/semver": {
++      "version": "7.8.6",
++      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.6.tgz",
++      "integrity": "sha512-9lpSSU4Mly3mrtruwLs1eLK6+gzbzqeBFwRNjIjE+9LuDpWdYctrQlQ3ej1Ilgi7gknpsTRnPoLP8DpCHqHIJw==",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/slice-ansi": {
++      "version": "4.0.0",
++      "resolved": "https://registry.npmjs.org/slice-ansi/-/slice-ansi-4.0.0.tgz",
++      "integrity": "sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-styles": "^4.0.0",
++        "astral-regex": "^2.0.0",
++        "is-fullwidth-code-point": "^3.0.0"
++      },
++      "engines": {
++        "node": ">=10"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/slice-ansi?sponsor=1"
++      }
++    },
++    "node_modules/spdx-correct": {
++      "version": "3.2.0",
++      "resolved": "https://registry.npmjs.org/spdx-correct/-/spdx-correct-3.2.0.tgz",
++      "integrity": "sha512-kN9dJbvnySHULIluDHy32WHRUu3Og7B9sbY7tsFLctQkIqnMh3hErYgdMjTYuqmcXX+lK5T1lnUt3G7zNswmZA==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "spdx-expression-parse": "^3.0.0",
++        "spdx-license-ids": "^3.0.0"
++      }
++    },
++    "node_modules/spdx-exceptions": {
++      "version": "2.5.0",
++      "resolved": "https://registry.npmjs.org/spdx-exceptions/-/spdx-exceptions-2.5.0.tgz",
++      "integrity": "sha512-PiU42r+xO4UbUS1buo3LPJkjlO7430Xn5SVAhdpzzsPHsjbYVflnnFdATgabnLude+Cqu25p6N+g2lw/PFsa4w==",
++      "dev": true,
++      "license": "CC-BY-3.0"
++    },
++    "node_modules/spdx-expression-parse": {
++      "version": "3.0.1",
++      "resolved": "https://registry.npmjs.org/spdx-expression-parse/-/spdx-expression-parse-3.0.1.tgz",
++      "integrity": "sha512-cbqHunsQWnJNE6KhVSMsMeH5H/L9EpymbzqTQ3uLwNCLZ1Q481oWaofqH7nO6V07xlXwY6PhQdQ2IedWx/ZK4Q==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "spdx-exceptions": "^2.1.0",
++        "spdx-license-ids": "^3.0.0"
++      }
++    },
++    "node_modules/spdx-license-ids": {
++      "version": "3.0.24",
++      "resolved": "https://registry.npmjs.org/spdx-license-ids/-/spdx-license-ids-3.0.24.tgz",
++      "integrity": "sha512-cLS9TtWkIQFyLkJ3/5aFQAOHOSKTlOs/7WDut/XPSdjom1fJhUdkepeJAKXa9Y05+FabHd0sti+Et559vDtkpQ==",
++      "dev": true,
++      "license": "CC0-1.0"
++    },
++    "node_modules/string-width": {
++      "version": "4.2.3",
++      "resolved": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz",
++      "integrity": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "emoji-regex": "^8.0.0",
++        "is-fullwidth-code-point": "^3.0.0",
++        "strip-ansi": "^6.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/string-width/node_modules/ansi-regex": {
++      "version": "5.0.1",
++      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
++      "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/string-width/node_modules/strip-ansi": {
++      "version": "6.0.1",
++      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
++      "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^5.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/strip-ansi": {
++      "version": "7.2.0",
++      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-7.2.0.tgz",
++      "integrity": "sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^6.2.2"
++      },
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/strip-ansi?sponsor=1"
++      }
++    },
++    "node_modules/structured-source": {
++      "version": "4.0.0",
++      "resolved": "https://registry.npmjs.org/structured-source/-/structured-source-4.0.0.tgz",
++      "integrity": "sha512-qGzRFNJDjFieQkl/sVOI2dUjHKRyL9dAJi2gCPGJLbJHBIkyOHxjuocpIEfbLioX+qSJpvbYdT49/YCdMznKxA==",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "dependencies": {
++        "boundary": "^2.0.0"
++      }
++    },
++    "node_modules/supports-color": {
++      "version": "10.2.2",
++      "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-10.2.2.tgz",
++      "integrity": "sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/supports-color?sponsor=1"
++      }
++    },
++    "node_modules/supports-hyperlinks": {
++      "version": "4.6.0",
++      "resolved": "https://registry.npmjs.org/supports-hyperlinks/-/supports-hyperlinks-4.6.0.tgz",
++      "integrity": "sha512-FL/q/YePS4tFFTNiBOR+zPk2ZrKheqNtmTJ/9OUZ4e1wKHJofDbGQSmSsxS0XNnabSkqexryCaXGvEKz1vf9UQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "has-flag": "^5.0.1",
++        "supports-color": "^10.2.2"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/supports-hyperlinks?sponsor=1"
++      }
++    },
++    "node_modules/table": {
++      "version": "6.10.1",
++      "resolved": "https://registry.npmjs.org/table/-/table-6.10.1.tgz",
++      "integrity": "sha512-f05boz6UD5S70AJiUxqKOnDuE45mBIVagX490oQmcW38+Lq/H1s7CjIpFgJjR/kpV87L4lw/AN+14D2PktQJsQ==",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "dependencies": {
++        "ajv": "^8.0.1",
++        "slice-ansi": "^4.0.0",
++        "string-width": "^4.2.3",
++        "strip-ansi": "^6.0.1"
++      },
++      "engines": {
++        "node": ">=10.0.0"
++      }
++    },
++    "node_modules/table/node_modules/ansi-regex": {
++      "version": "5.0.1",
++      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
++      "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/table/node_modules/strip-ansi": {
++      "version": "6.0.1",
++      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
++      "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^5.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/tagged-tag": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/tagged-tag/-/tagged-tag-1.0.0.tgz",
++      "integrity": "sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/terminal-link": {
++      "version": "5.0.0",
++      "resolved": "https://registry.npmjs.org/terminal-link/-/terminal-link-5.0.0.tgz",
++      "integrity": "sha512-qFAy10MTMwjzjU8U16YS4YoZD+NQLHzLssFMNqgravjbvIPNiqkGFR4yjhJfmY9R5OFU7+yHxc6y+uGHkKwLRA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-escapes": "^7.0.0",
++        "supports-hyperlinks": "^4.1.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/text-table": {
++      "version": "0.2.0",
++      "resolved": "https://registry.npmjs.org/text-table/-/text-table-0.2.0.tgz",
++      "integrity": "sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/textextensions": {
++      "version": "6.11.0",
++      "resolved": "https://registry.npmjs.org/textextensions/-/textextensions-6.11.0.tgz",
++      "integrity": "sha512-tXJwSr9355kFJI3lbCkPpUH5cP8/M0GGy2xLO34aZCjMXBaK3SoPnZwr/oWmo1FdCnELcs4npdCIOFtq9W3ruQ==",
++      "dev": true,
++      "license": "Artistic-2.0",
++      "dependencies": {
++        "editions": "^6.21.0"
++      },
++      "engines": {
++        "node": ">=4"
++      },
++      "funding": {
++        "url": "https://bevry.me/fund"
++      }
++    },
++    "node_modules/type-fest": {
++      "version": "5.10.0",
++      "resolved": "https://registry.npmjs.org/type-fest/-/type-fest-5.10.0.tgz",
++      "integrity": "sha512-NoSdpq/WEiAg5sjmBkmV/hfxv6HJH4NqPNrqjtSO5CwRmpsDfaf4begxW34KdJykH/l1yHtwBWQkCRdoXO8mPA==",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "dependencies": {
++        "tagged-tag": "^1.0.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/unicorn-magic": {
++      "version": "0.4.1",
++      "resolved": "https://registry.npmjs.org/unicorn-magic/-/unicorn-magic-0.4.1.tgz",
++      "integrity": "sha512-lzlXPoVB0Uy/FvTaUgX39RbixYiSKoc3JSoSf01+0c2B6FR3qdYIPN7Qjo/AV7n6sqLCk0509cT3LRj1oSZ1+A==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/validate-npm-package-license": {
++      "version": "3.0.4",
++      "resolved": "https://registry.npmjs.org/validate-npm-package-license/-/validate-npm-package-license-3.0.4.tgz",
++      "integrity": "sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "spdx-correct": "^3.0.0",
++        "spdx-expression-parse": "^3.0.0"
++      }
++    },
++    "node_modules/version-range": {
++      "version": "4.15.0",
++      "resolved": "https://registry.npmjs.org/version-range/-/version-range-4.15.0.tgz",
++      "integrity": "sha512-Ck0EJbAGxHwprkzFO966t4/5QkRuzh+/I1RxhLgUKKwEn+Cd8NwM60mE3AqBZg5gYODoXW0EFsQvbZjRlvdqbg==",
++      "dev": true,
++      "license": "Artistic-2.0",
++      "engines": {
++        "node": ">=4"
++      },
++      "funding": {
++        "url": "https://bevry.me/fund"
++      }
++    }
++  }
++}
+diff --git a/.github/secretlint/package.json b/.github/secretlint/package.json
+new file mode 100644
+index 0000000..4ea538e
+--- /dev/null
++++ b/.github/secretlint/package.json
+@@ -0,0 +1,8 @@
++{
++  "private": true,
++  "description": "Locked CI credential scanner",
++  "devDependencies": {
++    "@secretlint/secretlint-rule-preset-recommend": "13.0.7",
++    "secretlint": "13.0.7"
++  }
++}
+diff --git a/.github/workflows/desktop-release.yml b/.github/workflows/desktop-release.yml
+index 527bd0f..0533e49 100644
+--- a/.github/workflows/desktop-release.yml
++++ b/.github/workflows/desktop-release.yml
+@@ -30,7 +30,7 @@ jobs:
+   resolve:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-resolve
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     name: Resolve release
+     if: ${{ vars.DESKTOP_RELEASE_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+     runs-on: ubuntu-24.04
+@@ -68,7 +68,7 @@ jobs:
+   javascript-first:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-javascript-first-caller
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: resolve
+     if: ${{ !cancelled() && (github.event_name == 'pull_request' || needs.resolve.outputs.should_build == 'true') }}
+     uses: ./.github/workflows/javascript-first-gate.yml # zizmor: ignore[self-repository]
+@@ -78,7 +78,7 @@ jobs:
+   build:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-build-${{ matrix.label }}
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     name: Build ${{ matrix.label }}
+     needs: [resolve, javascript-first]
+     if: ${{ !cancelled() && needs.javascript-first.result == 'success' && (github.event_name == 'pull_request' || needs.resolve.outputs.should_build == 'true') }}
+diff --git a/.github/workflows/javascript-first-example.yml b/.github/workflows/javascript-first-example.yml
+index 6081dd3..6f6b3cc 100644
+--- a/.github/workflows/javascript-first-example.yml
++++ b/.github/workflows/javascript-first-example.yml
+@@ -19,7 +19,7 @@ jobs:
+   javascript-first:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-javascript-first-caller
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     # A relative call binds the gate to the same candidate commit as this caller.
+     uses: ./.github/workflows/javascript-first-gate.yml # zizmor: ignore[self-repository]
+     with:
+diff --git a/.github/workflows/javascript-first-gate.yml b/.github/workflows/javascript-first-gate.yml
+index 4f360f7..262f4a9 100644
+--- a/.github/workflows/javascript-first-gate.yml
++++ b/.github/workflows/javascript-first-gate.yml
+@@ -43,7 +43,7 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-javascript-prerequisite
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     outputs:
+       tested-sha: ${{ steps.revision.outputs.sha }}
+     steps:
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 20b31b4..f3501c9 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -56,9 +56,8 @@ env:
+   DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
+ 
+ # Concurrency is intentionally job-scoped. Each read-only job cancels only its
+-# superseded counterpart for the same non-main ref. Main checks are not
+-# cancelled, so a cancelled main job is always exceptional and the terminal
+-# status gate can safely report it as a failure. Jobs that can
++# superseded counterpart for the same ref, including main. The terminal status
++# gate excuses cancellation only for a superseded cancellable job. Jobs that can
+ # mutate repositories, registries, releases, or Pages all use one shared
+ # concurrency group instead. A write that has started is never cancelled, and
+ # GitHub queues up to 100 pending writers without replacing them.
+@@ -66,7 +65,7 @@ jobs:
+   javascript-first:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-javascript-first-caller
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     uses: ./.github/workflows/javascript-first-gate.yml # zizmor: ignore[self-repository]
+     with:
+       source-sha: ${{ github.sha }}
+@@ -79,7 +78,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (github.event_name != 'workflow_dispatch') }}
+     outputs:
+       rs-changed: ${{ steps.changes.outputs.rs-changed }}
+@@ -122,7 +121,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-validate-docs
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes]
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (needs.detect-changes.outputs.docs-changed == 'true') }}
+     steps:
+@@ -183,7 +182,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-changelog
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes]
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true') }}
+     steps:
+@@ -218,7 +217,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-version-check
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (github.event_name == 'pull_request') }}
+     steps:
+       - uses: actions/checkout@v7
+@@ -245,7 +244,7 @@ jobs:
+         run: rust-script scripts/check-version-modification.rs
+ 
+   # === SECRETS SCAN ===
+-  # Language-agnostic credential scan; runs via npx so no Node dependency is committed.
++  # Language-agnostic credential scan with locked tooling and tracked evidence.
+   secrets-scan:
+     if: needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha
+     needs: [javascript-first]
+@@ -254,15 +253,26 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-secrets-scan
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+         with:
+           ref: ${{ needs.javascript-first.outputs.tested-sha == github.sha && github.sha }}
+           persist-credentials: false
+ 
+-      - name: Run secretlint
+-        run: npx --yes -p secretlint@13.0.7 -p @secretlint/secretlint-rule-preset-recommend@13.0.7 secretlint --secretlintignore .gitignore "**/*"
++      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
++        with:
++          node-version: '24'
++
++      - name: Install locked secretlint
++        # secretlint@13.0.7 and @secretlint/secretlint-rule-preset-recommend@13.0.7
++        run: npm ci --prefix .github/secretlint --ignore-scripts --no-audit --no-fund
++
++      - name: Test tracked evidence scanner
++        run: node --test .github/scripts/check-secrets.test.mjs
++
++      - name: Run secretlint on tracked evidence
++        run: node .github/scripts/check-secrets.mjs
+ 
+   # === FRESH MERGE SIMULATION ===
+   # Catches semantic merge conflicts: a pull request that is green in isolation but
+@@ -273,7 +283,7 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-fresh-merge
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes]
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true') }}
+     steps:
+@@ -326,7 +336,7 @@ jobs:
+     timeout-minutes: 60
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-docker-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes]
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (!cancelled() && (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.any-code-changed == 'true')) }}
+     steps:
+@@ -373,7 +383,7 @@ jobs:
+     timeout-minutes: 5
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-cargo-lock
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes]
+     if: |
+       needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha &&
+@@ -412,7 +422,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes, cargo-lock]
+     # Note: !cancelled() is required because detect-changes is skipped on workflow_dispatch,
+     # and without it, this job would also be skipped even though its condition includes workflow_dispatch.
+@@ -509,7 +519,7 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes, cargo-lock]
+     # Note: !cancelled() is required because detect-changes is skipped on workflow_dispatch,
+     # and without it, this job would also be skipped even though its condition includes workflow_dispatch.
+@@ -585,7 +595,7 @@ jobs:
+     timeout-minutes: 20
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-script-tests
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes, cargo-lock]
+     # Note: !cancelled() is required because detect-changes is skipped on workflow_dispatch,
+     # and without it, this job would also be skipped even though its condition includes workflow_dispatch.
+@@ -641,7 +651,7 @@ jobs:
+     timeout-minutes: 15
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-coverage
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, detect-changes, cargo-lock]
+     env:
+       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+@@ -714,7 +724,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [javascript-first, lint, test, script-tests]
+     if: ${{ needs.javascript-first.result == 'success' && needs.javascript-first.outputs.tested-sha == github.sha && (!cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' && needs.script-tests.result == 'success') }}
+     steps:
+@@ -1134,7 +1144,7 @@ jobs:
+   release-javascript-first:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-release-javascript-first-caller
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [auto-release, manual-release]
+     if: ${{ !cancelled() && (needs.auto-release.outputs.tested-sha != '' || needs.manual-release.outputs.tested-sha != '') }}
+     uses: ./.github/workflows/javascript-first-gate.yml # zizmor: ignore[self-repository]
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index 5450a4e..8c4d66d 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -21,7 +21,7 @@ jobs:
+   javascript-first:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-javascript-first-caller
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     uses: ./.github/workflows/javascript-first-gate.yml # zizmor: ignore[self-repository]
+     with:
+       source-sha: ${{ github.sha }}
+diff --git a/.github/workflows/workflows.yml b/.github/workflows/workflows.yml
+index f9519ab..6499ba5 100644
+--- a/.github/workflows/workflows.yml
++++ b/.github/workflows/workflows.yml
+@@ -21,7 +21,7 @@ jobs:
+   javascript-first:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-javascript-first-caller
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     uses: ./.github/workflows/javascript-first-gate.yml # zizmor: ignore[self-repository]
+     with:
+       source-sha: ${{ github.sha }}
+diff --git a/experiments/issue-215-regressions.py b/experiments/issue-215-regressions.py
+index d35ce6d..5732d69 100644
+--- a/experiments/issue-215-regressions.py
++++ b/experiments/issue-215-regressions.py
+@@ -132,15 +132,15 @@ class PipelineRegressions(unittest.TestCase):
+ 
+     def test_real_release_cancel_policies_and_unknowns_fail_closed(self):
+         names = re.findall(r'^  ([\w-]+):$', (WORKFLOWS / 'release.yml').read_text(), re.M)
+-        for ref, expected in [('refs/pull/7/merge', 'true'), ('refs/heads/main', 'false')]:
++        for ref, expected in [('refs/pull/7/merge', 'true'), ('refs/heads/main', 'true')]:
+             p = run(['bash', str(SCRIPTS / 'read-job-cancel-in-progress.sh'), *names], env={
+                 'WORKFLOW_FILE': str(WORKFLOWS / 'release.yml'), 'GITHUB_REF': ref})
+             values = dict(line.split('\t') for line in p.stdout.splitlines())
+             self.assertNotIn('unknown', values.values(), p.stdout)
+             self.assertEqual(values['test'], expected)
+         for ref, head, expected in [('refs/pull/7/merge', 'b'*40, 0),
+-                                    ('refs/heads/main', 'b'*40, 1),
+-                                    ('refs/pull/7/merge', 'a'*40, 1), ('', 'b'*40, 1)]:
++                                    ('refs/heads/main', 'b'*40, 0),
++                                    ('refs/pull/7/merge', 'a'*40, 1), ('', 'b'*40, 0)]:
+             p = run(['bash', str(SCRIPTS / 'check-pipeline-status.sh')], env={
+                 'NEEDS_JSON': '{"test":{"result":"cancelled"}}', 'RUN_SHA': 'a'*40,
+                 'BRANCH_HEAD_SHA': head, 'GITHUB_REF': ref,
+diff --git a/experiments/issue-228-git-regressions.py b/experiments/issue-228-git-regressions.py
+new file mode 100644
+index 0000000..35f6b4b
+--- /dev/null
++++ b/experiments/issue-228-git-regressions.py
+@@ -0,0 +1,121 @@
++#!/usr/bin/env python3
++"""Offline CLI regressions: missing Git evidence must not become no-change outputs."""
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import tempfile
++import unittest
++
++ROOT = Path(__file__).resolve().parents[1]
++SCRIPT = ROOT / 'scripts/detect-code-changes.rs'
++
++
++class GitEvidence(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.runner = shutil.which('rust-script')
++        cls.git = shutil.which('git')
++        if not cls.runner or not cls.git:
++            raise RuntimeError('rust-script and git are required')
++        # Complete compilation before the per-probe deadlines start.
++        subprocess.run([cls.runner, '--wrapper', 'true', str(SCRIPT)], cwd=ROOT,
++                       env={**os.environ, 'RUST_LOG': 'error'}, check=True)
++
++    def setUp(self):
++        temp = tempfile.TemporaryDirectory(prefix='issue-228-git-')
++        self.addCleanup(temp.cleanup)
++        self.work = Path(temp.name)
++        self.env = {k: v for k, v in os.environ.items() if not k.startswith('GITHUB_')}
++        self.output = self.work / 'outputs'
++        self.env.update(RUST_LOG='error', GITHUB_EVENT_NAME='push', GITHUB_OUTPUT=str(self.output))
++        self.command([self.git, 'init', '-q', '-b', 'main'], check=True)
++        for key, value in [('user.name', 'Test'), ('user.email', 'test@example.invalid')]:
++            self.command([self.git, 'config', key, value], check=True)
++        (self.work / 'src').mkdir()
++        (self.work / 'src/lib.rs').write_text('pub fn fixture() {}\n')
++        (self.work / 'Cargo.toml').write_text('[package]\nname="fixture"\nversion="1.0.0"\n')
++        self.command([self.git, 'add', '.'], check=True)
++        self.command([self.git, 'commit', '-qm', 'initial'], check=True)
++
++    def command(self, args, **options):
++        return subprocess.run(args, cwd=self.work, env=self.env, capture_output=True,
++                              text=True, timeout=30, **options)
++
++    def run_detector(self):
++        return self.command([self.runner, str(SCRIPT)])
++
++    def assert_no_claim(self, result):
++        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertNotIn('-changed=', result.stdout)
++        self.assertFalse(self.output.exists(), result.stdout + result.stderr)
++
++    def test_missing_checkout(self):
++        shutil.rmtree(self.work / '.git')
++        self.assert_no_claim(self.run_detector())
++
++    def test_corrupt_head(self):
++        (self.work / '.git/HEAD').write_text('invalid HEAD\n')
++        self.assert_no_claim(self.run_detector())
++
++    def mock_git(self, failed_command):
++        tools = self.work / 'tools'
++        tools.mkdir(exist_ok=True)
++        shim = tools / 'git'
++        shim.write_text('''#!/usr/bin/env python3
++import os, sys
++if os.environ['FAIL_GIT'] in ('all', sys.argv[1]):
++    sys.stderr.write('injected Git evidence failure\\n')
++    sys.exit(42)
++os.execv(os.environ['REAL_GIT'], [os.environ['REAL_GIT'], *sys.argv[1:]])
++''')
++        shim.chmod(0o755)
++        self.env.update(FAIL_GIT=failed_command, REAL_GIT=self.git,
++                        PATH=str(tools) + os.pathsep + os.environ['PATH'])
++
++    def test_initial_commit_and_successful_empty_diff_are_distinct(self):
++        result = self.run_detector()
++        self.assertEqual(result.returncode, 0, result.stderr)
++        self.assertIn('rs-changed=true', self.output.read_text())
++        self.output.unlink()
++        self.command([self.git, 'commit', '--allow-empty', '-qm', 'empty'], check=True)
++        result = self.run_detector()
++        self.assertEqual(result.returncode, 0, result.stderr)
++        self.assertEqual(len(self.output.read_text().splitlines()), 5)
++        self.assertTrue(all(line.endswith('=false') for line in self.output.read_text().splitlines()))
++        self.assertNotIn('listing all files', result.stdout)
++
++    def test_failed_git_evidence_is_fatal(self):
++        for operation in ['all', 'rev-parse', 'cat-file', 'ls-tree']:
++            with self.subTest(operation=operation):
++                self.mock_git(operation)
++                result = self.run_detector()
++                self.assert_no_claim(result)
++                self.assertIn('injected Git evidence failure', result.stderr)
++        self.command([self.git, 'commit', '--allow-empty', '-qm', 'empty'], check=True)
++        self.mock_git('diff')
++        result = self.run_detector()
++        self.assert_no_claim(result)
++        self.assertIn('injected Git evidence failure', result.stderr)
++
++    def test_pr_diff_failure_does_not_fall_back_to_base_diff(self):
++        self.command([self.git, 'checkout', '-qb', 'feature'], check=True)
++        (self.work / 'src/lib.rs').write_text('pub fn changed() {}\n')
++        self.command([self.git, 'commit', '-qam', 'feature change'], check=True)
++        self.command([self.git, 'checkout', '-q', 'main'], check=True)
++        self.command([self.git, 'merge', '--no-ff', '-qm', 'synthetic merge', 'feature'], check=True)
++        self.env['GITHUB_EVENT_NAME'] = 'pull_request'
++        self.mock_git('diff')
++        result = self.run_detector()
++        self.assert_no_claim(result)
++        self.assertIn('injected Git evidence failure', result.stderr)
++
++    def test_output_write_failure_remains_fatal(self):
++        self.env['GITHUB_OUTPUT'] = str(self.work)
++        result = self.run_detector()
++        self.assertNotEqual(result.returncode, 0)
++        self.assertIn('GITHUB_OUTPUT', result.stderr)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/experiments/issue-230-concurrency.py b/experiments/issue-230-concurrency.py
+new file mode 100644
+index 0000000..f7b529a
+--- /dev/null
++++ b/experiments/issue-230-concurrency.py
+@@ -0,0 +1,66 @@
++#!/usr/bin/env python3
++"""Evaluate actual workflow cancellation policies and the terminal gate offline."""
++import os
++from pathlib import Path
++import re
++import subprocess
++import unittest
++
++ROOT = Path(__file__).resolve().parents[1]
++WRITERS = {'auto-release', 'manual-release', 'docker-publish', 'docker-merge-manifest',
++           'changelog-pr', 'deploy-docs', 'publish', 'finalize'}
++
++
++def jobs(path):
++    content = path.read_text().split('\njobs:\n', 1)[1]
++    return [(m.group(1), m.group(2)) for m in re.finditer(
++        r'^  ([\w-]+):\n(.*?)(?=^  [\w-]+:\n|\Z)', content, re.M | re.S)]
++
++
++class Concurrency(unittest.TestCase):
++    def test_every_concurrent_job_on_main_and_pr(self):
++        for path in (ROOT / '.github/workflows').glob('*.yml'):
++            self.assertNotIn('\nconcurrency:', path.read_text().split('\njobs:\n')[0])
++            if path.name == 'rerun-infrastructure-failures.yml':
++                continue  # Per-run Actions retry coordinator; never a superseded check.
++            for name, body in jobs(path):
++                if '\n    concurrency:' not in '\n' + body:
++                    continue
++                group = re.search(r'^      group: (.+)$', body, re.M).group(1)
++                expected = 'false' if name in WRITERS else 'true'
++                for ref in ['refs/heads/main', 'refs/pull/233/merge']:
++                    with self.subTest(workflow=path.name, job=name, ref=ref):
++                        result = subprocess.run(['bash', 'scripts/read-job-cancel-in-progress.sh'],
++                            cwd=ROOT, env={**os.environ, 'WORKFLOW_FILE': str(path),
++                            'JOB_NAMES': name, 'GITHUB_REF': ref}, text=True,
++                            capture_output=True, check=True, timeout=10)
++                        self.assertEqual(result.stdout.strip(), name + '\t' + expected)
++                if name in WRITERS:
++                    self.assertEqual(group, 'main-writer-${{ github.repository }}')
++                    self.assertIn('queue: max', body)
++                if 'matrix:' in body and name not in WRITERS:
++                    matrix = body.split('matrix:', 1)[1].split('steps:', 1)[0]
++                    dimensions = re.findall(r'^        ([\w-]+):\s*\[', matrix, re.M)
++                    if dimensions:
++                        for dimension in dimensions:
++                            self.assertIn('matrix.' + dimension, group)
++                    else:
++                        self.assertIn('matrix.', group)
++
++    def test_real_gate_excuses_only_superseded_checks(self):
++        for ref in ['refs/heads/main', 'refs/pull/233/merge']:
++            for job, superseded, success in [('test', True, True), ('test', False, False),
++                                            ('auto-release', True, False), ('auto-release', False, False)]:
++                with self.subTest(ref=ref, job=job, superseded=superseded):
++                    env = {k: v for k, v in os.environ.items() if not k.startswith(('GH_', 'GITHUB_'))}
++                    env.update(NEEDS_JSON='{"' + job + '":{"result":"cancelled"}}',
++                               WORKFLOW_FILE=str(ROOT / '.github/workflows/release.yml'),
++                               RUN_SHA='1' * 40, BRANCH_HEAD_SHA=('2' if superseded else '1') * 40,
++                               GITHUB_REF=ref, HEAD_REF=ref)
++                    result = subprocess.run(['bash', 'scripts/check-pipeline-status.sh'], cwd=ROOT,
++                                            env=env, text=True, capture_output=True, timeout=10)
++                    self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/experiments/issue-231-release-sync.py b/experiments/issue-231-release-sync.py
+new file mode 100644
+index 0000000..38640dd
+--- /dev/null
++++ b/experiments/issue-231-release-sync.py
+@@ -0,0 +1,231 @@
++#!/usr/bin/env python3
++"""Actual release CLI against local Git origins and a local registry; no publication."""
++import http.server
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import tempfile
++import threading
++import unittest
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++class ReleaseSync(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        class Registry(http.server.BaseHTTPRequestHandler):
++            def log_message(self, *_args):
++                pass
++
++            def do_GET(self):
++                self.send_response(404)
++                self.send_header('Content-Length', '2')
++                self.end_headers()
++                self.wfile.write(b'{}')
++
++        cls.server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Registry)
++        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
++        cls.thread.start()
++        cls.temp = tempfile.TemporaryDirectory(prefix='issue-231-tools-')
++        cls.scripts = Path(cls.temp.name) / 'scripts'
++        shutil.copytree(ROOT / 'scripts', cls.scripts)
++        for path in cls.scripts.rglob('*.rs'):
++            path.write_text(path.read_text().replace('https://crates.io',
++                            f'http://127.0.0.1:{cls.server.server_port}'))
++        cls.runner = shutil.which('rust-script')
++        subprocess.run([cls.runner, '--wrapper', 'true', str(cls.scripts / 'version-and-commit.rs')],
++                       env={**os.environ, 'RUST_LOG': 'error'}, check=True)
++
++    @classmethod
++    def tearDownClass(cls):
++        cls.server.shutdown()
++        cls.server.server_close()
++        cls.thread.join()
++        cls.temp.cleanup()
++
++    def setUp(self):
++        self.tempdir = tempfile.TemporaryDirectory(prefix='issue-231-repo-')
++        self.addCleanup(self.tempdir.cleanup)
++        self.root = Path(self.tempdir.name)
++        self.origin, self.work, self.other = [self.root / p for p in ('origin.git', 'release', 'other')]
++        self.env = {k: v for k, v in os.environ.items() if not k.startswith('GITHUB_')}
++        self.env.pop('RUST_ROOT', None)
++        self.env['RUST_LOG'] = 'error'
++        self.command(self.root, 'git', 'init', '--bare', '-q', '-b', 'main', str(self.origin))
++        self.command(self.root, 'git', 'clone', '-q', str(self.origin), str(self.work))
++        self.write(self.work, 'Cargo.toml', '[package]\nname="fixture"\nversion="1.0.0"\n')
++        self.write(self.work, 'Cargo.lock', 'version = 3\n[[package]]\nname="fixture"\nversion="1.0.0"\n')
++        self.write(self.work, 'src/lib.rs', 'pub fn fixture() {}\n')
++        self.write(self.work, 'CHANGELOG.md', '## [1.0.0]\n\nOriginal.\n')
++        self.write(self.work, 'changelog.d/fix.md', '---\nbump: patch\n---\n\n### Fixed\n- A fix.\n')
++        self.write(self.work, 'package.json', '{"name":"native-fixture","version":"1.0.0","scripts":{"test":"node test.js"}}\n')
++        self.write(self.work, 'package-lock.json', '{"name":"native-fixture","version":"1.0.0","lockfileVersion":3,"packages":{"":{"name":"native-fixture","version":"1.0.0"}}}\n')
++        self.commit(self.work)
++        self.command(self.work, 'git', 'push', '-qu', 'origin', 'main')
++        self.command(self.root, 'git', 'clone', '-q', str(self.origin), str(self.other))
++        self.validated = self.git(self.work, 'rev-parse', 'HEAD')
++
++    def command(self, cwd, *args, check=True):
++        return subprocess.run(args, cwd=cwd, env=self.env, check=check,
++                              capture_output=True, text=True, timeout=45)
++
++    def git(self, cwd, *args):
++        return self.command(cwd, 'git', *args).stdout.strip()
++
++    def write(self, cwd, path, content):
++        path = cwd / path
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_text(content)
++
++    def commit(self, cwd):
++        self.git(cwd, 'add', '.')
++        self.git(cwd, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture')
++
++    def advance(self, path, content):
++        self.write(self.other, path, content)
++        self.commit(self.other)
++        self.git(self.other, 'push', '-q', 'origin', 'main')
++        return self.git(self.other, 'rev-parse', 'HEAD')
++
++    def race(self, path, content, second=None):
++        self.write(self.other, path, content)
++        self.commit(self.other)
++        commits = [self.git(self.other, 'rev-parse', 'HEAD')]
++        if second:
++            self.write(self.other, *second)
++            self.commit(self.other)
++            commits.append(self.git(self.other, 'rev-parse', 'HEAD'))
++        # Advance before Git advertises remote refs, so the real push reports
++        # a non-fast-forward rather than a server-side ref-lock failure.
++        tools = self.root / 'bin'
++        tools.mkdir()
++        marker = self.root / 'race-pending'
++        marker.write_text('0')
++        real_git = shutil.which('git')
++        shim = tools / 'git'
++        shim.write_text("#!/usr/bin/env python3\nimport os, pathlib, subprocess, sys\n"
++                        + "marker = pathlib.Path(" + repr(str(marker)) + ")\n"
++                        + "commits = " + repr(commits) + "\nindex = int(marker.read_text())\n"
++                        + "if sys.argv[1:] == ['push'] and index < len(commits):\n"
++                        + "    marker.write_text(str(index + 1))\n"
++                        + "    subprocess.run([" + repr(real_git) + ", '-C', " + repr(str(self.other))
++                        + ", 'push', '-q', 'origin', commits[index] + ':main'], check=True)\n"
++                        + "os.execv(" + repr(real_git) + ", [" + repr(real_git) + ", *sys.argv[1:]])\n")
++        shim.chmod(0o755)
++        self.env['PATH'] = str(tools) + os.pathsep + self.env['PATH']
++
++    def release(self):
++        self.remote_manifest = self.git(self.root, '--git-dir', str(self.origin), 'show', 'main:Cargo.toml')
++        return self.command(self.work, self.runner, str(self.scripts / 'version-and-commit.rs'),
++                            '--bump-type', 'patch', check=False)
++
++    def assert_refused(self, result):
++        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertIn('validated source', result.stderr)
++        self.assertEqual(self.git(self.root, '--git-dir', str(self.origin), 'tag'), '')
++        self.assertEqual(self.remote_manifest, self.git(self.root, '--git-dir', str(self.origin), 'show', 'main:Cargo.toml'))
++
++    def test_initial_source_change_is_rejected(self):
++        remote = self.advance('src/lib.rs', 'pub fn untested() {}\n')
++        self.assert_refused(self.release())
++        self.assertEqual(self.git(self.work, 'rev-parse', 'HEAD'), self.validated)
++        self.assertEqual(self.git(self.root, '--git-dir', str(self.origin), 'rev-parse', 'main'), remote)
++
++    def test_initial_dependency_change_is_rejected(self):
++        self.advance('Cargo.toml', '[package]\nname="fixture"\nversion="1.0.1"\n[dependencies]\nevil="1"\n')
++        self.assert_refused(self.release())
++
++    def test_concurrent_source_push_is_rejected(self):
++        self.race('src/new.rs', 'pub fn untested() {}\n')
++        self.assert_refused(self.release())
++        self.assertFalse((self.work / 'src/new.rs').exists())
++
++    def test_concurrent_dependency_push_is_rejected(self):
++        self.race('package.json', '{"name":"native-fixture","version":"1.0.1","dependencies":{"evil":"1"}}\n')
++        self.assert_refused(self.release())
++
++    def test_second_push_race_rechecks_the_original_validated_source(self):
++        self.race('package.json', '{"name":"native-fixture","version":"1.0.1","scripts":{"test":"node test.js"}}\n',
++                  second=('src/lib.rs', 'pub fn untested_second_race() {}\n'))
++        result = self.release()
++        self.assert_refused(result)
++        self.assertIn('attempt 2/3', result.stderr)
++        self.assertEqual((self.work / 'src/lib.rs').read_text(), 'pub fn fixture() {}\n')
++
++    def metadata(self, race):
++        content = '{"name":"native-fixture","version":"1.0.1","scripts":{"test":"node test.js"}}\n'
++        if race:
++            self.race('package.json', content)
++        else:
++            self.advance('package.json', content)
++        result = self.release()
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        remote = self.git(self.root, '--git-dir', str(self.origin), 'rev-parse', 'main')
++        self.assertEqual(self.git(self.root, '--git-dir', str(self.origin), 'rev-parse', 'v1.0.1^{}'), remote)
++        self.assertIn('1.0.1', (self.work / 'package.json').read_text())
++        self.assertEqual((self.work / 'src/lib.rs').read_text(), 'pub fn fixture() {}\n')
++
++    def test_initial_metadata_only_release_is_allowed(self):
++        self.metadata(False)
++
++    def test_concurrent_metadata_only_release_is_allowed(self):
++        self.metadata(True)
++
++    def test_initial_cargo_version_and_local_lock_metadata_are_allowed(self):
++        self.write(self.other, 'Cargo.lock', 'version = 3\n[[package]]\nname="fixture"\nversion="1.0.1"\n')
++        self.advance('Cargo.toml', '[package]\nname="fixture"\nversion="1.0.1"\n')
++        result = self.release()
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertEqual(self.git(self.work, 'rev-parse', 'v1.0.2^{}'), self.git(self.work, 'rev-parse', 'HEAD'))
++
++    def test_initial_npm_lock_version_metadata_is_allowed(self):
++        self.advance('package-lock.json', '{"name":"native-fixture","version":"1.0.1","lockfileVersion":3,"packages":{"":{"name":"native-fixture","version":"1.0.1"}}}\n')
++        result = self.release()
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++
++    def test_dependency_and_unsupported_metadata_changes_are_rejected(self):
++        cases = {
++            'Cargo.lock': 'version = 3\n[[package]]\nname="fixture"\nversion="1.0.0"\n[[package]]\nname="external"\nversion="2.0.0"\nsource="registry+https://example.invalid"\n',
++            'package-lock.json': '{"name":"native-fixture","version":"1.0.1","lockfileVersion":3,"packages":{"":{"name":"native-fixture","version":"1.0.1","dependencies":{"external":"2"}}}}\n',
++            'package.json': '{"name":"native-fixture","version":"1.0.1","scripts":{"test":"evil"}}\n',
++            'nested/Cargo.toml': '[package]\nname="new"\nversion="1.0.0"\n',
++            'changelog.d/fix.md': '### Fixed\n- Untested behavior.\n',
++            'changelog.d/new.md': '### Fixed\n- Untested behavior.\n',
++            '.github/workflows/new.yml': 'name: untested\n',
++            'tests/fixtures/package.json': '{"version":"2.0.0"}\n',
++        }
++        for path, content in cases.items():
++            with self.subTest(path=path):
++                self.setUp()
++                self.advance(path, content)
++                self.assert_refused(self.release())
++                self.assertEqual(self.git(self.work, 'rev-parse', 'HEAD'), self.validated)
++
++    def test_consumed_fragments_and_changelog_are_allowed(self):
++        (self.other / 'changelog.d/fix.md').unlink()
++        self.advance('CHANGELOG.md', '## [1.0.1]\n\nConcurrent release.\n')
++        result = self.release()
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++
++    @unittest.skipIf(os.name == 'nt', 'POSIX symlink fixture')
++    def test_symlink_metadata_is_rejected(self):
++        (self.other / 'package.json').unlink()
++        (self.other / 'package.json').symlink_to('src/lib.rs')
++        self.commit(self.other)
++        self.git(self.other, 'push', '-q', 'origin', 'main')
++        self.assert_refused(self.release())
++
++    def test_missing_version_is_not_equivalent_metadata(self):
++        self.advance('package.json', '{"name":"native-fixture","scripts":{"test":"node test.js"}}\n')
++        self.assert_refused(self.release())
++
++    def test_fetch_failure_is_fatal(self):
++        self.git(self.work, 'remote', 'set-url', 'origin', str(self.root / 'missing.git'))
++        self.assert_refused(self.release())
++        self.assertEqual(self.git(self.work, 'rev-parse', 'HEAD'), self.validated)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/scripts/check-codeql-results.mjs b/scripts/check-codeql-results.mjs
+index 2f1349d..7e39b4c 100644
+--- a/scripts/check-codeql-results.mjs
++++ b/scripts/check-codeql-results.mjs
+@@ -13,10 +13,35 @@ function reportsIn(directory) {
+   });
+ }
+ 
++// Invocation success does not guarantee complete extraction. SARIF defaults an
++// omitted notification level to warning, including configuration diagnostics.
++function invocationDiagnostics(invocation, context) {
++  const failures = [];
++  for (const field of ['toolExecutionNotifications', 'toolConfigurationNotifications']) {
++    if (!Object.hasOwn(invocation, field)) continue;
++    if (!Array.isArray(invocation[field])) throw new Error(`Malformed SARIF notification array: ${context}, ${field}`);
++    for (const notification of invocation[field]) {
++      const level = notification?.level ?? 'warning';
++      if (!notification || typeof notification !== 'object' || Array.isArray(notification) ||
++          !(typeof notification.message?.text === 'string' || typeof notification.message?.markdown === 'string') ||
++          (Object.hasOwn(notification, 'level') && !['error', 'warning', 'note', 'none'].includes(notification.level))) {
++        throw new Error(`Malformed SARIF notification: ${context}, ${field}`);
++      }
++      if (level === 'note' || level === 'none') continue;
++      const location = notification.locations?.[0]?.physicalLocation;
++      failures.push(`${context}, ${field}: ${notification.descriptor?.id ?? notification.descriptor?.index ?? '?'} (${level}) ` +
++        `${location?.artifactLocation?.uri ?? '?'}:${location?.region?.startLine ?? '?'}: ` +
++        `${notification.message.text ?? notification.message.markdown}`);
++    }
++  }
++  return failures;
++}
++
+ export function checkCodeqlResults(directory) {
+   const reports = reportsIn(directory).sort();
+   if (!reports.length) throw new Error(`No SARIF reports in ${directory}`);
+   const findings = [];
++  const diagnostics = [];
+   for (const file of reports) {
+     const data = JSON.parse(readFileSync(file, 'utf8'));
+     if (data?.version !== '2.1.0' || !Array.isArray(data.runs) || !data.runs.length) {
+@@ -29,6 +54,9 @@ export function checkCodeqlResults(directory) {
+           run.invocations.some((invocation) => invocation?.executionSuccessful !== true)) {
+         throw new Error(`Missing or unsuccessful CodeQL analysis: ${context}`);
+       }
++      for (const [invocationIndex, invocation] of run.invocations.entries()) {
++        diagnostics.push(...invocationDiagnostics(invocation, `${context}, invocation ${invocationIndex + 1}`));
++      }
+       for (const result of run.results) {
+         if (!result || typeof result.ruleId !== 'string' ||
+             !(typeof result.message?.text === 'string' || typeof result.message?.markdown === 'string')) {
+@@ -42,6 +70,7 @@ export function checkCodeqlResults(directory) {
+       }
+     }
+   }
++  if (diagnostics.length) throw new Error(`${diagnostics.length} incomplete CodeQL analysis diagnostic(s):\n${diagnostics.join('\n')}`);
+   if (findings.length) throw new Error(`${findings.length} unresolved CodeQL finding(s):\n${findings.join('\n')}`);
+   return reports.length;
+ }
+diff --git a/scripts/check-codeql-results.test.mjs b/scripts/check-codeql-results.test.mjs
+index ed4e510..33bf97d 100644
+--- a/scripts/check-codeql-results.test.mjs
++++ b/scripts/check-codeql-results.test.mjs
+@@ -40,3 +40,37 @@ test('SARIF gate rejects missing/invalid reports and checks every file/run/sever
+     check(false);
+   } finally { rmSync(dir, { recursive: true, force: true }); }
+ });
++
++test('SARIF invocation diagnostics gate extraction even with no findings', { timeout: 20000 }, () => {
++  const dir = mkdtempSync(join(tmpdir(), 'codeql-notifications-'));
++  try {
++    const check = (invocations) => {
++      writeFileSync(join(dir, 'analysis.sarif'), JSON.stringify(sarif({ ...run(), invocations })));
++      return spawnSync(process.execPath, [cli.pathname, dir], { encoding: 'utf8', timeout: 5000 });
++    };
++    for (const field of ['toolExecutionNotifications', 'toolConfigurationNotifications']) {
++      const diagnostic = { descriptor: { id: 'extract/failure' }, message: { text: 'Extraction failed' },
++        locations: [{ physicalLocation: { artifactLocation: { uri: 'src/lib.rs' }, region: { startLine: 42 } } }] };
++      for (const level of ['error', 'warning', undefined]) {
++        const result = check([{ executionSuccessful: true },
++          { executionSuccessful: true, [field]: [{ ...diagnostic, level }] }]);
++        assert.equal(result.status, 1);
++        assert.match(result.stderr, /extract\/failure/);
++        assert.match(result.stderr, /src\/lib.rs:42/);
++        assert.match(result.stderr, /Extraction failed/);
++      }
++      for (const value of [null, {}, 'invalid', [null], [1], [{}], [{ level: 'note' }],
++        [{ message: { text: 'bad level' }, level: 'unknown' }],
++        [{ message: 'invalid' }], [{ message: { text: 12 } }], [{ message: { text: 'null level' }, level: null }]]) {
++        const result = check([{ executionSuccessful: true, [field]: value }]);
++        assert.equal(result.status, 1, JSON.stringify(value));
++        assert.match(result.stderr, /Malformed SARIF notification/);
++      }
++      for (const level of ['note', 'none']) {
++        const result = check([{ executionSuccessful: true, [field]: [{ ...diagnostic, level }] }]);
++        assert.equal(result.status, 0, result.stderr);
++      }
++      assert.equal(check([{ executionSuccessful: true, [field]: [] }]).status, 0);
++    }
++  } finally { rmSync(dir, { recursive: true, force: true }); }
++});
+diff --git a/scripts/detect-code-changes.rs b/scripts/detect-code-changes.rs
+index 990ddb0..d94e92c 100644
+--- a/scripts/detect-code-changes.rs
++++ b/scripts/detect-code-changes.rs
+@@ -54,28 +54,31 @@ use std::process::Command;
+ #[path = "rust-paths.rs"]
+ mod rust_paths;
+ 
+-fn exec_in(command: &str, args: &[&str], current_dir: Option<&Path>) -> String {
++fn exec_in(command: &str, args: &[&str], current_dir: Option<&Path>) -> std::io::Result<String> {
+     let mut process = Command::new(command);
+     process.args(args);
+     if let Some(current_dir) = current_dir {
+         process.current_dir(current_dir);
+     }
+-
+-    match process.output() {
+-        Ok(output) => {
+-            if output.status.success() {
+-                String::from_utf8_lossy(&output.stdout).trim().to_string()
+-            } else {
+-                eprintln!("Error executing {} {:?}", command, args);
+-                eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+-                String::new()
+-            }
+-        }
+-        Err(e) => {
+-            eprintln!("Failed to execute {} {:?}: {}", command, args, e);
+-            String::new()
+-        }
++    let output = process.output().map_err(|error| {
++        std::io::Error::new(
++            error.kind(),
++            format!("Failed to execute {command} {args:?}: {error}"),
++        )
++    })?;
++    if !output.status.success() {
++        return Err(std::io::Error::new(
++            std::io::ErrorKind::Other,
++            format!(
++                "Error executing {command} {args:?} ({}): {}",
++                output.status,
++                String::from_utf8_lossy(&output.stderr).trim()
++            ),
++        ));
+     }
++    String::from_utf8(output.stdout)
++        .map(|value| value.trim().to_string())
++        .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))
+ }
+ 
+ #[path = "github-output.rs"]
+@@ -87,86 +90,67 @@ fn set_output(name: &str, value: &str) -> std::io::Result<()> {
+     Ok(())
+ }
+ 
+-fn is_merge_commit_in_repo(repo_path: &Path) -> bool {
+-    let output = exec_in("git", &["cat-file", "-p", "HEAD"], Some(repo_path));
+-    output
++fn commit_parents(repo_path: &Path, revision: &str) -> std::io::Result<Vec<String>> {
++    // Inspect the commit's headers independently of its diff. Even a shallow
++    // commit records its parent, so unavailable history fails rather than being
++    // mistaken for an initial commit. Ignore parent-like lines in the message.
++    let output = exec_in("git", &["cat-file", "-p", revision], Some(repo_path))?;
++    Ok(output
+         .lines()
+-        .filter(|line| line.starts_with("parent "))
+-        .count()
+-        > 1
++        .take_while(|line| !line.is_empty())
++        .filter_map(|line| line.strip_prefix("parent ").map(String::from))
++        .collect())
+ }
+ 
+-fn get_changed_files() -> Vec<String> {
++fn get_changed_files() -> std::io::Result<Vec<String>> {
+     let event_name = env::var("GITHUB_EVENT_NAME").unwrap_or_default();
+     get_changed_files_in_repo(Path::new("."), &event_name)
+ }
+ 
+-fn get_changed_files_in_repo(repo_path: &Path, event_name: &str) -> Vec<String> {
+-    // Disable rename detection in every diff so moving code into an excluded
+-    // folder still reports the deleted source path and activates the code jobs.
+-    // GitHub Actions checks out a synthetic merge commit for pull_request
+-    // events: HEAD is the merge commit, HEAD^ is the base branch, HEAD^2
+-    // is the actual PR head. To get the per-commit diff (what the latest
+-    // push actually changed), we compare HEAD^2^ to HEAD^2.
+-    // For push events, including real merge commits pushed to main, compare
+-    // HEAD's first parent to HEAD so the full merge diff is detected.
+-    if event_name == "pull_request" && is_merge_commit_in_repo(repo_path) {
++fn get_changed_files_in_repo(repo_path: &Path, event_name: &str) -> std::io::Result<Vec<String>> {
++    exec_in(
++        "git",
++        &["rev-parse", "--verify", "HEAD^{commit}"],
++        Some(repo_path),
++    )?;
++    let parents = commit_parents(repo_path, "HEAD")?;
++    // Disable rename detection so moving code into an excluded folder still
++    // reports the deleted source. Preserve the PR's per-commit diff semantics.
++    let output = if event_name == "pull_request" && parents.len() > 1 {
+         println!("Merge commit detected (pull_request event)");
+-        println!("Comparing HEAD^2^ to HEAD^2 (per-commit diff of PR head)");
+-        let output = exec_in(
++        let pr_parents = commit_parents(repo_path, "HEAD^2")?;
++        let base = if pr_parents.is_empty() {
++            "HEAD^"
++        } else {
++            "HEAD^2^"
++        };
++        println!("Comparing {base} to HEAD^2 (per-commit diff of PR head)");
++        exec_in(
+             "git",
+-            &["diff", "--name-only", "--no-renames", "HEAD^2^", "HEAD^2"],
++            &["diff", "--name-only", "--no-renames", base, "HEAD^2"],
+             Some(repo_path),
+-        );
+-        if !output.is_empty() {
+-            return output
+-                .lines()
+-                .filter(|s| !s.is_empty())
+-                .map(String::from)
+-                .collect();
+-        }
+-        // Fallback: first commit in PR, compare base to PR head
+-        println!("HEAD^2^ not available (first commit in PR), comparing HEAD^ to HEAD^2");
+-        let output = exec_in(
++        )?
++    } else if parents.is_empty() {
++        println!("Initial commit, listing all files in HEAD");
++        exec_in(
+             "git",
+-            &["diff", "--name-only", "--no-renames", "HEAD^", "HEAD^2"],
++            &["ls-tree", "--name-only", "-r", "HEAD"],
+             Some(repo_path),
+-        );
+-        if !output.is_empty() {
+-            return output
+-                .lines()
+-                .filter(|s| !s.is_empty())
+-                .map(String::from)
+-                .collect();
+-        }
+-    }
+-
+-    println!("Comparing HEAD^1 to HEAD");
+-    let output = exec_in(
+-        "git",
+-        &["diff", "--name-only", "--no-renames", "HEAD^1", "HEAD"],
+-        Some(repo_path),
+-    );
+-
+-    if output.is_empty() {
+-        println!("HEAD^1 not available, listing all files in HEAD");
+-        let output = exec_in(
++        )?
++    } else {
++        println!("Comparing HEAD^1 to HEAD");
++        exec_in(
+             "git",
+-            &["ls-tree", "--name-only", "-r", "HEAD"],
++            &["diff", "--name-only", "--no-renames", "HEAD^1", "HEAD"],
+             Some(repo_path),
+-        );
+-        return output
+-            .lines()
+-            .filter(|s| !s.is_empty())
+-            .map(String::from)
+-            .collect();
+-    }
+-
+-    output
++        )?
++    };
++    // Ok("") is a real empty diff; it must never select a fallback.
++    Ok(output
+         .lines()
+-        .filter(|s| !s.is_empty())
++        .filter(|line| !line.is_empty())
+         .map(String::from)
+-        .collect()
++        .collect())
+ }
+ 
+ /// Package path prefix relative to the repository root.
+@@ -268,7 +252,7 @@ fn included_changed_files<'a>(prefix: &str, changed_files: &'a [String]) -> Vec<
+ fn main() -> std::io::Result<()> {
+     println!("Detecting file changes for CI/CD...\n");
+ 
+-    let changed_files = get_changed_files();
++    let changed_files = get_changed_files()?;
+ 
+     println!("Changed files:");
+     if changed_files.is_empty() {
+@@ -425,6 +409,22 @@ mod tests {
+         repo
+     }
+ 
++    #[test]
++    fn successful_empty_commits_do_not_fall_back_to_listing_all_files() {
++        let repo = create_merge_repo();
++        run_git(&repo, &["checkout", "feature"]);
++        run_git(&repo, &["commit", "--allow-empty", "-m", "Empty commit"]);
++        assert!(get_changed_files_in_repo(&repo, "push").unwrap().is_empty());
++        run_git(&repo, &["checkout", "main"]);
++        run_git(
++            &repo,
++            &["merge", "--no-ff", "feature", "-m", "Merge empty commit"],
++        );
++        assert!(get_changed_files_in_repo(&repo, "pull_request")
++            .unwrap()
++            .is_empty());
++    }
++
+     #[test]
+     fn shell_scripts_and_composite_action_files_are_code() {
+         let pattern = code_change_pattern();
+@@ -512,7 +512,7 @@ mod tests {
+                 "docs/case-studies/issue-109/repro.md",
+             ] {
+                 let repo = create_single_change_merge_repo(file_path);
+-                let changed_files = get_changed_files_in_repo(&repo, event_name);
++                let changed_files = get_changed_files_in_repo(&repo, event_name).unwrap();
+ 
+                 assert_eq!(changed_files, [file_path]);
+                 assert!(
+@@ -577,7 +577,7 @@ mod tests {
+     #[test]
+     fn examples_only_pull_request_activates_no_output_in_multi_language_layout() {
+         let repo = create_single_change_merge_repo("rust/examples/demo.rs");
+-        let changed_files = get_changed_files_in_repo(&repo, "pull_request");
++        let changed_files = get_changed_files_in_repo(&repo, "pull_request").unwrap();
+ 
+         assert_eq!(changed_files, ["rust/examples/demo.rs"]);
+         assert!(
+@@ -598,7 +598,7 @@ mod tests {
+     fn push_merge_commit_detects_full_first_parent_merge_diff() {
+         let repo = create_merge_repo();
+ 
+-        let changed_files = get_changed_files_in_repo(&repo, "push");
++        let changed_files = get_changed_files_in_repo(&repo, "push").unwrap();
+ 
+         assert!(
+             changed_files.iter().any(|file| file == "src/lib.rs"),
+@@ -625,7 +625,7 @@ mod tests {
+     fn pull_request_synthetic_merge_uses_latest_pr_head_commit_diff() {
+         let repo = create_merge_repo();
+ 
+-        let changed_files = get_changed_files_in_repo(&repo, "pull_request");
++        let changed_files = get_changed_files_in_repo(&repo, "pull_request").unwrap();
+ 
+         assert_eq!(
+             changed_files,
+diff --git a/scripts/recheck-broken-links.mjs b/scripts/recheck-broken-links.mjs
+index 45ad390..98d4f43 100644
+--- a/scripts/recheck-broken-links.mjs
++++ b/scripts/recheck-broken-links.mjs
+@@ -38,7 +38,7 @@
+ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+ import { fileURLToPath } from 'node:url';
+ import path from 'node:path';
+-import { validateLycheeReport } from './check-web-archive.mjs';
++import { extractErrorsSection, validateLycheeReport } from './check-web-archive.mjs';
+ 
+ // Environment-derived settings are read inside main(), not here: a test run
+ // with a restricted environment must be able to import this module without
+@@ -64,10 +64,11 @@ const ACCEPT_DEFAULT = '100..=103,200..=299';
+ export function parseLycheeFailures(content) {
+   const failures = [];
+   const entryPattern =
+-    /^\s*(?:\*|-)\s+\[([^\]]+)\]\s+<?([^\s>|)]+)>?(?:\s+\(at [^)]*\))?\s*\|?\s*(.*)$/gim;
++    /^[ \t]*(?:\*|-)[ \t]+\[([^\]\r\n]+)\][ \t]+<?([^\s>|)]+)>?(?:[ \t]+\(at [^)\r\n]*\))?[ \t]*\|?[ \t]*([^\r\n]*)\r?$/gim;
+ 
++  const section = extractErrorsSection(content);
+   let match;
+-  while ((match = entryPattern.exec(content)) !== null) {
++  while ((match = entryPattern.exec(section)) !== null) {
+     const marker = match[1].trim();
+     const url = match[2].trim().replace(/[.,;!?]+$/, '');
+     const detail = match[3].trim();
+diff --git a/scripts/recheck-broken-links.test.mjs b/scripts/recheck-broken-links.test.mjs
+index 8eb7180..c3ab3b1 100644
+--- a/scripts/recheck-broken-links.test.mjs
++++ b/scripts/recheck-broken-links.test.mjs
+@@ -50,6 +50,26 @@ function once(fn) {
+ }
+ 
+ describe('lychee report classification', () => {
++  it('preserves adjacent description-free failures and ignores other sections', () => {
++    for (const newline of ['\n', '\r\n']) {
++      const report = [
++        '## Successful links', '* [200] https://example.com/ok',
++        '## Errors per input', '### Errors in README.md',
++        '* [404] https://example.com/missing',
++        '* [ERROR] https://example.com/reset',
++        '- [TIMEOUT] <https://example.com/slow> (at 1:2)',
++        '- [ERROR] <https://example.com/busy> | Rejected status code: 503',
++        '## Redirects per input', '* [301] https://example.com/moved',
++      ].join(newline);
++      assert.deepEqual(parseLycheeFailures(report), [
++        { marker: '404', url: 'https://example.com/missing', detail: '', answered: true, retryable: false },
++        { marker: 'ERROR', url: 'https://example.com/reset', detail: '', answered: false, retryable: true },
++        { marker: 'TIMEOUT', url: 'https://example.com/slow', detail: '', answered: false, retryable: true },
++        { marker: 'ERROR', url: 'https://example.com/busy', detail: 'Rejected status code: 503', answered: true, retryable: true },
++      ]);
++    }
++  });
++
+   it('marks a failure carrying a status code as final', () => {
+     const failures = parseLycheeFailures(fixtureReport);
+     const answered = failures.filter((failure) => failure.answered);
+diff --git a/scripts/test-scripts.sh b/scripts/test-scripts.sh
+index e2633af..54f4a4e 100755
+--- a/scripts/test-scripts.sh
++++ b/scripts/test-scripts.sh
+@@ -54,6 +54,15 @@ fi
+ if ! python3 experiments/issue-224-regressions.py -v; then
+   status=1
+ fi
++if ! python3 experiments/issue-230-concurrency.py -v; then
++  status=1
++fi
++if ! python3 experiments/issue-231-release-sync.py -v; then
++  status=1
++fi
++if ! python3 experiments/issue-228-git-regressions.py -v; then
++  status=1
++fi
+ if ! python3 experiments/issue-226-regressions.py -v; then
+   status=1
+ fi
+diff --git a/scripts/version-and-commit.rs b/scripts/version-and-commit.rs
+index 4605346..5d4c3b9 100644
+--- a/scripts/version-and-commit.rs
++++ b/scripts/version-and-commit.rs
+@@ -18,6 +18,7 @@
+ //! ureq = "2"
+ //! serde = { version = "1", features = ["derive"] }
+ //! serde_json = "1"
++//! toml = "0.8"
+ //! ```
+ 
+ // Test harnesses replace main; the real build still denies unused helpers.
+@@ -33,6 +34,9 @@ use std::path::{Path, PathBuf};
+ use std::process::exit;
+ use std::process::Command;
+ 
++#[path = "version-and-commit/source-guard.rs"]
++mod source_guard;
++
+ #[path = "release-index.rs"]
+ mod release_index;
+ 
+@@ -500,6 +504,13 @@ fn main() -> std::io::Result<()> {
+             exit(1);
+         });
+ 
++    // This immutable tree is the source validated by this CI run. Every later
++    // synchronization must preserve it, including retries after our own commit.
++    let validated_source = exec("git", &["rev-parse", "HEAD"]).unwrap_or_else(|e| {
++        eprintln!("::error::Could not record validated source: {e}");
++        exit(1);
++    });
++
+     // Configure git
+     let _ = exec("git", &["config", "user.name", "github-actions[bot]"]);
+     let _ = exec(
+@@ -522,7 +533,8 @@ fn main() -> std::io::Result<()> {
+     let current_branch =
+         exec("git", &["rev-parse", "--abbrev-ref", "HEAD"]).unwrap_or_else(|_| "main".to_string());
+     if let Err(e) = exec("git", &["fetch", "origin", &current_branch]) {
+-        eprintln!("Warning: Could not fetch origin/{}: {}", current_branch, e);
++        eprintln!("::error::Could not synchronize validated source: {e}");
++        exit(1);
+     } else {
+         // Count the commits origin/<branch> has that HEAD does not. Being merely
+         // ahead of the remote is not being behind, and needs no rebase.
+@@ -534,15 +546,28 @@ fn main() -> std::io::Result<()> {
+                 &format!("HEAD..origin/{}", current_branch),
+             ],
+         )
+-        .ok()
+-        .and_then(|out| out.trim().parse().ok())
+-        .unwrap_or(0);
++        .and_then(|out| {
++            out.parse()
++                .map_err(|e| format!("Invalid behind count: {e}"))
++        })
++        .unwrap_or_else(|e| {
++            eprintln!("::error::Could not inspect validated source: {e}");
++            exit(1);
++        });
+         if behind > 0 {
+             println!(
+                 "Local branch is behind origin/{} by {} commit(s), rebasing...",
+                 current_branch, behind
+             );
+-            if let Err(e) = exec("git", &["rebase", &format!("origin/{}", current_branch)]) {
++            let remote = exec("git", &["rev-parse", "FETCH_HEAD"]).unwrap_or_else(|e| {
++                eprintln!("::error::Could not resolve validated source candidate: {e}");
++                exit(1);
++            });
++            source_guard::verify(&validated_source, &remote).unwrap_or_else(|e| {
++                eprintln!("::error::{e}");
++                exit(1);
++            });
++            if let Err(e) = exec("git", &["rebase", &remote]) {
+                 eprintln!("Error rebasing onto origin/{}: {}", current_branch, e);
+                 let _ = exec("git", &["rebase", "--abort"]);
+                 exit(1);
+@@ -550,6 +575,11 @@ fn main() -> std::io::Result<()> {
+         }
+     }
+ 
++    source_guard::verify(&validated_source, "HEAD").unwrap_or_else(|e| {
++        eprintln!("::error::{e}");
++        exit(1);
++    });
++
+     // Recompute the allowlist after synchronization, including new fragments.
+     let release_index = release_index::ReleaseIndex::new(Path::new(&rust_root), &package_manifest)
+         .unwrap_or_else(|e| {
+@@ -726,13 +756,22 @@ fn main() -> std::io::Result<()> {
+                 PushFailure::LostRace => {
+                     if attempt < max_push_attempts {
+                         eprintln!(
+-                            "Push rejected as non-fast-forward (attempt {}/{}); the remote branch moved. Pulling with rebase and retrying...",
++                            "Push rejected as non-fast-forward (attempt {}/{}); the remote branch moved. Validating source before rebasing and retrying...",
+                             attempt, max_push_attempts
+                         );
+-                        if let Err(rebase_err) =
+-                            exec("git", &["pull", "--rebase", "origin", &current_branch])
+-                        {
+-                            eprintln!("Error during pull --rebase: {}", rebase_err);
++                        // Never pull here: an implicit fetch could replace the
++                        // inspected remote with an unvalidated revision.
++                        let retry = exec("git", &["fetch", "origin", &current_branch])
++                            .and_then(|_| exec("git", &["rev-parse", "FETCH_HEAD"]))
++                            .and_then(|remote| {
++                                source_guard::verify(&validated_source, &remote)?;
++                                exec("git", &["rebase", &remote])?;
++                                source_guard::verify(&validated_source, "HEAD")
++                            });
++                        if let Err(rebase_err) = retry {
++                            eprintln!(
++                                "::error::Guarded release synchronization failed: {rebase_err}"
++                            );
+                             let _ = exec("git", &["rebase", "--abort"]);
+                             exit(1);
+                         }
+@@ -749,7 +788,7 @@ fn main() -> std::io::Result<()> {
+     }
+ 
+     // Create tag only after the release commit is on the remote, so that a
+-    // `pull --rebase` retry above can never leave the tag on an orphaned
++    // guarded rebase retry above can never leave the tag on an orphaned
+     // pre-rebase commit (see issue #94).
+     let tag_name = format!("{}{}", tag_prefix, new_version);
+     let tag_msg = match &description {
+diff --git a/scripts/version-and-commit/source-guard.rs b/scripts/version-and-commit/source-guard.rs
+new file mode 100644
+index 0000000..f908159
+--- /dev/null
++++ b/scripts/version-and-commit/source-guard.rs
+@@ -0,0 +1,265 @@
++//! Compare committed trees, allowing only dependency-equivalent release metadata.
++use std::collections::BTreeMap;
++use std::path::Path;
++
++use super::exec;
++
++type Tree = BTreeMap<String, (String, String)>;
++
++fn tree(revision: &str) -> Result<Tree, String> {
++    let result = std::process::Command::new("git")
++        .args(["ls-tree", "-r", "-z", revision])
++        .output()
++        .map_err(|e| e.to_string())?;
++    if !result.status.success() {
++        return Err(String::from_utf8_lossy(&result.stderr).into_owned());
++    }
++    let output = String::from_utf8(result.stdout).map_err(|e| e.to_string())?;
++    output
++        .split('\0')
++        .filter(|entry| !entry.is_empty())
++        .map(|entry| {
++            let (metadata, path) = entry.split_once('\t').ok_or("Invalid Git tree entry")?;
++            let parts: Vec<_> = metadata.split_whitespace().collect();
++            if parts.len() != 3 {
++                return Err("Invalid Git tree metadata".to_string());
++            }
++            Ok((
++                path.to_string(),
++                (parts[0].to_string(), parts[2].to_string()),
++            ))
++        })
++        .collect()
++}
++
++fn content(blob: &str) -> Result<String, String> {
++    exec("git", &["cat-file", "blob", blob])
++}
++
++fn toml(blob: &str) -> Result<toml::Value, String> {
++    content(blob)?
++        .parse::<toml::Value>()
++        .map_err(|e| e.to_string())
++}
++
++fn json(blob: &str) -> Result<serde_json::Value, String> {
++    serde_json::from_str(&content(blob)?).map_err(|e| e.to_string())
++}
++
++fn strip_toml_version(value: &mut toml::Value, section: &[&str]) {
++    let mut current = value;
++    for key in section {
++        let Some(next) = current.get_mut(*key) else {
++            return;
++        };
++        current = next;
++    }
++    if let Some(table) = current.as_table_mut() {
++        // An inherited version table is behavior, not a scalar release version.
++        if table.get("version").is_some_and(toml::Value::is_str) {
++            table.insert(
++                "version".into(),
++                toml::Value::String("<release-version>".into()),
++            );
++        }
++    }
++}
++
++/// Versions of local packages only; registry packages of the same name retain
++/// their version, source and checksum in the lock comparison.
++fn local_versions(tree: &Tree) -> Result<BTreeMap<(String, String), ()>, String> {
++    let mut packages = BTreeMap::new();
++    for (path, (mode, blob)) in tree {
++        if Path::new(path)
++            .file_name()
++            .is_some_and(|p| p == "Cargo.toml")
++        {
++            if mode != "100644" {
++                return Err(format!("Non-regular manifest: {path}"));
++            }
++            let manifest = toml(blob)?;
++            let Some(package) = manifest.get("package") else {
++                continue;
++            };
++            let Some(name) = package.get("name").and_then(toml::Value::as_str) else {
++                continue;
++            };
++            let version = package
++                .get("version")
++                .and_then(toml::Value::as_str)
++                .map(str::to_string)
++                .or_else(|| {
++                    if package
++                        .get("version")
++                        .and_then(|v| v.get("workspace"))
++                        .and_then(toml::Value::as_bool)
++                        != Some(true)
++                    {
++                        return None;
++                    }
++                    Path::new(path).ancestors().skip(2).find_map(|parent| {
++                        let workspace = parent
++                            .join("Cargo.toml")
++                            .to_string_lossy()
++                            .replace('\\', "/");
++                        let (_, blob) = tree.get(&workspace)?;
++                        let manifest = toml(blob).ok()?;
++                        manifest
++                            .get("workspace")?
++                            .get("package")?
++                            .get("version")?
++                            .as_str()
++                            .map(str::to_string)
++                    })
++                });
++            if let Some(version) = version {
++                packages.insert((name.to_string(), version.to_string()), ());
++            }
++        }
++    }
++    Ok(packages)
++}
++
++fn normalized_lock(blob: &str, tree: &Tree) -> Result<toml::Value, String> {
++    let versions = local_versions(tree)?;
++    let mut lock = toml(blob)?;
++    if let Some(packages) = lock.get_mut("package").and_then(toml::Value::as_array_mut) {
++        for package in packages {
++            let name = package
++                .get("name")
++                .and_then(toml::Value::as_str)
++                .unwrap_or("");
++            let version = package
++                .get("version")
++                .and_then(toml::Value::as_str)
++                .unwrap_or("");
++            if package.get("source").is_none()
++                && package.get("checksum").is_none()
++                && versions.contains_key(&(name.to_string(), version.to_string()))
++            {
++                strip_toml_version(package, &[]);
++            }
++        }
++    }
++    Ok(lock)
++}
++
++fn metadata_equivalent(
++    path: &str,
++    before: &str,
++    after: &str,
++    base: &Tree,
++    candidate: &Tree,
++) -> Result<bool, String> {
++    match Path::new(path).file_name().and_then(|p| p.to_str()) {
++        Some("Cargo.toml") => {
++            let (mut a, mut b) = (toml(before)?, toml(after)?);
++            for value in [&mut a, &mut b] {
++                strip_toml_version(value, &["package"]);
++                strip_toml_version(value, &["workspace", "package"]);
++            }
++            Ok(a == b)
++        }
++        Some("Cargo.lock") => {
++            Ok(normalized_lock(before, base)? == normalized_lock(after, candidate)?)
++        }
++        Some("package.json" | "package-lock.json") => {
++            let (mut a, mut b) = (json(before)?, json(after)?);
++            for value in [&mut a, &mut b] {
++                if let Some(object) = value.as_object_mut() {
++                    if object
++                        .get("version")
++                        .is_some_and(serde_json::Value::is_string)
++                    {
++                        object.insert(
++                            "version".into(),
++                            serde_json::Value::String("<release-version>".into()),
++                        );
++                    }
++                }
++                if path.ends_with("package-lock.json") {
++                    if let Some(root) = value
++                        .pointer_mut("/packages/")
++                        .and_then(serde_json::Value::as_object_mut)
++                    {
++                        if root
++                            .get("version")
++                            .is_some_and(serde_json::Value::is_string)
++                        {
++                            root.insert(
++                                "version".into(),
++                                serde_json::Value::String("<release-version>".into()),
++                            );
++                        }
++                    }
++                }
++            }
++            Ok(a == b)
++        }
++        _ => Ok(false),
++    }
++}
++
++/// Prove that candidate preserves the validated tree, apart from explicitly
++/// allowed metadata. New manifests/locks, symlinks and fragment edits fail closed.
++fn equivalent(validated: &str, candidate: &str) -> Result<(), String> {
++    let base = tree(validated)?;
++    let next = tree(candidate)?;
++    for path in base.keys().chain(next.keys()) {
++        let before = base.get(path);
++        let after = next.get(path);
++        if before == after {
++            continue;
++        }
++        if before
++            .into_iter()
++            .chain(after)
++            .any(|(mode, _)| mode != "100644")
++        {
++            return Err(format!("Unexpected release metadata mode: {path}"));
++        }
++        let file = Path::new(path);
++        if file.components().any(|part| {
++            let name = part.as_os_str().to_string_lossy();
++            name.starts_with('.')
++                || matches!(
++                    name.as_ref(),
++                    "tests"
++                        | "fixtures"
++                        | "examples"
++                        | "experiments"
++                        | "docs"
++                        | "scripts"
++                        | "vendor"
++                        | "node_modules"
++                )
++        }) {
++            return Err(format!("Path outside release metadata allowlist: {path}"));
++        }
++        let fragment = file
++            .parent()
++            .and_then(Path::file_name)
++            .is_some_and(|p| p == "changelog.d")
++            && file.extension().is_some_and(|p| p == "md")
++            && file.file_name().is_some_and(|p| p != "README.md");
++        if fragment && after.is_none() {
++            continue;
++        }
++        if file.file_name().is_some_and(|p| p == "CHANGELOG.md") && after.is_some() {
++            continue;
++        }
++        if let (Some((_, a)), Some((_, b))) = (before, after) {
++            if metadata_equivalent(path, a, b, &base, &next)? {
++                continue;
++            }
++        }
++        return Err(format!("Untested source/dependency change: {path}"));
++    }
++    Ok(())
++}
++
++pub fn verify(validated: &str, candidate: &str) -> Result<(), String> {
++    exec("git", &["merge-base", "--is-ancestor", validated, candidate])
++        .and_then(|_| equivalent(validated, candidate))
++        .map_err(|e| format!("Release cannot preserve validated source {validated} at {candidate}: {e}. Let the newer commit's own CI run release it."))
++}

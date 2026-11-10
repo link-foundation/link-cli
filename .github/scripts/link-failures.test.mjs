@@ -4,7 +4,11 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { validateLycheeReport, splitRecoveredUrls } from './check-web-archive.mjs';
+import {
+  extractBrokenLinks,
+  splitRecoveredUrls,
+  validateLycheeReport,
+} from './check-web-archive.mjs';
 import {
   recheckUnanswered,
   allFailuresRecovered,
@@ -18,7 +22,7 @@ test('missing or incomplete link evidence never turns a failed checker green', (
     '| Errors | 0 |',
     '## Errors per input\n* [WAT] https://example.com',
   ]) {
-    assert.throws(() => validateLycheeReport(content, '1'), /report/);
+    assert.throws(() => validateLycheeReport(content, '2'), /report/);
   }
   const root = mkdtempSync(join(tmpdir(), 'missing-lychee-'));
   try {
@@ -82,4 +86,80 @@ test('a permanent response terminates retries immediately', async () => {
   });
   assert.equal(requests, 1);
   assert.equal(result.stillBroken.length, 1);
+});
+
+// lychee lists timed-out links under "## Timeouts per input", not under the
+// errors (lychee-bin/src/formatters/stats/markdown.rs), and exits 2 for them.
+// Reading only the errors section declared a recovered 503 plus an unverified
+// timeout "all recovered", and rejected a timeouts-only report as malformed
+// (issue #172).
+const timeoutReport = (errors) => `# Summary
+
+| Status         | Count |
+|----------------|-------|
+| 🔍 Total       | 5     |
+| ✅ Successful  | 3     |
+| ⏳ Timeouts    | 1     |
+| 🚫 Errors      | ${errors.length}     |
+${errors.length ? `\n## Errors per input\n\n### Errors in README.md\n\n${errors.join('\n')}\n` : ''}
+## Timeouts per input
+
+### Timeouts in README.md
+
+* [TIMEOUT] <https://example.com/slow> (at 1:1) | Request timed out
+
+## Redirects per input
+
+### Redirects in README.md
+
+* https://example.com/old --[308]--> https://example.com/new
+`;
+
+test('timed-out links are failures that must be rechecked (issue #172)', () => {
+  const mixed = timeoutReport([
+    '* [503] <https://example.com/busy> (at 2:1) | Rejected status code: 503',
+  ]);
+  validateLycheeReport(mixed, '2');
+  assert.deepEqual(
+    parseLycheeFailures(mixed).map(({ url, retryable }) => [url, retryable]),
+    [
+      ['https://example.com/busy', true],
+      ['https://example.com/slow', true],
+    ],
+  );
+  assert.deepEqual(extractBrokenLinks(mixed).urls, [
+    'https://example.com/busy',
+    'https://example.com/slow',
+  ]);
+
+  const onlyTimeouts = timeoutReport([]);
+  validateLycheeReport(onlyTimeouts, '2');
+  assert.deepEqual(
+    parseLycheeFailures(onlyTimeouts).map(({ url }) => url),
+    ['https://example.com/slow'],
+  );
+
+  const miscounted = mixed.replace('⏳ Timeouts    | 1', '⏳ Timeouts    | 2');
+  assert.throws(() => validateLycheeReport(miscounted, '2'), /report/);
+  // A crashed or misconfigured run is never a recoverable link failure.
+  for (const code of ['1', '3']) {
+    assert.throws(() => validateLycheeReport(mixed, code), /not a link-failure result/);
+  }
+});
+
+test('a lychee record never borrows text from the next line (issue #172)', () => {
+  const report = [
+    '## Errors per input',
+    '### Errors in README.md',
+    '* [ERROR',
+    '* [404] https://example.com/missing | Rejected status code: 404',
+    '* [404]',
+    'https://example.com/next-line',
+    '',
+  ].join('\n');
+  assert.deepEqual(
+    parseLycheeFailures(report).map(({ marker, url }) => [marker, url]),
+    [['404', 'https://example.com/missing']],
+  );
+  assert.deepEqual(extractBrokenLinks(report).urls, ['https://example.com/missing']);
 });

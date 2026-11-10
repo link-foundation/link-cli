@@ -1,0 +1,265 @@
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index c4704e9..3daa842 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -36,11 +36,11 @@ jobs:
+       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+         with:
+           persist-credentials: false
+-      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
++      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+         with:
+           languages: ${{ matrix.language }}
+           build-mode: none
+-      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
++      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+         with:
+           output: artifacts/sarif
+       - name: Require complete clean SARIF
+diff --git a/scripts/change-detection-renames.test.mjs b/scripts/change-detection-renames.test.mjs
+new file mode 100644
+index 0000000..3de97d0
+--- /dev/null
++++ b/scripts/change-detection-renames.test.mjs
+@@ -0,0 +1,98 @@
++import { describe, expect, test } from 'bun:test';
++import { execFileSync } from 'node:child_process';
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { dirname, join } from 'node:path';
++
++const helper = new URL('./detect-code-changes.mjs', import.meta.url).href;
++
++// Run the real helper in an isolated process: CSHARP_ROOT is read at import time.
++function compareMove(event, root, source, destination, editOnly = false) {
++  const directory = mkdtempSync(join(tmpdir(), 'change-detection-'));
++  const git = (...args) =>
++    execFileSync('git', args, { cwd: directory, encoding: 'utf8' }).trim();
++  try {
++    git('init', '--quiet');
++    git('config', 'user.name', 'Regression Test');
++    git('config', 'user.email', 'test@example.com');
++    git('config', 'commit.gpgsign', 'false');
++    // Reproduce even when a consumer explicitly enables rename detection.
++    git('config', 'diff.renames', 'true');
++    mkdirSync(dirname(join(directory, source)), { recursive: true });
++    writeFileSync(join(directory, source), 'class Program {}\n');
++    git('add', '.');
++    git('commit', '--quiet', '-m', 'Initial source');
++    const base = git('rev-parse', 'HEAD');
++    if (editOnly) {
++      writeFileSync(
++        join(directory, source),
++        'class Program { static void Main() {} }\n',
++      );
++    } else {
++      mkdirSync(dirname(join(directory, destination)), { recursive: true });
++      git('mv', source, destination);
++    }
++    git('add', '.');
++    git('commit', '--quiet', '-m', 'Change source');
++    const head = git('rev-parse', 'HEAD');
++    return JSON.parse(
++      execFileSync(
++        process.execPath,
++        [
++          '--input-type=module',
++          '-e',
++          `
++      import { getChangedFiles, detectChangeOutputs } from ${JSON.stringify(helper)};
++      const files = getChangedFiles();
++      console.log(JSON.stringify({ files, outputs: detectChangeOutputs(files) }));
++    `,
++        ],
++        {
++          cwd: directory,
++          encoding: 'utf8',
++          env: {
++            ...process.env,
++            CSHARP_ROOT: root,
++            GITHUB_EVENT_NAME: event,
++            GITHUB_BASE_SHA: base,
++            GITHUB_HEAD_SHA: head,
++          },
++        },
++      ),
++    );
++  } finally {
++    rmSync(directory, { recursive: true, force: true });
++  }
++}
++
++for (const event of ['push', 'pull_request']) {
++  for (const root of ['', 'csharp']) {
++    const prefix = root ? `${root}/` : '';
++    const source = `${prefix}src/Program.cs`;
++    describe(`${event} rename detection (${root || 'root'} layout)`, () => {
++      test.each(['.changeset', 'docs', 'dev/log', 'experiments', 'examples'])(
++        'moving source into %s still requires a changeset',
++        (folder) => {
++          const destination = `${prefix}${folder}/Program.cs`;
++          const { files, outputs } = compareMove(event, root, source, destination);
++          expect(files.sort()).toEqual([source, destination].sort());
++          expect(outputs).toEqual({ 'any-code-changed': 'true' });
++        },
++      );
++
++      test('ordinary source renames preserve both paths', () => {
++        const destination = `${prefix}src/Renamed.cs`;
++        const { files, outputs } = compareMove(event, root, source, destination);
++        expect(files.sort()).toEqual([source, destination].sort());
++        expect(outputs).toEqual({ 'any-code-changed': 'true' });
++      });
++
++      test('genuine examples-only edits remain excluded', () => {
++        const example = `${prefix}examples/Program.cs`;
++        const { files, outputs } = compareMove(event, root, example, example, true);
++        expect(files).toEqual([example]);
++        expect(outputs).toEqual({ 'any-code-changed': 'false' });
++      });
++    });
++  }
++}
+diff --git a/scripts/detect-code-changes.mjs b/scripts/detect-code-changes.mjs
+index 88bb87a..61c697f 100644
+--- a/scripts/detect-code-changes.mjs
++++ b/scripts/detect-code-changes.mjs
+@@ -65,6 +65,7 @@ function setOutput(name, value) {
+  * @returns {string[]} Array of changed file paths
+  */
+ export function getChangedFiles() {
++  // Keep deleted source paths when files move into folders excluded below.
+   if (process.env.GITHUB_EVENT_NAME === 'pull_request') {
+     const base = process.env.GITHUB_BASE_SHA || '';
+     const head = process.env.GITHUB_HEAD_SHA || '';
+@@ -75,7 +76,9 @@ export function getChangedFiles() {
+     } catch {
+       git(['fetch', 'origin', base]);
+     }
+-    return git(['diff', '--name-only', base, head, '--']).split('\n').filter(Boolean);
++    return git(['diff', '--no-renames', '--name-only', base, head, '--'])
++      .split('\n')
++      .filter(Boolean);
+   }
+   // Only a genuinely absent parent permits the initial-commit path.
+   let hasParent = true;
+@@ -86,7 +89,7 @@ export function getChangedFiles() {
+   }
+   return git(
+     hasParent
+-      ? ['diff', '--name-only', 'HEAD^', 'HEAD', '--']
++      ? ['diff', '--no-renames', '--name-only', 'HEAD^', 'HEAD', '--']
+       : ['ls-tree', '--name-only', '-r', 'HEAD'],
+   )
+     .split('\n')
+diff --git a/scripts/recheck-broken-links.mjs b/scripts/recheck-broken-links.mjs
+index 0e41b98..4b1a86e 100644
+--- a/scripts/recheck-broken-links.mjs
++++ b/scripts/recheck-broken-links.mjs
+@@ -84,8 +84,9 @@ export function parseLycheeFailures(content) {
+   const section = extractErrorsSection(content);
+   const failures = [];
+ 
++  // Horizontal whitespace keeps every record and its detail on one line.
+   const entryPattern =
+-    /^\s*(?:\*|-)\s+\[([^\]]+)\]\s*<?([^\s>|)]+)>?(?:\s+\(at [^)]*\))?\s*\|?\s*(.*)$/gm;
++    /^[ \t]*(?:\*|-)[ \t]+\[([^\]\r\n]+)\][ \t]*<?([^\s>|)]+)>?(?:[ \t]+\(at [^)\r\n]*\))?[ \t]*\|?[ \t]*([^\r\n]*)$/gm;
+   let match;
+   while ((match = entryPattern.exec(section)) !== null) {
+     const marker = match[1].trim();
+diff --git a/scripts/recheck-broken-links.test.mjs b/scripts/recheck-broken-links.test.mjs
+index bc1a3c6..408256e 100644
+--- a/scripts/recheck-broken-links.test.mjs
++++ b/scripts/recheck-broken-links.test.mjs
+@@ -64,6 +64,71 @@ function readOutputs(path) {
+ }
+ 
+ describe('lychee failure classification', () => {
++  test.each([
++    [
++      'bare URLs',
++      '* [404] https://example.com/missing',
++      '* [ERROR] https://example.com/reset',
++    ],
++    [
++      'angle brackets',
++      '- [404] <https://example.com/missing>',
++      '- [ERROR] <https://example.com/reset>',
++    ],
++    [
++      'locations',
++      '* [404] <https://example.com/missing> (at 1:1)',
++      '* [ERROR] <https://example.com/reset> (at 2:1)',
++    ],
++    [
++      'horizontal whitespace',
++      '\t* [404] https://example.com/missing \t| \t',
++      '\t* [ERROR] https://example.com/reset\t| Network error: reset',
++    ],
++  ])('preserves adjacent failures with %s', (_name, first, second) => {
++    for (const newline of ['\n', '\r\n']) {
++      const failures = parseLycheeFailures(
++        ['## Errors per input', first, second].join(newline),
++      );
++      expect(failures).toEqual([
++        { marker: '404', url: 'https://example.com/missing', detail: '' },
++        {
++          marker: 'ERROR',
++          url: 'https://example.com/reset',
++          detail: second.includes('Network') ? 'Network error: reset' : '',
++        },
++      ]);
++      const { final, unanswered } = classifyFailures(failures);
++      expect(final.map((failure) => failure.url)).toEqual([
++        'https://example.com/missing',
++      ]);
++      expect(unanswered.map((failure) => failure.url)).toEqual([
++        'https://example.com/reset',
++      ]);
++    }
++  });
++
++  test('reads only failures in the Errors section, including input subheadings', () => {
++    const failures = parseLycheeFailures(
++      [
++        '* [ERROR] https://example.com/before',
++        '## Errors per input',
++        '### Errors in README.md',
++        '* [404] https://example.com/missing',
++        '',
++        '### Errors in docs/index.md',
++        '* [ERROR] https://example.com/reset',
++        '## Redirects per input',
++        '* [ERROR] https://example.com/after',
++      ].join('\n'),
++    );
++    expect(failures.map((failure) => failure.url)).toEqual([
++      'https://example.com/missing',
++      'https://example.com/reset',
++    ]);
++    expect(parseLycheeFailures('* [ERROR] https://example.com/outside')).toEqual([]);
++  });
++
+   test('the real fixture leaves nothing to re-ask: 404s answered, locals unprovable', () => {
+     const failures = parseLycheeFailures(report);
+     const { final, unanswered } = classifyFailures(failures);
+@@ -432,8 +497,8 @@ describe('main', () => {
+         '',
+         '## Errors per input',
+         '',
+-        '* [404] <https://gone.example/x> (at 1:1) | Rejected status code: 404 Not Found',
+-        '* [ERROR] <https://flappy.example/y> (at 2:1) | Network error: Connection reset by peer (os error 104)',
++        '* [404] https://gone.example/x',
++        '* [ERROR] https://flappy.example/y',
+         '',
+       ].join('\n'),
+     );
+@@ -475,7 +540,7 @@ describe('main', () => {
+         '',
+         '## Errors per input',
+         '',
+-        '* [ERROR] <https://flappy.example/y> (at 2:1) | Network error: Connection reset by peer (os error 104)',
++        '* [ERROR] https://flappy.example/y',
+         '',
+       ].join('\n'),
+     );

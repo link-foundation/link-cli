@@ -70,3 +70,43 @@ test('SARIF gate rejects missing/invalid reports and checks every file/run/sever
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('SARIF text cannot inject workflow commands and every problem is reported (issue #172)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'codeql-results-'));
+  try {
+    const injected = 'tainted\n::error title=forged::looks like a second, unrelated failure';
+    writeFileSync(
+      join(dir, 'js.sarif'),
+      JSON.stringify(
+        sarif({
+          ...run([
+            { ruleId: 'js/first', message: { text: injected } },
+            { ruleId: 'js/second', message: { text: 'second' } },
+          ]),
+          invocations: [
+            {
+              executionSuccessful: true,
+              toolExecutionNotifications: [
+                { level: 'warning', message: { text: 'extractor warning' } },
+                { level: 'note' },
+              ],
+            },
+          ],
+        }),
+      ),
+    );
+    const result = spawnSync(process.execPath, [cli.pathname, dir], {
+      encoding: 'utf8',
+      timeout: 5000,
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /4 unresolved CodeQL finding\(s\) or diagnostic\(s\)/);
+    assert.match(result.stderr, /extractor warning/);
+    assert.match(result.stderr, /missing diagnostic message/);
+    assert.match(result.stderr, /js\/second/);
+    assert.ok(result.stderr.includes(JSON.stringify(injected)));
+    assert.ok(!result.stderr.split('\n').some((line) => line.startsWith('::')));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -45,9 +45,10 @@ on:
         type: string
 
 # Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on pull requests, while writer jobs share a never-cancelled
-# group. A workflow-level group held the whole run, including the release
-# and the registry wait, so a third push to main cancelled the queued run.
+# cancelled on every branch, main included (issue #172), while writer jobs
+# share a never-cancelled group. A workflow-level group held the whole run,
+# including the release and the registry wait, so a third push to main
+# cancelled the queued run.
 
 # Least privilege by default; the publishing jobs opt into more below.
 permissions:
@@ -86,7 +87,7 @@ jobs:
         if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
         id: preflight_auth
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
-      - name: Prove authentication before builds or version writes
+      - name: Prove authentication before version writes or publishing
         working-directory: .
         env:
           RELEASE_MODE: ${{ inputs.release_mode }}
@@ -196,9 +197,9 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: true
-    needs: [detect-changes, release-preflight]
+    needs: [detect-changes]
     if: |
-      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -221,8 +222,9 @@ jobs:
       - name: Install rust-script
         run: bash rust/scripts/install-rust-script.sh
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -282,6 +284,18 @@ jobs:
       - name: Run workflow policy tests
         run: node --test .github/scripts/*.test.mjs
 
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+
   # === TEST ===
   test:
     name: Test (${{ matrix.os }})
@@ -290,8 +304,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changelog, release-preflight, lint]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+    needs: [detect-changes, changelog, lint]
+    if: ${{ !cancelled() && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -307,16 +321,19 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          # Its own key: sharing the lint job's key let lint's clippy-only
+          # cache win the save race, so tests restored almost nothing.
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('rust/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-test-
 
       - name: Setup Node.js for dependency boundary checks
         uses: actions/setup-node@v7
@@ -325,6 +342,28 @@ jobs:
 
       - name: Verify SQLite is optional
         run: node .github/scripts/check-sqlite-optional.mjs rust
+
+      # Compile everything first and save the cache before the long test
+      # run, so saving (3-5 minutes for ~3 GB on Windows) can never be what
+      # pushes a job whose tests passed past timeout-minutes (issue #172).
+      - name: Build test binaries
+        shell: bash
+        run: |
+          cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests --no-run
+          cargo test --manifest-path rust/Cargo.toml --all-features --no-run
+          cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
+
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
       - name: Test native stores without optional providers
         run: cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests
@@ -352,7 +391,7 @@ jobs:
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-coverage
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
@@ -406,7 +445,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
       cancel-in-progress: true
     if: github.event_name == 'pull_request'
-    needs: [detect-changes, lint, release-preflight]
+    needs: [detect-changes, lint]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -419,8 +458,9 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update --component rustfmt,clippy
           rustup default stable
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -438,6 +478,18 @@ jobs:
             cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
             cargo test --manifest-path rust/Cargo.toml --all-features
         run: bash .github/scripts/simulate-fresh-merge.sh
+
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
   # === BUILD ===
   build:
@@ -460,8 +512,9 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
 
-      - name: Cache cargo registry
-        uses: actions/cache@v6
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cargo/registry
@@ -477,11 +530,23 @@ jobs:
       - name: Check package
         run: cargo package --manifest-path rust/Cargo.toml --list --allow-dirty
 
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+
   # === AUTO RELEASE ===
   auto-release:
     name: Auto Release
-    needs: [lint, test, build]
-    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a
@@ -596,8 +661,8 @@ jobs:
   # === MANUAL RELEASE ===
   manual-release:
     name: Manual Release
-    needs: [lint, test, build]
-    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a

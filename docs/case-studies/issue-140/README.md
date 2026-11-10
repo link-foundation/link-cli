@@ -19,7 +19,9 @@ PR conversation comments, inline review comments, reviews, images or required
 sub-issues at intake; the other JSON files preserve those empty collections
 and the original PR state. [PLAN.md](PLAN.md) tracks completion and verification.
 
-The baseline is main commit `199a07bb1ca4f71d06503f94ae51ac3fa46e7531`.
+The intake baseline is main commit `199a07bb1ca4f71d06503f94ae51ac3fa46e7531`.
+Main subsequently advanced to `9bf97cee`; its CI improvements and source
+refactorings are merged before final verification.
 Rust's `protocol/server.rs` accepts TCP connections and its `LinoConnection`
 client owns a `TcpStream`. C#'s `LinksServer` and `LinoConnection` use TCP.
 JavaScript's `connectTcp` uses `node:net`; its process adapter starts a TCP
@@ -221,8 +223,11 @@ native suite also verifies normal relay exit releases that inherited handle.
 The first CI pass also found existing dependency-freshness failures: cargo-audit,
 System.CommandLine, Microsoft.Data.Sqlite, Microsoft.NET.Test.Sdk and the locked
 rustls-pki-types. A subsequent registry check also required webpki-roots 1.0.12.
-Those are refreshed in separate commits. Rust has a patch version bump; the
-C# patch changeset lets release automation update both package versions and the
-changelog together. Python IPC starts at version 0.1.0.
+The dependency refreshes were made in separate commits and subsequently landed
+on main through PR #174. The merged security workflow retains verified
+cargo-audit 0.22.2 under its explicit [issue #176 hold](https://github.com/link-foundation/link-cli/issues/176),
+since the pinned installer cannot yet verify 0.23.0. Rust and C# each have a
+new patch fragment so release automation updates versions, lockfiles and
+changelogs together. Python IPC starts at version 0.1.0.
 CI logs were downloaded for diagnosis rather than assuming an old passing run
 validated a newer commit. Final verification is recorded in [PLAN.md](PLAN.md).
