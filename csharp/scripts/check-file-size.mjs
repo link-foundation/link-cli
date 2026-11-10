@@ -181,6 +181,20 @@ export function checkLanguage(baseDir, config) {
  * @param {{ file: string, lines: number }} finding
  * @returns {string}
  */
+/**
+ * Files of an explicit list (repository-relative) in the warning band.
+ * Used by .github/scripts/check-javascript-quality.mjs, whose file list
+ * comes from Git rather than a directory walk.
+ * @param {string} rootDir
+ * @param {string[]} files
+ * @returns {Array<{file: string, lines: number}>}
+ */
+export function nearLimitFiles(rootDir, files) {
+  return files
+    .map((file) => ({ file, lines: countLines(join(rootDir, file)) }))
+    .filter(({ lines }) => classifyLineCount(lines) === 'warning');
+}
+
 export function warningAnnotation(finding) {
   const file = finding.file
     .replaceAll('\\', '/')
