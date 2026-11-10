@@ -333,10 +333,13 @@ shards:
 4. A bridge member connected to both halves: commits continue.
 5. Slow links: with every link 50 ms late (etcd sends heartbeats every 100 ms
    and starts an election after 1000 ms), commits continue through every
-   member. With the leader's outgoing links 1500 ms late, longer than the
-   election timeout, its heartbeats arrive from a term the others may already
-   have ended, and the majority must still commit. In local runs the majority
-   elected a new leader.
+   member. With the leader's outgoing links 2500 ms late, longer than any
+   election timeout, its heartbeats arrive from a term the others have already
+   ended, and the majority must still commit. etcd randomizes each member's
+   election timeout between one and two times the configured value (1000 to
+   1900 ms here). With a 1500 ms delay, both followers sometimes waited out the
+   silence, the old leader kept its term, and every commit outlived the
+   client's 700 ms deadline. That flake is why the delay is 2500 ms.
 6. Six random rounds (seeded by `PARTITION_SEED`) of isolations, single links,
    all links into or out of one member, and one member's outgoing links slowed
    by 100 to 2000 ms, with a second fault injected mid-round while four clients

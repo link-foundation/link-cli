@@ -321,9 +321,14 @@ try {
 
   // 5. Slow links, not cut. Every link 50 ms late (heartbeats every 100 ms,
   // elections after 1000 ms): commits continue through every member. Then
-  // the leader's messages 1500 ms late, longer than the election timeout:
-  // they arrive, in order, from a term the others may already have ended,
-  // and the others must still commit.
+  // the leader's messages 2500 ms late, longer than any election timeout:
+  // they arrive, in order, from a term the others have already ended, and
+  // the others must still commit. etcd draws each member's timeout from
+  // [electionTimeout, 2 * electionTimeout) ticks, so 1000 to 1900 ms here. A
+  // shorter delay, such as 1500 ms, can let both followers draw a timeout
+  // longer than the silence. The old leader then keeps its term, every commit
+  // waits two delayed trips (over 3 s) and the clients' 700 ms deadline
+  // refuses them all; seed 2026 failed that way once in CI.
   {
     const all = [];
     for (let a = 0; a < size; a++) for (let b = 0; b < size; b++) if (a !== b) all.push([a, b]);
@@ -334,13 +339,13 @@ try {
     const others = [0, 1, 2].filter((i) => i !== leader);
     network.slow(
       others.map((other) => [leader, other]),
-      1500,
+      2500,
     );
     const records = await commitThrough(others, 3);
     const now = await leaderSeenBy(others[0]).catch(() => null);
     await heal();
     console.log(
-      `PASS slow links: 50 ms everywhere, commits through every member; leader n${leader} 1500 ms late, the majority committed (${JSON.stringify(outcomes(records))}, n${others[0]} then followed ${now === null ? 'none' : `n${now}`})`,
+      `PASS slow links: 50 ms everywhere, commits through every member; leader n${leader} 2500 ms late, the majority committed (${JSON.stringify(outcomes(records))}, n${others[0]} then followed ${now === null ? 'none' : `n${now}`})`,
     );
   }
 

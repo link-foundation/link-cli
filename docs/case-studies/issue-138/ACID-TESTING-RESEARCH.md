@@ -229,7 +229,8 @@ Network partitions: `experiments/issue-138/etcd-partition.mjs` cuts the Raft
 links of the real cluster through per-member proxies that classify connections
 by etcd's `X-Server-From` header. It runs a two-way isolation of the leader,
 one-way cuts in both directions, a bridge, slowed links (50 ms on every link,
-then the leader's links 1500 ms late, past the election timeout), and six
+then the leader's links 2500 ms late, past etcd's longest randomized
+election timeout), and six
 seeded random rounds of cuts and delays with a second fault injected
 mid-round while four clients commit. Every member must
 agree. Acknowledged transactions must be kept, refused ones absent, and
