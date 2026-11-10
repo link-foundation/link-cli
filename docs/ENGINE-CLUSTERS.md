@@ -286,14 +286,17 @@ the fault plan, but etcd's timing is real, so the counts differ between runs:
 two local runs of seed 138 acknowledged 295 and 258 commits, refused 194 and
 174, and left 3 and 2 outcomes unknown. With slow links added, one run of seed
 138 acknowledged 344, refused 217 and left 6 unknown, and one run of seed 2026
-acknowledged 309, refused 203 and left 1 unknown.
+acknowledged 309, refused 203 and left 1 unknown. CI at `3f10358a` gave 587 /
+279 / 5 and 564 / 235 / 3.
 
 Liveness is asserted in bounded form. In scenarios 1 to 5 the side that holds
 a majority must commit within 200 attempts. After every heal, every member
 must follow one leader within about 100 polls and then commit a transaction
 through itself alone. Liveness is not asserted while a random round's faults
-last: in seed 2026, round 3 committed nothing while two members' links were
-cut, which etcd allows.
+last, and which rounds stall varies between runs. Locally, seed 2026's round 3
+committed nothing while two members' links were cut. In CI, seed 138's round 5
+committed nothing while one member's outgoing links were 1454 ms late. etcd
+allows both.
 
 Clocks are not skewed. Correctness here does not read a clock. A commit is an
 etcd transaction that compares every selected key's `mod_revision` with the
