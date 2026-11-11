@@ -20,8 +20,21 @@ internal sealed class SocketTransport(Socket socket, string kind) : ITransport, 
         {
             if (_timeout != millis)
             {
-                socket.ReceiveTimeout = millis;
-                _timeout = millis;
+                try
+                {
+                    socket.ReceiveTimeout = millis;
+                    _timeout = millis;
+                }
+                // macOS refuses every socket option once both directions are shut down (XNU
+                // sosetoptlock returns EINVAL); the receive below then returns at once anyway.
+                catch (SocketException error) when (error.SocketErrorCode == SocketError.InvalidArgument)
+                {
+                    IpcTransports.Trace($"{Kind} read timeout refused: {error.Message}");
+                }
+                catch (ObjectDisposedException)
+                {
+                    return 0;
+                }
             }
         }
         try
@@ -32,9 +45,9 @@ internal sealed class SocketTransport(Socket socket, string kind) : ITransport, 
         {
             throw IpcException.TimedOut();
         }
-        // A hung-up socket ends like a closed one.
+        // A hung-up socket ends like a closed one, and so does a receive that Shutdown aborted.
         catch (SocketException error) when (error.SocketErrorCode is SocketError.NotConnected or SocketError.ConnectionAborted
-            or SocketError.Shutdown)
+            or SocketError.Shutdown or SocketError.OperationAborted or SocketError.Interrupted)
         {
             return 0;
         }
@@ -57,8 +70,13 @@ internal sealed class SocketTransport(Socket socket, string kind) : ITransport, 
         catch (SocketException error)
         {
             throw error.SocketErrorCode is SocketError.Shutdown or SocketError.ConnectionAborted
+                or SocketError.OperationAborted or SocketError.Interrupted
                 ? IpcException.BrokenPipe()
                 : IpcTransports.Wrap(error);
+        }
+        catch (ObjectDisposedException)
+        {
+            throw IpcException.BrokenPipe();
         }
     }
 
@@ -69,6 +87,9 @@ internal sealed class SocketTransport(Socket socket, string kind) : ITransport, 
             socket.Shutdown(SocketShutdown.Send);
         }
         catch (SocketException error) when (error.SocketErrorCode == SocketError.NotConnected)
+        {
+        }
+        catch (ObjectDisposedException)
         {
         }
         catch (SocketException error)
@@ -85,6 +106,12 @@ internal sealed class SocketTransport(Socket socket, string kind) : ITransport, 
         }
         catch (Exception error) when (error is SocketException or ObjectDisposedException)
         {
+        }
+        // Winsock's shutdown does not wake a receive blocked on another thread; only closing the
+        // socket aborts it, so a stopping server would wait for every idle client.
+        if (OperatingSystem.IsWindows())
+        {
+            socket.Dispose();
         }
     }
 

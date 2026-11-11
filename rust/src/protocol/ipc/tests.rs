@@ -449,6 +449,29 @@ fn read_timeouts_expire() {
     });
 }
 
+/// A socket shut down both ways still reads its end under a new timeout:
+/// macOS refuses `SO_RCVTIMEO` on it with `EINVAL`.
+#[cfg(unix)]
+#[test]
+fn a_socket_shut_both_ways_still_reads_its_end() {
+    within(30, || {
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let mut listener =
+            listen(&format!("unix:{}", dir.path().join("links.sock").display())).expect("listen");
+        let address = listener.endpoint();
+        let accepting =
+            thread::spawn(move || listener.accept().expect("accept").expect("a stream"));
+        let mut client = connect(&address).expect("connect");
+        drop(accepting.join().expect("accept thread"));
+        client.close_write().expect("close the outgoing direction");
+        let mut buffer = [0u8; 8];
+        client.set_read_timeout(Some(Duration::from_secs(10)));
+        assert_eq!(client.read(&mut buffer).expect("the end"), 0);
+        client.set_read_timeout(Some(Duration::from_millis(50)));
+        assert_eq!(client.read(&mut buffer).expect("the end again"), 0);
+    });
+}
+
 #[test]
 fn custom_kinds_can_be_registered() {
     let connect_fn: ConnectFn = Arc::new(|endpoint: &Endpoint| {

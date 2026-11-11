@@ -83,8 +83,16 @@ impl<S: StreamSocket> Transport for SocketTransport<S> {
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             if *current != timeout {
-                self.socket.set_read_timeout(timeout)?;
-                *current = timeout;
+                match self.socket.set_read_timeout(timeout) {
+                    Ok(()) => *current = timeout,
+                    // macOS refuses every socket option once both directions
+                    // are shut down (XNU `sosetoptlock` returns `EINVAL`); the
+                    // read below then returns at once, so it needs none.
+                    Err(error) if error.kind() == io::ErrorKind::InvalidInput => {
+                        trace!("{} read timeout refused: {error}", self.kind);
+                    }
+                    Err(error) => return Err(error),
+                }
             }
         }
         match self.socket.read(buf) {

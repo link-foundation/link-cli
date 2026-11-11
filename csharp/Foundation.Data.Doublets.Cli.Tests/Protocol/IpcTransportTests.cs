@@ -473,6 +473,41 @@ public sealed class IpcTransportTests
         Assert.Equal(0, client.Read(buffer));
     });
 
+    /// <summary>
+    /// A socket shut down both ways still reads its end under a new timeout: macOS refuses
+    /// <c>SO_RCVTIMEO</c> on it with <c>EINVAL</c>.
+    /// </summary>
+    [Fact]
+    public void ASocketShutBothWaysStillReadsItsEnd()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+        var directory = Directory.CreateTempSubdirectory("clink-ipc-").FullName;
+        try
+        {
+            Within(30, () =>
+            {
+                using var listener = IpcTransports.Listen($"unix:{Path.Combine(directory, "links.sock")}");
+                var accepting = Task.Factory.StartNew(() => listener.Accept() ?? throw new InvalidOperationException("a stream"),
+                    TaskCreationOptions.LongRunning);
+                using var client = IpcTransports.Connect(listener.Endpoint);
+                accepting.GetAwaiter().GetResult().Dispose();
+                client.CloseWrite();
+                var buffer = new byte[8];
+                client.ReadTimeoutSpan = TimeSpan.FromSeconds(10);
+                Assert.Equal(0, client.Read(buffer));
+                client.ReadTimeoutSpan = TimeSpan.FromMilliseconds(50);
+                Assert.Equal(0, client.Read(buffer));
+            });
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
     [Fact]
     public void CustomKindsCanBeRegistered()
     {
