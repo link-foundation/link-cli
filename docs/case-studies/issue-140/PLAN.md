@@ -93,6 +93,12 @@ From the owner's PR review:
   - A macOS FIFO reader never saw the end, because XNU `poll` does not report it.
   - A `sysvmq` chunk longer than a queue holds (2048 bytes on macOS, `msgmax`
     on Linux) failed every send; it is now lowered to fit.
+  - The JavaScript client never saw a macOS FIFO end either (libuv watches it
+    with `kqueue`); it now reads after every wait there.
+  - A macOS socket shut down both ways refused the read timeout with `EINVAL`.
+  - A stopping C# server on Windows left a `recv` blocked on another thread.
+  - ALPC dropped every frame: one sent without awaiting a reply arrives as
+    `LPC_REQUEST`, not `LPC_DATAGRAM`.
 - **CodeQL** needs `[DllImport]` declarations for the C# natives. The WASM
   lockfile is refreshed along with the release fix.
 - **Windows and macOS** are verified by the IPC, Rust and C# workflow matrices

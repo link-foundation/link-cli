@@ -258,10 +258,12 @@ Per mechanism:
   (`LIP1`), `cds.cbData` the frame length and `cds.lpData` the frame. The
   window procedure copies the frame before returning: `1` when taken, `0` when
   dropped (for example on a full queue).
-- **`alpc`.** Each frame is one `LPC_DATAGRAM` message (type 3) sent with
-  `NtAlpcSendWaitReceivePort` on the port connected to the peer's inbox port;
-  the inbox port owner receives with `NtAlpcSendWaitReceivePort` (100 ms
-  timeout) and accepts the peer's single connection request
+- **`alpc`.** Each frame is one message sent with
+  `NtAlpcSendWaitReceivePort` and no flags (no reply is awaited) on the port
+  connected to the peer's inbox port. It arrives as `LPC_REQUEST` (type 1;
+  `0x2001` with the continuation bit); a receiver takes `LPC_DATAGRAM` (3)
+  as a frame too, and never replies. The inbox port owner receives with
+  `NtAlpcSendWaitReceivePort` (100 ms timeout) and accepts the peer's single connection request
   (`LPC_CONNECTION_REQUEST`, type 10) with `NtAlpcAcceptConnectPort`.
   `LPC_PORT_CLOSED` (5) and `LPC_CLIENT_DIED` (6) hang up. Ports use
   `MaxMessageLength = chunk + 8 + sizeof(PORT_MESSAGE)`.

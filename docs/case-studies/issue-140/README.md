@@ -78,7 +78,7 @@ POSIX message queues.
 | UDP loopback | `udp:HOST:PORT`: per-connection socket after a `HELLO`/`WELCOME` handshake plus the [reliable session](../../protocol/ipc-transports-v1.md#reliable-datagram-session) | `udp_echoes`, `datagram_sessions_survive_loss`, JS handshake and loss tests, interop |
 | Anonymous pipes | `stdio` (a server on its standard input/output) and `exec:COMMAND` (a client that starts it, no shell) | `exec_runs_a_child_over_anonymous_pipes`, `a_stdio_server_serves_one_connection_and_saves`, JS `exec:` tests, interop `exec:` from every client |
 | Named pipes | `pipe:NAME`: a Windows duplex byte-mode named pipe; on POSIX `pipe:` is `fifo:`, two FIFOs | `pipe_echoes`, `fifo_echoes`, `a_second_pipe_server_is_refused`, JS FIFO tests, interop |
-| Windows ALPC | `alpc:DIR`: two `\RPC Control` ports exchanging `LPC_DATAGRAM` messages through `NtAlpc*` | `alpc_echoes` / `AlpcEchoes` and interop on Windows |
+| Windows ALPC | `alpc:DIR`: two `\RPC Control` ports exchanging messages through `NtAlpc*` | `alpc_echoes` / `AlpcEchoes`, `alpc_carries_many_frames` / `AlpcCarriesManyFrames` and interop on Windows |
 | Windows `WM_COPYDATA` | `copydata:DIR`: two message-only windows on their own message-loop threads | `copydata_echoes` / `CopydataEchoes` and interop on Windows |
 | Windows mailslots | `mailslot:DIR`: one local mailslot per direction | `mailslot_echoes` / `MailslotEchoes` and interop on Windows |
 | POSIX message queues | `mq:DIR`: two `mq_open` queues | `mq_echoes` / `MqEchoes` and interop on Linux |
@@ -162,7 +162,17 @@ Per mechanism:
   after every slice (20 ms on macOS) whether `poll` said ready or not. A
   non-blocking FIFO write there also fails until `PIPE_BUF` bytes are free,
   though `poll` already reports the FIFO writable, so the writer sleeps 1 ms
-  before it retries.
+  before it retries. The JavaScript client hit the same wall through libuv,
+  which watches a FIFO with `kqueue`: on macOS every JavaScript `fifo`
+  conversation waited for its one-second close fallback. There it reads the
+  FIFO with `fs.read` after every wait instead (1 ms, doubling up to 20 ms
+  while idle).
+- **Stream sockets.** On macOS a socket shut down both ways refuses every
+  `setsockopt` with `EINVAL` (XNU [`sosetoptlock`](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/uipc_socket.c)),
+  so setting a read timeout on it failed the read. Rust and C# now trace the
+  refused timeout and read the end anyway. On Windows `shutdown(SD_BOTH)` does
+  not wake a `recv` blocked on another thread, so a stopping C# server also
+  closes the socket there.
 - **[System V message queues](https://man7.org/linux/man-pages/man2/msgop.2.html)**
   refuse with `EINVAL` a message longer than `msgmax` (8192 bytes on Linux) or
   than the queue holds. On macOS a queue holds only 2048 bytes by default
@@ -196,7 +206,13 @@ Per mechanism:
   checked against [Microsoft Terminal's ALPC client](https://github.com/microsoft/terminal/blob/main/src/interactivity/onecore/ConIoSrvComm.cpp)
   and the [ALPC samples](https://github.com/csandker/InterProcessCommunication-Samples).
   Each side owns an inbox port and connects to the peer's port. The C#
-  natives use `[DllImport]` so CodeQL can analyze them.
+  natives use `[DllImport]` so CodeQL can analyze them. A frame sent without
+  `ALPC_MSGFLG_SYNC_REQUEST` arrives as `LPC_REQUEST` with the continuation
+  bit (`0x2001`), not as the `LPC_DATAGRAM` (3) that phnt's names suggest.
+  Both implementations first accepted only type 3, so every frame was dropped
+  and the Windows CI hung; the `[ipc]` traces of each port step showed it.
+  Both types now carry a frame, and `alpc_carries_many_frames` /
+  `AlpcCarriesManyFrames` send thousands of unreplied frames each way.
 - **Shared memory names** are `/lcID`: 23 bytes, within Darwin's 31-byte
   `PSHMNAMLEN` limit ([`posix_shm.h`](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/posix_shm.h)).
   The first, Python design ran into that limit on the macOS runner.
