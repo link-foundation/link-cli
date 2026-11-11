@@ -11,6 +11,10 @@ public sealed partial class RemoteLinks : RemoteLinks<uint>, ITriplets<uint>
     /// <summary>Connects to a server at an address written as host:port.</summary>
     public new static RemoteLinks Connect(string endPoint, ILinoProtocol protocol) => new(LinksClient.Connect(endPoint, protocol));
 
+    /// <summary>Connects to a server at any IPC endpoint, such as <c>unix:/tmp/links.sock</c> or <c>shm:/tmp/links</c>.</summary>
+    public new static RemoteLinks ConnectEndpoint(string endpoint, ILinoProtocol protocol) =>
+        new(LinksClient.ConnectEndpoint(endpoint, protocol));
+
     /// <summary>Runs an established uint operation and returns its reply.</summary>
     public IReadOnlyList<LinoLink> Execute(LinksOperation operation)
     {

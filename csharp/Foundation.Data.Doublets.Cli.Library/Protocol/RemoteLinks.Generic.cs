@@ -48,6 +48,10 @@ public class RemoteLinks<T> : INamedTypesLinks<T>, IDisposable
     /// <summary>Connects to a server at an address written as <c>host:port</c>.</summary>
     public static RemoteLinks<T> Connect(string endPoint, ILinoProtocol protocol) => new(LinksClient.Connect(endPoint, protocol));
 
+    /// <summary>Connects to a server at any IPC endpoint, such as <c>unix:/tmp/links.sock</c> or <c>shm:/tmp/links</c>.</summary>
+    public static RemoteLinks<T> ConnectEndpoint(string endpoint, ILinoProtocol protocol) =>
+        new(LinksClient.ConnectEndpoint(endpoint, protocol));
+
     /// <summary>The constants of the <c>UnitedMemoryLinks</c> a server stores its links in.</summary>
     public LinksConstants<T> Constants { get; }
 

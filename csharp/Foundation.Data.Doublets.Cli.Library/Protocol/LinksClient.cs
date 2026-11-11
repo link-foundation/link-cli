@@ -1,11 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
+using Foundation.Data.Doublets.Cli.Ipc;
 using Link.Foundation.Links.Notation.Binary;
 
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 
 namespace Foundation.Data.Doublets.Cli.Protocol;
 
-/// <summary>Sends substitution queries to a LiNo server over any <see cref="ILinoProtocol"/>.</summary>
+/// <summary>Sends substitution queries to a LiNo server over any <see cref="ILinoProtocol"/> and any IPC transport.</summary>
 /// <remarks>
 /// A server pushes the changes a connection subscribed to between its replies; a pushed document starts with
 /// <c>(notify: N)</c>. <see cref="Request"/> sets the pushes it meets aside for <see cref="ReceiveNotification"/>, so
@@ -13,33 +15,35 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 /// </remarks>
 public sealed class LinksClient : IDisposable
 {
-    private readonly TcpClient _client;
     private readonly LinoConnection _connection;
     private readonly Queue<IReadOnlyList<LinoLink>> _notifications = new();
 
-    private LinksClient(TcpClient client, ILinoProtocol protocol)
+    private LinksClient(IpcStream stream, ILinoProtocol protocol)
     {
-        _client = client;
-        _connection = new LinoConnection(client.GetStream(), protocol);
+        Kind = stream.Kind;
+        _connection = new LinoConnection(stream, protocol);
     }
 
     /// <summary>The protocol used for every message.</summary>
     public ILinoProtocol Protocol => _connection.Protocol;
 
-    /// <summary>Connects to <paramref name="host"/>:<paramref name="port"/> using <paramref name="protocol"/>.</summary>
+    /// <summary>The transport kind the client is connected through, such as <c>tcp</c> or <c>unix</c>.</summary>
+    public string Kind { get; }
+
+    /// <summary>Connects to <paramref name="host"/>:<paramref name="port"/> over TCP using <paramref name="protocol"/>.</summary>
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = IpcTransports.OwnershipTransferred)]
     public static LinksClient Connect(string host, int port, ILinoProtocol protocol)
     {
         ArgumentNullException.ThrowIfNull(protocol);
-        var client = new TcpClient();
+        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            client.Connect(host, port);
-            client.NoDelay = true;
-            return new LinksClient(client, protocol);
+            socket.Connect(host, port);
+            return new LinksClient(IpcTransports.FromTcpSocket(socket), protocol);
         }
         catch (SocketException error)
         {
-            client.Dispose();
+            socket.Dispose();
             throw new LinoProtocolException(LinoProtocolErrorKind.Io, error.Message, error);
         }
     }
@@ -49,6 +53,26 @@ public sealed class LinksClient : IDisposable
     {
         var (host, port) = LinksServer.ParseEndPoint(endPoint);
         return Connect(host, port, protocol);
+    }
+
+    /// <summary>
+    /// Connects to an IPC endpoint (see <see cref="Ipc.Endpoint"/>), such as <c>127.0.0.1:8080</c>,
+    /// <c>unix:/tmp/links.sock</c>, <c>pipe:links</c> or <c>shm:/tmp/links</c>, using <paramref name="protocol"/>.
+    /// </summary>
+    /// <exception cref="LinoProtocolException">The endpoint is not valid or cannot be reached, as an <see cref="LinoProtocolErrorKind.Io"/> error.</exception>
+    public static LinksClient ConnectEndpoint(string endpoint, ILinoProtocol protocol)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(protocol);
+        return FromStream(LinksServer.Transport(() => IpcTransports.Connect(endpoint)), protocol);
+    }
+
+    /// <summary>Talks to a server through an open <see cref="IpcStream"/>, which the client then owns.</summary>
+    public static LinksClient FromStream(IpcStream stream, ILinoProtocol protocol)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        ArgumentNullException.ThrowIfNull(protocol);
+        return new LinksClient(stream, protocol);
     }
 
     /// <summary>
@@ -128,9 +152,5 @@ public sealed class LinksClient : IDisposable
     }
 
     /// <inheritdoc/>
-    public void Dispose()
-    {
-        _connection.Dispose();
-        _client.Dispose();
-    }
+    public void Dispose() => _connection.Dispose();
 }

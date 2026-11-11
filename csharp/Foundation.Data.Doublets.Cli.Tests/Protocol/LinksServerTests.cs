@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Foundation.Data.Doublets.Cli.Ipc;
 using Foundation.Data.Doublets.Cli.Protocol;
 using Link.Foundation.Links.Notation.Binary;
 
@@ -143,12 +144,17 @@ public sealed class LinksServerTests
     }
 
     [Fact]
-    public void AnAcceptedSocketThatIsAlreadyGoneIsDropped()
+    public void AConnectionAcceptedWhileStoppingIsClosed()
     {
         using var server = LinksServer.Bind("127.0.0.1", 0);
-        using var client = new TcpClient();
-        // A socket that is no longer connected has no stream to serve.
-        Assert.Null(server.Register(client));
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        using var peer = new TcpClient("127.0.0.1", ((IPEndPoint)listener.LocalEndpoint).Port);
+        var stream = IpcTransports.FromTcpSocket(listener.AcceptSocket());
+        server.Shutdown();
+        // The server takes no new connection once it is stopping, and closes it.
+        Assert.False(server.Register(stream));
+        Assert.Throws<ObjectDisposedException>(() => stream.WriteByte(0));
     }
 
     [Fact]
@@ -158,13 +164,11 @@ public sealed class LinksServerTests
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         using var peer = new TcpClient("127.0.0.1", ((IPEndPoint)listener.LocalEndpoint).Port);
-        using var client = listener.AcceptTcpClient();
-        var stream = server.Register(client);
-        Assert.NotNull(stream);
-        // The worker starts only after the shutdown disposed its client: it
-        // already holds the stream, so it never calls into the disposed TcpClient.
+        var stream = IpcTransports.FromTcpSocket(listener.AcceptSocket());
+        Assert.True(server.Register(stream));
+        // The worker starts only after the shutdown closed its stream, and ends cleanly.
         server.Shutdown();
-        server.HandleConnection(client, stream, null!);
+        server.HandleConnection(stream, null!);
     }
 
     [Fact]
@@ -233,20 +237,21 @@ public sealed class LinksServerTests
                 }
                 WaitForLog(log, "[server] client hung up");
             }
-            using var bound = LinksServer.Bind("127.0.0.1", 0, new LinksServerOptions { Trace = true });
-            // Nagle's algorithm is a TCP option: a UDP socket refuses it.
-            using var datagram = new TcpClient { Client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) };
-            bound.TryDisableNagle(datagram);
+            // Nagle's algorithm is a TCP option: a UDP socket refuses it, which the [ipc] log reports.
+            IpcTransports.SetTrace(true);
+            using var udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            using var datagram = IpcTransports.FromTcpSocket(udp);
         }
         finally
         {
+            IpcTransports.SetTrace(false);
             Console.SetError(standardError);
         }
 
         var lines = log.ToString();
         Assert.Contains("[server] request: () ((1 1))", lines, StringComparison.Ordinal);
         Assert.Contains("[server] reply: () ((1: 1 1))", lines, StringComparison.Ordinal);
-        Assert.Contains("[server] could not disable Nagle's algorithm: ", lines, StringComparison.Ordinal);
+        Assert.Contains("[ipc] could not disable Nagle's algorithm: ", lines, StringComparison.Ordinal);
     }
 
     /// <summary>Waits until the server, on its own thread, has logged <paramref name="line"/>.</summary>

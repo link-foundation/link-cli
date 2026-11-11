@@ -2,7 +2,10 @@ using Foundation.Data.Doublets.Cli.Protocol;
 
 namespace Foundation.Data.Doublets.Cli.Tests.Protocol;
 
-/// <summary>A <see cref="LinksServer"/> serving a fresh temporary store on a background thread.</summary>
+/// <summary>
+/// A <see cref="LinksServer"/> serving a fresh temporary store on a background thread, on TCP or on any IPC
+/// endpoint.
+/// </summary>
 internal sealed class RunningServer : IDisposable
 {
     private readonly string _databaseFilename = Path.GetTempFileName();
@@ -10,9 +13,23 @@ internal sealed class RunningServer : IDisposable
     private readonly Thread _thread;
     private Exception? _failure;
 
+    private readonly bool _tcp;
+
     public RunningServer(LinksServerOptions? options = null)
+        : this(LinksServer.Bind("127.0.0.1", 0, options), true)
     {
-        _server = LinksServer.Bind("127.0.0.1", 0, options);
+    }
+
+    /// <summary>Serves on every one of <paramref name="endpoints"/>.</summary>
+    public RunningServer(LinksServerOptions? options, params string[] endpoints)
+        : this(LinksServer.ListenAll(endpoints, options), false)
+    {
+    }
+
+    private RunningServer(LinksServer server, bool tcp)
+    {
+        _server = server;
+        _tcp = tcp;
         _thread = new Thread(() =>
         {
             try
@@ -33,7 +50,12 @@ internal sealed class RunningServer : IDisposable
 
     public LinksServer Server => _server;
 
-    public LinksClient Client(ILinoProtocol protocol) => LinksClient.Connect("127.0.0.1", Port, protocol);
+    public LinksClient Client(ILinoProtocol protocol) => _tcp
+        ? LinksClient.Connect("127.0.0.1", Port, protocol)
+        : LinksClient.ConnectEndpoint(_server.Endpoints[0], protocol);
+
+    /// <summary>A client of the <paramref name="index"/>th endpoint.</summary>
+    public LinksClient Client(int index, ILinoProtocol protocol) => LinksClient.ConnectEndpoint(_server.Endpoints[index], protocol);
 
     public RemoteLinks Remote(ILinoProtocol protocol) => new(Client(protocol));
 

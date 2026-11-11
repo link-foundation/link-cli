@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Numerics;
 using System.Net.Sockets;
+using Foundation.Data.Doublets.Cli.Ipc;
 using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -78,9 +80,14 @@ public sealed record LinksServerOptions
 }
 
 /// <summary>
-/// A TCP server exposing a links store through the LiNo protocols.
+/// A server exposing a links store through the LiNo protocols over any IPC transport (issue #140).
 /// </summary>
 /// <remarks>
+/// <para>
+/// <see cref="Bind(string, int, LinksServerOptions?)"/> listens on TCP; <see cref="Listen"/> takes any
+/// <see cref="Ipc.Endpoint"/>, such as <c>unix:/tmp/links.sock</c>, <c>pipe:links</c> or <c>shm:/tmp/links</c>, and
+/// <see cref="ListenAll"/> several at once, whose clients share the store and see each other's changes.
+/// </para>
 /// Each connection gets its own thread that parses messages and another that
 /// writes them; requests are executed one at a time under a lock, so the store
 /// needs no thread safety of its own. The protocol is detected per message and
@@ -101,24 +108,35 @@ public sealed record LinksServerOptions
 /// </remarks>
 public sealed partial class LinksServer : IDisposable
 {
-    private readonly TcpListener _listener;
+    private readonly IIpcListener _listener;
+    private readonly Action _closeListener;
     private readonly LinksServerOptions _options;
     private readonly object _storeLock = new();
-    private readonly HashSet<TcpClient> _clients = new();
+    private readonly HashSet<IpcStream> _clients = new();
     // Read and changed under _storeLock only.
     private readonly List<(LinksConnection Connection, LinksSession? Session)> _connections = new();
     private volatile bool _stopping;
 
-    private LinksServer(TcpListener listener, LinksServerOptions options)
+    private LinksServer(IIpcListener listener, LinksServerOptions options)
     {
         _listener = listener;
+        _closeListener = listener.Closer();
         _options = options;
     }
 
-    /// <summary>The address the server listens on.</summary>
-    public IPEndPoint LocalEndPoint => (IPEndPoint)_listener.LocalEndpoint;
+    /// <summary>The TCP address the server listens on.</summary>
+    /// <exception cref="InvalidOperationException">The server listens on no TCP endpoint.</exception>
+    public IPEndPoint LocalEndPoint => _listener.LocalEndPoint
+        ?? throw new InvalidOperationException($"`{_listener.Endpoint}` is not a TCP endpoint");
+
+    /// <summary>The endpoints the server listens on, joined by spaces, as clients connect to them.</summary>
+    public string Endpoint => _listener.Endpoint;
+
+    /// <summary>Every endpoint the server listens on, in the order given.</summary>
+    public IReadOnlyList<string> Endpoints => _listener.Endpoints;
 
     /// <summary>Binds to <paramref name="host"/>:<paramref name="port"/> (use port 0 for an ephemeral port).</summary>
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The server owns the listener.")]
     public static LinksServer Bind(string host, int port, LinksServerOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(host);
@@ -126,8 +144,55 @@ public sealed partial class LinksServer : IDisposable
             ? parsed
             : Dns.GetHostAddresses(host).First();
         var listener = new TcpListener(address, port);
-        listener.Start();
+        try
+        {
+            listener.Start();
+            return FromListener(IpcTransports.FromTcpListener(listener), options);
+        }
+        catch
+        {
+            listener.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Listens on an IPC endpoint (see <see cref="Ipc.Endpoint"/>), such as <c>127.0.0.1:0</c>,
+    /// <c>unix:/tmp/links.sock</c>, <c>pipe:links</c> or <c>shm:/tmp/links</c>.
+    /// </summary>
+    /// <exception cref="LinoProtocolException">The endpoint is not valid or cannot be listened on, as an <see cref="LinoProtocolErrorKind.Io"/> error.</exception>
+    public static LinksServer Listen(string endpoint, LinksServerOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return FromListener(Transport(() => IpcTransports.Listen(endpoint)), options);
+    }
+
+    /// <summary>Listens on every endpoint at once; clients of all of them share the store and see each other's changes.</summary>
+    /// <exception cref="LinoProtocolException">An endpoint is not valid or cannot be listened on, as an <see cref="LinoProtocolErrorKind.Io"/> error.</exception>
+    public static LinksServer ListenAll(IEnumerable<string> endpoints, LinksServerOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        return FromListener(Transport(() => IpcTransports.ListenAll(endpoints)), options);
+    }
+
+    /// <summary>Serves the connections of any listener, such as one of a kind added with <see cref="IpcTransports.Register"/>; the server then owns it.</summary>
+    public static LinksServer FromListener(IIpcListener listener, LinksServerOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
         return new LinksServer(listener, options ?? new LinksServerOptions());
+    }
+
+    /// <summary>Runs an IPC call, reporting its failure as an <see cref="LinoProtocolErrorKind.Io"/> error.</summary>
+    internal static TResult Transport<TResult>(Func<TResult> call)
+    {
+        try
+        {
+            return call();
+        }
+        catch (IOException error)
+        {
+            throw new LinoProtocolException(LinoProtocolErrorKind.Io, error.Message, error);
+        }
     }
 
     /// <summary>Binds to an address written as <c>host:port</c>.</summary>
@@ -150,39 +215,20 @@ public sealed partial class LinksServer : IDisposable
         return (endPoint[..separator].Trim('[', ']'), port);
     }
 
-    /// <summary>Serves <paramref name="links"/> until <see cref="Shutdown"/> is called.</summary>
+    /// <summary>
+    /// Serves <paramref name="links"/> until <see cref="Shutdown"/> is called, or until the listener can accept no
+    /// more connections (a <c>stdio</c> listener once its only connection ended).
+    /// </summary>
     public void Serve(INamedTypesLinks<uint> links)
     {
         ArgumentNullException.ThrowIfNull(links);
         var sessions = new LinksSessions(links, _options);
-        var workers = new List<Thread>();
-        while (!_stopping)
+        var limits = _options.Limits.ForQuery(links.QueryLimits);
+        AcceptAll(stream =>
         {
-            TcpClient client;
-            try
-            {
-                client = _listener.AcceptTcpClient();
-            }
-            catch (Exception error) when (error is SocketException or ObjectDisposedException or InvalidOperationException)
-            {
-                break;
-            }
-            if (Register(client) is not { } stream)
-            {
-                continue;
-            }
             var session = sessions.Open();
-            var limits = _options.Limits.ForQuery(links.QueryLimits);
-            var worker = new Thread(() => HandleSessionConnection(client, stream, session, limits)) { IsBackground = true };
-            workers.Add(worker);
-            worker.Start();
-            workers.RemoveAll(thread => !thread.IsAlive);
-        }
-        Shutdown();
-        foreach (var worker in workers)
-        {
-            worker.Join();
-        }
+            return () => HandleSessionConnection(stream, session, limits);
+        });
     }
 
     /// <summary>Serves the selected unsigned address type through the same protocols.</summary>
@@ -191,30 +237,56 @@ public sealed partial class LinksServer : IDisposable
     {
         ArgumentNullException.ThrowIfNull(links);
         var limits = _options.Limits.ForQuery(links.QueryLimits);
+        AcceptAll(stream => () => HandleConnection(stream, links, limits));
+    }
+
+    /// <summary>Accepts connections and answers each on a thread of its own until the server stops.</summary>
+    private void AcceptAll(Func<IpcStream, Action> handler)
+    {
         var workers = new List<Thread>();
         while (!_stopping)
         {
-            TcpClient client;
+            IpcStream? stream;
             try
             {
-                client = _listener.AcceptTcpClient();
+                stream = _listener.Accept();
             }
-            catch (Exception error) when (error is SocketException or ObjectDisposedException or InvalidOperationException)
+            catch (ObjectDisposedException)
             {
                 break;
             }
             catch (NullReferenceException) when (_stopping)
             {
                 // .NET 10 TcpListener.Stop clears its socket after disposing it.
-                // AcceptTcpClient can pass its active check before that clear,
+                // AcceptSocket can pass its active check before that clear,
                 // then dereference the cleared socket. Only shutdown permits it.
                 break;
             }
-            if (Register(client) is not { } stream)
+            catch (Exception error) when (error is IOException or SocketException or UnauthorizedAccessException)
+            {
+                if (_stopping)
+                {
+                    break;
+                }
+                // One failed handshake must not stop the server, and a failing listener must not spin.
+                Trace($"accept failed: {error.Message}");
+                Thread.Sleep(10);
+                continue;
+            }
+            if (stream is null)
+            {
+                if (!_stopping)
+                {
+                    Trace($"{_listener.Endpoint} accepts no more connections");
+                }
+                break;
+            }
+            if (!Register(stream))
             {
                 continue;
             }
-            var worker = new Thread(() => HandleConnection(client, stream, links, limits)) { IsBackground = true };
+            Trace($"{stream.Kind} connection accepted");
+            var worker = new Thread(new ThreadStart(handler(stream))) { IsBackground = true };
             workers.Add(worker);
             worker.Start();
             workers.RemoveAll(thread => !thread.IsAlive);
@@ -232,55 +304,59 @@ public sealed partial class LinksServer : IDisposable
         lock (_clients)
         {
             _stopping = true;
+            // Wakes every worker blocked in a read; each disposes its own stream.
             foreach (var client in _clients)
             {
-                client.Dispose();
+                client.Shutdown();
             }
             _clients.Clear();
         }
-        _listener.Stop();
+        _closeListener();
+        _listener.Dispose();
     }
 
     /// <inheritdoc/>
     public void Dispose() => Shutdown();
 
-    /// <summary>Lists an accepted client and returns its stream, or null when its socket is already gone.</summary>
-    internal NetworkStream? Register(TcpClient client)
+    /// <summary>
+    /// Lists an accepted connection, so <see cref="Shutdown"/> closes it; false, and the stream closed, when the
+    /// server is already stopping.
+    /// </summary>
+    internal bool Register(IpcStream stream)
     {
         lock (_clients)
         {
-            // Shutdown disposes only listed clients, and under this lock, so this
-            // one still has its socket. TcpClient is not thread safe: a Dispose in
-            // the middle of GetStream makes it throw ArgumentNullException, which
-            // used to kill the process when a worker got its own stream.
-            // Accepted while stopping, it closes in its worker, which sees _stopping.
-            TryDisableNagle(client);
-            try
+            if (_stopping)
             {
-                var stream = client.GetStream();
-                _clients.Add(client);
-                return stream;
+                Trace("connection closed: server is shutting down");
+                stream.Dispose();
+                return false;
             }
-            catch (InvalidOperationException error)
-            {
-                Trace($"connection closed: {error.Message}");
-                client.Dispose();
-                return null;
-            }
+            _clients.Add(stream);
+            return true;
         }
     }
 
-    /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
-    private void HandleSessionConnection(TcpClient client, NetworkStream stream, LinksSession session, ProtocolLimits limits)
+    /// <summary>Writes one whole document and flushes it, so a datagram transport sends it in as few frames as it can.</summary>
+    private void Write(IpcStream stream, MessageFormat format, IReadOnlyList<LinoLink> document)
     {
-        var connection = new LinksConnection(client, _options.MaxPendingNotifications);
+        using var buffer = new MemoryStream();
+        format.Protocol(_options.Limits).WriteDocument(buffer, document);
+        buffer.WriteTo(stream);
+        stream.Flush();
+    }
+
+    /// <summary>Answers the requests on <paramref name="stream"/>.</summary>
+    private void HandleSessionConnection(IpcStream stream, LinksSession session, ProtocolLimits limits)
+    {
+        var connection = new LinksConnection(stream, _options.MaxPendingNotifications);
         lock (_storeLock)
         {
             _connections.Add((connection, session));
         }
         var writer = new Thread(() =>
         {
-            if (connection.WriteAll((document, format) => format.Protocol(_options.Limits).WriteDocument(stream, document)) is { } error)
+            if (connection.WriteAll((document, format) => Write(stream, format, document)) is { } error)
             {
                 Trace($"connection closed: {error.Message}");
             }
@@ -340,25 +416,12 @@ public sealed partial class LinksServer : IDisposable
             }
             lock (_clients)
             {
-                _clients.Remove(client);
+                _clients.Remove(stream);
             }
             session?.Dispose();
-            // Disposes the client, and so the stream, which stops the writer.
+            // Disposes the stream, which stops the writer.
             connection.Close();
             writer.Join();
-        }
-    }
-
-    /// <summary>Sends every reply at once; a connection that refuses still works, only slower, as in the Rust server.</summary>
-    internal void TryDisableNagle(TcpClient client)
-    {
-        try
-        {
-            client.NoDelay = true;
-        }
-        catch (SocketException error)
-        {
-            Trace($"could not disable Nagle's algorithm: {error.Message}");
         }
     }
 
@@ -481,11 +544,11 @@ public sealed partial class LinksServer : IDisposable
         }
     }
 
-    /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
-    internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
-        => HandleConnection(client, stream, links, _options.Limits.ForQuery(links?.QueryLimits));
+    /// <summary>Answers the requests on <paramref name="stream"/>.</summary>
+    internal void HandleConnection(IpcStream stream, INamedTypesLinks<uint> links)
+        => HandleConnection(stream, links, _options.Limits.ForQuery(links?.QueryLimits));
 
-    private void HandleConnection<T>(TcpClient client, NetworkStream stream, INamedTypesLinks<T> links, ProtocolLimits limits)
+    private void HandleConnection<T>(IpcStream stream, INamedTypesLinks<T> links, ProtocolLimits limits)
         where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         try
@@ -501,7 +564,7 @@ public sealed partial class LinksServer : IDisposable
                 catch (LinoProtocolException error) when (error.Kind != LinoProtocolErrorKind.Io)
                 {
                     // The stream may be out of sync; answer in text and hang up.
-                    MessageFormat.Text.Protocol(_options.Limits).WriteDocument(stream, ErrorDocument(error.Message));
+                    Write(stream, MessageFormat.Text, ErrorDocument(error.Message));
                     Trace($"connection closed: {error.Message}");
                     return;
                 }
@@ -512,7 +575,7 @@ public sealed partial class LinksServer : IDisposable
                 }
                 var (document, format) = received;
                 var reply = Accepts(format) ? Execute(links, document) : ErrorDocument("this server does not accept this protocol");
-                format.Protocol(_options.Limits).WriteDocument(stream, reply);
+                Write(stream, format, reply);
             }
         }
         catch (Exception error) when (error is IOException or ObjectDisposedException or SocketException or LinoProtocolException)
@@ -523,10 +586,9 @@ public sealed partial class LinksServer : IDisposable
         {
             lock (_clients)
             {
-                _clients.Remove(client);
+                _clients.Remove(stream);
             }
-            // Also disposes the stream.
-            client.Dispose();
+            stream.Dispose();
         }
     }
 

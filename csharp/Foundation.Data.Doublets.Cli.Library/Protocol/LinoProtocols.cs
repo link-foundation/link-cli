@@ -363,6 +363,10 @@ public sealed class LinoConnection : IDisposable
 
     private static bool TimedOut(Exception? error)
     {
+        if (Ipc.IpcException.IsTimeout(error))
+        {
+            return true;
+        }
         for (; error is not null; error = error.InnerException)
         {
             if (error is System.Net.Sockets.SocketException { SocketErrorCode: System.Net.Sockets.SocketError.TimedOut or System.Net.Sockets.SocketError.WouldBlock })
