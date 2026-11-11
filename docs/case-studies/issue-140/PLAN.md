@@ -85,3 +85,10 @@ Keep every source file below the repository's 1000-line Python limit.
 - Register IPC with infrastructure reruns under the newly merged policy.
   Use Rust/C# patch fragments as release triggers, allowing their automation
   to update versions, lockfiles and changelogs together.
+
+- All ten workflows passed on `40522c14`. The final fetch found main's automated
+  Rust 3.0.0 release (`1674b770`), so that release is merged too. Its stale WASM
+  lock reproduced a `--locked` metadata failure. The release staging regression
+  fails before the fix and all 15 release-helper tests pass afterward. Sync,
+  verify and stage the dependent lock alongside the native lock on every release;
+  the final new-commit CI record remains required in the PR description.

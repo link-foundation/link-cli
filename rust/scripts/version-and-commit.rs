@@ -59,7 +59,9 @@ mod release_write;
 mod registry;
 
 use release_changelog::collect_changelog_with_date;
-use release_write::{classify_push_failure, update_cargo_lock, verify_release_write, PushFailure};
+use release_write::{
+    classify_push_failure, update_release_lockfiles, verify_release_write, PushFailure,
+};
 
 fn get_arg(name: &str) -> Option<String> {
     let args: Vec<String> = env::args().collect();
@@ -275,7 +277,7 @@ fn stage_release_files(
     package_manifest: &str,
     changelog_file: &str,
     changelog_dir: &str,
-    cargo_lock: Option<&str>,
+    cargo_locks: &[&str],
 ) -> Result<Vec<String>, String> {
     let mut paths = vec![package_manifest];
     if repo.map_or(Path::new(changelog_file).exists(), |dir| {
@@ -283,9 +285,7 @@ fn stage_release_files(
     }) {
         paths.push(changelog_file);
     }
-    if let Some(lock) = cargo_lock {
-        paths.push(lock);
-    }
+    paths.extend_from_slice(cargo_locks);
     let mut add_args = vec!["add", "--"];
     add_args.extend(paths);
     exec_in(repo, "git", &add_args).map_err(|e| format!("Error staging release files: {}", e))?;
@@ -440,8 +440,8 @@ fn main() {
     }
 
     let cargo_lock_path = rust_paths::get_cargo_lock_path(&rust_root);
-    let lock_updated = match update_cargo_lock(&cargo_lock_path, &crate_name, &new_version) {
-        Ok(updated) => updated,
+    let cargo_locks = match update_release_lockfiles(&cargo_lock_path, &crate_name, &new_version) {
+        Ok(paths) => paths,
         Err(e) => fail(&format!("Error updating Cargo.lock: {}", e)),
     };
 
@@ -464,13 +464,29 @@ fn main() {
         fail(&e);
     }
 
-    let cargo_lock_str = cargo_lock_path.to_string_lossy().to_string();
+    for lock in &cargo_locks {
+        if let Err(e) = verify_release_write(
+            &changelog_file,
+            &changelog_dir,
+            lock,
+            &crate_name,
+            &new_version,
+            false,
+        ) {
+            fail(&e);
+        }
+    }
+    let cargo_lock_strings: Vec<_> = cargo_locks
+        .iter()
+        .map(|path| path.to_string_lossy().into_owned())
+        .collect();
+    let cargo_lock_refs: Vec<_> = cargo_lock_strings.iter().map(String::as_str).collect();
     let staged = match stage_release_files(
         None,
         &package_manifest_str,
         &changelog_file,
         &changelog_dir,
-        lock_updated.then_some(cargo_lock_str.as_str()),
+        &cargo_lock_refs,
     ) {
         Ok(staged) => staged,
         Err(e) => fail(&e),
@@ -571,6 +587,7 @@ fn main() {
 mod tests {
     use super::*;
     use release_changelog::insert_changelog_entry;
+    use release_write::update_cargo_lock;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -608,6 +625,10 @@ mod tests {
         assert!(content.contains("name = \"link-cli\"\nversion = \"1.0.9\""));
         assert!(content.contains("name = \"link-cli-helper\"\nversion = \"0.1.0\""));
         assert!(!update_cargo_lock(&lock, "link-cli", "1.0.9").unwrap());
+        assert_eq!(
+            update_release_lockfiles(&lock, "link-cli", "1.0.9").unwrap(),
+            vec![lock]
+        );
     }
 
     #[test]
@@ -665,6 +686,12 @@ mod tests {
             "[[package]]\nname = \"link-cli\"\nversion = \"0.1.0\"\n",
         )
         .unwrap();
+        fs::create_dir_all(rust.join("wasm")).unwrap();
+        fs::write(
+            rust.join("wasm/Cargo.lock"),
+            "[[package]]\nname = \"link-cli\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
         write_fragment(
             &rust.join("changelog.d"),
             "20260101_000000_fix.md",
@@ -674,7 +701,11 @@ mod tests {
         git(&repo, &["commit", "--quiet", "-m", "initial"]);
 
         update_cargo_toml(rust.join("Cargo.toml").to_str().unwrap(), "1.0.9").unwrap();
-        assert!(update_cargo_lock(&rust.join("Cargo.lock"), "link-cli", "1.0.9").unwrap());
+        let lockfiles =
+            update_release_lockfiles(&rust.join("Cargo.lock"), "link-cli", "1.0.9").unwrap();
+        assert!(fs::read_to_string(rust.join("wasm/Cargo.lock"))
+            .unwrap()
+            .contains("version = \"1.0.9\""));
         collect_changelog_with_date(
             rust.join("changelog.d").to_str().unwrap(),
             rust.join("CHANGELOG.md").to_str().unwrap(),
@@ -683,12 +714,22 @@ mod tests {
         )
         .unwrap();
 
+        let lock_names: Vec<_> = lockfiles
+            .iter()
+            .map(|path| {
+                path.strip_prefix(&repo)
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+        let lock_refs: Vec<_> = lock_names.iter().map(String::as_str).collect();
         let staged = stage_release_files(
             Some(&repo),
             "rust/Cargo.toml",
             "rust/CHANGELOG.md",
             "rust/changelog.d",
-            Some("rust/Cargo.lock"),
+            &lock_refs,
         )
         .unwrap();
 
@@ -699,6 +740,7 @@ mod tests {
                 "rust/Cargo.lock",
                 "rust/Cargo.toml",
                 "rust/changelog.d/20260101_000000_fix.md",
+                "rust/wasm/Cargo.lock",
             ]
         );
         let status = git(&repo, &["status", "--porcelain", "--untracked-files=all"]);
@@ -717,7 +759,7 @@ mod tests {
             "rust/Cargo.toml",
             "rust/CHANGELOG.md",
             "rust/changelog.d",
-            None,
+            &[],
         )
         .unwrap_err();
         assert!(error.contains("Error staging release files"), "{error}");

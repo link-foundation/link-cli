@@ -1,0 +1,71 @@
+Upstream release: 1674b77029e996033bf844db08fa5a3a8d2a1b4c (rust-v3.0.0)
+
+Metadata reproduction before syncing rust/wasm/Cargo.lock:
+node .github/scripts/check-sqlite-optional.mjs rust
+default native: no SQLite production dependency
+bare native: no SQLite production dependency
+native pages: no SQLite production dependency
+sorted tables: no SQLite production dependency
+physical LSM components: no SQLite production dependency
+native LSM facade: no SQLite production dependency
+error: cannot update the lock file /tmp/gh-issue-solver-1794343607728/rust/wasm/Cargo.lock because --locked was passed to prevent this
+help: to generate the lock file without accessing the network, remove the --locked flag and use --offline instead.
+
+Release staging regression before including the WASM lock candidate:
+running 1 test
+test tests::staging_records_bump_changelog_lock_and_fragment_removal ... FAILED
+
+failures:
+
+---- tests::staging_records_bump_changelog_lock_and_fragment_removal stdout ----
+Updated /tmp/version-and-commit-staging-1794356160128914607/rust/Cargo.toml to version 1.0.9
+Updated /tmp/version-and-commit-staging-1794356160128914607/rust/Cargo.lock to version 1.0.9
+
+thread 'tests::staging_records_bump_changelog_lock_and_fragment_removal' (29449) panicked at ../../../rust/scripts/version-and-commit.rs:700:9:
+assertion failed: fs::read_to_string(rust.join("wasm/Cargo.lock")).unwrap().contains("version = \"1.0.9\"")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::staging_records_bump_changelog_lock_and_fragment_removal
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.12s
+
+error: test failed, to rerun pass `--lib`
+Peak child RSS (KiB): 290484
+
+Release helper suite after the fix:
+   Compiling issue-140-release-lockfiles v0.1.0 (/tmp/gh-issue-solver-1794343607728/experiments/issue-140/release-lockfiles)
+    Finished `test` profile [unoptimized] target(s) in 1.25s
+     Running unittests ../../../rust/scripts/version-and-commit.rs (/tmp/issue-140-release-helper-target/debug/deps/issue_140_release_lockfiles-636d6b97b443fb34)
+
+running 15 tests
+test registry::tests::permanent_failures_are_not_retried ... ok
+test registry::tests::transient_failures_are_retried_until_success ... ok
+test registry::tests::exhausted_retries_report_the_last_failure_and_the_attempts ... ok
+test registry::tests::max_version_skips_yanked_and_compares_numerically ... ok
+test release_changelog::tests::repeated_inserts_keep_exactly_one_blank_line ... ok
+test tests::a_lost_race_is_classified_for_the_rebase_retry ... ok
+test release_changelog::tests::collect_inserts_the_new_release_above_the_previous_one ... ok
+test tests::repository_rules_are_classified_before_the_rebase_retry ... ok
+test release_changelog::tests::collect_without_fragments_changes_nothing ... ok
+test release_changelog::tests::collect_creates_a_missing_changelog_and_consumes_fragments ... ok
+test release_changelog::tests::collect_rejects_fragments_without_a_description ... ok
+test tests::cargo_lock_entry_of_the_crate_is_bumped_and_others_are_kept ... ok
+test tests::staging_errors_are_reported_instead_of_ignored ... ok
+test tests::verification_rejects_leftover_fragments_and_lock_mismatch ... ok
+test tests::staging_records_bump_changelog_lock_and_fragment_removal ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+Metadata matrix after the fix:
+default native: no SQLite production dependency
+bare native: no SQLite production dependency
+native pages: no SQLite production dependency
+sorted tables: no SQLite production dependency
+physical LSM components: no SQLite production dependency
+native LSM facade: no SQLite production dependency
+default WASM: no SQLite production dependency
+WASM with native-only feature: no SQLite production dependency
+explicit native sqlite: provider selected

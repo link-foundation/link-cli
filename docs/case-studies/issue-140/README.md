@@ -21,7 +21,9 @@ and the original PR state. [PLAN.md](PLAN.md) tracks completion and verification
 
 The intake baseline is main commit `199a07bb1ca4f71d06503f94ae51ac3fa46e7531`.
 Main subsequently advanced to `9bf97cee`; its CI improvements and source
-refactorings are merged before final verification.
+refactorings are merged before final verification. Its later automated Rust
+3.0.0 release (`1674b770`) is also merged; the dependent WASM lockfile omission
+found during that update is repaired with a reproducing release-script test.
 Rust's `protocol/server.rs` accepts TCP connections and its `LinoConnection`
 client owns a `TcpStream`. C#'s `LinksServer` and `LinoConnection` use TCP.
 JavaScript's `connectTcp` uses `node:net`; its process adapter starts a TCP
@@ -205,6 +207,7 @@ Focused validation does not build Rust or C# locally:
 PYTHONPATH=ipc python -m unittest discover -s ipc/tests -v
 PYTHONPATH=ipc python experiments/issue-140/signal-wakeup.py
 node --test .github/scripts/pipeline-status.test.mjs
+bash experiments/issue-140/release-lockfiles/run.sh
 ```
 
 The [IPC workflow](../../../.github/workflows/ipc.yml) runs native independent
@@ -231,3 +234,14 @@ new patch fragment so release automation updates versions, lockfiles and
 changelogs together. Python IPC starts at version 0.1.0.
 CI logs were downloaded for diagnosis rather than assuming an old passing run
 validated a newer commit. Final verification is recorded in [PLAN.md](PLAN.md).
+
+After all ten workflows passed on `40522c14`, the final main fetch found the
+automatic Rust 3.0.0 release. Its native lockfile was updated, but the separate
+WASM lockfile still recorded core 2.1.2. The existing dependency-boundary check
+reproduced the `cargo tree --locked` failure without building the engine. The
+release staging regression then failed before synchronizing the dependent lock.
+Release automation now updates, verifies and stages both lockfiles in the same
+commit; all 15 helper tests pass. The bounded helper build peaked at 284 MiB RSS.
+The [reusable probe](../../../experiments/issue-140/release-lockfiles/README.md)
+and [before/after evidence](evidence/release-lockfiles.txt) preserve this finding.
+Final commit verification remains recorded in the PR description.
