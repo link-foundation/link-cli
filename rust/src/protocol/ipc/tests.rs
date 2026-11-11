@@ -32,12 +32,38 @@ fn payload(len: usize, seed: u32) -> Vec<u8> {
 
 /// Echoes every connection of `listener` until it is closed: reads all
 /// input, then writes it back and ends the outgoing direction.
-fn echo_server(mut listener: Box<dyn Listener>) -> thread::JoinHandle<usize> {
+fn echo_server(listener: Box<dyn Listener>) -> thread::JoinHandle<usize> {
+    serve(listener, Framing::HalfClose)
+}
+
+/// How a test marks the end of a payload.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Framing {
+    /// The writer ends its outgoing direction.
+    HalfClose,
+    /// An 8-byte little-endian length comes first, for kinds that cannot
+    /// half-close (a Windows named pipe closes both directions at once).
+    LengthPrefix,
+}
+
+fn serve(mut listener: Box<dyn Listener>, framing: Framing) -> thread::JoinHandle<usize> {
     thread::spawn(move || {
         let mut served = 0;
         while let Some(mut stream) = listener.accept().expect("accept") {
             served += 1;
             thread::spawn(move || {
+                if framing == Framing::LengthPrefix {
+                    let mut len = [0u8; 8];
+                    stream.read_exact(&mut len).expect("server read length");
+                    let mut received = vec![0u8; u64::from_le_bytes(len) as usize];
+                    stream.read_exact(&mut received).expect("server read");
+                    stream.write_all(&received).expect("server write");
+                    stream.flush().expect("server flush");
+                    // Wait for the client to hang up.
+                    let mut rest = [0u8; 1];
+                    let _ = stream.read(&mut rest);
+                    return;
+                }
                 let mut received = Vec::new();
                 stream.read_to_end(&mut received).expect("server read");
                 stream.write_all(&received).expect("server write");
@@ -53,19 +79,39 @@ fn echo_server(mut listener: Box<dyn Listener>) -> thread::JoinHandle<usize> {
 }
 
 fn round_trip(endpoint: &str, len: usize, seed: u32) {
-    let mut client = connect(endpoint).unwrap_or_else(|error| panic!("connect {endpoint}: {error}"));
+    round_trip_with(endpoint, len, seed, Framing::HalfClose);
+}
+
+fn round_trip_with(endpoint: &str, len: usize, seed: u32, framing: Framing) {
+    let mut client =
+        connect(endpoint).unwrap_or_else(|error| panic!("connect {endpoint}: {error}"));
     let sent = payload(len, seed);
     let writer = {
         let mut client = client.clone();
         let sent = sent.clone();
         thread::spawn(move || {
+            if framing == Framing::LengthPrefix {
+                client
+                    .write_all(&(sent.len() as u64).to_le_bytes())
+                    .expect("client write length");
+            }
             client.write_all(&sent).expect("client write");
             client.flush().expect("client flush");
-            client.close_write().expect("client close_write");
+            if framing == Framing::HalfClose {
+                client.close_write().expect("client close_write");
+            }
         })
     };
     let mut echoed = Vec::new();
-    client.read_to_end(&mut echoed).expect("client read");
+    match framing {
+        Framing::HalfClose => {
+            client.read_to_end(&mut echoed).expect("client read");
+        }
+        Framing::LengthPrefix => {
+            echoed.resize(len, 0);
+            client.read_exact(&mut echoed).expect("client read");
+        }
+    }
     writer.join().expect("the writer");
     assert_eq!(echoed.len(), sent.len(), "{endpoint}: echoed length");
     assert!(echoed == sent, "{endpoint}: echoed bytes differ");
@@ -74,17 +120,24 @@ fn round_trip(endpoint: &str, len: usize, seed: u32) {
 
 /// Two consecutive and two concurrent connections echo their payloads.
 fn check_kind(endpoint: String, len: usize) {
+    check_kind_with(endpoint, len, Framing::HalfClose);
+}
+
+fn check_kind_with(endpoint: String, len: usize, framing: Framing) {
     within(120, move || {
-        let listener = listen(&endpoint).unwrap_or_else(|error| panic!("listen {endpoint}: {error}"));
+        let listener =
+            listen(&endpoint).unwrap_or_else(|error| panic!("listen {endpoint}: {error}"));
         let address = listener.endpoint();
         let closer = listener.closer();
-        let server = echo_server(listener);
-        round_trip(&address, len, 1);
-        round_trip(&address, 1, 2);
+        let server = serve(listener, framing);
+        round_trip_with(&address, len, 1, framing);
+        round_trip_with(&address, 1, 2, framing);
         let concurrent: Vec<_> = (0..2)
             .map(|index| {
                 let address = address.clone();
-                thread::spawn(move || round_trip(&address, len / 2 + index, 3 + index as u32))
+                thread::spawn(move || {
+                    round_trip_with(&address, len / 2 + index, 3 + index as u32, framing)
+                })
             })
             .collect();
         for client in concurrent {
@@ -145,7 +198,10 @@ fn signal_echoes() {
 #[test]
 fn unix_echoes() {
     let dir = tempfile::tempdir().expect("a temporary directory");
-    check_kind(format!("unix:{}", dir.path().join("links.sock").display()), 300_000);
+    check_kind(
+        format!("unix:{}", dir.path().join("links.sock").display()),
+        300_000,
+    );
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -167,8 +223,28 @@ fn pipe_echoes() {
         let (_dir, endpoint) = rendezvous_endpoint("pipe", "");
         check_kind(endpoint, 100_000);
     } else {
-        check_kind(format!("pipe:clink-test-{}", random_id()), 300_000);
+        check_kind_with(
+            format!("pipe:clink-test-{}", random_id()),
+            300_000,
+            Framing::LengthPrefix,
+        );
     }
+}
+
+#[cfg(windows)]
+#[test]
+fn a_second_pipe_server_is_refused() {
+    let endpoint = format!("pipe:clink-test-{}", random_id());
+    let _first = listen(&endpoint).expect("listen");
+    let error = listen(&endpoint).expect_err("the name is taken");
+    assert_eq!(error.kind(), io::ErrorKind::AddrInUse, "{error}");
+}
+
+#[cfg(windows)]
+#[test]
+fn connecting_to_a_missing_pipe_is_refused() {
+    let error = connect(&format!("pipe:clink-test-{}", random_id())).expect_err("nobody listens");
+    assert_eq!(error.kind(), io::ErrorKind::ConnectionRefused, "{error}");
 }
 
 #[cfg(target_os = "linux")]
@@ -237,8 +313,14 @@ fn unsupported_kinds_fail_cleanly() {
             assert_eq!(error.kind(), io::ErrorKind::Unsupported, "{kind}: {error}");
         }
     }
-    assert_eq!(connect("stdio").unwrap_err().kind(), io::ErrorKind::Unsupported);
-    assert_eq!(listen("exec:cat").unwrap_err().kind(), io::ErrorKind::Unsupported);
+    assert_eq!(
+        connect("stdio").unwrap_err().kind(),
+        io::ErrorKind::Unsupported
+    );
+    assert_eq!(
+        listen("exec:cat").unwrap_err().kind(),
+        io::ErrorKind::Unsupported
+    );
 }
 
 #[test]
@@ -249,7 +331,9 @@ fn connecting_without_a_listener_fails_quickly() {
         assert!(
             matches!(
                 error.kind(),
-                io::ErrorKind::NotFound | io::ErrorKind::ConnectionRefused | io::ErrorKind::TimedOut
+                io::ErrorKind::NotFound
+                    | io::ErrorKind::ConnectionRefused
+                    | io::ErrorKind::TimedOut
             ),
             "{error}"
         );
@@ -325,7 +409,10 @@ fn exec_runs_a_child_over_anonymous_pipes() {
 
 #[test]
 fn exec_command_lines() {
-    assert_eq!(stdio::command_line("clink --serve stdio").unwrap(), ["clink", "--serve", "stdio"]);
+    assert_eq!(
+        stdio::command_line("clink --serve stdio").unwrap(),
+        ["clink", "--serve", "stdio"]
+    );
     assert_eq!(
         stdio::command_line(r#"["C:\\Program Files\\clink.exe", "--serve", "stdio"]"#).unwrap(),
         ["C:\\Program Files\\clink.exe", "--serve", "stdio"]
@@ -339,7 +426,8 @@ fn read_timeouts_expire() {
         let (_dir, endpoint) = rendezvous_endpoint("mmap", "");
         let mut listener = listen(&endpoint).expect("listen");
         let address = listener.endpoint();
-        let accepting = thread::spawn(move || listener.accept().expect("accept").expect("a stream"));
+        let accepting =
+            thread::spawn(move || listener.accept().expect("accept").expect("a stream"));
         let mut client = connect(&address).expect("connect");
         let server = accepting.join().expect("accept thread");
         client.set_read_timeout(Some(Duration::from_millis(50)));
@@ -432,7 +520,10 @@ fn datagram_sessions_survive_loss() {
 fn datagram_frames_round_trip() {
     let frame = datagram::frame(datagram::DATA, 7, b"links");
     assert_eq!(frame.len(), datagram::HEADER + 5);
-    assert_eq!(datagram::parse(&frame), Some((datagram::DATA, 7, &b"links"[..])));
+    assert_eq!(
+        datagram::parse(&frame),
+        Some((datagram::DATA, 7, &b"links"[..]))
+    );
     assert_eq!(datagram::parse(&frame[..4]), None);
     assert_eq!(datagram::agree_chunk(4096, Some(1024)), 1024);
     assert_eq!(datagram::agree_chunk(4096, None), 4096);

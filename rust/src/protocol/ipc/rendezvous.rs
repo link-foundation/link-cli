@@ -92,10 +92,7 @@ impl RendezvousListener {
                 if process_alive(pid as u32) {
                     return Err(io::Error::new(
                         io::ErrorKind::AddrInUse,
-                        format!(
-                            "process {pid} already listens on `{}`",
-                            dir.display()
-                        ),
+                        format!("process {pid} already listens on `{}`", dir.display()),
                     ));
                 }
             }
@@ -197,7 +194,10 @@ impl RendezvousListener {
 }
 
 fn valid_id(id: &str) -> bool {
-    id.len() == 20 && id.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+    id.len() == 20
+        && id
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
 }
 
 impl Drop for RendezvousListener {

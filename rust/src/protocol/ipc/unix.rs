@@ -261,7 +261,10 @@ fn start_dispatcher() -> io::Result<()> {
                             return;
                         }
                         let wake = wake();
-                        let _guard = wake.lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                        let _guard = wake
+                            .lock
+                            .lock()
+                            .unwrap_or_else(|poisoned| poisoned.into_inner());
                         GENERATION.fetch_add(1, Ordering::SeqCst);
                         wake.changed.notify_all();
                     }
@@ -277,7 +280,10 @@ fn start_dispatcher() -> io::Result<()> {
 fn install(signo: libc::c_int) -> io::Result<()> {
     start_dispatcher()?;
     let wake = wake();
-    let mut installed = wake.installed.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut installed = wake
+        .installed
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     if installed.contains(&signo) {
         return Ok(());
     }
@@ -324,7 +330,10 @@ impl Notifier for SignalNotifier {
             return;
         }
         let wake = wake();
-        let guard = wake.lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let guard = wake
+            .lock
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         if GENERATION.load(Ordering::SeqCst) != generation {
             return;
         }
@@ -365,7 +374,10 @@ impl SignalSetup {
 
 pub(crate) fn signal_client(endpoint: &Endpoint, _id: &str) -> io::Result<(Object, SignalSetup)> {
     let own = own_signal(endpoint)?;
-    Ok((Object::new().with("signal", own as u32), SignalSetup { _own: own }))
+    Ok((
+        Object::new().with("signal", own as u32),
+        SignalSetup { _own: own },
+    ))
 }
 
 pub(crate) fn signal_server(
@@ -393,9 +405,14 @@ fn mkfifo(path: &Path) -> io::Result<()> {
 
 fn open_fifo(path: &Path, write: bool) -> io::Result<OwnedFd> {
     let name = c_path(path)?;
-    let mode = if write { libc::O_WRONLY } else { libc::O_RDONLY };
+    let mode = if write {
+        libc::O_WRONLY
+    } else {
+        libc::O_RDONLY
+    };
     // SAFETY: a valid path.
-    let fd = check(unsafe { libc::open(name.as_ptr(), mode | libc::O_NONBLOCK | libc::O_CLOEXEC) })?;
+    let fd =
+        check(unsafe { libc::open(name.as_ptr(), mode | libc::O_NONBLOCK | libc::O_CLOEXEC) })?;
     // SAFETY: a descriptor this call just opened.
     Ok(unsafe { OwnedFd::from_raw_fd(fd) })
 }
@@ -460,7 +477,10 @@ impl FifoTransport {
 
 impl Transport for FifoTransport {
     fn read(&self, buf: &mut [u8], timeout: Option<Duration>) -> io::Result<usize> {
-        let _reading = self.reading.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _reading = self
+            .reading
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let deadline = timeout.map(|timeout| Instant::now() + timeout);
         let fd = self.incoming.as_raw_fd();
         loop {
@@ -519,7 +539,10 @@ impl Transport for FifoTransport {
     }
 
     fn write(&self, buf: &[u8]) -> io::Result<usize> {
-        let outgoing = self.outgoing.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let outgoing = self
+            .outgoing
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let Some(fd) = outgoing.as_ref().map(AsRawFd::as_raw_fd) else {
             return Err(io::Error::new(
                 io::ErrorKind::BrokenPipe,
@@ -598,7 +621,9 @@ pub(crate) fn connect_fifo(endpoint: &Endpoint) -> io::Result<IpcStream> {
         }
     };
     let result = rendezvous.request(Object::new()).and_then(|ack| {
-        let peer = ack.number("pid").map_or(rendezvous.server_pid, |pid| pid as u32);
+        let peer = ack
+            .number("pid")
+            .map_or(rendezvous.server_pid, |pid| pid as u32);
         let outgoing = open_fifo(&c2s, true)?;
         FifoTransport::new(kind, incoming, outgoing, peer)
     });
@@ -632,7 +657,8 @@ impl FifoListener {
 impl Listener for FifoListener {
     fn accept(&mut self) -> io::Result<Option<IpcStream>> {
         accept_with(&self.rendezvous, self.kind, |request| {
-            self.open(request).map(|transport| (Object::new(), IpcStream::new(transport)))
+            self.open(request)
+                .map(|transport| (Object::new(), IpcStream::new(transport)))
         })
     }
 
@@ -664,7 +690,9 @@ mod posix_mq {
         unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut now) };
         let nanos = now.tv_nsec as u64 + u64::from(timeout.subsec_nanos());
         libc::timespec {
-            tv_sec: now.tv_sec + timeout.as_secs() as libc::time_t + (nanos / 1_000_000_000) as libc::time_t,
+            tv_sec: now.tv_sec
+                + timeout.as_secs() as libc::time_t
+                + (nanos / 1_000_000_000) as libc::time_t,
             tv_nsec: (nanos % 1_000_000_000) as libc::c_long,
         }
     }
@@ -725,7 +753,13 @@ mod posix_mq {
             let deadline = deadline_after(Duration::from_millis(10));
             // SAFETY: a valid queue and frame.
             let result = unsafe {
-                libc::mq_timedsend(self.send.0, frame.as_ptr().cast(), frame.len(), 0, &deadline)
+                libc::mq_timedsend(
+                    self.send.0,
+                    frame.as_ptr().cast(),
+                    frame.len(),
+                    0,
+                    &deadline,
+                )
             };
             if result == 0 {
                 return Ok(true);
@@ -809,8 +843,14 @@ mod posix_mq {
         unlink();
         let ack = ack?;
         let chunk = agree_chunk(own_chunk, ack.number("chunk"));
-        let peer = ack.number("pid").map_or(rendezvous.server_pid, |pid| pid as u32);
-        let session = Session::start("mq", link(send, receive, peer)?, local_settings(endpoint, chunk)?)?;
+        let peer = ack
+            .number("pid")
+            .map_or(rendezvous.server_pid, |pid| pid as u32);
+        let session = Session::start(
+            "mq",
+            link(send, receive, peer)?,
+            local_settings(endpoint, chunk)?,
+        )?;
         trace!("mq connected as {}, chunk {chunk}", rendezvous.id);
         Ok(IpcStream::new(session))
     }
@@ -886,7 +926,11 @@ mod sysv_mq {
             mtype: libc::c_long,
             flags: libc::c_int,
         ) -> libc::ssize_t;
-        fn msgctl(queue: libc::c_int, command: libc::c_int, buffer: *mut libc::c_void) -> libc::c_int;
+        fn msgctl(
+            queue: libc::c_int,
+            command: libc::c_int,
+            buffer: *mut libc::c_void,
+        ) -> libc::c_int;
     }
 
     const MTYPE: libc::c_long = 1;
@@ -1028,7 +1072,9 @@ mod sysv_mq {
             }
         };
         let chunk = agree_chunk(own_chunk, ack.number("chunk"));
-        let peer = ack.number("pid").map_or(rendezvous.server_pid, |pid| pid as u32);
+        let peer = ack
+            .number("pid")
+            .map_or(rendezvous.server_pid, |pid| pid as u32);
         let session = Session::start(
             "sysvmq",
             link(endpoint, server_queue, client_queue, peer)?,

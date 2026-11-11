@@ -78,7 +78,10 @@ impl<S: StreamSocket> Transport for SocketTransport<S> {
     fn read(&self, buf: &mut [u8], timeout: Option<Duration>) -> io::Result<usize> {
         {
             let timeout = timeout.map(|timeout| timeout.max(Duration::from_millis(1)));
-            let mut current = self.timeout.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let mut current = self
+                .timeout
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
             if *current != timeout {
                 self.socket.set_read_timeout(timeout)?;
                 *current = timeout;
@@ -440,7 +443,10 @@ impl Datagrams for UdpLink {
     fn recv(&self, buf: &mut Vec<u8>, timeout: Duration) -> io::Result<bool> {
         let timeout = Some(timeout.max(Duration::from_millis(1)));
         {
-            let mut current = self.timeout.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let mut current = self
+                .timeout
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
             if *current != timeout {
                 self.socket.set_read_timeout(timeout)?;
                 *current = timeout;
@@ -462,8 +468,16 @@ fn udp_settings(endpoint: &Endpoint, chunk: usize) -> io::Result<Settings> {
     Ok(Settings {
         chunk,
         rto: endpoint.millis("rto", 20)?,
-        heartbeat: Some(endpoint.millis("heartbeat", 1000)?.max(Duration::from_millis(1))),
-        dead: Some(endpoint.millis("dead", 10_000)?.max(Duration::from_millis(1))),
+        heartbeat: Some(
+            endpoint
+                .millis("heartbeat", 1000)?
+                .max(Duration::from_millis(1)),
+        ),
+        dead: Some(
+            endpoint
+                .millis("dead", 10_000)?
+                .max(Duration::from_millis(1)),
+        ),
     })
 }
 
@@ -541,6 +555,9 @@ pub(crate) fn connect_udp(endpoint: &Endpoint) -> io::Result<IpcStream> {
     }
 }
 
+/// The session socket of one client, the WELCOME sent from it, and when.
+type UdpSession = (UdpSocket, Vec<u8>, Instant);
+
 #[derive(Debug)]
 struct UdpIpcListener {
     socket: UdpSocket,
@@ -548,7 +565,7 @@ struct UdpIpcListener {
     endpoint: Endpoint,
     own_chunk: u64,
     /// `(source, token)` → the session socket and the WELCOME sent from it.
-    sessions: HashMap<(SocketAddr, [u8; 16]), (UdpSocket, Vec<u8>, Instant)>,
+    sessions: HashMap<(SocketAddr, [u8; 16]), UdpSession>,
     closed: Arc<AtomicBool>,
 }
 

@@ -90,9 +90,9 @@ impl Endpoint {
             let builtin = KINDS.contains(&kind.as_str());
             let allowed = options_of(&kind);
             for pair in query.split('&').filter(|pair| !pair.is_empty()) {
-                let (name, value) = pair.split_once('=').ok_or_else(|| {
-                    invalid(format!("endpoint option `{pair}` needs a `=value`"))
-                })?;
+                let (name, value) = pair
+                    .split_once('=')
+                    .ok_or_else(|| invalid(format!("endpoint option `{pair}` needs a `=value`")))?;
                 let name = name.to_ascii_lowercase();
                 if builtin && !allowed.contains(&name.as_str()) {
                     return Err(invalid(format!(
@@ -119,7 +119,10 @@ impl Endpoint {
     fn validate(&self) -> io::Result<()> {
         let needs_address = !matches!(self.kind.as_str(), "stdio");
         if needs_address && self.address.is_empty() && KINDS.contains(&self.kind.as_str()) {
-            return Err(invalid(format!("`{}:` endpoints need an address", self.kind)));
+            return Err(invalid(format!(
+                "`{}:` endpoints need an address",
+                self.kind
+            )));
         }
         if self.kind == "stdio" && !self.address.is_empty() {
             return Err(invalid("`stdio` takes no address".to_string()));

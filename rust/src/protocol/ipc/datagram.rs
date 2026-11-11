@@ -116,7 +116,9 @@ struct Shared {
 
 impl Shared {
     fn lock(&self) -> MutexGuard<'_, State> {
-        self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     fn send(&self, frame: &[u8]) -> io::Result<bool> {
@@ -343,7 +345,9 @@ impl Session {
     }
 
     fn sending(&self) -> MutexGuard<'_, ()> {
-        self.sending.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.sending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 }
 
@@ -498,15 +502,10 @@ pub(crate) mod memory {
                 .counter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                 + 1;
-            if self.lose_every != 0 && count % self.lose_every == 0 {
+            if self.lose_every != 0 && count.is_multiple_of(self.lose_every) {
                 return Ok(false);
             }
-            Ok(self
-                .outgoing
-                .lock()
-                .unwrap()
-                .send(frame.to_vec())
-                .is_ok())
+            Ok(self.outgoing.lock().unwrap().send(frame.to_vec()).is_ok())
         }
 
         fn recv(&self, buf: &mut Vec<u8>, timeout: Duration) -> io::Result<bool> {

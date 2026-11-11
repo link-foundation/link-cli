@@ -73,10 +73,17 @@ impl ThreadedReader {
     }
 
     fn lock(&self) -> MutexGuard<'_, ReaderState> {
-        self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    fn read(&self, buf: &mut [u8], timeout: Option<Duration>, closed: &AtomicBool) -> io::Result<usize> {
+    fn read(
+        &self,
+        buf: &mut [u8],
+        timeout: Option<Duration>,
+        closed: &AtomicBool,
+    ) -> io::Result<usize> {
         let deadline = timeout.map(|timeout| Instant::now() + timeout);
         let mut state = self.lock();
         loop {
@@ -132,12 +139,18 @@ struct Ended {
 
 impl Ended {
     fn set(&self) {
-        *self.ended.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = true;
+        *self
+            .ended
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = true;
         self.changed.notify_all();
     }
 
     fn wait_until(&self, closed: &AtomicBool) {
-        let mut ended = self.ended.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut ended = self
+            .ended
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         while !*ended && !closed.load(Ordering::SeqCst) {
             ended = self
                 .changed
@@ -157,13 +170,17 @@ struct StdioTransport {
 
 impl fmt::Debug for StdioTransport {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.debug_struct("StdioTransport").finish_non_exhaustive()
+        formatter
+            .debug_struct("StdioTransport")
+            .finish_non_exhaustive()
     }
 }
 
 impl StdioTransport {
     fn output(&self) -> MutexGuard<'_, Option<io::Stdout>> {
-        self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.output
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 }
 
@@ -313,7 +330,9 @@ impl fmt::Debug for ExecTransport {
 
 impl ExecTransport {
     fn input(&self) -> MutexGuard<'_, Option<ChildStdin>> {
-        self.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.input
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 }
 
@@ -350,7 +369,10 @@ impl Transport for ExecTransport {
         }
         drop(self.input().take());
         self.output.discard();
-        let mut child = self.child.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut child = self
+            .child
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let deadline = Instant::now() + Duration::from_secs(5);
         loop {
             match child.try_wait() {

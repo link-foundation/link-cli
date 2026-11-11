@@ -63,11 +63,7 @@ impl Mapping {
     ///
     /// `ptr` must point to `len` mapped, page-aligned bytes that stay valid
     /// until `release` runs.
-    pub(crate) unsafe fn new(
-        ptr: *mut u8,
-        len: usize,
-        release: Box<dyn FnOnce() + Send>,
-    ) -> Self {
+    pub(crate) unsafe fn new(ptr: *mut u8, len: usize, release: Box<dyn FnOnce() + Send>) -> Self {
         Self {
             ptr,
             len,
@@ -76,7 +72,7 @@ impl Mapping {
     }
 
     fn atomic(&self, offset: usize) -> &AtomicU32 {
-        assert!(offset % 4 == 0 && offset + 4 <= self.len);
+        assert!(offset.is_multiple_of(4) && offset + 4 <= self.len);
         // SAFETY: in bounds, 4-aligned (the mapping is page-aligned).
         unsafe { &*(self.ptr.add(offset) as *const AtomicU32) }
     }
@@ -143,12 +139,14 @@ impl FileRegion {
             #[cfg(unix)]
             let read = {
                 use std::os::unix::fs::FileExt;
-                self.file.read_at(&mut buf[done..], (offset + done) as u64)?
+                self.file
+                    .read_at(&mut buf[done..], (offset + done) as u64)?
             };
             #[cfg(windows)]
             let read = {
                 use std::os::windows::fs::FileExt;
-                self.file.seek_read(&mut buf[done..], (offset + done) as u64)?
+                self.file
+                    .seek_read(&mut buf[done..], (offset + done) as u64)?
             };
             #[cfg(not(any(unix, windows)))]
             let read: usize = {
@@ -177,7 +175,8 @@ impl FileRegion {
             #[cfg(windows)]
             let written = {
                 use std::os::windows::fs::FileExt;
-                self.file.seek_write(&data[done..], (offset + done) as u64)?
+                self.file
+                    .seek_write(&data[done..], (offset + done) as u64)?
             };
             #[cfg(not(any(unix, windows)))]
             let written: usize = {
@@ -185,7 +184,10 @@ impl FileRegion {
                 return Err(super::unsupported("file", "positioned writes"));
             };
             if written == 0 {
-                return Err(io::Error::new(io::ErrorKind::WriteZero, "the ring file is full"));
+                return Err(io::Error::new(
+                    io::ErrorKind::WriteZero,
+                    "the ring file is full",
+                ));
             }
             done += written;
         }
@@ -385,7 +387,10 @@ impl RingTransport {
 
 impl Transport for RingTransport {
     fn read(&self, buf: &mut [u8], timeout: Option<Duration>) -> io::Result<usize> {
-        let _reading = self.reading.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _reading = self
+            .reading
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let deadline = timeout.map(|timeout| Instant::now() + timeout);
         let mut attempt = 0;
         let mut last_check = Instant::now();
@@ -426,7 +431,10 @@ impl Transport for RingTransport {
     }
 
     fn write(&self, data: &[u8]) -> io::Result<usize> {
-        let _writing = self.writing.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _writing = self
+            .writing
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let mut attempt = 0;
         let mut last_check = Instant::now();
         loop {
@@ -464,7 +472,10 @@ impl Transport for RingTransport {
     }
 
     fn close_write(&self) -> io::Result<()> {
-        let _writing = self.writing.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _writing = self
+            .writing
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         if self.region.load(self.outgoing + WRITER_STATE)? == OPEN {
             self.region.store(self.outgoing + WRITER_STATE, ENDED)?;
             self.notifier.notify();
@@ -708,13 +719,20 @@ struct RingListener {
 }
 
 impl RingListener {
-    fn open(&self, request: &super::rendezvous::Request) -> io::Result<(Box<dyn Region>, Vec<PathBuf>)> {
+    fn open(
+        &self,
+        request: &super::rendezvous::Request,
+    ) -> io::Result<(Box<dyn Region>, Vec<PathBuf>)> {
         if self.kind == "shm" {
             return Ok((Box::new(platform::open_shm(&request.id)?), Vec::new()));
         }
         let path = request.path(file_suffix(self.kind));
         let (file, len) = open_file(&path)?;
-        let cleanup = if cfg!(windows) { vec![path] } else { Vec::new() };
+        let cleanup = if cfg!(windows) {
+            vec![path]
+        } else {
+            Vec::new()
+        };
         Ok((file_region(self.kind, file, len)?, cleanup))
     }
 }

@@ -329,7 +329,9 @@ impl Parser<'_> {
                 }
                 Some(b'\\') => {
                     self.at += 1;
-                    let escape = self.peek().ok_or_else(|| invalid("unended escape".into()))?;
+                    let escape = self
+                        .peek()
+                        .ok_or_else(|| invalid("unended escape".into()))?;
                     self.at += 1;
                     match escape {
                         b'"' => out.push('"'),
@@ -347,7 +349,9 @@ impl Parser<'_> {
                             {
                                 self.at += 2;
                                 let low = self.hex4()?;
-                                0x10000 + ((high - 0xD800) << 10) + (low.wrapping_sub(0xDC00) & 0x3ff)
+                                0x10000
+                                    + ((high - 0xD800) << 10)
+                                    + (low.wrapping_sub(0xDC00) & 0x3ff)
                             } else {
                                 high
                             };

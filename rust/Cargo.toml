@@ -77,7 +77,9 @@ windows-sys = { version = "0.61.2", features = [
     "Win32_Security",
     # Windows IPC transports (`protocol::ipc`).
     "Win32_Networking_WinSock",
+    "Win32_Graphics_Gdi",
     "Win32_System_Console",
+    "Win32_System_DataExchange",
     "Win32_System_IO",
     "Win32_System_LibraryLoader",
     "Win32_System_Mailslots",

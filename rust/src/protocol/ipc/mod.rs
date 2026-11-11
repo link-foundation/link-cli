@@ -440,7 +440,10 @@ impl MultiListener {
     /// Accepts on every listener; each one runs on a thread of its own.
     pub fn new(listeners: Vec<Box<dyn Listener>>) -> Self {
         let (sender, incoming) = mpsc::channel();
-        let endpoints = listeners.iter().map(|listener| listener.endpoint()).collect();
+        let endpoints = listeners
+            .iter()
+            .map(|listener| listener.endpoint())
+            .collect();
         let local_addr = listeners.iter().find_map(|listener| listener.local_addr());
         let closers = listeners.iter().map(|listener| listener.closer()).collect();
         let open = listeners.len();
@@ -578,17 +581,15 @@ pub fn relay(listener: &mut dyn Listener, target: &Endpoint) -> io::Result<()> {
     let mut connections = Vec::new();
     while let Some(stream) = listener.accept()? {
         let target = target.clone();
-        connections.push(thread::spawn(move || {
-            match connect_endpoint(&target) {
-                Ok(outgoing) => {
-                    if let Err(error) = forward(stream, outgoing) {
-                        trace!("relay to {target} ended: {error}");
-                    }
+        connections.push(thread::spawn(move || match connect_endpoint(&target) {
+            Ok(outgoing) => {
+                if let Err(error) = forward(stream, outgoing) {
+                    trace!("relay to {target} ended: {error}");
                 }
-                Err(error) => {
-                    crate::diagnostics::stderr!("clink: cannot forward to {target}: {error}");
-                    stream.shutdown();
-                }
+            }
+            Err(error) => {
+                crate::diagnostics::stderr!("clink: cannot forward to {target}: {error}");
+                stream.shutdown();
             }
         }));
         connections.retain(|connection| !connection.is_finished());
@@ -607,7 +608,10 @@ static TRACE: AtomicU8 = AtomicU8::new(TRACE_UNSET);
 /// Turns the `[ipc]` transport log on standard error on or off. It starts
 /// on when the environment variable `CLINK_IPC_TRACE` is `1`.
 pub fn set_trace(enabled: bool) {
-    TRACE.store(if enabled { TRACE_ON } else { TRACE_OFF }, Ordering::Relaxed);
+    TRACE.store(
+        if enabled { TRACE_ON } else { TRACE_OFF },
+        Ordering::Relaxed,
+    );
 }
 
 /// Whether the `[ipc]` transport log is on.
@@ -705,7 +709,10 @@ impl PeerWatch {
     }
 
     pub(crate) fn alive(&self) -> bool {
-        let mut state = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         if state.1 && state.0.elapsed() >= Duration::from_millis(100) {
             state.1 = process_alive(self.pid);
             state.0 = web_time::Instant::now();
