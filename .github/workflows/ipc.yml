@@ -3,106 +3,74 @@ name: IPC
 on:
   push:
     branches: [main]
-    paths: ['ipc/**', 'examples/ipc/**', '.github/workflows/ipc.yml', 'rust/**', 'csharp/**']
+    paths:
+      - 'examples/ipc/**'
+      - 'docs/protocol/ipc-transports-v1.md'
+      - '.github/workflows/ipc.yml'
+      - 'rust/**'
+      - 'csharp/**'
+      - 'js/client/**'
   pull_request:
     branches: [main]
-    paths: ['ipc/**', 'examples/ipc/**', '.github/workflows/ipc.yml', 'rust/**', 'csharp/**']
+    paths:
+      - 'examples/ipc/**'
+      - 'docs/protocol/ipc-transports-v1.md'
+      - '.github/workflows/ipc.yml'
+      - 'rust/**'
+      - 'csharp/**'
+      - 'js/client/**'
   workflow_dispatch:
 
 permissions:
   contents: read
 
-env:
-  PYTHONPATH: ipc
-  GIT_CONFIG_COUNT: '1'
-  GIT_CONFIG_KEY_0: init.defaultBranch
-  GIT_CONFIG_VALUE_0: main
-
 jobs:
-  native:
-    name: Native IPC (${{ matrix.os }})
+  interop:
+    name: IPC interop (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, windows-2025, macos-15]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    timeout-minutes: 45
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-native-${{ matrix.os }}
+      group: check-${{ github.workflow }}-${{ github.ref }}-interop-${{ matrix.os }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.14'
-      - name: Test independent processes and native mechanisms
-        run: python -m unittest discover -s ipc/tests -p test_transports.py -v
-      - name: Verify optional package installation
-        if: matrix.os == 'ubuntu-24.04'
-        run: |
-          python -m pip install --no-deps ./ipc
-          python -I -m link_ipc --help
-
-  protocol:
-    name: LiNo over IPC (${{ matrix.backend }}, ${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - backend: rust
-            os: ubuntu-24.04
-          - backend: csharp
-            os: ubuntu-24.04
-          - backend: csharp
-            os: windows-2025
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-protocol-${{ matrix.backend }}-${{ matrix.os }}
-      cancel-in-progress: true
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.14'
       - uses: actions/setup-node@v7
         with:
           node-version: '26.x'
       - name: Setup Rust
-        if: matrix.backend == 'rust'
         shell: bash
         run: rustup toolchain install stable --profile minimal --no-self-update
       - name: Build Rust CLI
-        if: matrix.backend == 'rust'
         run: cargo build --manifest-path rust/Cargo.toml --locked --bin clink -j 2
       - uses: actions/setup-dotnet@v6
-        if: matrix.backend == 'csharp'
         with:
           dotnet-version: '10.0.403'
       - name: Build C# CLI
-        if: matrix.backend == 'csharp'
         run: dotnet build csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj -c Release
-      - name: Real text and binary conversations, subscriptions and stacking
+      - name: Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients
         shell: bash
-        env:
-          IPC_BACKEND: ${{ matrix.backend }}
         run: |
-          if [ "$IPC_BACKEND" = rust ]; then
-            export CLINK_COMMAND='["rust/target/debug/clink"]'
-          else
-            export CLINK_COMMAND='["dotnet", "csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll"]'
-          fi
-          python -m unittest discover -s ipc/tests -p test_protocols.py -v
+          export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+          node examples/ipc/interop.mjs --js \
+            rust=rust/target/debug/clink \
+            'csharp=["dotnet","csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll"]'
+      - name: The JS client against the Rust server over every kind
+        shell: bash
+        working-directory: js/client
+        run: |
+          export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+          node --test --test-concurrency=1 --test-timeout=120000 test/ipc.test.mjs
 
   pipeline-status:
     name: Pipeline Status (ipc)
     needs:
-      - native
-      - protocol
+      - interop
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
