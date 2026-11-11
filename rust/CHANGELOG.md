@@ -7,6 +7,462 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.0.0] - 2026-11-11
+
+Reuse the standard protocol with selected query address types, retaining the
+u32 facade. Add original-query-text envelopes and a standard JS/TS BigInt client
+over actual WASM causal workspaces, with bounded request parsing and explicit
+preparation/publication ownership. Preserve upstream LiNo comment boundaries.
+
+Flush data and the transaction journal before checkpoint/rollback markers;
+reject corrupt complete transaction records and propagate recovery errors.
+Transition replay helpers now return Result instead of hiding storage failures.
+
+Keep optional storage, query, server, transaction, trigger and version
+diagnostics best effort.
+Reclaim rolled-back retention records without replaying aborted writes, exclude
+them from committed archives, and leave pending transactions unreclaimed.
+
+Journal public explicit-address allocations and all retained placeholders so
+rollback, recovery and branch checkout include them. Return I/O errors through
+fallible named-query bridges and release failed automatic create operations.
+
+Record storage callbacks even when the operation subsequently fails, so automatic
+partial writes roll back and explicit transactions retain their undo information.
+Preserve the original absent state across repeated create/update callbacks.
+
+Forward mapped-store cascade observations and restore original contents of slots
+allocated while undoing a higher address. Retain the entire observed undo batch
+before journal I/O, reject commits and writes after an append failure, and roll
+back failed automatic appends while retaining pending state if cleanup fails.
+
+Fence commit and further writes as soon as rollback begins, retaining the abort
+decision across undo, data-flush, rollback-marker and journal-flush errors.
+
+Observe mapped creation callbacks rather than assuming the returned address is
+new. Preserve existing duplicate rows during rollback/recovery and undo temporary
+allocations when a validator rejects creation after allocation.
+
+Reject exhausted legacy transaction sequence space before mutation and reserve
+capacity for complete observed batches. Retain an unnumbered batch only as
+pending undo when a cascade exceeds capacity; never serialize wrapped numbers.
+
+Initialize legacy version history from retained journal records rather than
+manufacturing versions for every integer across sparse sequence gaps.
+
+Persist branch and parent names with an unambiguous versioned marker, retaining
+legacy reads. Recover tag names containing equals signs without truncation.
+
+Retain a known committed transaction until its data checkpoint and journal
+markers finish. Commit, rollback and save retry that checkpoint without a new
+commit decision; subsequent writes wait. Preserve the version owner until
+branch publication succeeds, including named writes, and reject public recovery
+while a transaction owns live state.
+
+Use portable transaction timestamps in browser/Node WASM while retaining native
+clock semantics. Run ordinary legacy transaction and history contracts in WASM.
+
+Apply transaction admission checks to named writes, including the version
+bridge, while failed committed checkpoints or rollback cleanup still own it.
+
+Recover the complete committed suffix after an older applied-marker gap and
+flush final redo/undo before advancing applied markers. Preserve later committed
+updates, deletion and recreation across interrupted recovery and retries.
+
+Retain uncertain commit attempts before marker append/flush, fence new writes
+and resolve the decision through commit/rollback/save without undoing a possibly
+durable commit. Avoid duplicate decision markers on retry and finish version
+publication after cleanup resolves the inner decision.
+
+Exclude aborted and recovered pending records from initial version history and
+its branch head. Reject existing sidecars that attribute a known uncommitted
+record, and reject version construction/recovery over a live inner transaction.
+
+Retain an implicit version owner for automatic writes through failed commit and
+metadata publication. Retry committed work through commit/rollback/save, preserve
+ordinary pre-commit undo, and fence new mutations until the original branch is
+published. Keep existing/zero-address allocation and existing lookup as no-ops.
+
+Persist a version-publication intent before committing the journal, flush exact
+branch attribution before clearing it, and recover interrupted publication after
+abrupt process exit. Keep admission through metadata/flush errors and reject
+malformed or contradictory intents without rewriting sidecars. Permit custom
+metadata adapters through the common links API while retaining the default type.
+
+Resolve every changed undo and redo transition before checkout or branch
+switching. Reject missing retained history without changing rows or metadata,
+while preserving no-op and available-suffix moves over an unavailable shared
+prefix. Index the retained journal once instead of rescanning it per transition.
+
+Fence public unlogged transition apply/revert while a transaction or its failed
+commit/rollback cleanup still owns the data. Preserve retry of that owner and
+ordinary unlogged version replay after ownership is released.
+
+Repair partial file-journal writes before reusing the same writer for read,
+append or flush. Retain the repair requirement across repeated I/O failures,
+preserve complete records after uncertain writes and use bounded tail scanning.
+
+Persist resolved checkout/branch-switch replay intents before changing rows.
+Retain exclusive replay ownership through metadata and flush failures, finish
+exact positions on reopen and reject contradictory movement metadata. Preserve
+resolved records across retention and sequence floors after payload eviction.
+
+Avoid reusing recovered commit/abort transaction IDs after a Rust process restart
+with a repeated wall clock. Check both explicit and automatic owners against the
+existing decision indexes, preserving wire compatibility and default-off tracing.
+
+Claim chunk archive filenames exclusively and retry occupied candidates after
+clock/counter reuse, preserving other journals' archives and symlink targets.
+Keep non-collision filesystem failures visible and committed cleanup retryable.
+
+Validate recovery journals before replacing live history or replaying rows.
+Reject conflicting sequence records, contradictory decisions and invalid owners
+or sequences while preserving idempotent parsed duplicates and retained floors.
+Retain admission across failed recovery and reload, retrying an incomplete data
+refresh before following writes or replay can proceed.
+
+Construct branch paths iteratively without stack growth per ancestor, scanning
+transition attribution once. Preserve nested fork cutoffs, per-branch heads and
+root-to-leaf replay order, including empty histories and subsequent edits.
+
+Record ordinary name changes and row-associated names in complete portable
+journal records. Restore unique-name owners and deleted/cascaded names during
+rollback; publish name-only versions and preserve names through recovery,
+movement intents and chunk archives. Retain the original Copy row transition
+and v1 codec; expose complete record snapshots and replay alongside them.
+
+Select optional pre-effect logical row/name undo images for ordinary transactions.
+Retain preparation and cleanup ownership, validate mandatory metadata before
+mutation and reconcile unreported effects before committed history/publication.
+Preserve the default observer cost path and existing transition codecs; recover
+unknown allocations and redo later committed checkpoints after image restoration.
+
+Add an optional staged links engine with optimistic/exclusive admission,
+configurable isolation and immutable history, commit-time constraints, portable
+checksummed revisions, and asynchronous/synchronous fixed-primary log adapters.
+Expose sessions through the existing links API and the WASM binding.
+
+Support independent journal branches and atomic three-way merge, with saved
+merge bases for reopen/retry after uncertain I/O outcomes.
+
+Compose atomic multi-shard transactions with replaceable journal stores and an
+optional etcd HTTP adapter, with bounded I/O, linearizable snapshots, generation
+validation, unknown outcomes and actual three-member failover integration.
+
+Route immutable journals to independent data stores while atomically publishing
+small catalog pointers; preserve cross-shard validation and unknown-outcome
+discovery across independent consensus groups.
+
+Keep optional engine and replica diagnostics best effort when stderr fails,
+so a diagnostic write cannot panic after durable publication or poison the
+engine's commit mutex.
+
+Select optional pessimistic point-write ownership with immediate busy errors,
+independent isolation/read-set validation, stale/ABA rejection, branch protection
+and cleanup on every session outcome. Keep engine-local locks out of cluster
+workspaces and preserve existing optimistic/exclusive defaults.
+
+Commit caller-selected groups of independent sessions with separate revisions
+and one shared durability flush. Preserve input-order validation, known aborts
+and indeterminate prefix recovery without publishing uncertain state. Expose
+matching Rust-backed WASM/JS ownership and outcome contracts. Avoid flushing
+the primary twice during synchronous replica acknowledgement.
+
+Select structurally shared immutable ordered engine state independently of
+isolation, history and journal settings. Preserve flat-map defaults and portable
+revision records; share unchanged entries across live and recovered revisions,
+scans, group preparation and branches. Keep the public BTreeMap snapshot view
+through lazy materialization and provide borrowed iteration without that copy.
+
+Select canonical changed-row revision encoding independently of state structure
+and other engine policies. Preserve complete-snapshot defaults, mixed journal
+recovery, saved branch bases, shared group flush and physical delta composition.
+Apply selected change records against immutable predecessor roots and validate
+base, allocator, row/name operations and checksums before publication.
+
+Select an optional bundled SQLite physical page-WAL journal. Preserve staged
+reads, atomic group flushes and uncertain outcomes; fence stale owners, validate
+schema/UTF-8/sequences, enforce WAL/FULL and expose bounded checkpoints. Keep
+default and bare-WASM builds free of the selected native SQLite component.
+
+Select optional persistent constraint indexes independently of map, encoding and
+other engine policies. Allocate only selected pair/name/reference indexes, allow
+atomic swaps, count incoming references and publish roots only after flush.
+Preserve scan defaults, historical replay validation and uncertain group outcomes.
+
+Select a bounded immutable journal object cache for partitioned stores. Keep
+catalog reads and publication checks fresh, return owned records and retain no
+cache by default. Reuse the maintained LRU component with standard hashing.
+
+Reject cycles and missing nodes while decoding persisted Unicode sequences.
+Preserve repeated shared subtrees, UTF-16 code-unit extraction and valid deep
+graphs. Add a checked sequence walker; retain the existing Vec API with bounded
+failure for malformed graphs. Keep name and metadata errors fallible.
+
+Format deep link structures with explicit source-spine frames and one output
+buffer. Preserve reference order, names, cycle handling and generic-store
+errors while avoiding recursive stack exhaustion and repeated subtree copying.
+
+Preserve exact names in the legacy text store, including whitespace, quote
+edges, control characters and names without rows. Keep raw legacy backslashes
+literal and use versioned UTF-8 name metadata for controls and absent addresses.
+Retain live rows, names, indexes and allocation when a complete reload fails.
+
+Select a SQL-free native doublets page journal independently of logical engine
+and replication strategies. Validate independent versioned binary vectors,
+canonical page and record chains, immutable publication and uncertain flush
+fencing. Provide an optional native exclusive file device with durable flush,
+parent directory synchronization on POSIX, bounded metadata reads and explicit
+close error fencing. Keep native I/O dependencies out of default and WASM builds.
+Expose the portable page codec to WASM host devices and a public native example.
+
+Add independently selected two-copy native page repair, with immutable format
+mode, full-prefix validation before repair and uncertain-outcome ownership fences.
+
+Accept equals signs in CLI tag names using the first resolvable complete suffix.
+Preserve aliases to existing delimiter-containing tags and invalid-point errors.
+
+Add independently selected immutable sorted-run engine state in native Rust and
+Rust-backed WASM/JS/TS. Share run arrays across revisions, merge with newest-write
+precedence and retain existing logical journals and links/session interfaces.
+
+Return allocation and journal errors through named query planning and persistent
+transformation composition instead of entering infallible transaction/version
+bridges. Add a default fallible pair lookup/allocation to the named links trait.
+
+Propagate allocation errors from explicit and nested text imports and binary
+archives, including row reallocation after a selected trigger removes it.
+
+Export portable retained-history checkpoints and optionally publish them through
+coordinated generation CAS without rewriting local append-only journals.
+Compose the initial checkpoint with optional physical delta encoding and either
+replication order, preserving exact replay and uncertain-operation fencing.
+
+Add an optional ordered-journal replacement capability and portable two-bank
+page journals. Synchronize the complete inactive image before its epoch-bound
+root decision; fence uncertain I/O and recover complete old or new records.
+Preserve ordinary page formats, caller-owned devices and single/mirrored modes.
+
+Publish retained journal checkpoints through optional replacement logs while
+holding the engine commit mutex. Preserve live sessions, history, branch bases
+and committed allocator positions; fence uncertain outcomes until reopening.
+Compose physical delta compression and expose compaction through WASM bindings.
+
+Add an optional native checkpoint journal factory owning the raw root and both
+single or mirrored banks. Acquire all writer fences before recovery, attempt
+every cleanup in reverse order, preserve all constructor/cleanup errors and
+retain uncertain native fences without flushing pending work on close.
+
+Select mirrored checkpoint roots independently of bank mirroring, preserving
+existing single-root APIs and costs. Validate both root copies before choosing,
+validate the committed bank before repair, synchronize both decisions before
+acknowledgment and reject incompatible persisted modes before mutation. Native
+factories retain all raw owners through acquisition, recovery and reverse cleanup.
+
+Add an optional namespace-maintenance capability with complete bounded,
+revision-consistent etcd scans and single-send generation-conditional deletion.
+Keep ordinary atomic stores and existing partitioned retention unchanged.
+
+Select explicit epoch-fenced immutable journal reclamation with bounded complete
+root discovery, exact-generation deletion and coherent owned-reader refresh.
+Preserve append-only partitioned stores and default zero-cache costs. Provide
+portable wire vectors and native/WASM retained-history checkpoint handoffs.
+
+Select immutable physical sorted journal tables independently with `sorted-tables`.
+Retain exact tombstone generations, bounded complete validation, physical record
+addresses and page hashes for indexed point reads. Preserve default core and
+SQLite optionality, and verify native file interchange and actual WASM controls.
+
+Add optional `physical-lsm` WAL semantic replay and validated checkpoint encoding,
+with independent shared vectors and actual-WASM controls. This component performs
+no I/O; physical table selection, publication and native ownership composition
+remain separate required work.
+
+Add the optional native `FileLsmJournalStore` facade with bounded read-only
+discovery before repair, independent root/bank/table mirrors, exclusive directory
+ownership and cached uncertain cleanup. Preserve the physical store and WAL
+formats across Rust, C#, Node, Bun and Deno; add complete-store handoffs, actual
+cluster consumers and finite native failure/process-exit controls.
+
+Select bounded immutable journal chunks independently of caching and engine
+policies. Reuse unchanged complete chunks while preserving whole-journal
+defaults, atomic catalog publication, owned reads, collision checks and
+cross-language native file interchange. Reject malformed manifests and complete
+update admission failures before data access; retain explicit staging/replay
+costs and the separate epoch-reclamation format.
+
+Compose optional bounded immutable journal chunks with epoch-fenced reclamation.
+Protect all live references, stage each publication in its captured epoch and
+refresh whole reader groups after retirement. Preserve blob2 defaults and
+owned snapshots, and verify native file and consensus handoffs across runtimes.
+
+Retain checked mapped-view flush ownership through Rust storage decorators and
+explicit generic adoption. On Windows, synchronize the current mapped view
+before its owned file buffers. Reject failed remaps and retired handles, and
+release retained file handles when the mapping closes. This barrier does not
+supply physical torn-page repair or hardware power-loss certification.
+
+Prepare replacement views before retiring plain-data Rust mappings. Rejected
+file growth, capacity overflow and failed initialization retain the old pointer,
+contents and checked flush handle. Initialize fresh padding and failed-extension
+tails exactly. Windows extends through a temporary mapping object while its
+old view remains live. Generic destructor values retain their existing path;
+failed shrink and physical torn-page repair remain separate limitations.
+
+Preserve persisted bytes and the current mapping when zero items are removed.
+Reject excessive shrink requests before invalidating the live flush handle.
+
+Preserve the owned mapping and checked flush barrier when destructor-bearing growth rejects arithmetic/layout overflow or a zero-growth callback unwinds.
+
+Initialize destructor-bearing mapped values from the original file length rather than treating minimum-page padding as persisted application data.
+
+Add independently selected causal version encoding, retained-sibling merge and checked counter construction with shared native/WASM/JS/C# vectors. These semantic operations perform no storage I/O or replication.
+
+Add selected bounded local causal ownership over coherent atomic journals. Persist author counters, mutations and retry receipts together; retain historical contradictions and concurrent deletion evidence. Include portable shared vectors and SQL-free native directory interchange/process-exit examples. Merkle transport, projection and safe reclamation remain separate unfinished components.
+
+Add optional causal-merkle snapshots, canonical root-bound proof frames and bounded differing-range pulls with owned continuations. Preserve concurrent destination evidence and deletion markers; include native filesystem wire exchange and process-exit examples without SQLite. Keep projection, membership reclamation and automatic balancing as separate unfinished work.
+
+Add optional causal-batches over a coherent atomic journal store. Publish staged
+owner records and bounded retry receipts together, retain original results after
+lost replies and later edits, and reject stale bases or child-token collisions
+without partial publication. Preserve the existing causal owner wire and bare
+dependency boundary; include native SQL-free directory interchange examples.
+
+Add separately selected owned causal row/name projection with explicit sibling
+rejection or maximum-dot selection. Retain deletion markers and losing siblings,
+validate complete supplied evidence before pruning, reject cross-row dot reuse,
+and bound complete input independently of visible rows.
+
+Reuse the standard query processor with a selected address type while retaining
+the u32 facade. Add a checked full-u64 causal named/query adapter with a wider
+wildcard marker, finite grammar/result/binding admission and lossless name output.
+
+Reserve exact query allocations through the shared execution path on private
+rows. Preserve owned identities across reference replanning and explicit ensures,
+without staging allocation probes or publishing before explicit session commit.
+
+- Upgrade doublets to 0.9.0, preserving split-store query indexes when forward
+  references become live and filtering concrete target counts correctly.
+
+- Validate legacy recycling queries on a detached copy of the actual allocator,
+  including named allocations and duplicate merges. Reject missing references
+  before writing data, names or journals, and keep transaction/history behavior.
+
+Select permanent fresh-address blocks through a linearizable atomic journal key.
+Retain exact author/token/count receipts after unknown replies and later grants,
+reject collisions and exhaustion without publication, and never recycle abandoned
+addresses. Bound replay and admission; preserve bare-store defaults. Include
+shared Rust/C#/JS vectors, actual WASM contracts and physical/etcd examples.
+
+Added optional explicit author takeover fencing over atomic journal providers.
+Permanent owner-token receipts resolve lost replies without reviving replaced
+owners. Guarded data publication compares the current fence in the same CAS;
+ordinary manually managed providers retain their existing path.
+Admit the canonical ASCII wire format before parsing so character budgets
+cannot admit oversized UTF-8 records.
+
+- Preserve checked query admission and allocation reservations through
+  permission and undo sessions, retaining generic addresses and original-query
+  envelopes with subscription change observations.
+- Upgrade to doublets 0.21.0, links-notation 0.31.3 and current released
+  protocol/storage dependencies.
+
+### Fixed
+
+- A mapped `grow` or `shrink` of values with destructors that hits a file quota
+  or mapping limit now returns the error with its view still readable. It used
+  to crash on the next read.
+- `shrink` now aborts if a tail destructor panics. It used to drop those values
+  a second time.
+
+### Changed
+
+- Update doublets to 0.21.0 and links-notation to 0.31.3.
+
+### Fixed
+
+- Names holding both quote kinds, backticks or a leading `#` now read back from
+  LiNo output, because the notation library delimits them.
+
+### Added
+
+- Nested savepoints on engine sessions and cluster shards with `savepoint`,
+  `rollback_to_savepoint` and `release_savepoint`. Rolling back restores staged
+  rows only; reads stay validated, point-write ownership stays and allocated
+  addresses stay retired. The WebAssembly session exposes them as `savepoint`,
+  `rollbackTo` and `releaseSavepoint`.
+
+### Added
+
+- `clink --serve`, with or without `--graphql`, now stops cleanly on Ctrl-C and on termination signals: it finishes the current request, saves the store and exits with status 0. `GraphqlServer::shutdown_handle` stops a GraphQL server from another thread, as `LinksServer::shutdown_handle` already did.
+
+### Added
+
+- Optional `EngineOptions::lock_wait`: a pessimistic write waits a bounded time for
+  another session's address and refuses a wait that would close a cycle. The JS
+  client offers the same through `lockWaitMs`, on top of the new
+  `StagedSession.writeOwner` and `takeWriteBlocker`.
+
+### Added
+
+- `Engine::backup_to` copies a consistent cut to an empty log while commits continue,
+  flushes it and verifies it by reading it back. It can target any retained revision
+  for a point-in-time copy. `Engine::export_checkpoint_at` returns the same records.
+  The WebAssembly `StagedEngine` gains `backup` and an optional revision on
+  `exportCheckpoint`.
+
+### Fixed
+
+- Rollback, undo-image restore and recovery replay no longer delete a row that shares its source and target with another row. They now restore the recorded row through the new `LinksStorage::restore_link`, which skips duplicate resolution on direct stores. A layered `NamedLinksStorage` view keeps its own checks, so a duplicate below such a view still merges.
+
+### Fixed
+
+- A GraphQL subject can now write a value on a link it has just created. `insert_links_one` with a nested `string`, `number` or `object` used to answer `Forbidden` under a permission policy, because the check on the owner of the value did not know which links the subject had created.
+
+### Added
+
+- `Engine::backup_incremental_to` appends to an earlier backup only the revisions it lacks, each as the rows that changed, and JavaScript gets `WasmEngine.backupIncremental`. It refuses a destination whose last revision is no longer retained or that is not a copy of this engine, and leaves it unchanged.
+
+### Added
+
+- `engine::restore_backup` copies an archived journal to an empty log up to a chosen revision, so an incremental chain reopens at any revision it holds and a copy can end just before damage, and JavaScript gets `WasmEngine.restoreBackup`. A refused restore leaves the destination unchanged.
+
+### Added
+
+- `Engine::compact_journal_after` compacts once a selected number of commits have landed since the last compaction, and the optional `BackgroundCompaction` calls it periodically on its own thread and reports the first failure. The WebAssembly engine exposes `compactJournalAfter`.
+
+### Added
+
+- `engine::TimedLog` and `engine::revision_at`: an optional log decorator that records when each revision was written, so `restore_backup` can restore to a time.
+
+### Fixed
+
+- An update naming only one part of a link, such as `((1: 1 1)) ((1: 2 *))`, keeps the stored value of the other part instead of writing the wildcard marker into the link.
+
+### Added
+
+- `CacheLinks` and `CacheOptions`: an optional decorator that keeps any store as a cache, with links that expire (`expire`, `persist`, `time_to_live`, `purge_expired`, a default time to live) and a capacity kept by evicting the least recently used link nothing else refers to.
+
+### Added
+
+- `engine::recovery`: `check_journal` reports the longest prefix of a journal that `Engine::open` would replay and the first damaged record; `recover_journal` picks the longest valid prefix among copies (the damaged primary, replicas, mirrors, a restored backup) and refuses copies that diverge; `repair_journal_file` rewrites a damaged file journal under the writer lock, first keeping the original bytes in `<path>.damaged-<n>`; `read_journal_file_lossy` reads a journal with invalid UTF-8 so the checksum reports it.
+
+### Fixed
+
+- An engine journal record whose checksum differs from the written one only in letter case (`B` for `b`, a single flipped bit) is now refused as damage instead of being replayed; only the exact lowercase checksum the encoder writes is accepted.
+
+### Fixed
+
+- `ReplicatedLog` refuses to open a primary when a replica holds the primary's whole log and more, which means the primary lost acknowledged commits (a truncated file, an old backup). Writing on top would fork history and drop those commits for good; the error names the replica to repair the primary from. Unreadable or divergent replicas are still ignored.
+
+### Added
+
+- `EngineTransaction::lock_for_update(id)` reads a link and reserves its address until the session ends, like SQL `SELECT ... FOR UPDATE`, in a pessimistic engine. Locking every row a decision reads refuses write skew, which write locks alone let commit. A missing address is reserved too, a changed link is refused with a conflict, and the call waits under `lock_wait` like a write. The WASM `StagedSession.lockForUpdate` exposes it to JavaScript. See `docs/ENGINE-PESSIMISTIC.md`.
+
+### Changed
+
+- Update `rustls-pki-types` to 1.16.0 and split the Rust files approaching the 1000-line limit, with no change in behaviour. CI now restores Cargo caches on every branch but saves them only from main, so a Windows test job no longer times out saving a cache, and false negatives in the link, secret, CodeQL and file-size checks are fixed (issue #172).
+
 ## [2.1.2] - 2026-11-06
 
 Update doublets and links-notation, and split large permission, triplet and protocol modules without changing their public interfaces. Harden CI failure, security and release checks.
