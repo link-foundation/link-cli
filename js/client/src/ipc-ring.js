@@ -280,11 +280,7 @@ export class RingStream extends Duplex {
     this.#wanted = true;
     if (this.#looping) return;
     this.#looping = true;
-    this.#readLoop()
-      .catch((error) => this.destroy(error))
-      .finally(() => {
-        this.#looping = false;
-      });
+    this.#readLoop().catch((error) => this.destroy(error));
   }
 
   async #readLoop() {
@@ -329,6 +325,10 @@ export class RingStream extends Duplex {
       await this.#notifier.wait(generation, attempt, PEER_CHECK);
       attempt += 1;
     }
+    // Cleared the moment the loop stops (a loop that failed has destroyed the
+    // stream): the `_read` that follows the push which stopped it, possibly
+    // before any promise settles, must start it again or the stream stalls.
+    this.#looping = false;
   }
 
   _write(chunk, _encoding, callback) {
