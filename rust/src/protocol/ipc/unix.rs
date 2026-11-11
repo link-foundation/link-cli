@@ -1,9 +1,9 @@
 //! POSIX mechanisms: process liveness, FIFOs, shared memory, signals and
 //! message queues.
 
-use super::datagram::{agree_chunk, Datagrams, Session, Settings};
+use super::datagram::{agree_chunk, local_settings, Datagrams, Session};
 use super::json::Object;
-use super::rendezvous::{Backoff, Rendezvous, RendezvousListener, Request};
+use super::rendezvous::{accept_with, Backoff, Rendezvous, RendezvousListener, Request};
 use super::ring::{Mapping, Notifier};
 use super::{timed_out, trace, Endpoint, IpcStream, Listener, PeerWatch, Transport, Waker};
 use std::ffi::CString;
@@ -645,39 +645,7 @@ impl Listener for FifoListener {
     }
 }
 
-/// Answers rendezvous requests with `open` until one succeeds.
-pub(crate) fn accept_with(
-    rendezvous: &RendezvousListener,
-    kind: &str,
-    mut open: impl FnMut(&Request) -> io::Result<(Object, IpcStream)>,
-) -> io::Result<Option<IpcStream>> {
-    while let Some(mut request) = rendezvous.next()? {
-        match open(&request) {
-            Ok((fields, stream)) => {
-                let (id, pid) = (request.id.clone(), request.pid());
-                request.ack(fields)?;
-                trace!("{kind} accepted {id} from process {pid}");
-                return Ok(Some(stream));
-            }
-            Err(error) => {
-                trace!("{kind} refused {}: {error}", request.id);
-                request.refuse(&error.to_string());
-            }
-        }
-    }
-    Ok(None)
-}
-
 // ---------------------------------------------------------------- datagrams
-
-fn settings(endpoint: &Endpoint, chunk: usize) -> io::Result<Settings> {
-    Ok(Settings {
-        chunk,
-        rto: endpoint.millis("rto", 20)?,
-        heartbeat: None,
-        dead: None,
-    })
-}
 
 #[cfg(target_os = "linux")]
 mod posix_mq {
@@ -842,7 +810,7 @@ mod posix_mq {
         let ack = ack?;
         let chunk = agree_chunk(own_chunk, ack.number("chunk"));
         let peer = ack.number("pid").map_or(rendezvous.server_pid, |pid| pid as u32);
-        let session = Session::start("mq", link(send, receive, peer)?, settings(endpoint, chunk)?)?;
+        let session = Session::start("mq", link(send, receive, peer)?, local_settings(endpoint, chunk)?)?;
         trace!("mq connected as {}, chunk {chunk}", rendezvous.id);
         Ok(IpcStream::new(session))
     }
@@ -871,7 +839,7 @@ mod posix_mq {
                 let session = Session::start(
                     "mq",
                     link(send, receive, request.pid())?,
-                    settings(&endpoint, chunk)?,
+                    local_settings(&endpoint, chunk)?,
                 )?;
                 Ok((
                     Object::new().with("chunk", chunk as u64),
@@ -1064,7 +1032,7 @@ mod sysv_mq {
         let session = Session::start(
             "sysvmq",
             link(endpoint, server_queue, client_queue, peer)?,
-            settings(endpoint, chunk)?,
+            local_settings(endpoint, chunk)?,
         )?;
         trace!("sysvmq connected as {}, chunk {chunk}", rendezvous.id);
         Ok(IpcStream::new(session))
@@ -1099,7 +1067,7 @@ mod sysv_mq {
                 let session = Session::start(
                     "sysvmq",
                     link(&endpoint, send, receive, request.pid())?,
-                    settings(&endpoint, chunk)?,
+                    local_settings(&endpoint, chunk)?,
                 )?;
                 Ok((
                     Object::new().with("chunk", chunk as u64),

@@ -71,6 +71,17 @@ pub(crate) struct Settings {
     pub(crate) dead: Option<Duration>,
 }
 
+/// The settings of a local datagram kind (`mq`, `sysvmq`, `mailslot`,
+/// `copydata`, `alpc`): no heartbeat, the peer's liveness is its process.
+pub(crate) fn local_settings(endpoint: &super::Endpoint, chunk: usize) -> io::Result<Settings> {
+    Ok(Settings {
+        chunk,
+        rto: endpoint.millis("rto", 20)?,
+        heartbeat: None,
+        dead: None,
+    })
+}
+
 #[derive(Debug)]
 struct State {
     inbound: VecDeque<u8>,

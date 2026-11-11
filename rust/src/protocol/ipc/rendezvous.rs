@@ -2,7 +2,7 @@
 //! directory" section of `docs/protocol/ipc-transports-v1.md`).
 
 use super::json::Object;
-use super::{process_alive, random_id, trace, Endpoint, Waker};
+use super::{process_alive, random_id, trace, Endpoint, IpcStream, Waker};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -374,4 +374,27 @@ impl Rendezvous {
 
 fn refused(message: String) -> io::Error {
     io::Error::new(io::ErrorKind::ConnectionRefused, message)
+}
+
+/// Answers rendezvous requests with `open` until one succeeds.
+pub(crate) fn accept_with(
+    rendezvous: &RendezvousListener,
+    kind: &str,
+    mut open: impl FnMut(&Request) -> io::Result<(Object, IpcStream)>,
+) -> io::Result<Option<IpcStream>> {
+    while let Some(mut request) = rendezvous.next()? {
+        match open(&request) {
+            Ok((fields, stream)) => {
+                let (id, pid) = (request.id.clone(), request.pid());
+                request.ack(fields)?;
+                trace!("{kind} accepted {id} from process {pid}");
+                return Ok(Some(stream));
+            }
+            Err(error) => {
+                trace!("{kind} refused {}: {error}", request.id);
+                request.refuse(&error.to_string());
+            }
+        }
+    }
+    Ok(None)
 }
