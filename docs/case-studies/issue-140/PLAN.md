@@ -88,6 +88,8 @@ From the owner's PR review:
   - A ring reader could miss the bytes published with the end.
   - A lost last acknowledgement could fail a half-close.
   - The JavaScript ring hang-up differed from Rust and C#.
+  - A JavaScript ring stream piped into a slow consumer could stall.
+  - A JavaScript `udp:HOST:0` connect left a resend timer that threw later.
 - **CodeQL** needs `[DllImport]` declarations for the C# natives. The WASM
   lockfile is refreshed along with the release fix.
 - **Windows and macOS** are verified by the IPC, Rust and C# workflow matrices

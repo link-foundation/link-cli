@@ -128,14 +128,18 @@ turns each shape into the same stream:
   reads and writes instead of atomics. A reader that sees the writer end loads
   the counters once more before it reports the end. This fixes a race found
   while testing, where the last bytes published together with the end could
-  be lost (`0f8d6cf1`).
+  be lost (`0f8d6cf1`). The JavaScript ring stream also restarts its reader
+  as soon as a slow consumer drains it; before `b189f69a` a stream piped into
+  such a consumer could stall for good.
 - **Messages:** `udp`, `mq`, `sysvmq`, `mailslot`, `copydata` and `alpc`. One
   stop-and-wait session numbers DATA and EOF frames, acknowledges a frame
   before the reader may see it, retransmits with doubling delays and
   suppresses duplicates. Like TCP's `shutdown(SHUT_WR)`, it treats the end as
   delivered when the peer hung up before its last acknowledgement arrived. A
   System V queue removed by the reader discards that acknowledgement, and a
-  full POSIX queue drops it (`4720c173`).
+  full POSIX queue drops it (`4720c173`). A HELLO that cannot be sent at all
+  (`udp:HOST:0`) fails the JavaScript connect without leaving its resend
+  timer behind (`c202de9c`).
 
 Kinds whose address is a directory meet through a
 [rendezvous directory](../../protocol/ipc-transports-v1.md#rendezvous-directory).
