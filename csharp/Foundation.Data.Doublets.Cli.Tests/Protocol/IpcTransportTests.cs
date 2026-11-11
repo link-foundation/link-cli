@@ -284,6 +284,19 @@ public sealed class IpcTransportTests
         }
     }
 
+    /// <summary>
+    /// A chunk longer than a queue holds (Linux <c>msgmax</c> is 8192 bytes, a macOS queue 2048)
+    /// is lowered to fit instead of failing every send.
+    /// </summary>
+    [Fact]
+    public void SysvmqLowersAChunkTheQueuesCannotHold()
+    {
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            CheckRendezvousKind("sysvmq", "?chunk=65000&poll=1", 50_000);
+        }
+    }
+
     [Fact]
     public void MailslotEchoes()
     {

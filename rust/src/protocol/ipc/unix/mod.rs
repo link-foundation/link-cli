@@ -417,6 +417,15 @@ fn open_fifo(path: &Path, write: bool) -> io::Result<OwnedFd> {
     Ok(unsafe { OwnedFd::from_raw_fd(fd) })
 }
 
+/// How long a FIFO reader waits before it checks for the end anyway: macOS
+/// `poll` reports a FIFO readable only while it holds bytes, never at the
+/// end of its writer (XNU `filt_vnode_common` counts the bytes only).
+const FIFO_EOF_CHECK: Duration = Duration::from_millis(if cfg!(target_vendor = "apple") {
+    20
+} else {
+    100
+});
+
 /// Waits until `fd` is ready for `events`, at most `timeout`.
 fn poll(fd: RawFd, events: libc::c_short, timeout: Duration) -> io::Result<bool> {
     let mut entry = libc::pollfd {
@@ -497,12 +506,10 @@ impl Transport for FifoTransport {
                 }
                 None => Duration::from_millis(100),
             };
-            if !poll(fd, libc::POLLIN, wait)? {
-                if !self.greeted.load(Ordering::SeqCst) && !self.peer.alive() {
-                    return Err(super::hung_up());
-                }
-                continue;
-            }
+            // macOS polls a FIFO through its byte count alone, so the end
+            // of the writer never wakes the poll: read anyway once it times
+            // out, which returns 0 when no writer is left.
+            let ready = poll(fd, libc::POLLIN, wait.min(FIFO_EOF_CHECK))?;
             // SAFETY: reading into `buf`.
             let read = unsafe { libc::read(fd, buf.as_mut_ptr().cast(), buf.len()) };
             if read < 0 {
@@ -511,6 +518,9 @@ impl Transport for FifoTransport {
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted
                 ) {
+                    if !ready && !self.greeted.load(Ordering::SeqCst) && !self.peer.alive() {
+                        return Err(super::hung_up());
+                    }
                     continue;
                 }
                 return Err(error);
@@ -564,7 +574,12 @@ impl Transport for FifoTransport {
             let error = last_error();
             match error.kind() {
                 io::ErrorKind::WouldBlock => {
-                    poll(fd, libc::POLLOUT, Duration::from_millis(100))?;
+                    // macOS reports a FIFO writable while any byte is free,
+                    // but a write waits for `PIPE_BUF` free bytes: pause so
+                    // a full FIFO does not spin.
+                    if poll(fd, libc::POLLOUT, Duration::from_millis(100))? {
+                        thread::sleep(Duration::from_millis(1));
+                    }
                 }
                 io::ErrorKind::Interrupted => {}
                 _ => return Err(error),

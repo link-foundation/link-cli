@@ -232,6 +232,50 @@ internal static partial class PosixNative
 
     public static void SysvRemove(int queue) => _ = Msgctl(queue, 0, 0);
 
+    /// <summary>
+    /// The most bytes <paramref name="queue"/> holds (<c>msg_qbytes</c> of <c>IPC_STAT</c>), or
+    /// <see cref="ulong.MaxValue"/> in a 32-bit process, whose <c>struct msqid_ds</c> layout
+    /// depends on the C library build.
+    /// </summary>
+    public static unsafe ulong SysvQueueBytes(int queue)
+    {
+        if (sizeof(nint) != 8)
+        {
+            return ulong.MaxValue;
+        }
+        // struct msqid_ds: on 64-bit Linux msg_qbytes follows a 48-byte ipc_perm, three time_t
+        // and two counters (offset 88); on macOS (packed to 4) a 24-byte ipc_perm, two int32 and
+        // two counters (offset 48). Both are an unsigned long.
+        var status = stackalloc byte[256];
+        if (Msgctl(queue, 2, (nint)status) == -1)
+        {
+            throw Error("cannot read the System V message queue limits");
+        }
+        return *(ulong*)(status + (IsLinux ? 88 : 48));
+    }
+
+    /// <summary>The longest message the system accepts (<c>msgmax</c>), if it says.</summary>
+    public static ulong? SysvMessageLimit()
+    {
+        // XNU fixes msgmax at 16384, above the 2048 bytes a queue holds.
+        if (!IsLinux)
+        {
+            return null;
+        }
+        try
+        {
+            return ulong.TryParse(File.ReadAllText("/proc/sys/kernel/msgmax").Trim(), out var limit) ? limit : null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     private static IpcException SysvGone(string what)
     {
         var errno = LastErrno;
@@ -282,6 +326,13 @@ internal static class PosixFifo
 {
     private sealed class FifoTransport : ITransport, IDisposable
     {
+        /// <summary>
+        /// How long a reader waits before it checks for the end anyway: macOS <c>poll</c> reports a
+        /// FIFO readable only while it holds bytes, never at the end of its writer (XNU
+        /// <c>filt_vnode_common</c> counts the bytes only).
+        /// </summary>
+        private static readonly TimeSpan EofCheck = TimeSpan.FromMilliseconds(OperatingSystem.IsMacOS() ? 20 : 100);
+
         private readonly int _incoming;
         private readonly Lock _outgoingLock = new();
         private readonly Lock _reading = new();
@@ -330,20 +381,20 @@ internal static class PosixFifo
                         }
                         wait = limit.Remaining;
                     }
-                    if (!PosixNative.Poll(_incoming, PosixNative.PollIn, wait))
-                    {
-                        if (!_greeted && !_peer.Alive)
-                        {
-                            throw IpcException.HungUp();
-                        }
-                        continue;
-                    }
+                    // macOS polls a FIFO through its byte count alone, so the end of the
+                    // writer never wakes the poll: read anyway once it times out, which
+                    // returns 0 when no writer is left.
+                    var ready = PosixNative.Poll(_incoming, PosixNative.PollIn, wait < EofCheck ? wait : EofCheck);
                     var read = PosixNative.Read(_incoming, buffer);
                     if (read < 0)
                     {
                         var errno = PosixNative.LastErrno;
                         if (PosixNative.IsAgain(errno) || errno == PosixNative.EINTR)
                         {
+                            if (!ready && !_greeted && !_peer.Alive)
+                            {
+                                throw IpcException.HungUp();
+                            }
                             continue;
                         }
                         throw PosixNative.ErrorOf("cannot read the FIFO");
@@ -399,7 +450,12 @@ internal static class PosixFifo
                     var errno = PosixNative.LastErrno;
                     if (PosixNative.IsAgain(errno))
                     {
-                        PosixNative.Poll(_outgoing, PosixNative.PollOut, TimeSpan.FromMilliseconds(100));
+                        // macOS reports a FIFO writable while any byte is free, but a write
+                        // waits for PIPE_BUF free bytes: pause so a full FIFO does not spin.
+                        if (PosixNative.Poll(_outgoing, PosixNative.PollOut, TimeSpan.FromMilliseconds(100)))
+                        {
+                            Thread.Sleep(1);
+                        }
                     }
                     else if (errno != PosixNative.EINTR)
                     {
@@ -697,6 +753,29 @@ internal static class SysVMessageQueue
         }
     }
 
+    /// <summary>
+    /// The chunk this side offers: the <c>chunk</c> option, lowered so a frame fits both queues and
+    /// the system limit. A longer <c>msgsnd</c> fails with <c>EINVAL</c>, and macOS queues hold only
+    /// 2048 bytes.
+    /// </summary>
+    private static ulong OwnChunk(Endpoint endpoint, int first, int second)
+    {
+        var wanted = endpoint.Number("chunk", 1024, 16, 65000);
+        var largest = Math.Min(PosixNative.SysvMessageLimit() ?? ulong.MaxValue,
+            Math.Min(PosixNative.SysvQueueBytes(first), PosixNative.SysvQueueBytes(second)));
+        var header = (ulong)DatagramSession.HeaderSize;
+        if (largest < header + 16)
+        {
+            throw IpcException.Invalid($"a System V message queue holds only {largest} bytes");
+        }
+        var fitting = largest - header;
+        if (fitting < wanted)
+        {
+            IpcTransports.Trace($"sysvmq chunk {wanted} lowered to {fitting} to fit the queues");
+        }
+        return Math.Min(wanted, fitting);
+    }
+
     private static IDatagrams Link(Endpoint endpoint, int send, int receive, uint peer)
     {
         var poll = endpoint.Millis("poll", 5);
@@ -708,7 +787,6 @@ internal static class SysVMessageQueue
     public static IpcStream Connect(Endpoint endpoint)
     {
         var rendezvous = new Rendezvous(endpoint, "sysvmq");
-        var ownChunk = endpoint.Number("chunk", 1024, 16, 65000);
         var serverQueue = PosixNative.SysvCreate();
         int clientQueue;
         try
@@ -720,9 +798,11 @@ internal static class SysVMessageQueue
             PosixNative.SysvRemove(serverQueue);
             throw;
         }
+        ulong ownChunk;
         IpcJson ack;
         try
         {
+            ownChunk = OwnChunk(endpoint, serverQueue, clientQueue);
             ack = rendezvous.Request(new IpcJson()
                 .With("chunk", ownChunk)
                 .With("server_queue", (ulong)serverQueue)
@@ -748,14 +828,13 @@ internal static class SysVMessageQueue
 
         public IpcStream? Accept() => _rendezvous.AcceptWith("sysvmq", request =>
         {
-            var ownChunk = endpoint.Number("chunk", 1024, 16, 65000);
-            var chunk = DatagramSession.AgreeChunk(ownChunk, request.Fields.Number("chunk"));
             int Queue(string name)
             {
                 var id = request.Fields.RequireNumber(name);
                 return id <= int.MaxValue ? (int)id : throw IpcException.InvalidData("an invalid queue id");
             }
             var (receive, send) = (Queue("server_queue"), Queue("client_queue"));
+            var chunk = DatagramSession.AgreeChunk(OwnChunk(endpoint, receive, send), request.Fields.Number("chunk"));
             var session = new DatagramSession("sysvmq", Link(endpoint, send, receive, request.Pid),
                 DatagramSettings.Local(endpoint, chunk));
             return (new IpcJson().With("chunk", (ulong)chunk), new IpcStream(session));

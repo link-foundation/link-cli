@@ -135,7 +135,13 @@ non-blocking; every read and write waits with `poll(2)` in slices of at most
 Each side first writes one byte `0x00` to its outgoing FIFO and discards the
 first byte it reads: until that byte arrives, end-of-file only means the
 writer has not opened yet. The rest is the raw byte stream; closing the
-writing end is the end of that direction.
+writing end is the end of that direction. A reader must try to read after
+every poll slice, ready or not: macOS `poll(2)` and `kqueue` report a FIFO
+readable only while it holds bytes, never when its writer closes (XNU
+`filt_vnode_common`), so only a `read` returning 0 shows the end there.
+Likewise a non-blocking write on macOS fails with `EAGAIN` until `PIPE_BUF`
+bytes are free even when `poll` reports the FIFO writable, so a writer retries
+after a short sleep.
 
 ## Ring region
 
@@ -240,6 +246,11 @@ Per mechanism:
   `mq_timedreceive`. A full queue counts as a dropped frame.
 - **`sysvmq`.** One frame per message of `mtype` 1, sent with `IPC_NOWAIT` (a
   full queue counts as a dropped frame) and received with `IPC_NOWAIT` polling.
+  `msgsnd` refuses (`EINVAL`) a message longer than the system limit (Linux
+  `msgmax`, 8192 bytes by default) or than the queue holds (`msg_qbytes`, only
+  2048 bytes by default on macOS), so before offering its `chunk` each side
+  lowers it until `chunk + 8` fits both queues (`IPC_STAT`) and the system
+  limit.
 - **`mailslot`.** One frame per `WriteFile`; each side reads its own mailslot
   with a 100 ms read timeout.
 - **`copydata`.** `SendMessageTimeoutW(peer, WM_COPYDATA, own hwnd, &cds,

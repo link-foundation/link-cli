@@ -154,7 +154,21 @@ Per mechanism:
 - **[Pipes and FIFOs](https://man7.org/linux/man-pages/man7/pipe.7.html)** are
   non-blocking and wait with `poll(2)` in slices of at most 100 ms, so a
   timeout or a hang-up interrupts them. A one-byte greeting tells "the writer
-  has not opened yet" apart from end-of-file.
+  has not opened yet" apart from end-of-file. On macOS `poll` and `kqueue`
+  report a FIFO readable only while it holds bytes and never when its writer
+  closes: XNU's [`filt_vnode_common`](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/vfs/vfs_vnops.c)
+  counts the bytes only. The macOS CI found that `fifo` and POSIX `pipe` then
+  waited for an end that `poll` never reported, so a reader tries to read
+  after every slice (20 ms on macOS) whether `poll` said ready or not. A
+  non-blocking FIFO write there also fails until `PIPE_BUF` bytes are free,
+  though `poll` already reports the FIFO writable, so the writer sleeps 1 ms
+  before it retries.
+- **[System V message queues](https://man7.org/linux/man-pages/man2/msgop.2.html)**
+  refuse with `EINVAL` a message longer than `msgmax` (8192 bytes on Linux) or
+  than the queue holds. On macOS a queue holds only 2048 bytes by default
+  (XNU `MSGMNB`), so the 2048-byte chunk the tests asked for failed every
+  send there. Each side now lowers its chunk until a frame fits both queues
+  (`IPC_STAT`'s `msg_qbytes`) and the system limit.
 - **[Windows named pipes](https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipes)**
   use overlapped byte mode with `PIPE_REJECT_REMOTE_CLIENTS`. The first
   instance takes `FILE_FLAG_FIRST_PIPE_INSTANCE`, so a second server of the

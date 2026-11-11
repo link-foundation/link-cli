@@ -27,6 +27,84 @@ extern "C" {
     fn msgctl(queue: libc::c_int, command: libc::c_int, buffer: *mut libc::c_void) -> libc::c_int;
 }
 
+/// The `struct msqid_ds` of Apple platforms (`<sys/msg.h>`, packed to 4).
+#[cfg(target_vendor = "apple")]
+#[repr(C, packed(4))]
+#[allow(dead_code)] // only `qbytes` is read; the rest gives the layout
+struct MsqidDs {
+    /// `struct ipc_perm`: uid, gid, cuid, cgid, mode and seq, key.
+    perm: [u32; 6],
+    first: i32,
+    last: i32,
+    cbytes: libc::c_ulong,
+    qnum: libc::c_ulong,
+    qbytes: libc::c_ulong,
+    lspid: libc::pid_t,
+    lrpid: libc::pid_t,
+    stime: libc::time_t,
+    pad1: i32,
+    rtime: libc::time_t,
+    pad2: i32,
+    ctime: libc::time_t,
+    pad3: i32,
+    pad4: [i32; 4],
+}
+
+#[cfg(target_os = "linux")]
+type MsqidDs = libc::msqid_ds;
+
+/// The most bytes `queue` holds (`msg_qbytes`).
+fn queue_bytes(queue: libc::c_int) -> io::Result<usize> {
+    // SAFETY: plain old data that `IPC_STAT` fills.
+    let mut status: MsqidDs = unsafe { std::mem::zeroed() };
+    // SAFETY: a valid buffer for `IPC_STAT`.
+    check(unsafe { msgctl(queue, libc::IPC_STAT, (&raw mut status).cast()) })?;
+    #[cfg(target_vendor = "apple")]
+    let bytes = status.qbytes;
+    #[cfg(target_os = "linux")]
+    let bytes = status.msg_qbytes;
+    Ok(usize::try_from(bytes).unwrap_or(usize::MAX))
+}
+
+/// The longest message the system accepts (`msgmax`), if it says.
+fn system_message_limit() -> Option<usize> {
+    if cfg!(target_os = "linux") {
+        let limit = std::fs::read_to_string("/proc/sys/kernel/msgmax").ok()?;
+        limit.trim().parse().ok()
+    } else {
+        // XNU fixes `msgmax` at 16384, above the 2048 a queue holds.
+        None
+    }
+}
+
+/// The largest chunk whose frame fits every one of `queues` and the system
+/// limit: a longer `msgsnd` fails with `EINVAL`, and macOS queues hold only
+/// 2048 bytes.
+fn fitting_chunk(queues: &[libc::c_int]) -> io::Result<usize> {
+    let mut largest = system_message_limit().unwrap_or(usize::MAX);
+    for &queue in queues {
+        largest = largest.min(queue_bytes(queue)?);
+    }
+    let chunk = largest.saturating_sub(super::super::datagram::HEADER);
+    if chunk < 16 {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("a System V message queue holds only {largest} bytes"),
+        ));
+    }
+    Ok(chunk)
+}
+
+/// The chunk this side offers: the `chunk` option, made to fit the queues.
+fn own_chunk(endpoint: &Endpoint, queues: &[libc::c_int]) -> io::Result<u64> {
+    let wanted = endpoint.number("chunk", 1024, 16, 65000)?;
+    let fitting = u64::try_from(fitting_chunk(queues)?).unwrap_or(u64::MAX);
+    if fitting < wanted {
+        trace!("sysvmq chunk {wanted} lowered to {fitting} to fit the queues");
+    }
+    Ok(wanted.min(fitting))
+}
+
 const MTYPE: libc::c_long = 1;
 const LONG: usize = std::mem::size_of::<libc::c_long>();
 const MAX_FRAME: usize = 65000 + super::super::datagram::HEADER;
@@ -142,12 +220,19 @@ fn link(
 
 pub(crate) fn connect(endpoint: &Endpoint) -> io::Result<IpcStream> {
     let rendezvous = Rendezvous::begin(endpoint, "sysvmq")?;
-    let own_chunk = endpoint.number("chunk", 1024, 16, 65000)?;
     let server_queue = create_queue()?;
     let client_queue = match create_queue() {
         Ok(queue) => queue,
         Err(error) => {
             remove_queue(server_queue);
+            return Err(error);
+        }
+    };
+    let own_chunk = match own_chunk(endpoint, &[server_queue, client_queue]) {
+        Ok(chunk) => chunk,
+        Err(error) => {
+            remove_queue(server_queue);
+            remove_queue(client_queue);
             return Err(error);
         }
     };
@@ -195,14 +280,14 @@ impl Listener for SysvListener {
     fn accept(&mut self) -> io::Result<Option<IpcStream>> {
         let endpoint = self.endpoint.clone();
         accept_with(&self.rendezvous, "sysvmq", |request| {
-            let own_chunk = endpoint.number("chunk", 1024, 16, 65000)?;
-            let chunk = agree_chunk(own_chunk, request.fields.number("chunk"));
             let queue = |name: &str| -> io::Result<libc::c_int> {
                 let id = request.fields.require_number(name)?;
                 libc::c_int::try_from(id)
                     .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "an invalid queue id"))
             };
             let (receive, send) = (queue("server_queue")?, queue("client_queue")?);
+            let own_chunk = own_chunk(&endpoint, &[receive, send])?;
+            let chunk = agree_chunk(own_chunk, request.fields.number("chunk"));
             let session = Session::start(
                 "sysvmq",
                 link(&endpoint, send, receive, request.pid())?,

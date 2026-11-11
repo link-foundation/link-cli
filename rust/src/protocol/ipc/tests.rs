@@ -261,6 +261,15 @@ fn sysvmq_echoes() {
     check_kind(endpoint, 50_000);
 }
 
+/// A chunk longer than a queue holds (Linux `msgmax` is 8192 bytes, a macOS
+/// queue 2048) is lowered to fit instead of failing every send.
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+#[test]
+fn sysvmq_lowers_a_chunk_the_queues_cannot_hold() {
+    let (_dir, endpoint) = rendezvous_endpoint("sysvmq", "?chunk=65000&poll=1");
+    check_kind(endpoint, 50_000);
+}
+
 #[cfg(windows)]
 #[test]
 fn mailslot_echoes() {
