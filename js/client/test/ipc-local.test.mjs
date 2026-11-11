@@ -169,11 +169,15 @@ test('a joined stream passes errors and waits for its release', async () => {
     parts[side].destroy(new Error(`side ${side}`));
     assert.equal((await failed).message, `side ${side}`);
   }
-  const refusing = new Writable({ write: (_chunk, _encoding, callback) => callback(new Error('full')) });
+  const refusing = new Writable({
+    write: (_chunk, _encoding, callback) => callback(new Error('full')),
+  });
   const writer = new JoinedStream(new PassThrough(), refusing);
   writer.on('error', () => {});
   await assert.rejects(
-    new Promise((resolve, reject) => writer.write('x', (error) => (error ? reject(error) : resolve()))),
+    new Promise((resolve, reject) =>
+      writer.write('x', (error) => (error ? reject(error) : resolve())),
+    ),
     /full/,
   );
 
@@ -199,7 +203,9 @@ test('a joined stream ends its writable once, and reports a failed end', async (
   done.end();
   await new Promise((resolve) => done.once('finish', resolve));
   const finished = new JoinedStream(new PassThrough(), done);
-  await new Promise((resolve, reject) => finished.end((error) => (error ? reject(error) : resolve())));
+  await new Promise((resolve, reject) =>
+    finished.end((error) => (error ? reject(error) : resolve())),
+  );
 
   const destroyed = new PassThrough();
   destroyed.destroy();
@@ -292,4 +298,3 @@ test('fifo: a FIFO that cannot be created is reported', { skip: !POSIX }, async 
   fs.writeFileSync(fake, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
   await assert.rejects(connectStream(`fifo:${dir}`), rejectsWith('EIO', /Command failed/));
 });
-

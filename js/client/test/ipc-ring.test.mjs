@@ -68,21 +68,25 @@ const ended = (stream) =>
   new Promise((resolve, reject) => stream.end((error) => (error ? reject(error) : resolve())));
 
 for (const kind of ['file', 'mmap', 'signal', 'shm']) {
-  test(`${kind}: connects through the rendezvous and echoes`, { skip: kind === 'shm' && !LINUX }, async (t) => {
-    const dir = tempDir(t);
-    const listener = new Listener(dir, kind, { onStream: echo });
-    t.after(() => listener.close());
-    const stream = await connectStream(`${kind}:${dir}?capacity=64&poll=1`);
-    assert.equal(stream.kind, kind);
-    assert.equal(stream.capacity, 64);
-    assert.equal(stream.peerPid, process.pid);
-    const sent = payload(5_000);
-    const received = collect(stream);
-    stream.end(sent);
-    assert.deepEqual(await received, sent);
-    stream.destroy();
-    assert.deepEqual(fs.readdirSync(dir), ['listener.json'], 'the region is removed at once');
-  });
+  test(
+    `${kind}: connects through the rendezvous and echoes`,
+    { skip: kind === 'shm' && !LINUX },
+    async (t) => {
+      const dir = tempDir(t);
+      const listener = new Listener(dir, kind, { onStream: echo });
+      t.after(() => listener.close());
+      const stream = await connectStream(`${kind}:${dir}?capacity=64&poll=1`);
+      assert.equal(stream.kind, kind);
+      assert.equal(stream.capacity, 64);
+      assert.equal(stream.peerPid, process.pid);
+      const sent = payload(5_000);
+      const received = collect(stream);
+      stream.end(sent);
+      assert.deepEqual(await received, sent);
+      stream.destroy();
+      assert.deepEqual(fs.readdirSync(dir), ['listener.json'], 'the region is removed at once');
+    },
+  );
 }
 
 test('a ring keeps its file until it hangs up on Windows', async (t) => {

@@ -41,7 +41,8 @@ export const collect = (stream) =>
     stream.once('error', reject);
   });
 
-export const payload = (length) => Buffer.from(Array.from({ length }, (_, index) => (index * 7) & 0xff));
+export const payload = (length) =>
+  Buffer.from(Array.from({ length }, (_, index) => (index * 7) & 0xff));
 
 /** Echoes every server stream back, ending when its client ends. */
 export const echo = (stream) => {
@@ -129,9 +130,7 @@ export class Listener {
     const region = this.kind === 'shm' ? `/dev/shm/lc${id}` : file(SUFFIX[this.kind]);
     const size = fs.statSync(region).size;
     const signal = this.kind === 'signal';
-    const notifier = signal
-      ? new SignalNotifier(request.pid, request.signal)
-      : new PollNotifier(1);
+    const notifier = signal ? new SignalNotifier(request.pid, request.signal) : new PollNotifier(1);
     this.#hand(
       new RingStream({
         kind: this.kind,

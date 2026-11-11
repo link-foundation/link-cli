@@ -148,7 +148,9 @@ test('tcp: connects to the first address that answers', async (t) => {
     { address: '127.0.0.1', family: 4 },
   ]);
   await echoed(await connectStream(`tcp:two.test:${port}`));
-  await assert.rejects(connectStream(`tcp:127.0.0.1:${await freePort()}`), { code: 'ECONNREFUSED' });
+  await assert.rejects(connectStream(`tcp:127.0.0.1:${await freePort()}`), {
+    code: 'ECONNREFUSED',
+  });
 });
 
 test('tcp: a connect that hangs times out or is aborted', async (t) => {
@@ -318,17 +320,24 @@ test('bridge: a refused or failed forward is reported', { skip: !POSIX }, async 
   );
 });
 
-test('bridge: a bridge that never connects times out or is aborted', { skip: !POSIX }, async (t) => {
-  const clink = fakeClink(t, 'hang');
-  shortenTimer(t, 10_007);
-  await assert.rejects(
-    connectStream('sysvmq:/q?timeout=7', { clink }),
-    rejectsWith('ETIMEDOUT', /did not connect in time/),
-  );
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), 50);
-  await assert.rejects(connectStream('sysvmq:/q', { clink, signal: controller.signal }), AbortError);
-});
+test(
+  'bridge: a bridge that never connects times out or is aborted',
+  { skip: !POSIX },
+  async (t) => {
+    const clink = fakeClink(t, 'hang');
+    shortenTimer(t, 10_007);
+    await assert.rejects(
+      connectStream('sysvmq:/q?timeout=7', { clink }),
+      rejectsWith('ETIMEDOUT', /did not connect in time/),
+    );
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 50);
+    await assert.rejects(
+      connectStream('sysvmq:/q', { clink, signal: controller.signal }),
+      AbortError,
+    );
+  },
+);
 
 test('open: custom kinds, stdio and kinds without a connector', async (t) => {
   const stream = new PassThrough();
@@ -338,16 +347,23 @@ test('open: custom kinds, stdio and kinds without a connector', async (t) => {
   if (!process.platform.startsWith('win')) {
     await assert.rejects(connectStream('mailslot:x'), rejectsWith('ENOTSUP', /`mailslot:`/));
   }
-  await assert.rejects(
-    connectStream('unit-now:x', { signal: AbortSignal.abort() }),
-    AbortError,
-  );
+  await assert.rejects(connectStream('unit-now:x', { signal: AbortSignal.abort() }), AbortError);
   // A stream that opens after the connect gave up is closed again.
-  const late = [new PassThrough(), { destroy: () => { throw new Error('gone'); } }, null];
+  const late = [
+    new PassThrough(),
+    {
+      destroy: () => {
+        throw new Error('gone');
+      },
+    },
+    null,
+  ];
   let index = 0;
   registerTransport('unit-late', () => sleep(40).then(() => late[index]));
   for (index = 0; index < late.length; index += 1) {
-    await assert.rejects(connectStream('unit-late:x', { timeout: 10 }), { name: 'DeadlineExceededError' });
+    await assert.rejects(connectStream('unit-late:x', { timeout: 10 }), {
+      name: 'DeadlineExceededError',
+    });
     await sleep(60);
   }
   assert.ok(late[0].destroyed);
@@ -359,7 +375,8 @@ const linksServer = (t, reply) =>
   server(t, { port: 0, host: '127.0.0.1' }, (socket) => {
     const reader = new MessageReader();
     socket.on('data', (chunk) => {
-      for (const _text of reader.push(chunk)) {
+      const requests = reader.push(chunk).length;
+      for (let i = 0; i < requests; i++) {
         socket.write(Buffer.isBuffer(reply) ? reply : encodeMessage(reply));
       }
     });
@@ -386,7 +403,10 @@ test('connectIpc verifies the protocol and takes a TCP address', async (t) => {
     return true;
   });
   await assert.rejects(connectIpc(null), TypeError);
-  await assert.rejects(IpcTransport.connect('tcp:127.0.0.1:1', { signal: AbortSignal.abort() }), AbortError);
+  await assert.rejects(
+    IpcTransport.connect('tcp:127.0.0.1:1', { signal: AbortSignal.abort() }),
+    AbortError,
+  );
 });
 
 test('an IpcTransport on a stream it does not own only closes itself', async (t) => {
@@ -397,7 +417,11 @@ test('an IpcTransport on a stream it does not own only closes itself', async (t)
     [false, 'test'],
     [true, undefined],
   ]) {
-    const socket = net.connect({ port: listening.address().port, host: '127.0.0.1', allowHalfOpen: true });
+    const socket = net.connect({
+      port: listening.address().port,
+      host: '127.0.0.1',
+      allowHalfOpen: true,
+    });
     socket.on('error', () => {});
     const transport = new IpcTransport(socket, { owned, kind });
     assert.equal(transport.kind, kind ?? 'ipc');
