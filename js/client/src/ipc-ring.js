@@ -390,7 +390,7 @@ export class RingStream extends Duplex {
       trace(`${this.kind} ring to process ${this.peerPid} hung up`);
       try {
         if (load(this.#region, this.#outgoing + WRITER_STATE) === OPEN) {
-          store(this.#region, this.#outgoing + WRITER_STATE, ABORTED);
+          store(this.#region, this.#outgoing + WRITER_STATE, ENDED);
         }
         store(this.#region, this.#incoming + READER_STATE, GONE);
         this.#notifier.notify();

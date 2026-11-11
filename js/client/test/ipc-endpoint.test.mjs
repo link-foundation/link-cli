@@ -228,16 +228,26 @@ test('a ring carries both directions through wrap-around and ends', async () => 
   server.destroy();
 });
 
-test('a ring reports a hang-up to the peer', async () => {
+test('a ring hang-up ends the peer stream after the data before it', async () => {
   const [client, server, region] = ringPair(64);
   const reading = collect(server);
   client.write(Buffer.from('partial'));
   client.destroy();
-  await assert.rejects(reading, rejectsWith('ECONNRESET'));
-  // Writer state 2 (aborted) on the client's ring, reader state 2 on the other.
-  assert.equal(region.bytes.readUInt32LE(64 + 8), 2);
+  assert.deepEqual(await reading, Buffer.from('partial'));
+  // Writer state 1 (ended) on the client's ring, reader state 2 on the other,
+  // as the Rust and C# implementations store them.
+  assert.equal(region.bytes.readUInt32LE(64 + 8), 1);
   assert.equal(region.bytes.readUInt32LE(64 + 128 + 64 + 64 + 8), 2);
   server.destroy();
+});
+
+test('an aborted ring direction resets the reader', async () => {
+  const [client, server, region] = ringPair(64);
+  const reading = collect(server);
+  // Writer state 2 on the client's ring aborts the direction.
+  region.bytes.writeUInt32LE(2, 64 + 8);
+  await assert.rejects(reading, rejectsWith('ECONNRESET'));
+  client.destroy();
   // A writer whose reader is gone gets a broken pipe.
   const [writer, gone] = ringPair(64);
   gone.destroy();

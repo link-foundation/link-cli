@@ -129,7 +129,8 @@ closes first; the other side then sees the channel hang up.
 ### FIFO
 
 The server opens `ID.s2c` for writing and `ID.c2s` for reading (both
-non-blocking, then switched to blocking) before acking; the client opens
+non-blocking; every read and write waits with `poll(2)` in slices of at most
+100 ms, so a closed connection or a timeout interrupts it) before acking; the client opens
 `ID.s2c` for reading before the request and `ID.c2s` for writing after the ack.
 Each side first writes one byte `0x00` to its outgoing FIFO and discards the
 first byte it reads: until that byte arrives, end-of-file only means the
@@ -174,8 +175,10 @@ server→client bytes. The client initializes both complements to `0xFFFFFFFF`.
   and storing its state. Only when the ring is still empty has the direction
   ended.
 - **Close.** Ending a direction stores writer state `1` after its last byte.
-  Hanging up stores writer state `2` on the outgoing ring and reader state `2`
-  on the incoming ring.
+  Hanging up stores writer state `1` on the outgoing ring when it is still `0`
+  (like closing a TCP socket, everything written stays readable and then
+  ends), and reader state `2` on the incoming ring. Writer state `2` aborts a
+  direction: its reader fails with "connection reset" instead of ending.
 - **Waiting.** `shm`, `mmap` and `file` poll, backing off from busy checks to
   sleeps of at most `poll` ms. `signal` announces every publish of `head`,
   `tail` or a state: POSIX sends the peer's requested signal with
@@ -208,7 +211,10 @@ except ACK.
   `ACK(seq)`. A smaller sequence (a retransmission) is acknowledged again with
   the last accepted sequence. Other frames are dropped unacknowledged.
 - **EOF** ends the direction after the data before it. **ABORT** hangs up both
-  directions at once and is not acknowledged. **PING** keeps a `udp` session
+  directions at once and is not acknowledged. Shutting a session down sends
+  it (three times, as it may be lost) even after an orderly EOF, so the peer
+  stops retransmitting at once; a receiver that already accepted the EOF
+  still reads everything before it and then the end. **PING** keeps a `udp` session
   alive and expects no reply.
 - A `udp` peer is gone when nothing arrives for `dead` ms. Local kinds use the
   peer's process liveness.
