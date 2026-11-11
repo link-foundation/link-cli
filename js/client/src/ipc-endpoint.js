@@ -224,8 +224,9 @@ export function parseEndpoint(input) {
       if (equals < 0) throw invalid(`endpoint option \`${pair}\` needs a \`=value\``);
       const name = asciiLower(pair.slice(0, equals));
       if (builtin && !allowed.includes(name)) {
-        const list = allowed.length === 0 ? '' : ` (options: ${allowed.join(', ')})`;
-        throw invalid(`\`${kind}:\` endpoints have no option \`${name}\`${list}`);
+        throw invalid(
+          `\`${kind}:\` endpoints have no option \`${name}\` (options: ${allowed.join(', ')})`,
+        );
       }
       options.set(name, pair.slice(equals + 1));
     }

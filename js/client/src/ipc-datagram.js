@@ -232,10 +232,6 @@ export class DatagramSession extends Duplex {
   }
 
   _destroy(error, callback) {
-    if (this.#closed) {
-      callback(error);
-      return;
-    }
     this.#closed = true;
     this.#notify();
     trace(`${this.kind} session hanging up`);

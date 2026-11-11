@@ -440,7 +440,7 @@ export async function connectRing(endpoint, { signal } = {}, platform = process.
     const poll = endpoint.millis('poll', 5);
     let fields = {};
     if (kind === 'signal') {
-      const own = endpoint.number('signo', os.constants.signals.SIGUSR2 ?? 12, 1, 64);
+      const own = endpoint.number('signo', os.constants.signals.SIGUSR2, 1, 64);
       installSignal(own);
       fields = { signal: own };
     }

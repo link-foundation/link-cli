@@ -241,7 +241,8 @@ async function connectBridge(endpoint, options) {
   trace(`bridge started \`${clink}\` as process ${child.pid} for ${text}`);
   let tail = '';
   let pending = '';
-  let onLine = () => {};
+  // Set by the connect promise below before any output can arrive.
+  let onLine;
   child.stderr.setEncoding('utf8');
   child.stderr.on('data', (chunk) => {
     pending += chunk;
@@ -366,7 +367,8 @@ export async function connectStream(endpoint, options = {}) {
   if (early) throw early;
   trace(`connect ${text}`);
   const controller = new AbortController();
-  let stop = () => {};
+  // Set at once by the promise executor below.
+  let stop;
   const ended = new Promise((_resolve, reject) => {
     stop = watchScope(scope, (errorOf) => {
       const error = errorOf('not-sent');
@@ -375,19 +377,21 @@ export async function connectStream(endpoint, options = {}) {
     });
   });
   ended.catch(() => {});
-  let opening;
+  const opening = Promise.resolve().then(() =>
+    open(parsed, { ...options, signal: controller.signal }),
+  );
+  let stream;
   try {
-    opening = Promise.resolve().then(() => open(parsed, { ...options, signal: controller.signal }));
-    const stream = await Promise.race([opening, ended]);
-    trace(`connected ${text}`);
-    return stream;
+    stream = await Promise.race([opening, ended]);
   } catch (error) {
-    if (controller.signal.aborted) opening?.then(discard, () => {});
+    if (controller.signal.aborted) opening.then(discard, () => {});
     trace(`connect ${text} failed: ${error.message}`);
     throw error;
   } finally {
     stop();
   }
+  trace(`connected ${text}`);
+  return stream;
 }
 
 // A TCP `{ host, port }`, as TcpTransport.connect takes, becomes `tcp:HOST:PORT`.
