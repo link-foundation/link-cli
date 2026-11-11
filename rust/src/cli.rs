@@ -42,7 +42,14 @@ pub struct Cli {
     pub list_branches: bool,
     pub list_tags: bool,
     pub show_log: bool,
+    /// The first `--serve` endpoint, such as `127.0.0.1:7878` or
+    /// `unix:/tmp/links.sock` (issue #140).
     pub serve: Option<String>,
+    /// Every later `--serve` endpoint: one server listens on all of them.
+    pub serve_also: Vec<String>,
+    /// `--forward`: relay each `--serve` connection to this endpoint, byte
+    /// for byte, instead of serving a database (issue #140).
+    pub forward: Option<String>,
     /// `--graphql`: `--serve` speaks Hasura's GraphQL for Deep (issue #153).
     pub graphql: bool,
     /// `--jwt-secret`: signs the tokens of `--graphql`; random when absent.
@@ -107,6 +114,8 @@ impl Default for Cli {
             list_tags: false,
             show_log: false,
             serve: None,
+            serve_also: Vec::new(),
+            forward: None,
             graphql: false,
             jwt_secret: None,
             graphql_admin_secret: None,
@@ -163,6 +172,23 @@ impl Cli {
             || self.triggers
             || self.embed_triggers
             || self.triggers_file.is_some()
+    }
+
+    /// Every `--serve` endpoint, in the order given.
+    pub fn serve_endpoints(&self) -> Vec<&str> {
+        self.serve
+            .iter()
+            .chain(&self.serve_also)
+            .map(String::as_str)
+            .collect()
+    }
+
+    fn add_serve(&mut self, endpoint: String) {
+        if self.serve.is_none() {
+            self.serve = Some(endpoint);
+        } else {
+            self.serve_also.push(endpoint);
+        }
     }
 
     /// True when any flag in the version-control decorator family was passed.
@@ -343,7 +369,11 @@ impl Cli {
                 continue;
             }
             if let Some(value) = inline_value(&arg, &["--serve"]) {
-                cli.serve = Some(value.to_string());
+                cli.add_serve(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--forward"]) {
+                cli.forward = Some(value.to_string());
                 continue;
             }
             if let Some(value) = inline_value(&arg, &["--connect"]) {
@@ -509,7 +539,11 @@ impl Cli {
                     cli.deep_packages.push(next_value(&mut args, &arg)?);
                 }
                 "--serve" => {
-                    cli.serve = Some(next_value(&mut args, &arg)?);
+                    let value = next_value(&mut args, &arg)?;
+                    cli.add_serve(value);
+                }
+                "--forward" => {
+                    cli.forward = Some(next_value(&mut args, &arg)?);
                 }
                 "--connect" => {
                     cli.connect = Some(next_value(&mut args, &arg)?);
@@ -583,7 +617,8 @@ impl Cli {
             "      --indexed-lookups\n",
             "          Use optional lookup-index decorators for local links and names (Rust only)\n",
             "  -t, --trace\n",
-            "          Enable trace (verbose output)\n",
+            "          Enable trace (verbose output), including each transport event of\n",
+            "          --serve, --connect and --forward (as CLINK_IPC_TRACE=1 does)\n",
             "      --auto-create-missing-references\n",
             "          Create missing numeric and named references as self-referential point links\n",
             "  -s, --structure <STRUCTURE>\n",
@@ -651,8 +686,16 @@ impl Cli {
             "      --log\n",
             "          Print the transitions log and exit (implies --transactions)\n",
             "      --serve <ADDR>\n",
-            "          Serve the database over TCP (e.g. 127.0.0.1:7878) until stopped;\n",
-            "          each message may use the text or the binary LiNo protocol\n",
+            "          Serve the database on an endpoint until stopped: a TCP address\n",
+            "          (e.g. 127.0.0.1:7878) or KIND:ADDRESS for another transport, such as\n",
+            "          unix:/tmp/links.sock, pipe:NAME, fifo:DIR, shm:DIR, mmap:DIR, file:DIR,\n",
+            "          signal:DIR, mq:DIR, sysvmq:DIR, udp:HOST:PORT, stdio, mailslot:DIR,\n",
+            "          copydata:DIR or alpc:DIR (see docs/protocol/ipc-transports-v1.md);\n",
+            "          repeat it to serve one store on several endpoints at once. Each\n",
+            "          message may use the text or the binary LiNo protocol\n",
+            "      --forward <ADDR>\n",
+            "          With --serve: relay every connection, byte for byte, to this\n",
+            "          endpoint instead of serving a database (stacks transports)\n",
             "      --graphql\n",
             "          With --serve: speak Hasura's GraphQL over HTTP and WebSocket for Deep\n",
             "      --jwt-secret <SECRET>\n",
@@ -662,7 +705,8 @@ impl Cli {
             "      --deep-package <FILE>\n",
             "          Load a Deep package (JSON rows of links) before --graphql serves\n",
             "      --connect <ADDR>\n",
-            "          Send the query to a clink server instead of opening a database;\n",
+            "          Send the query to a clink server on a --serve endpoint (e.g.\n",
+            "          127.0.0.1:7878 or shm:/tmp/links) instead of opening a database;\n",
             "          an empty query reads every link\n",
             "      --protocol <PROTOCOL>\n",
             "          'text' or 'binary' for --connect (default: text); 'text', 'binary'\n",

@@ -198,6 +198,11 @@ pub trait Listener: Send + fmt::Debug {
     /// The endpoint clients connect to, such as `shm:/tmp/links` or, for TCP,
     /// the bound `host:port`.
     fn endpoint(&self) -> String;
+    /// Every endpoint clients connect to: one, except for a
+    /// [`MultiListener`].
+    fn endpoints(&self) -> Vec<String> {
+        vec![self.endpoint()]
+    }
     /// The bound TCP address, for TCP listeners.
     fn local_addr(&self) -> Option<std::net::SocketAddr> {
         None
@@ -452,7 +457,7 @@ impl MultiListener {
         let (sender, incoming) = mpsc::channel();
         let endpoints = listeners
             .iter()
-            .map(|listener| listener.endpoint())
+            .flat_map(|listener| listener.endpoints())
             .collect();
         let local_addr = listeners.iter().find_map(|listener| listener.local_addr());
         let closers = listeners.iter().map(|listener| listener.closer()).collect();
@@ -487,11 +492,6 @@ impl MultiListener {
             closed: Arc::new(AtomicBool::new(false)),
         }
     }
-
-    /// The endpoints of the listeners.
-    pub fn endpoints(&self) -> &[String] {
-        &self.endpoints
-    }
 }
 
 impl Listener for MultiListener {
@@ -508,6 +508,10 @@ impl Listener for MultiListener {
 
     fn endpoint(&self) -> String {
         self.endpoints.join(" ")
+    }
+
+    fn endpoints(&self) -> Vec<String> {
+        self.endpoints.clone()
     }
 
     fn local_addr(&self) -> Option<std::net::SocketAddr> {
@@ -589,7 +593,17 @@ fn pump(mut from: IpcStream, mut to: IpcStream) -> io::Result<u64> {
 /// exhausted. Waits for the forwarded connections to end before returning.
 pub fn relay(listener: &mut dyn Listener, target: &Endpoint) -> io::Result<()> {
     let mut connections = Vec::new();
-    while let Some(stream) = listener.accept()? {
+    loop {
+        let stream = match listener.accept() {
+            Ok(Some(stream)) => stream,
+            Ok(None) => break,
+            Err(error) => {
+                trace!("relay accept on {} failed: {error}", listener.endpoint());
+                // A failing listener must not spin.
+                thread::sleep(Duration::from_millis(10));
+                continue;
+            }
+        };
         let target = target.clone();
         connections.push(thread::spawn(move || match connect_endpoint(&target) {
             Ok(outgoing) => {

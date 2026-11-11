@@ -251,6 +251,11 @@ impl LinksServer {
         self.listener.endpoint()
     }
 
+    /// Every endpoint the server listens on, in the order given.
+    pub fn endpoints(&self) -> Vec<String> {
+        self.listener.endpoints()
+    }
+
     /// A handle that stops [`serve`](Self::serve).
     pub fn shutdown_handle(&self) -> ProtocolResult<ShutdownHandle> {
         Ok(ShutdownHandle {

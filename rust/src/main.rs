@@ -6,6 +6,7 @@
 use anyhow::{anyhow, bail, Result};
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::import_lino_file;
+use link_cli::protocol::ipc;
 use link_cli::protocol::{
     export_store_file, import_store_file, AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol,
     LinksClient, LinksServer, LinksSessions, LinoProtocol, ServerOptions, TextLinoProtocol,
@@ -37,6 +38,12 @@ fn main() -> Result<()> {
 
     if cli.serve.is_some() && cli.connect.is_some() {
         bail!("--serve and --connect cannot be used together.");
+    }
+    if cli.trace {
+        ipc::set_trace(true);
+    }
+    if let Some(target) = &cli.forward {
+        return run_relay(&cli, target);
     }
     if let Some(address) = &cli.connect {
         if cli.indexed_lookups {
@@ -212,8 +219,8 @@ where
     if let (Some(address), true) = (&cli.serve, cli.graphql) {
         return run_graphql_server(cli, address, storage, policy);
     }
-    if let Some(address) = &cli.serve {
-        return run_server(cli, address, storage, policy, subject, tokens);
+    if cli.serve.is_some() {
+        return run_server(cli, storage, policy, subject, tokens);
     }
     match policy {
         None => run_query_pipeline_with(cli, storage, trigger_stage)?,
@@ -620,7 +627,7 @@ fn run_client(cli: &Cli, address: &str) -> Result<()> {
         Some(other) => bail!("Invalid --protocol value '{other}'. Use 'text' or 'binary'."),
     };
     let query = cli.query.as_deref().or(cli.query_arg.as_deref());
-    let mut client = LinksClient::connect(address, protocol)?;
+    let mut client = LinksClient::connect_endpoint(address, protocol)?;
     if let Some(token) = &cli.token {
         client.authenticate(token)?;
     }
@@ -646,6 +653,17 @@ where
     S: NamedTypeLinks,
 {
     use link_cli::graphql::{DeepStore, GraphqlServer, Json, Settings};
+    if !cli.serve_also.is_empty() {
+        bail!("--graphql serves HTTP on one TCP address; give --serve once.");
+    }
+    let endpoint = ipc::Endpoint::parse(address)?;
+    if endpoint.kind() != "tcp" {
+        bail!(
+            "--graphql serves HTTP over TCP only, not over `{}:`.",
+            endpoint.kind()
+        );
+    }
+    let address = endpoint.address();
     let mut store = DeepStore::open(&mut *storage, policy)?;
     for file in &cli.deep_packages {
         let text = std::fs::read_to_string(file)?;
@@ -670,7 +688,6 @@ where
 
 fn run_server<S>(
     cli: &Cli,
-    address: &str,
     storage: &mut S,
     policy: Option<PermissionPolicy>,
     subject: u32,
@@ -713,18 +730,55 @@ where
             LinksTokenTable::new(&mut tokens).authenticate(token)
         }),
     };
-    let server = LinksServer::bind(address, options)?;
+    let server = LinksServer::listen_all(&cli.serve_endpoints(), options)?;
     let stop = server.shutdown_handle()?;
     ctrlc::set_handler(move || stop.shutdown())?;
-    print_banner(&server)?;
+    print_banner(&server.endpoints())?;
     server.serve_sessions(&mut sessions)?;
     drop(sessions);
     storage.save()?;
     Ok(())
 }
 
-fn print_banner(server: &LinksServer) -> Result<()> {
-    println!("clink server listening on {}", server.local_addr()?);
+/// `--serve A --forward B`: relays every connection accepted on the
+/// `--serve` endpoints, byte for byte, to a new connection to `B`; no
+/// database is opened, so relays stack any transports in either protocol.
+fn run_relay(cli: &Cli, target: &str) -> Result<()> {
+    if cli.serve.is_none() {
+        bail!("--forward relays the connections of --serve; give --serve as well.");
+    }
+    if cli.query.is_some() || cli.query_arg.is_some() {
+        bail!("--forward does not take a query; send queries with --connect.");
+    }
+    if cli.graphql {
+        bail!("--forward and --graphql cannot be used together.");
+    }
+    let target = ipc::Endpoint::parse(target)?;
+    let mut listener = ipc::listen_all(&cli.serve_endpoints())?;
+    let close = listener.closer();
+    ctrlc::set_handler(move || close())?;
+    print_banner(&listener.endpoints())?;
+    if cli.trace {
+        eprintln!("clink: forwarding to {target}");
+    }
+    ipc::relay(&mut *listener, &target)?;
+    Ok(())
+}
+
+/// Prints `clink server listening on ENDPOINT` once per endpoint: on
+/// standard output, or on standard error when one endpoint is `stdio`,
+/// whose standard output carries the protocol.
+fn print_banner(endpoints: &[String]) -> Result<()> {
+    let stdio = endpoints
+        .iter()
+        .any(|endpoint| ipc::Endpoint::parse(endpoint).is_ok_and(|e| e.kind() == "stdio"));
+    for endpoint in endpoints {
+        if stdio {
+            eprintln!("clink server listening on {endpoint}");
+        } else {
+            println!("clink server listening on {endpoint}");
+        }
+    }
     std::io::Write::flush(&mut std::io::stdout())?;
     Ok(())
 }

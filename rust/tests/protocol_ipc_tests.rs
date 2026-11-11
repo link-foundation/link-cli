@@ -20,6 +20,7 @@ const PUSH_TIMEOUT: Duration = Duration::from_secs(10);
 /// A server listening on `endpoints` and serving a fresh temporary store.
 struct IpcServer {
     endpoint: String,
+    endpoints: Vec<String>,
     shutdown: ShutdownHandle,
     thread: Option<JoinHandle<()>>,
     _database: NamedTempFile,
@@ -31,6 +32,7 @@ impl IpcServer {
         let path = database.path().to_path_buf();
         let server = LinksServer::listen_all(endpoints, ServerOptions::default()).unwrap();
         let endpoint = server.endpoint();
+        let endpoints = server.endpoints();
         let shutdown = server.shutdown_handle().unwrap();
         let thread = thread::spawn(move || {
             let mut storage = LinkStorage::new(&path, false).unwrap();
@@ -38,6 +40,7 @@ impl IpcServer {
         });
         Self {
             endpoint,
+            endpoints,
             shutdown,
             thread: Some(thread),
             _database: database,
@@ -46,7 +49,7 @@ impl IpcServer {
 
     /// The endpoints the server listens on.
     fn endpoints(&self) -> Vec<&str> {
-        self.endpoint.split(' ').collect()
+        self.endpoints.iter().map(String::as_str).collect()
     }
 }
 
@@ -163,7 +166,7 @@ fn clients_of_different_kinds_share_one_store_and_its_pushes() {
 fn a_server_over_a_kind_stops_on_shutdown() {
     let dir = tempfile::tempdir().unwrap();
     let endpoint = format!("shm:{}", dir.path().join("links").display());
-    let server = IpcServer::start(&[endpoint.clone()]);
+    let server = IpcServer::start(std::slice::from_ref(&endpoint));
     let mut client = LinksClient::connect_endpoint(&endpoint, TextLinoProtocol::new()).unwrap();
     client.query_text("() ((1 1))").unwrap();
     drop(server);
