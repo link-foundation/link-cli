@@ -38,7 +38,7 @@ internal static class CliIo
         }
         try
         {
-            using var client = LinksClient.Connect(address, protocol);
+            using var client = LinksClient.ConnectEndpoint(address, protocol);
             if (token is not null)
             {
                 client.Authenticate(token);

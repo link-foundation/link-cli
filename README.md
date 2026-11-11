@@ -1024,7 +1024,7 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--db`                  | string  | `db.links`     | `--data-source`, `--data`, `-d`     | Path to the links database file                                            |
 | `--query`               | string  | _None_         | `--apply`, `--do`, `-q`             | LiNo query for CRUD operation                                              |
 | `query` (positional)    | string  | _None_         | _N/A_                               | LiNo query for CRUD operation (provided as the first positional argument)  |
-| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                              |
+| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output), including each IPC transport event of `--serve`, `--connect` and `--forward` (as `CLINK_IPC_TRACE=1` does) |
 | `--auto-create-missing-references` | bool | `false` | _None_                              | Create missing numeric and named references as self-referential point links |
 | `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                                     |
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
@@ -1041,8 +1041,9 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
 | `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
 | `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
-| `--serve`               | string  | _None_         | _None_                              | Serve the database over TCP at `host:port` (port `0` picks a free port)   |
-| `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server at `host:port` and print the reply |
+| `--serve`               | string  | _None_         | _None_                              | Serve the database on an endpoint: `host:port` (port `0` picks a free port) or `KIND:ADDRESS` of any [IPC transport](docs/protocol/ipc-transports-v1.md); repeat it to serve one store on several endpoints |
+| `--forward`             | string  | _None_         | _None_                              | With `--serve`: relay every connection, byte for byte, to this endpoint instead of serving a database |
+| `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server on any endpoint (`host:port`, `shm:/tmp/links`, ...) and print the reply |
 | `--protocol`            | string  | detected       | _None_                              | `text` or `binary` (with `--serve`, also `any`, which is the default)     |
 | `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
 | `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |
