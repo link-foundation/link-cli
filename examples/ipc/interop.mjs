@@ -171,13 +171,20 @@ const results = [];
 
 async function check(label, conversation) {
   const began = Date.now();
+  // A conversation that hangs fails here instead of stalling the whole run.
+  let timer;
+  const stalled = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => reject(new Error(`no answer in ${2 * TIMEOUT} ms`)), 2 * TIMEOUT);
+  });
   try {
-    await conversation();
+    await Promise.race([conversation(), stalled]);
     results.push({ label, ok: true });
     console.log(`ok    ${label} (${Date.now() - began} ms)`);
   } catch (error) {
     results.push({ label, ok: false });
     console.log(`FAIL  ${label}: ${error.message}`);
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -329,3 +336,5 @@ const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} of ${results.length} conversations passed`);
 for (const result of failed) console.log(`  failed: ${result.label}`);
 process.exitCode = failed.length > 0 ? 1 : 0;
+// A stalled conversation may leave a client holding the event loop open.
+setTimeout(() => process.exit(), 1000).unref();

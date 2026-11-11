@@ -7,6 +7,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PassThrough, Writable } from 'node:stream';
 import { test } from 'node:test';
+import { execFileSync } from 'node:child_process';
+import net from 'node:net';
+import { PolledFifoReader, fifoReader } from '../src/ipc-fifo.js';
 import { JoinedStream } from '../src/ipc-joined.js';
 import { PeerWatch, processAlive, Rendezvous } from '../src/ipc-rendezvous.js';
 import { connectStream, parseEndpoint } from '../src/ipc.js';
@@ -254,6 +257,63 @@ for (const kind of ['fifo', 'pipe']) {
     assert.deepEqual(fs.readdirSync(dir), ['listener.json']);
   });
 }
+
+// A FIFO in `dir` opened for non-blocking reading and writing, as connectFifo opens it.
+function fifoPair(dir) {
+  const file = path.join(dir, 'fifo');
+  execFileSync('mkfifo', [file]);
+  const { O_RDONLY, O_WRONLY, O_NONBLOCK } = fs.constants;
+  const incoming = fs.openSync(file, O_RDONLY | O_NONBLOCK);
+  return { incoming, outgoing: fs.openSync(file, O_WRONLY | O_NONBLOCK) };
+}
+
+test('fifo: macOS reads are polled, everywhere else libuv watches', { skip: !POSIX }, (t) => {
+  const { incoming, outgoing } = fifoPair(tempDir(t));
+  // Never read: the polled reader only takes and closes its descriptor here.
+  const polled = fifoReader(outgoing, 'darwin');
+  assert.ok(polled instanceof PolledFifoReader);
+  polled.destroy();
+  const watched = fifoReader(incoming, 'linux');
+  assert.ok(watched instanceof net.Socket);
+  watched.destroy();
+});
+
+test(
+  'fifo: a polled reader passes bytes across idle waits and sees the end',
+  { skip: !POSIX },
+  async (t) => {
+    const { incoming, outgoing } = fifoPair(tempDir(t));
+    const reader = new PolledFifoReader(incoming);
+    const received = collect(reader);
+    fs.writeSync(outgoing, Buffer.from('first '));
+    // Long enough for the idle wait to grow to its limit.
+    await sleep(100);
+    fs.writeSync(outgoing, Buffer.from('second'));
+    await sleep(30);
+    // Only a read of 0 shows the end, as on macOS.
+    fs.closeSync(outgoing);
+    assert.equal((await received).toString(), 'first second');
+  },
+);
+
+test(
+  'fifo: a polled reader reports a failed read and closes mid-read',
+  { skip: !POSIX },
+  async (t) => {
+    const { incoming, outgoing } = fifoPair(tempDir(t));
+    // A descriptor open only for writing cannot be read.
+    const failing = new PolledFifoReader(outgoing);
+    const failed = new Promise((resolve) => failing.once('error', resolve));
+    failing.resume();
+    assert.equal((await failed).code, 'EBADF');
+    const reader = new PolledFifoReader(incoming);
+    const closed = new Promise((resolve) => reader.once('close', resolve));
+    reader.read(0);
+    reader.destroy();
+    await closed;
+    assert.throws(() => fs.fstatSync(incoming), { code: 'EBADF' });
+  },
+);
 
 test('fifo: the peer is watched until its late greeting', { skip: !POSIX }, async (t) => {
   const dir = tempDir(t);
