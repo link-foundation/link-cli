@@ -244,6 +244,10 @@ fn create_port(id: &str, side: char, largest: usize) -> io::Result<Handle> {
     let mut port = null_mut();
     // SAFETY: valid output pointer, name and attributes.
     let status = unsafe { (nt.create)(&mut port, &object, &port_attributes) };
+    trace!(
+        "alpc created port clink-{id}-{side}: NTSTATUS 0x{:08X}",
+        status as u32
+    );
     if status != STATUS_SUCCESS {
         return Err(status_error("NtAlpcCreatePort", status));
     }
@@ -263,6 +267,7 @@ fn connect_port(id: &str, side: char, largest: usize, timeout: Duration) -> io::
     let mut length = MESSAGE_HEADER;
     let timeout = relative(timeout);
     let mut port = null_mut();
+    trace!("alpc connecting to port clink-{id}-{side}");
     // SAFETY: valid pointers for the duration of the call.
     let status = unsafe {
         (nt.connect)(
@@ -279,6 +284,10 @@ fn connect_port(id: &str, side: char, largest: usize, timeout: Duration) -> io::
             &timeout,
         )
     };
+    trace!(
+        "alpc connected to port clink-{id}-{side}: NTSTATUS 0x{:08X}",
+        status as u32
+    );
     if status == STATUS_TIMEOUT {
         return Err(timed_out());
     }
@@ -345,9 +354,17 @@ fn receive(port: &Handle, buffer: &mut Buffer, timeout: Duration) -> io::Result<
         return Ok(Received::Nothing);
     }
     if status != STATUS_SUCCESS {
+        trace!("alpc receive failed: NTSTATUS 0x{:08X}", status as u32);
         return Err(status_error("NtAlpcSendWaitReceivePort", status));
     }
     let header = buffer.header();
+    if header.kind & 0xFF != LPC_DATAGRAM {
+        trace!(
+            "alpc received message type 0x{:04X} from process {}",
+            header.kind,
+            header.unique_process
+        );
+    }
     Ok(match header.kind & 0xFF {
         LPC_DATAGRAM => Received::Datagram,
         LPC_CONNECTION_REQUEST => Received::Connection(header),
@@ -393,6 +410,11 @@ fn answer(
         }
         return Ok(None);
     }
+    trace!(
+        "alpc accepted a connection from process {}: NTSTATUS 0x{:08X}",
+        header.unique_process,
+        status as u32
+    );
     if status != STATUS_SUCCESS {
         return Err(status_error("NtAlpcAcceptConnectPort", status));
     }
