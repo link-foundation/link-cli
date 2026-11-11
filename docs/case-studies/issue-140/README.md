@@ -229,6 +229,10 @@ Automated coverage:
 - **Freshness gate.** The first CI pass found dependency-freshness failures,
   which were fixed and later landed on main through PR #174.
   `cargo-audit` 0.22.2 is held under [issue #176](https://github.com/link-foundation/link-cli/issues/176).
+  The releases published while this PR was open are taken here:
+  Microsoft.NET.Test.Sdk 18.12.0, `rusqlite` 0.42.0 (the `sqlite` engine
+  tests pass with it), and lucide-react 1.72.0, prettier 3.10.0 and vite 8.3.8
+  for the workbench.
 - **Changelog entries.** C# has a minor changeset, Rust has changelog
   fragments (the IPC feature is minor; the ring and datagram fixes are patch),
   and the JavaScript client is 0.5.0, which exports `./ipc`.

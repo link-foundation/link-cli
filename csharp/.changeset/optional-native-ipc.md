@@ -14,5 +14,5 @@ the transports interoperate with the Rust `clink` and the JavaScript client.
 `clink --serve` repeats to serve one store on several endpoints, `--forward`
 relays every connection to another endpoint without opening a database so
 transports stack, `--connect` takes any endpoint and `--trace` (or
-`CLINK_IPC_TRACE=1`) logs every transport event. System.CommandLine is 3.0.0
-and the tests use Microsoft.NET.Test.Sdk 18.12.0.
+`CLINK_IPC_TRACE=1`) logs every transport event. The tests use
+Microsoft.NET.Test.Sdk 18.12.0.
