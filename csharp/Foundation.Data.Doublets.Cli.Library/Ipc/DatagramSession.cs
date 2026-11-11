@@ -168,6 +168,7 @@ internal sealed class DatagramSession : ITransport, IDisposable
             return;
         }
         uint? reply = null;
+        var deliver = false;
         lock (_state)
         {
             _lastHeard = Stopwatch.GetTimestamp();
@@ -176,19 +177,9 @@ internal sealed class DatagramSession : ITransport, IDisposable
                 case Data or Eof:
                     if (seq == unchecked(_received + 1) && !_ended && _inbound.Count <= Window && payload.Length <= _settings.Chunk)
                     {
+                        // Only this thread handles frames, so the frame is delivered below, after its acknowledgement.
                         _received = seq;
-                        if (kind == Eof)
-                        {
-                            _ended = true;
-                        }
-                        else
-                        {
-                            foreach (var b in payload)
-                            {
-                                _inbound.Enqueue(b);
-                            }
-                        }
-                        Monitor.PulseAll(_state);
+                        deliver = true;
                         reply = _received;
                     }
                     else if (unchecked(seq - _received) > uint.MaxValue / 2 || seq == _received)
@@ -217,6 +208,26 @@ internal sealed class DatagramSession : ITransport, IDisposable
         if (reply is { } acknowledged)
         {
             TrySend(Frame(Ack, acknowledged, []));
+        }
+        if (deliver)
+        {
+            // The reader sees the frame only once it is acknowledged: a reader that hangs up as soon as it sees the
+            // end must not abort the peer before the peer learns its end arrived.
+            lock (_state)
+            {
+                if (kind == Eof)
+                {
+                    _ended = true;
+                }
+                else
+                {
+                    foreach (var b in payload)
+                    {
+                        _inbound.Enqueue(b);
+                    }
+                }
+                Monitor.PulseAll(_state);
+            }
         }
     }
 
@@ -287,6 +298,13 @@ internal sealed class DatagramSession : ITransport, IDisposable
                     }
                     if (_aborted)
                     {
+                        if (kind == Eof)
+                        {
+                            // Every DATA frame before the end was acknowledged, so nothing is lost: a peer that hung
+                            // up no longer reads, and its acknowledgement of the end may have been the frame lost.
+                            IpcTransports.Trace($"{Kind} peer hung up before acknowledging the end");
+                            return;
+                        }
                         throw IpcException.BrokenPipe();
                     }
                     if (_closed && linger is null)

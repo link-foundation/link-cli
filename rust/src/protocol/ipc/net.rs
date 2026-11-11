@@ -140,9 +140,11 @@ fn resolve(address: &str) -> io::Result<Vec<SocketAddr>> {
     Ok(addresses)
 }
 
-/// Wraps a connected TCP stream.
+/// Wraps a connected TCP stream; one that refuses to turn Nagle's algorithm off still works, only slower.
 pub(crate) fn tcp_stream(stream: TcpStream) -> IpcStream {
-    let _ = stream.set_nodelay(true);
+    if let Err(error) = stream.set_nodelay(true) {
+        trace!("could not disable Nagle's algorithm: {error}");
+    }
     IpcStream::new(SocketTransport::new(stream, "tcp"))
 }
 

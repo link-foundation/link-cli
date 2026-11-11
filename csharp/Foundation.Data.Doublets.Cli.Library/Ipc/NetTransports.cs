@@ -138,8 +138,10 @@ internal static class NetTransports
         {
             socket.NoDelay = true;
         }
-        catch (SocketException)
+        catch (SocketException error)
         {
+            // The connection still works, only slower.
+            IpcTransports.Trace($"could not disable Nagle's algorithm: {error.Message}");
         }
         return new IpcStream(new SocketTransport(socket, "tcp"));
     }

@@ -2,13 +2,19 @@
 // docs/protocol/ipc-transports-v1.md; the reference is
 // rust/src/protocol/ipc/datagram.rs), and the `udp` kind over it.
 
-import { randomBytes } from 'node:crypto';
-import dgram from 'node:dgram';
-import dns from 'node:dns/promises';
-import net from 'node:net';
-import { Duplex } from 'node:stream';
-import { brokenPipe, hungUp, IpcError, outgoingClosed, timedOut } from './ipc-endpoint.js';
-import { trace } from './ipc-trace.js';
+import { randomBytes } from "node:crypto";
+import dgram from "node:dgram";
+import dns from "node:dns/promises";
+import net from "node:net";
+import { Duplex } from "node:stream";
+import {
+  brokenPipe,
+  hungUp,
+  IpcError,
+  outgoingClosed,
+  timedOut,
+} from "./ipc-endpoint.js";
+import { trace } from "./ipc-trace.js";
 
 export const FRAME_HEADER = 8;
 export const DATA = 1;
@@ -32,14 +38,21 @@ export function frame(type, seq, payload = Buffer.alloc(0)) {
   const bytes = Buffer.alloc(FRAME_HEADER + payload.length);
   bytes[0] = type;
   bytes.writeUInt32LE(seq >>> 0, 4);
-  Buffer.from(payload.buffer, payload.byteOffset, payload.length).copy(bytes, FRAME_HEADER);
+  Buffer.from(payload.buffer, payload.byteOffset, payload.length).copy(
+    bytes,
+    FRAME_HEADER,
+  );
   return bytes;
 }
 
 /** Splits a frame into `{ type, seq, payload }`, or `null` when too short. */
 export function parseFrame(bytes) {
   if (bytes.length < FRAME_HEADER) return null;
-  return { type: bytes[0], seq: bytes.readUInt32LE(4), payload: bytes.subarray(FRAME_HEADER) };
+  return {
+    type: bytes[0],
+    seq: bytes.readUInt32LE(4),
+    payload: bytes.subarray(FRAME_HEADER),
+  };
 }
 
 /** The chunk both sides use: the smaller proposal, within 16..65000. */
@@ -128,14 +141,19 @@ export class DatagramSession extends Duplex {
         payload.length <= this.#settings.chunk
       ) {
         this.#received = seq;
+        // Acknowledged before the reader sees it: a reader that hangs up as soon as it sees the end must not abort
+        // the peer before the peer learns its end arrived.
+        this.#send(frame(ACK, seq));
         if (type === EOF) {
           this.#ended = true;
           this.push(null);
         } else if (payload.length > 0) {
           this.push(Buffer.from(payload));
         }
-        reply = this.#received;
-      } else if (wrapping(seq, this.#received) > HALF || seq === this.#received) {
+      } else if (
+        wrapping(seq, this.#received) > HALF ||
+        seq === this.#received
+      ) {
         // A retransmission of something already accepted.
         reply = this.#received;
       }
@@ -180,9 +198,17 @@ export class DatagramSession extends Duplex {
       const deadline = Date.now() + rto;
       for (;;) {
         if (wrapping(this.#acknowledged, seq) <= HALF) return;
-        if (this.#aborted) throw brokenPipe();
+        if (this.#aborted) {
+          // Every DATA frame before the end was acknowledged, so nothing is lost: a peer that hung up
+          // no longer reads, and its acknowledgement of the end may be the frame that was lost.
+          if (type === EOF) {
+            trace(`${this.kind} peer hung up before acknowledging the end`);
+            return;
+          }
+          throw brokenPipe();
+        }
         if (this.#closed && linger === undefined) {
-          throw new IpcError('the connection was closed', 'EPIPE');
+          throw new IpcError("the connection was closed", "EPIPE");
         }
         const now = Date.now();
         if (linger !== undefined && now >= linger) throw timedOut();
@@ -228,10 +254,13 @@ export class DatagramSession extends Duplex {
     const end = !this.#writeClosed && !this.#aborted;
     this.#writeClosed = true;
     const ending = end
-      ? this.#sendReliably(EOF, Buffer.alloc(0), Date.now() + LINGER).catch(() => {})
+      ? this.#sendReliably(EOF, Buffer.alloc(0), Date.now() + LINGER).catch(
+          () => {},
+        )
       : Promise.resolve();
     ending.then(() => {
-      if (!this.#aborted) for (let index = 0; index < 3; index += 1) this.#send(frame(ABORT, 0));
+      if (!this.#aborted)
+        for (let index = 0; index < 3; index += 1) this.#send(frame(ABORT, 0));
       this.#stopped = true;
       clearInterval(this.#timer);
       try {
@@ -246,44 +275,57 @@ export class DatagramSession extends Duplex {
 }
 
 const isIgnorable = (error) =>
-  ['ECONNREFUSED', 'ECONNRESET', 'EAGAIN', 'EWOULDBLOCK', 'ETIMEDOUT', 'EINTR'].includes(
-    error?.code,
-  );
+  [
+    "ECONNREFUSED",
+    "ECONNRESET",
+    "EAGAIN",
+    "EWOULDBLOCK",
+    "ETIMEDOUT",
+    "EINTR",
+  ].includes(error?.code);
 
 /**
  * Splits `host:port` or `[v6]:port` and resolves it to every address, in the
  * resolver's order, as `{ host, port, family }` entries.
  */
 export async function resolveAddresses(address) {
-  const colon = address.lastIndexOf(':');
+  const colon = address.lastIndexOf(":");
   const port = colon < 0 ? NaN : Number(address.slice(colon + 1));
   if (colon < 0 || !/^[0-9]+$/.test(address.slice(colon + 1)) || port > 65535) {
-    throw new IpcError(`invalid socket address \`${address}\``, 'EINVAL');
+    throw new IpcError(`invalid socket address \`${address}\``, "EINVAL");
   }
-  const host = address.slice(0, colon).replace(/^\[(.*)\]$/, '$1');
+  const host = address.slice(0, colon).replace(/^\[(.*)\]$/, "$1");
   if (net.isIP(host)) return [{ host, port, family: net.isIP(host) }];
   let found;
   try {
     found = await dns.lookup(host, { all: true });
   } catch (cause) {
-    throw new IpcError(`\`${address}\` resolves to no address`, 'EINVAL', { cause });
+    throw new IpcError(`\`${address}\` resolves to no address`, "EINVAL", {
+      cause,
+    });
   }
-  if (found.length === 0) throw new IpcError(`\`${address}\` resolves to no address`, 'EINVAL');
-  return found.map((entry) => ({ host: entry.address, port, family: entry.family }));
+  if (found.length === 0)
+    throw new IpcError(`\`${address}\` resolves to no address`, "EINVAL");
+  return found.map((entry) => ({
+    host: entry.address,
+    port,
+    family: entry.family,
+  }));
 }
 
 /** The display of a socket address, as Rust prints it. */
-export const display = (host, port) => (net.isIPv6(host) ? `[${host}]:${port}` : `${host}:${port}`);
+export const display = (host, port) =>
+  net.isIPv6(host) ? `[${host}]:${port}` : `${host}:${port}`;
 
 /** Connects to a `udp:` listener: HELLO, WELCOME, then a session on the WELCOME's source. */
 export async function connectUdp(endpoint, { signal } = {}) {
   const [server] = await resolveAddresses(endpoint.address);
   const serverText = display(server.host, server.port);
-  const socket = dgram.createSocket(server.family === 6 ? 'udp6' : 'udp4');
-  const ownChunk = endpoint.number('chunk', 1200, 16, 65000);
-  const rto = endpoint.millis('rto', 20);
-  const heartbeat = Math.max(endpoint.millis('heartbeat', 1000), 1);
-  const dead = Math.max(endpoint.millis('dead', 10_000), 1);
+  const socket = dgram.createSocket(server.family === 6 ? "udp6" : "udp4");
+  const ownChunk = endpoint.number("chunk", 1200, 16, 65000);
+  const rto = endpoint.millis("rto", 20);
+  const heartbeat = Math.max(endpoint.millis("heartbeat", 1000), 1);
+  const dead = Math.max(endpoint.millis("dead", 10_000), 1);
   const token = randomBytes(16);
   const payload = Buffer.alloc(20);
   token.copy(payload);
@@ -294,9 +336,9 @@ export async function connectUdp(endpoint, { signal } = {}) {
   let early = [];
   try {
     await new Promise((done, fail) => {
-      socket.once('error', fail);
+      socket.once("error", fail);
       socket.bind(0, () => {
-        socket.off('error', fail);
+        socket.off("error", fail);
         done();
       });
     });
@@ -306,9 +348,9 @@ export async function connectUdp(endpoint, { signal } = {}) {
       const finish = (error, value) => {
         clearTimeout(timer);
         clearInterval(resend);
-        socket.off('message', onMessage);
-        socket.off('error', onError);
-        signal?.removeEventListener('abort', onAbort);
+        socket.off("message", onMessage);
+        socket.off("error", onError);
+        signal?.removeEventListener("abort", onAbort);
         if (error) fail(error);
         else done(value);
       };
@@ -326,11 +368,17 @@ export async function connectUdp(endpoint, { signal } = {}) {
         socket.send(hello, server.port, server.host, (error) => {
           if (error && !isIgnorable(error)) finish(error);
         });
-      socket.on('message', onMessage);
-      socket.on('error', onError);
-      signal?.addEventListener('abort', onAbort, { once: true });
+      socket.on("message", onMessage);
+      socket.on("error", onError);
+      signal?.addEventListener("abort", onAbort, { once: true });
       timer = setTimeout(
-        () => finish(new IpcError(`no \`udp\` listener answered at ${serverText}`, 'ETIMEDOUT')),
+        () =>
+          finish(
+            new IpcError(
+              `no \`udp\` listener answered at ${serverText}`,
+              "ETIMEDOUT",
+            ),
+          ),
         timeout,
       );
       resend = setInterval(sendHello, 100);
@@ -339,24 +387,25 @@ export async function connectUdp(endpoint, { signal } = {}) {
     const { source } = welcome;
     // Frames that arrive before the session exists are kept for it.
     const collect = (bytes, from) => {
-      if (from.address === source.address && from.port === source.port) early.push(bytes);
+      if (from.address === source.address && from.port === source.port)
+        early.push(bytes);
     };
-    socket.on('message', collect);
+    socket.on("message", collect);
     await new Promise((done, fail) => {
-      socket.once('error', fail);
+      socket.once("error", fail);
       socket.connect(source.port, source.address, () => {
-        socket.off('error', fail);
+        socket.off("error", fail);
         done();
       });
     });
-    socket.off('message', collect);
+    socket.off("message", collect);
     const chunk = agreeChunk(ownChunk, welcome.chunk);
     trace(
       `udp connected to ${display(source.address, source.port)} through ${serverText}, chunk ${chunk}`,
     );
     let closed = false;
     session = new DatagramSession(
-      'udp',
+      "udp",
       {
         send: (bytes) => {
           if (!closed) socket.send(bytes, () => {});
@@ -368,8 +417,8 @@ export async function connectUdp(endpoint, { signal } = {}) {
       },
       { chunk, rto, heartbeat, dead },
     );
-    socket.on('message', (bytes) => session.receive(bytes));
-    socket.on('error', (error) => {
+    socket.on("message", (bytes) => session.receive(bytes));
+    socket.on("error", (error) => {
       if (!isIgnorable(error)) trace(`udp receive failed: ${error.message}`);
     });
     for (const bytes of early) session.receive(bytes);

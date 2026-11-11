@@ -551,6 +551,52 @@ public sealed class IpcTransportTests
         }
     });
 
+    /// <summary>
+    /// A reader may hang up as soon as it reads the end, and the acknowledgement of that end can be lost (a full
+    /// queue drops it, a removed System V queue discards it): the writer's half-close then still succeeds, as all its
+    /// data was acknowledged, while a later DATA frame is a broken pipe.
+    /// </summary>
+    [Fact]
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+        Justification = "The stream owns the session; the queues live as long as the test process.")]
+    public void APeerHangingUpInsteadOfAcknowledgingTheEndStillEndsTheStream() => Within(30, () =>
+    {
+        var (toA, toPeer) = (new BlockingCollection<byte[]>(), new BlockingCollection<byte[]>());
+        var settings = new DatagramSettings(64, TimeSpan.FromMilliseconds(5), null, null);
+        using var a = new IpcStream(new DatagramSession("test", new MemoryLink(toA, toPeer, 0), settings));
+        var received = new MemoryStream();
+        var peer = new Thread(() =>
+        {
+            var accepted = 0u;
+            while (toPeer.TryTake(out var frame, TimeSpan.FromSeconds(5)))
+            {
+                Assert.True(DatagramSession.TryParse(frame, out var kind, out var seq, out var payload));
+                if (kind == DatagramSession.Data)
+                {
+                    // A retransmission is acknowledged again, not read twice.
+                    if (seq == accepted + 1)
+                    {
+                        accepted = seq;
+                        received.Write(payload);
+                    }
+                    toA.Add(DatagramSession.Frame(DatagramSession.Ack, seq, []));
+                }
+                else if (kind == DatagramSession.Eof)
+                {
+                    toA.Add(DatagramSession.Frame(DatagramSession.Abort, 0, []));
+                    return;
+                }
+            }
+        });
+        peer.Start();
+        a.Write("links"u8);
+        a.CloseWrite();
+        peer.Join();
+        Assert.Equal("links"u8.ToArray(), received.ToArray());
+        var error = Assert.Throws<IpcException>(() => a.Write("more"u8));
+        Assert.Equal(IpcErrorKind.BrokenPipe, error.Kind);
+    });
+
     [Fact]
     public void DatagramFramesRoundTrip()
     {

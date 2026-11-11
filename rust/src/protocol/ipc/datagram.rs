@@ -161,6 +161,7 @@ impl Shared {
         let Some((kind, seq, payload)) = parse(frame) else {
             return;
         };
+        let mut deliver = false;
         let reply = {
             let mut state = self.lock();
             state.last_heard = Instant::now();
@@ -171,13 +172,10 @@ impl Shared {
                         && state.inbound.len() <= WINDOW
                         && payload.len() <= self.settings.chunk
                     {
+                        // Only this thread handles frames, so the frame is delivered below, after its
+                        // acknowledgement.
                         state.received = seq;
-                        if kind == EOF {
-                            state.ended = true;
-                        } else {
-                            state.inbound.extend(payload);
-                        }
-                        self.changed.notify_all();
+                        deliver = true;
                         Some(state.received)
                     } else if seq.wrapping_sub(state.received) > u32::MAX / 2
                         || seq == state.received
@@ -208,6 +206,17 @@ impl Shared {
         };
         if let Some(seq) = reply {
             let _ = self.send(&frame_ack(seq));
+        }
+        if deliver {
+            // The reader sees the frame only once it is acknowledged: a reader that hangs up as soon as it sees the
+            // end must not abort the peer before the peer learns its end arrived.
+            let mut state = self.lock();
+            if kind == EOF {
+                state.ended = true;
+            } else {
+                state.inbound.extend(payload);
+            }
+            self.changed.notify_all();
         }
     }
 
@@ -259,6 +268,12 @@ impl Shared {
                     return Ok(());
                 }
                 if state.aborted {
+                    if kind == EOF {
+                        // Every DATA frame before the end was acknowledged, so nothing is lost: a peer that
+                        // hung up no longer reads, and its acknowledgement of the end may be the frame lost.
+                        trace!("{} peer hung up before acknowledging the end", self.kind);
+                        return Ok(());
+                    }
                     return Err(broken_pipe());
                 }
                 if state.closed && linger.is_none() {

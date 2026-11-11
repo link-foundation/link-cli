@@ -208,8 +208,16 @@ except ACK.
   1000 ms, until acknowledged or the peer is gone.
 - **Receiver.** A frame whose sequence is the next expected one is accepted when
   at most 1 MiB is waiting to be read; it is then acknowledged with
-  `ACK(seq)`. A smaller sequence (a retransmission) is acknowledged again with
-  the last accepted sequence. Other frames are dropped unacknowledged.
+  `ACK(seq)`, and only after that sent may the reader see it. A smaller
+  sequence (a retransmission) is acknowledged again with the last accepted
+  sequence. Other frames are dropped unacknowledged.
+- **The last acknowledgement.** A reader may hang up as soon as it reads the
+  end, and the `ACK` of that EOF can still be lost: a full POSIX queue drops it,
+  and removing a System V queue discards what it holds. So a sender waiting for
+  the acknowledgement of its EOF that meets ABORT (or finds the peer gone)
+  treats the end as delivered, like TCP's `shutdown(SHUT_WR)`: every DATA frame
+  before it was already acknowledged, and a peer that hung up reads no more.
+  Only a DATA frame left unacknowledged is a broken pipe.
 - **EOF** ends the direction after the data before it. **ABORT** hangs up both
   directions at once and is not acknowledged. Shutting a session down sends
   it (three times, as it may be lost) even after an orderly EOF, so the peer

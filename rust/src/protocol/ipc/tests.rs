@@ -516,6 +516,59 @@ fn datagram_sessions_survive_loss() {
     });
 }
 
+/// A reader may hang up as soon as it reads the end, and the acknowledgement of
+/// that end can be lost (a full queue drops it, a removed System V queue
+/// discards it): the writer's half-close then still succeeds, as all its data
+/// was acknowledged, while a later DATA frame is a broken pipe.
+#[test]
+fn a_peer_hanging_up_instead_of_acknowledging_the_end_still_ends_the_stream() {
+    within(30, || {
+        let (a, peer) = memory::pair(0);
+        let settings = Settings {
+            chunk: 64,
+            rto: Duration::from_millis(5),
+            heartbeat: None,
+            dead: None,
+        };
+        let mut a = IpcStream::new(Session::start("test", Arc::new(a), settings).expect("session"));
+        let peer = thread::spawn(move || {
+            let mut buffer = Vec::new();
+            let mut received = Vec::new();
+            let mut accepted = 0;
+            loop {
+                if !datagram::Datagrams::recv(&peer, &mut buffer, Duration::from_secs(5))
+                    .expect("receive")
+                {
+                    continue;
+                }
+                let (kind, seq, payload) = datagram::parse(&buffer).expect("a frame");
+                match kind {
+                    datagram::DATA => {
+                        // A retransmission is acknowledged again, not read twice.
+                        if seq == accepted + 1 {
+                            accepted = seq;
+                            received.extend_from_slice(payload);
+                        }
+                        datagram::Datagrams::send(&peer, &datagram::frame(datagram::ACK, seq, &[]))
+                            .expect("ack");
+                    }
+                    datagram::EOF => {
+                        datagram::Datagrams::send(&peer, &datagram::frame(datagram::ABORT, 0, &[]))
+                            .expect("abort");
+                        return received;
+                    }
+                    _ => {}
+                }
+            }
+        });
+        a.write_all(b"links").expect("write");
+        a.close_write().expect("the end counts as delivered");
+        assert_eq!(peer.join().expect("peer"), b"links");
+        let error = a.write_all(b"more").expect_err("the peer no longer reads");
+        assert_eq!(error.kind(), io::ErrorKind::BrokenPipe);
+    });
+}
+
 #[test]
 fn datagram_frames_round_trip() {
     let frame = datagram::frame(datagram::DATA, 7, b"links");
