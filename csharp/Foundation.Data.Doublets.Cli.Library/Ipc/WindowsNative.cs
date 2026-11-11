@@ -14,23 +14,23 @@ internal static partial class WindowsNative
     public const int ErrorAccessDenied = 5;
     public const int StdOutputHandle = -11;
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
-    private static partial nint OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint pid);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern nint OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint pid);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool GetExitCodeProcess(nint process, out uint code);
+    private static extern bool GetExitCodeProcess(nint process, out uint code);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool CloseHandle(nint handle);
+    public static extern bool CloseHandle(nint handle);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
-    private static partial nint GetStdHandle(int which);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern nint GetStdHandle(int which);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetStdHandle(int which, nint handle);
+    private static extern bool SetStdHandle(int which, nint handle);
 
     /// <summary>The last Win32 error as an <see cref="IpcException"/> with the system message.</summary>
     public static IpcException LastError(string? what = null) => CodeError(Marshal.GetLastPInvokeError(), what);

@@ -74,7 +74,8 @@ public sealed class IpcTransportTests
                     {
                     }
                 }
-            }) { IsBackground = true }.Start();
+            })
+            { IsBackground = true }.Start();
         }
         listener.Dispose();
         return served;

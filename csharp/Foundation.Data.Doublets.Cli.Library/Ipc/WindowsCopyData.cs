@@ -69,38 +69,38 @@ internal static unsafe partial class WindowsCopyData
         public nint Pointer;
     }
 
-    [LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleW", SetLastError = true)]
-    private static partial nint GetModuleHandle(nint name);
+    [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", SetLastError = true, ExactSpelling = true)]
+    private static extern nint GetModuleHandle(nint name);
 
-    [LibraryImport("user32.dll", EntryPoint = "RegisterClassW", SetLastError = true)]
-    private static partial ushort RegisterClass(in WindowClass windowClass);
+    [DllImport("user32.dll", EntryPoint = "RegisterClassW", SetLastError = true, ExactSpelling = true)]
+    private static extern ushort RegisterClass(in WindowClass windowClass);
 
-    [LibraryImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-    private static partial nint CreateWindowEx(uint exStyle, nint className, nint windowName, uint style, int x, int y,
+    [DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true, ExactSpelling = true)]
+    private static extern nint CreateWindowEx(uint exStyle, nint className, nint windowName, uint style, int x, int y,
         int width, int height, nint parent, nint menu, nint instance, nint parameter);
 
-    [LibraryImport("user32.dll", EntryPoint = "DefWindowProcW")]
-    private static partial nint DefWindowProc(nint window, uint message, nuint wparam, nint lparam);
+    [DllImport("user32.dll", EntryPoint = "DefWindowProcW", ExactSpelling = true)]
+    private static extern nint DefWindowProc(nint window, uint message, nuint wparam, nint lparam);
 
-    [LibraryImport("user32.dll", EntryPoint = "GetMessageW", SetLastError = true)]
-    private static partial int GetMessage(out Message message, nint window, uint min, uint max);
+    [DllImport("user32.dll", EntryPoint = "GetMessageW", SetLastError = true, ExactSpelling = true)]
+    private static extern int GetMessage(out Message message, nint window, uint min, uint max);
 
-    [LibraryImport("user32.dll")]
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool TranslateMessage(in Message message);
+    private static extern bool TranslateMessage(in Message message);
 
-    [LibraryImport("user32.dll", EntryPoint = "DispatchMessageW")]
-    private static partial nint DispatchMessage(in Message message);
+    [DllImport("user32.dll", EntryPoint = "DispatchMessageW", ExactSpelling = true)]
+    private static extern nint DispatchMessage(in Message message);
 
-    [LibraryImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
+    [DllImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true, ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool PostMessage(nint window, uint message, nuint wparam, nint lparam);
+    private static extern bool PostMessage(nint window, uint message, nuint wparam, nint lparam);
 
-    [LibraryImport("user32.dll")]
-    private static partial void PostQuitMessage(int code);
+    [DllImport("user32.dll")]
+    private static extern void PostQuitMessage(int code);
 
-    [LibraryImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-    private static partial nint SendMessageTimeout(nint window, uint message, nuint wparam, nint lparam, uint flags,
+    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true, ExactSpelling = true)]
+    private static extern nint SendMessageTimeout(nint window, uint message, nuint wparam, nint lparam, uint flags,
         uint timeout, out nuint result);
 
     /// <summary>The inbox of every live window, by window handle.</summary>

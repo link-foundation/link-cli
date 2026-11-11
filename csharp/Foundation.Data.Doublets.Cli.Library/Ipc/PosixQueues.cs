@@ -40,57 +40,57 @@ internal static partial class PosixNative
         public nint Reserved3;
     }
 
-    [LibraryImport(Libc, EntryPoint = "mkfifo", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int MkfifoNative(string path, uint mode);
+    [DllImport(Libc, EntryPoint = "mkfifo", SetLastError = true, ExactSpelling = true)]
+    private static extern int MkfifoNative([MarshalAs(UnmanagedType.LPUTF8Str)] string path, uint mode);
 
-    [LibraryImport(Libc, EntryPoint = "open", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int OpenNative(string path, int flags);
+    [DllImport(Libc, EntryPoint = "open", SetLastError = true, ExactSpelling = true)]
+    private static extern int OpenNative([MarshalAs(UnmanagedType.LPUTF8Str)] string path, int flags);
 
-    [LibraryImport(Libc, EntryPoint = "poll", SetLastError = true)]
-    private static partial int PollNative(ref PollFd entry, nuint count, int timeout);
+    [DllImport(Libc, EntryPoint = "poll", SetLastError = true, ExactSpelling = true)]
+    private static extern int PollNative(ref PollFd entry, nuint count, int timeout);
 
-    [LibraryImport(Libc, EntryPoint = "read", SetLastError = true)]
-    private static unsafe partial nint ReadNative(int fd, byte* buffer, nuint count);
+    [DllImport(Libc, EntryPoint = "read", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern nint ReadNative(int fd, byte* buffer, nuint count);
 
-    [LibraryImport(Libc, EntryPoint = "write", SetLastError = true)]
-    private static unsafe partial nint WriteNative(int fd, byte* buffer, nuint count);
+    [DllImport(Libc, EntryPoint = "write", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern nint WriteNative(int fd, byte* buffer, nuint count);
 
-    [LibraryImport(Libc, EntryPoint = "clock_gettime", SetLastError = true)]
-    private static partial int ClockGettime(int clock, out TimeSpec now);
+    [DllImport(Libc, EntryPoint = "clock_gettime", SetLastError = true, ExactSpelling = true)]
+    private static extern int ClockGettime(int clock, out TimeSpec now);
 
-    [LibraryImport(Libc, EntryPoint = "mq_open", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int MqOpenCreate(string name, int flags, uint mode, ref MqAttr attributes);
+    [DllImport(Libc, EntryPoint = "mq_open", SetLastError = true, ExactSpelling = true)]
+    private static extern int MqOpenCreate([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags, uint mode, ref MqAttr attributes);
 
-    [LibraryImport(Libc, EntryPoint = "mq_open", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int MqOpenExisting(string name, int flags);
+    [DllImport(Libc, EntryPoint = "mq_open", SetLastError = true, ExactSpelling = true)]
+    private static extern int MqOpenExisting([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags);
 
-    [LibraryImport(Libc, EntryPoint = "mq_close", SetLastError = true)]
-    public static partial int MqClose(int queue);
+    [DllImport(Libc, EntryPoint = "mq_close", SetLastError = true, ExactSpelling = true)]
+    public static extern int MqClose(int queue);
 
-    [LibraryImport(Libc, EntryPoint = "mq_unlink", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    public static partial int MqUnlink(string name);
+    [DllImport(Libc, EntryPoint = "mq_unlink", SetLastError = true, ExactSpelling = true)]
+    public static extern int MqUnlink([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
-    [LibraryImport(Libc, EntryPoint = "mq_getattr", SetLastError = true)]
-    private static partial int MqGetattr(int queue, out MqAttr attributes);
+    [DllImport(Libc, EntryPoint = "mq_getattr", SetLastError = true, ExactSpelling = true)]
+    private static extern int MqGetattr(int queue, out MqAttr attributes);
 
-    [LibraryImport(Libc, EntryPoint = "mq_timedsend", SetLastError = true)]
-    private static unsafe partial int MqTimedsend(int queue, byte* message, nuint length, uint priority, ref TimeSpec deadline);
+    [DllImport(Libc, EntryPoint = "mq_timedsend", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern int MqTimedsend(int queue, byte* message, nuint length, uint priority, ref TimeSpec deadline);
 
-    [LibraryImport(Libc, EntryPoint = "mq_timedreceive", SetLastError = true)]
-    private static unsafe partial nint MqTimedreceive(int queue, byte* message, nuint length, nint priority,
+    [DllImport(Libc, EntryPoint = "mq_timedreceive", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern nint MqTimedreceive(int queue, byte* message, nuint length, nint priority,
         ref TimeSpec deadline);
 
-    [LibraryImport(Libc, EntryPoint = "msgget", SetLastError = true)]
-    private static partial int Msgget(int key, int flags);
+    [DllImport(Libc, EntryPoint = "msgget", SetLastError = true, ExactSpelling = true)]
+    private static extern int Msgget(int key, int flags);
 
-    [LibraryImport(Libc, EntryPoint = "msgsnd", SetLastError = true)]
-    private static unsafe partial int Msgsnd(int queue, byte* message, nuint size, int flags);
+    [DllImport(Libc, EntryPoint = "msgsnd", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern int Msgsnd(int queue, byte* message, nuint size, int flags);
 
-    [LibraryImport(Libc, EntryPoint = "msgrcv", SetLastError = true)]
-    private static unsafe partial nint Msgrcv(int queue, byte* message, nuint size, nint type, int flags);
+    [DllImport(Libc, EntryPoint = "msgrcv", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern nint Msgrcv(int queue, byte* message, nuint size, nint type, int flags);
 
-    [LibraryImport(Libc, EntryPoint = "msgctl", SetLastError = true)]
-    private static partial int Msgctl(int queue, int command, nint buffer);
+    [DllImport(Libc, EntryPoint = "msgctl", SetLastError = true, ExactSpelling = true)]
+    private static extern int Msgctl(int queue, int command, nint buffer);
 
     public static int LastErrno => Marshal.GetLastPInvokeError();
 

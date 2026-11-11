@@ -15,42 +15,42 @@ internal static partial class PosixNative
     public const int EAGAIN_LINUX = 11;
     public const int EAGAIN_BSD = 35;
 
-    [LibraryImport(Libc, EntryPoint = "kill", SetLastError = true)]
-    private static partial int Kill(int pid, int signal);
+    [DllImport(Libc, EntryPoint = "kill", SetLastError = true, ExactSpelling = true)]
+    private static extern int Kill(int pid, int signal);
 
-    [LibraryImport(Libc, EntryPoint = "dup2", SetLastError = true)]
-    private static partial int Dup2(int from, int to);
+    [DllImport(Libc, EntryPoint = "dup2", SetLastError = true, ExactSpelling = true)]
+    private static extern int Dup2(int from, int to);
 
-    [LibraryImport(Libc, EntryPoint = "mmap", SetLastError = true)]
-    private static partial nint Mmap(nint address, nuint length, int protection, int flags, int fd, long offset);
+    [DllImport(Libc, EntryPoint = "mmap", SetLastError = true, ExactSpelling = true)]
+    private static extern nint Mmap(nint address, nuint length, int protection, int flags, int fd, long offset);
 
-    [LibraryImport(Libc, EntryPoint = "munmap", SetLastError = true)]
-    private static partial int Munmap(nint address, nuint length);
+    [DllImport(Libc, EntryPoint = "munmap", SetLastError = true, ExactSpelling = true)]
+    private static extern int Munmap(nint address, nuint length);
 
-    [LibraryImport(Libc, EntryPoint = "shm_open", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int ShmOpen(string name, int flags, uint mode);
+    [DllImport(Libc, EntryPoint = "shm_open", SetLastError = true, ExactSpelling = true)]
+    private static extern int ShmOpen([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags, uint mode);
 
     /// <summary>
     /// <c>shm_open</c> is variadic: on Apple arm64 a variadic argument goes on the stack, so six dummy register
     /// arguments push the mode past the eight argument registers.
     /// </summary>
-    [LibraryImport(Libc, EntryPoint = "shm_open", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int ShmOpenVariadic(string name, int flags, int a, int b, int c, int d, int e, int f, long mode);
+    [DllImport(Libc, EntryPoint = "shm_open", SetLastError = true, ExactSpelling = true)]
+    private static extern int ShmOpenVariadic([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags, int a, int b, int c, int d, int e, int f, long mode);
 
-    [LibraryImport(Libc, EntryPoint = "shm_unlink", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int ShmUnlink(string name);
+    [DllImport(Libc, EntryPoint = "shm_unlink", SetLastError = true, ExactSpelling = true)]
+    private static extern int ShmUnlink([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
-    [LibraryImport(Libc, EntryPoint = "ftruncate", SetLastError = true)]
-    private static partial int Ftruncate(int fd, long length);
+    [DllImport(Libc, EntryPoint = "ftruncate", SetLastError = true, ExactSpelling = true)]
+    private static extern int Ftruncate(int fd, long length);
 
-    [LibraryImport(Libc, EntryPoint = "fstat", SetLastError = true)]
-    private static unsafe partial int Fstat(int fd, byte* stat);
+    [DllImport(Libc, EntryPoint = "fstat", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern int Fstat(int fd, byte* stat);
 
-    [LibraryImport(Libc, EntryPoint = "fstat$INODE64", SetLastError = true)]
-    private static unsafe partial int FstatInode64(int fd, byte* stat);
+    [DllImport(Libc, EntryPoint = "fstat$INODE64", SetLastError = true, ExactSpelling = true)]
+    private static unsafe extern int FstatInode64(int fd, byte* stat);
 
-    [LibraryImport(Libc, EntryPoint = "close", SetLastError = true)]
-    private static partial int Close(int fd);
+    [DllImport(Libc, EntryPoint = "close", SetLastError = true, ExactSpelling = true)]
+    private static extern int Close(int fd);
 
     private static int Errno => Marshal.GetLastPInvokeError();
 

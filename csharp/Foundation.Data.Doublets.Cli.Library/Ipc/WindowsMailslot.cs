@@ -20,24 +20,24 @@ internal static unsafe partial class WindowsMailslot
     private const int ErrorSemTimeout = 121;
     private const uint Slice = 100;
 
-    [LibraryImport("kernel32.dll", EntryPoint = "CreateMailslotW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    private static partial SafeFileHandle CreateMailslot(string name, uint maxMessageSize, uint readTimeout, nint security);
+    [DllImport("kernel32.dll", EntryPoint = "CreateMailslotW", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern SafeFileHandle CreateMailslot(string name, uint maxMessageSize, uint readTimeout, nint security);
 
-    [LibraryImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    private static partial SafeFileHandle CreateFile(string name, uint access, uint share, nint security, uint disposition,
+    [DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern SafeFileHandle CreateFile(string name, uint access, uint share, nint security, uint disposition,
         uint flags, nint template);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetMailslotInfo(SafeFileHandle mailslot, uint readTimeout);
+    private static extern bool SetMailslotInfo(SafeFileHandle mailslot, uint readTimeout);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool WriteFile(SafeFileHandle file, byte* buffer, uint length, out uint written, nint overlapped);
+    private static extern bool WriteFile(SafeFileHandle file, byte* buffer, uint length, out uint written, nint overlapped);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool ReadFile(SafeFileHandle file, byte* buffer, uint length, out uint read, nint overlapped);
+    private static extern bool ReadFile(SafeFileHandle file, byte* buffer, uint length, out uint read, nint overlapped);
 
     private static string Name(string id, char side) => $@"\\.\mailslot\clink-{id}-{side}";
 

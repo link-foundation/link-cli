@@ -22,13 +22,13 @@ internal static partial class WindowsPipe
     private const int BufferSize = 64 * 1024;
     private static readonly TimeSpan Slice = TimeSpan.FromMilliseconds(100);
 
-    [LibraryImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    private static partial SafePipeHandle CreateFile(string name, uint access, uint share, nint security, uint disposition,
+    [DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern SafePipeHandle CreateFile(string name, uint access, uint share, nint security, uint disposition,
         uint flags, nint template);
 
-    [LibraryImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [DllImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool WaitNamedPipe(string name, uint milliseconds);
+    private static extern bool WaitNamedPipe(string name, uint milliseconds);
 
     /// <summary>The full pipe path of an address: a bare name lives under <c>\\.\pipe\</c>.</summary>
     public static string PipeName(string address)

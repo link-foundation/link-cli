@@ -305,7 +305,8 @@ public static class IpcTransports
             {
                 backwardError = error;
             }
-        }) { IsBackground = true, Name = "clink-relay" };
+        })
+        { IsBackground = true, Name = "clink-relay" };
         thread.Start();
         long forward = 0;
         Exception? forwardError = null;

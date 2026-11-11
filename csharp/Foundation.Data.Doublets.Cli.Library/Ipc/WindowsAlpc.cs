@@ -186,11 +186,15 @@ internal static unsafe class WindowsAlpc
         {
             var unicode = new UnicodeString
             {
-                Length = (ushort)(name.Length * 2), MaximumLength = (ushort)(name.Length * 2), Buffer = chars,
+                Length = (ushort)(name.Length * 2),
+                MaximumLength = (ushort)(name.Length * 2),
+                Buffer = chars,
             };
             var objectAttributes = new ObjectAttributes
             {
-                Length = (uint)sizeof(ObjectAttributes), ObjectName = &unicode, Attributes = ObjCaseInsensitive,
+                Length = (uint)sizeof(ObjectAttributes),
+                ObjectName = &unicode,
+                Attributes = ObjCaseInsensitive,
             };
             status = nt.Create(&port, &objectAttributes, &attributes);
         }
@@ -212,7 +216,9 @@ internal static unsafe class WindowsAlpc
         {
             var unicode = new UnicodeString
             {
-                Length = (ushort)(name.Length * 2), MaximumLength = (ushort)(name.Length * 2), Buffer = chars,
+                Length = (ushort)(name.Length * 2),
+                MaximumLength = (ushort)(name.Length * 2),
+                Buffer = chars,
             };
             status = nt.Connect(&port, &unicode, null, &attributes, SyncRequest, 0, &message, &length, 0, 0, &interval);
         }
