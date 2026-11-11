@@ -52,7 +52,7 @@ From the owner's PR review:
   docs and experiment.
 - [x] Versions and changelogs: Rust fragments, a C# changeset, and the
   JavaScript client at 0.5.0.
-- [ ] Every CI check passes on the final head. This is recorded in the PR
+- [x] Every CI check passes on the final head. This is recorded in the PR
   description.
 
 ## Execution order
