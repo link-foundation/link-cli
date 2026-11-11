@@ -169,7 +169,10 @@ server→client bytes. The client initializes both complements to `0xFFFFFFFF`.
   `head mod C` (wrapping), then publish `head`. Wait while the ring is full.
   Fail with "broken pipe" once the reader state is `2`.
 - **Read.** Copy up to `used` bytes from `tail mod C`, then publish `tail`. When
-  the ring is empty and the writer state is not `0`, the direction has ended.
+  the ring is empty and the writer state is not `0`, load `head` and `tail`
+  again: the writer may have published its last bytes between the first check
+  and storing its state. Only when the ring is still empty has the direction
+  ended.
 - **Close.** Ending a direction stores writer state `1` after its last byte.
   Hanging up stores writer state `2` on the outgoing ring and reader state `2`
   on the incoming ring.

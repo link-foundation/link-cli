@@ -411,7 +411,15 @@ impl Transport for RingTransport {
             match self.region.load(self.incoming + WRITER_STATE)? {
                 OPEN => {}
                 ABORTED => return Err(hung_up()),
-                _ => return Ok(0),
+                _ => {
+                    // The writer may have written its last bytes after the
+                    // positions above were read and before it ended.
+                    let (head, tail) = self.positions(self.incoming)?;
+                    if head != tail {
+                        continue;
+                    }
+                    return Ok(0);
+                }
             }
             let now = Instant::now();
             if now.duration_since(last_check) >= PEER_CHECK {
