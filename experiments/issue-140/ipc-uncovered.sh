@@ -1,6 +1,6 @@
 #!/bin/sh
 # Lists the uncovered lines and branches of js/client/src/ipc*.js for the given test files.
-cd "$(dirname "$0")/../js/client" || exit 1
+cd "$(dirname "$0")/../../js/client" || exit 1
 node --test --test-concurrency=1 --test-timeout=30000 --experimental-test-coverage \
   --test-coverage-include='src/ipc*' --test-reporter=spec --test-reporter-destination=/tmp/ipc-spec.log \
   --test-reporter=lcov --test-reporter-destination=/tmp/ipc.lcov "$@" >/dev/null 2>&1

@@ -20,7 +20,14 @@ import {
   resolveAddresses,
 } from '../src/ipc-datagram.js';
 import { connectStream, parseEndpoint } from '../src/ipc.js';
-import { collect, echo, payload, rejectsWith, sleep, udpListener } from './support/ipc-listener.mjs';
+import {
+  collect,
+  echo,
+  payload,
+  rejectsWith,
+  sleep,
+  udpListener,
+} from './support/ipc-listener.mjs';
 
 /** A session whose link records the frames it sends. */
 const recorded = (settings = {}, link = {}) => {
@@ -303,6 +310,13 @@ test('udp: a silent listener times out, and an abort stops the handshake', async
   assert.equal(hellos, 1);
 });
 
+test('udp: a port no HELLO can reach fails at once and leaves no resend behind', async () => {
+  await assert.rejects(connectStream('udp:127.0.0.1:0?timeout=300'), {
+    code: 'ERR_SOCKET_BAD_PORT',
+  });
+  // Before the fix the resend interval threw ERR_SOCKET_BAD_PORT here, uncaught.
+  await sleep(250);
+});
 
 test('udp: socket failures during the handshake are reported', async (t) => {
   let patched = nextSocket(t, (socket) => {

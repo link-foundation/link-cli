@@ -338,10 +338,17 @@ export async function connectUdp(endpoint, { signal } = {}) {
         if (!isIgnorable(error)) finish(error);
       };
       const onAbort = () => finish(signal.reason);
-      const sendHello = () =>
-        socket.send(hello, server.port, server.host, (error) => {
-          if (error && !isIgnorable(error)) finish(error);
-        });
+      // `send` throws at once for an address it refuses (port 0), so the
+      // timers are stopped there too, or the resend would throw later.
+      const sendHello = () => {
+        try {
+          socket.send(hello, server.port, server.host, (error) => {
+            if (error && !isIgnorable(error)) finish(error);
+          });
+        } catch (error) {
+          finish(error);
+        }
+      };
       socket.on('message', onMessage);
       socket.on('error', onError);
       signal?.addEventListener('abort', onAbort, { once: true });
