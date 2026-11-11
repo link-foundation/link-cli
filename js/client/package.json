@@ -1,7 +1,7 @@
 {
   "name": "@link-foundation/link-cli-client",
-  "version": "0.4.0",
-  "description": "Minimal universal JS/TS client for link-cli stores: the clink --serve TCP protocol (Node.js, Bun, Deno), a subprocess adapter and the in-process WebAssembly backend, behind one contract with explicit capabilities",
+  "version": "0.5.0",
+  "description": "Minimal universal JS/TS client for link-cli stores: the clink --serve protocol over TCP (Node.js, Bun, Deno) and every IPC endpoint (Unix sockets, named pipes, FIFOs, UDP, shared memory, message queues, ...), a subprocess adapter and the in-process WebAssembly backend, behind one contract with explicit capabilities",
   "type": "module",
   "license": "Unlicense",
   "repository": {
@@ -19,6 +19,7 @@
     "link-cli",
     "clink",
     "client",
+    "ipc",
     "wasm"
   ],
   "sideEffects": false,
@@ -36,6 +37,10 @@
     "./tcp": {
       "types": "./types/tcp.d.ts",
       "default": "./src/tcp.js"
+    },
+    "./ipc": {
+      "types": "./types/ipc.d.ts",
+      "default": "./src/ipc.js"
     },
     "./process": {
       "types": "./types/process.d.ts",
