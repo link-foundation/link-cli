@@ -3,6 +3,7 @@ their own files so every Rust file stays under the 1000-line CI limit.
 
 Usage: python3 split_ipc_modules.py RUST_IPC_DIR
 """
+
 import os
 import re
 import sys
@@ -11,7 +12,14 @@ root = sys.argv[1]
 
 
 def dedent(lines):
-    return [line[4:] if line.startswith("    ") else line.lstrip(" ") if not line.strip() else line for line in lines]
+    return [
+        line[4:]
+        if line.startswith("    ")
+        else line.lstrip(" ")
+        if not line.strip()
+        else line
+        for line in lines
+    ]
 
 
 def extract(source, target_dir, modules, wrap=None):
@@ -66,7 +74,9 @@ def extract(source, target_dir, modules, wrap=None):
     os.remove(source)
 
 
-extract(os.path.join(root, "unix.rs"), os.path.join(root, "unix"), {"posix_mq", "sysv_mq"})
+extract(
+    os.path.join(root, "unix.rs"), os.path.join(root, "unix"), {"posix_mq", "sysv_mq"}
+)
 extract(
     os.path.join(root, "windows.rs"),
     os.path.join(root, "windows"),
