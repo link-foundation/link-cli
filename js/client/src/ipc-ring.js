@@ -25,7 +25,6 @@ const ABORTED = 2;
 const GONE = 2;
 const PEER_CHECK = 100;
 const READ_CHUNK = 65536;
-const WINDOWS = process.platform === 'win32';
 
 export const regionSize = (capacity) => HEADER + 2 * (RING_HEADER + capacity);
 export const ringBase = (ring, capacity) => HEADER + ring * (RING_HEADER + capacity);
@@ -423,8 +422,11 @@ function createFile(file, size) {
   return fd;
 }
 
-/** Connects to a `shm`, `mmap`, `file` or `signal` listener. */
-export async function connectRing(endpoint, { signal } = {}) {
+/**
+ * Connects to a `shm`, `mmap`, `file` or `signal` listener; `platform`
+ * (default: this one) decides when the files are removed.
+ */
+export async function connectRing(endpoint, { signal } = {}, platform = process.platform) {
   const kind = endpoint.kind;
   const rendezvous = Rendezvous.begin(endpoint, kind);
   const capacity = endpoint.number('capacity', 65536, 64, 1 << 30);
@@ -447,8 +449,9 @@ export async function connectRing(endpoint, { signal } = {}) {
     const notifier =
       kind === 'signal' ? new SignalNotifier(peer, peerSignal(ack)) : new PollNotifier(poll);
     // Both sides hold the region open now; nothing should outlive a crash.
-    const cleanup = WINDOWS ? [file] : [];
-    if (!WINDOWS) forget();
+    const windows = platform === 'win32';
+    const cleanup = windows ? [file] : [];
+    if (!windows) forget();
     const stream = new RingStream({ kind, region, notifier, peerPid: peer, cleanup });
     trace(`${kind} connected as ${rendezvous.id} to process ${peer}, ${capacity} bytes per ring`);
     return stream;

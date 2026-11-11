@@ -41,10 +41,12 @@ const COMMON = ['timeout'];
 const RENDEZVOUS = ['poll', 'accept-poll'];
 const RING = ['capacity'];
 const DATAGRAM = ['chunk', 'rto'];
-const WINDOWS = process.platform === 'win32';
 
-/** The options a built-in kind accepts, in the order the Rust errors list them. */
-export function optionsOf(kind) {
+/**
+ * The options a built-in kind accepts on `platform` (default: this one), in
+ * the order the Rust errors list them.
+ */
+export function optionsOf(kind, platform = process.platform) {
   switch (kind) {
     case 'tcp':
     case 'unix':
@@ -52,7 +54,7 @@ export function optionsOf(kind) {
     case 'exec':
       return [...COMMON];
     case 'pipe':
-      return WINDOWS ? [...COMMON] : [...COMMON, ...RENDEZVOUS];
+      return platform === 'win32' ? [...COMMON] : [...COMMON, ...RENDEZVOUS];
     case 'fifo':
       return [...COMMON, ...RENDEZVOUS];
     case 'shm':

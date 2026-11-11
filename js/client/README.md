@@ -133,7 +133,9 @@ ALPC) work this way wherever the Rust `clink` supports them:
 | `stdio` | serving only | serving only | serving only |
 
 `supportsNatively(kind)` and `supports(kind)` (natively or through the bridge)
-answer for the running platform. The bridge runs the command in the option
+answer for the running platform, or for another one given as
+`supports(kind, 'win32', 'x64')`; `bridgeableKinds(platform, arch)` lists what
+the bridge reaches there. The bridge runs the command in the option
 `clink`, else the environment variable `CLINK_BIN`, else `clink` on the `PATH`;
 its stream has `bridged: true` and the child's `pid`. Every connect honours
 `signal`, `deadline` and `timeout`, and the endpoint's own `?timeout=MS`.

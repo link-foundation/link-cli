@@ -82,10 +82,20 @@ export type IpcConnect = (
 /** Adds a custom endpoint kind; built-in kinds cannot be replaced. */
 export function registerTransport(kind: string, connect: IpcConnect): void;
 
-/** Whether the kind is connected to without the `clink` bridge (custom kinds count). */
-export function supportsNatively(kind: string): boolean;
-/** Whether the kind can be connected to on this platform, natively or through the bridge. */
-export function supports(kind: string): boolean;
+/**
+ * Whether the kind is connected to without the `clink` bridge on `platform`
+ * (default: this one; custom kinds count).
+ */
+export function supportsNatively(kind: string, platform?: string): boolean;
+/**
+ * Whether the kind can be connected to on `platform` and `arch` (default: this
+ * machine), natively or through the bridge.
+ */
+export function supports(kind: string, platform?: string, arch?: string): boolean;
+/** The kinds the `clink` bridge connects to on `platform` and `arch` (default: this machine). */
+export function bridgeableKinds(platform?: string, arch?: string): Set<IpcKind>;
+/** The function a kind is connected to with on `platform` without the bridge, if any. */
+export function nativeConnect(kind: string, platform?: string): IpcConnect | undefined;
 
 /** Turns the `[ipc]` log on standard error on or off (it starts on with `CLINK_IPC_TRACE=1`). */
 export function setTrace(on: boolean): void;

@@ -28,58 +28,37 @@ export { Endpoint, IpcError, KINDS, parseEndpoint, registerTransport } from './i
 export { setTrace, traceEnabled } from './ipc-trace.js';
 
 const PLATFORM = process.platform;
-const WINDOWS = PLATFORM === 'win32';
-const LINUX = PLATFORM === 'linux';
-const APPLE = PLATFORM === 'darwin';
-const WINDOWS_64 = WINDOWS && ['x64', 'arm64'].includes(process.arch);
+const ARCH = process.arch;
 
-/** The kinds this client speaks without a bridge, on this platform. */
-const NATIVE = new Set(
-  [
-    'tcp',
-    'udp',
-    'exec',
-    'pipe',
-    'file',
-    'mmap',
-    !WINDOWS && 'unix',
-    !WINDOWS && 'fifo',
-    !WINDOWS && 'signal',
-    LINUX && 'shm',
-  ].filter(Boolean),
-);
+/**
+ * The kinds the Rust `clink` (the bridge) connects to on `platform` and
+ * `arch` (default: this machine).
+ */
+export function bridgeableKinds(platform = PLATFORM, arch = ARCH) {
+  const kinds = ['tcp', 'udp', 'exec', 'pipe', 'file', 'mmap', 'shm', 'signal', 'unix'];
+  const windows = platform === 'win32';
+  if (!windows) kinds.push('fifo');
+  if (platform === 'linux' || platform === 'darwin') kinds.push('sysvmq');
+  if (platform === 'linux') kinds.push('mq');
+  if (windows) kinds.push('mailslot', 'copydata');
+  if (windows && ['x64', 'arm64'].includes(arch)) kinds.push('alpc');
+  return new Set(kinds);
+}
 
-/** The kinds the Rust `clink` (the bridge) connects to on this platform. */
-const BRIDGEABLE = new Set(
-  [
-    'tcp',
-    'udp',
-    'exec',
-    'pipe',
-    'file',
-    'mmap',
-    'shm',
-    'signal',
-    'unix',
-    !WINDOWS && 'fifo',
-    (LINUX || APPLE) && 'sysvmq',
-    LINUX && 'mq',
-    WINDOWS && 'mailslot',
-    WINDOWS && 'copydata',
-    WINDOWS_64 && 'alpc',
-  ].filter(Boolean),
-);
+const BRIDGEABLE = bridgeableKinds();
 
 const lower = (kind) => String(kind).replace(/[A-Z]/g, (letter) => letter.toLowerCase());
 
-/** Whether `kind` is connected to without a bridge (custom kinds count). */
-export function supportsNatively(kind) {
-  return registeredConnect(kind) !== undefined || NATIVE.has(lower(kind));
+/** Whether `kind` is connected to without a bridge on `platform` (custom kinds count). */
+export function supportsNatively(kind, platform = PLATFORM) {
+  return (
+    registeredConnect(kind) !== undefined || nativeConnect(lower(kind), platform) !== undefined
+  );
 }
 
-/** Whether `kind` can be connected to here, natively or through the bridge. */
-export function supports(kind) {
-  return supportsNatively(kind) || BRIDGEABLE.has(lower(kind));
+/** Whether `kind` can be connected to on `platform` and `arch`, natively or through the bridge. */
+export function supports(kind, platform = PLATFORM, arch = ARCH) {
+  return supportsNatively(kind, platform) || bridgeableKinds(platform, arch).has(lower(kind));
 }
 
 const unsupported = (kind) =>
@@ -144,10 +123,10 @@ async function connectTcpStream(endpoint, { signal }) {
   throw last;
 }
 
-async function connectUnix(endpoint, { signal }) {
+async function connectUnix(endpoint, { signal }, platform) {
   let path = endpoint.address;
   if (path.startsWith('@')) {
-    if (!LINUX) {
+    if (platform !== 'linux') {
       throw new IpcError('abstract `unix:@NAME` sockets exist only on Linux', 'ENOTSUP');
     }
     path = `\0${path.slice(1)}`;
@@ -322,8 +301,15 @@ async function connectBridge(endpoint, options) {
   return stream;
 }
 
-/** The native connect function of a kind on this platform, if any. */
-function nativeConnect(kind) {
+// A connect function that also learns the platform it connects on.
+const on = (connect, platform) => (endpoint, options) => connect(endpoint, options, platform);
+
+/**
+ * The function this client connects to `kind` with on `platform` (default:
+ * this one) without a bridge, if any.
+ */
+export function nativeConnect(kind, platform = PLATFORM) {
+  const windows = platform === 'win32';
   switch (kind) {
     case 'tcp':
       return connectTcpStream;
@@ -332,18 +318,18 @@ function nativeConnect(kind) {
     case 'exec':
       return connectExec;
     case 'unix':
-      return WINDOWS ? undefined : connectUnix;
+      return windows ? undefined : on(connectUnix, platform);
     case 'pipe':
-      return WINDOWS ? connectWindowsPipe : connectFifo;
+      return windows ? connectWindowsPipe : connectFifo;
     case 'fifo':
-      return WINDOWS ? undefined : connectFifo;
+      return windows ? undefined : connectFifo;
     case 'file':
     case 'mmap':
-      return connectRing;
+      return on(connectRing, platform);
     case 'signal':
-      return WINDOWS ? undefined : connectRing;
+      return windows ? undefined : on(connectRing, platform);
     case 'shm':
-      return LINUX ? connectRing : undefined;
+      return platform === 'linux' ? on(connectRing, platform) : undefined;
     default:
       return undefined;
   }
