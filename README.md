@@ -601,11 +601,6 @@ details.
 
 ## Serve a database over TCP
 
-For optional native IPC layers (shared memory, mapped files, Unix sockets,
-UDP, pipes, queues, signals and Windows mechanisms), see the
-[IPC configuration guide](ipc/README.md) and [runnable example](examples/ipc/README.md).
-The same adapters compose on the client and server and preserve both protocols.
-
 `--serve` exposes a database over TCP. `--connect` sends one query to a
 served database and prints the reply:
 
@@ -645,6 +640,47 @@ C# and Rust servers and clients work with each other: see
 
 Ctrl+C or `SIGTERM` stops a server gracefully: it closes the store and exits
 with status 0, so it can run under a service manager or in a container.
+
+### Serve over any IPC mechanism
+
+TCP is one of many transports. Every `--serve`, `--connect` and `--forward`
+address is an endpoint of
+[IPC transports v1](docs/protocol/ipc-transports-v1.md), and every endpoint
+carries both protocols between the Rust and C# CLIs, their libraries and the
+[JavaScript client](js/client/README.md#ipc-endpoints):
+
+| Endpoint | Mechanism | Platforms |
+| --- | --- | --- |
+| `127.0.0.1:7777`, `tcp:HOST:PORT` | TCP/IP loopback (or network) | all |
+| `udp:127.0.0.1:7777` | UDP loopback with acknowledged, ordered delivery | all |
+| `unix:/tmp/links.sock` | Unix domain socket | Linux, macOS, Windows |
+| `pipe:NAME` | named pipe (on POSIX: a pair of FIFOs in a directory) | all |
+| `fifo:DIR` | two POSIX named pipes | Linux, macOS |
+| `stdio`, `exec:COMMAND` | anonymous pipes of a child process | all |
+| `shm:DIR` | shared memory | all |
+| `mmap:DIR` | memory-mapped file | all |
+| `file:DIR` | a file on disk, positioned reads and writes only | all |
+| `signal:DIR` | memory-mapped file woken by OS signals (Windows: events) | all |
+| `mq:DIR` | POSIX message queues | Linux |
+| `sysvmq:DIR` | System V message queues | Linux, macOS |
+| `mailslot:DIR`, `copydata:DIR`, `alpc:DIR` | mailslots, `WM_COPYDATA`, ALPC | Windows |
+
+The transports are decorators under the protocol, so they are optional,
+interchangeable and stack. `--serve` repeats to serve one store on several
+endpoints at once, and `--forward` relays every connection of its `--serve`
+endpoints to another endpoint, byte for byte, without opening a database:
+
+```bash
+clink --db db.links --serve 127.0.0.1:7777 --serve shm:/tmp/links   # terminal 1
+clink --serve mq:/tmp/links-queue --forward shm:/tmp/links          # terminal 2: a relay
+clink --connect mq:/tmp/links-queue --protocol binary '() ((1 1))'  # terminal 3
+() ((1: 1 1))
+clink --connect 'exec:clink --db db2.links --serve stdio'           # no listener at all
+```
+
+`--trace` (or `CLINK_IPC_TRACE=1`) logs each transport event to standard
+error. See [`examples/ipc/`](examples/ipc/README.md) for the runnable
+examples and the interop check of every kind between every implementation.
 
 ### Serving triplets
 

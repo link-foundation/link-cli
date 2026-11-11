@@ -23,7 +23,7 @@ links database.
 | `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
 | `js/` | React/Vite browser workbench and JavaScript package lockfile. |
 | `js/client/` | `@link-foundation/link-cli-client`: the links contract in JavaScript and TypeScript over TCP, a `clink --serve` process or WebAssembly, plus the union, remap and external-id layers. |
-| `docs/protocol/` | The links protocol: binary links notation, links operations and subscriptions, with test vectors. |
+| `docs/protocol/` | The links protocol: binary links notation, links operations and subscriptions, with test vectors, and the IPC transports every implementation carries it over. |
 | `docs/case-studies/` | Research notes per issue, with evidence. |
 | `examples/` | Runnable examples, one folder per feature (TCP, permissions, composition, transactions, version control, type hierarchy, archives, embedding). |
 | `.github/workflows/` | CI per part of the repository; see [CI Workflows](#ci-workflows). |
@@ -127,6 +127,21 @@ Storage and names:
 - `Protocol/LinksConnection.cs`: one server connection, with its
   subscriptions and pending documents. `Protocol/LinoProtocolException.cs`:
   protocol errors and their kinds.
+- `Ipc/`: the IPC transports (#140) of
+  [IPC transports v1](protocol/ipc-transports-v1.md), the decorators under the
+  protocol. `Endpoint` parses an endpoint string; `IpcTransports` connects,
+  listens (`ListenAll` on several endpoints), relays and registers custom kinds;
+  `IpcStream` and `IIpcListener` are the duplex stream and listener every kind
+  returns. The kinds: `NetTransports.cs` (TCP, UDP, Unix sockets),
+  `StdioTransports.cs` (`stdio`, `exec:`), `RingRegion.cs` and
+  `RingTransport.cs` (`shm`, `mmap`, `file`, `signal`), `DatagramSession.cs`
+  (the reliable session of the datagram kinds), `PosixQueues.cs` (FIFOs, POSIX
+  and System V queues), `WindowsPipe.cs`, `WindowsMailslot.cs`,
+  `WindowsCopyData.cs` and `WindowsAlpc.cs`; `Rendezvous.cs` is the directory
+  handshake, `PosixNative.cs` and `WindowsNative.cs` the system calls.
+  `LinksServer.ListenAll` and `LinksClient.ConnectEndpoint` take any endpoint.
+- `Foundation.Data.Doublets.Cli/CliServe.cs`: `--serve` on several endpoints,
+  the `--forward` relay and the endpoint of `--graphql`.
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
 
@@ -210,6 +225,13 @@ Key files:
     `Triplets` store
   - `archive.rs`
   - `sessions.rs`: `LinksSessions`, the counterpart of `LinksSessions.cs`.
+  - `ipc/`: the IPC transports (#140) of
+    [IPC transports v1](protocol/ipc-transports-v1.md), the counterpart of the
+    C# `Ipc/` folder: `endpoint.rs`, `net.rs`, `stdio.rs`, `ring.rs`,
+    `datagram.rs`, `rendezvous.rs`, `unix/` (FIFOs, POSIX and System V queues,
+    signals) and `windows/` (named pipes, Unix sockets, shared memory, events,
+    mailslots, `WM_COPYDATA`, ALPC), with `connect`, `listen`, `listen_all`,
+    `relay` and `register`.
 - `rust/src/permissions.rs`: the optional permission layer (#149):
   `PermissionPolicy`, `PermissionsDecorator`, `LinksTokenTable` and
   `Forbidden`, with the same test cases as C# in
@@ -261,6 +283,12 @@ interchangeable backends, the JS counterpart of `INamedTypesLinks` /
 - `src/client.js`: the client over a transport; `src/tcp.js` (Node.js, Bun,
   Deno), `src/process.js` (a `clink --serve` child process) and `src/wasm.js`
   (the in-process `clink-wasm` store) are the transports.
+- `src/ipc.js` (`@link-foundation/link-cli-client/ipc`): `connectIpc` over any
+  endpoint of [IPC transports v1](protocol/ipc-transports-v1.md) (#140),
+  natively (`ipc-endpoint.js`, `ipc-ring.js`, `ipc-fifo.js`,
+  `ipc-datagram.js`, `ipc-rendezvous.js`, `ipc-joined.js`, `ipc-trace.js`) or
+  through a `clink --serve stdio --forward ENDPOINT` bridge for the kinds
+  Node.js cannot reach.
 - `src/framing.js`, `src/lino.js`, `src/operations.js`: the text protocol
   framing, canonical LiNo text, and the LinksOperation documents, triplets
   included, with every address a `BigInt`.
@@ -536,6 +564,7 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
 | `.github/workflows/js-client.yml` | `@link-foundation/link-cli-client` unit tests and type declarations, conformance against the Rust, C# and WebAssembly backends on Node.js, Bun and Deno, the composition example, and npm release with trusted publishing. |
+| `.github/workflows/ipc.yml` | Every IPC kind of Linux, macOS and Windows between the Rust and C# servers and relays and the Rust, C# and JavaScript clients, in both protocols (`examples/ipc/interop.mjs`). |
 | `.github/workflows/deep-client.yml` | The real `DeepClient` against the Rust and C# `clink --serve --graphql`. |
 | `.github/workflows/docs.yml` | Builds the C# (DocFX), Rust (rustdoc) and workbench documentation into one site. |
 | `.github/workflows/links.yml` | Checks the links of every Markdown and HTML file with lychee, falling back to the Web Archive. |

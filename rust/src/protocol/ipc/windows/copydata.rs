@@ -1,5 +1,12 @@
 //! `WM_COPYDATA`: a hidden message-only window per side, each message
-//! carrying one datagram.
+//! carrying one datagram. A window takes frames only from the peer window it
+//! learned in the handshake.
+//!
+//! `WM_COPYDATA` cannot tell which process sent a message: any process of the
+//! same desktop session that guesses the window handle and the peer's handle
+//! can inject frames. The handshake files limit who learns the handles, and
+//! the session drops frames out of sequence, but this kind is no stronger than
+//! its rendezvous directory's permissions.
 
 use super::*;
 use windows_sys::Win32::Foundation::{

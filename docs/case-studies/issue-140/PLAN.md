@@ -1,94 +1,94 @@
 # Issue 140 work plan
 
-Objective: implement and verify every IPC requirement in PR #175, preserving
-the existing text/binary protocols and client/server behavior. Never merge the PR.
+Objective: carry the LiNo text and binary protocols over every requested IPC
+mechanism as decorators in C# and Rust, usable from JavaScript, in PR #175.
+Apply each change everywhere it belongs, and pass every CI check. Never merge
+the PR.
 
-- [x] Read the complete issue and all issue/PR conversation, inline comments and
-  reviews. No comments, images or required sub-issues were present at intake.
-- [x] Inspect existing implementations and recent protocol PRs (#160, #155).
-- [x] Research native IPC semantics and available reusable libraries; preserve
-  sources, requirements, implementation choices and verification evidence.
-- [x] Implement optional transport decorators on both ends, with arbitrary
-  composition, bounded buffering, lifecycle management and opt-in tracing.
-- [x] Cover shared memory, mapped files, Unix sockets, TCP, UDP, anonymous
-  pipes, named pipes, ALPC, WM_COPYDATA, mailslots, POSIX message queues,
-  signals and disk files; expose an extension contract for similar mechanisms.
-- [x] Add focused automated native cross-process, failure and stacking tests,
-  and run real text/binary conversations against both existing servers.
-- [x] Document configuration, platform restrictions and runnable examples.
-- [x] Commit atomic changes, merge latest main, push only the prepared branch,
-  and review the full PR diff for scope and regressions.
-- [x] Replace WIP title/body and preserve `Fixes #140`.
+## Requirements inventory
 
-Final publication protocol: resolve every CI failure on the current commit,
-verify the working tree is clean and main is included, update the PR's final
-verification record, then mark PR #175 ready and report its URL. Never merge.
-These final gates are tracked in the PR description and GitHub check results
-so that they refer to the code actually tested, without a documentation-only
-commit making the recorded CI result stale.
+From the issue:
 
-Implementation decision: supply an optional, dependency-free Python IPC adapter
-package. Its relay decorates the existing TCP boundary of every Rust/C#/JS
-client/server, so sessions, authentication, subscriptions, triplets and both
-wire formats use the existing implementation. Endpoints are duplex byte
-streams; mechanisms that only carry events are composed with a payload layer.
-Native endpoints must transport payload through the named mechanism rather
-than silently substituting TCP. Additional relay processes are an explicit
-configuration choice. Existing commands and packages remain usable alone.
+- [x] Shared memory: `shm`.
+- [x] Memory-mapped files: `mmap`.
+- [x] Unix domain sockets: `unix`.
+- [x] TCP/IP loopback: `tcp`.
+- [x] UDP loopback: `udp`.
+- [x] Anonymous pipes: `stdio` and `exec:`.
+- [x] Named pipes: Windows `pipe`, plus POSIX `fifo`.
+- [x] Windows ALPC: `alpc`.
+- [x] `WM_COPYDATA`: `copydata`.
+- [x] Mailslots: `mailslot`.
+- [x] POSIX message queues: `mq`.
+- [x] OS signals: `signal`.
+- [x] Files on disk: `file`.
+- [x] All other similar mechanisms: `sysvmq` and a registry of custom kinds in
+  Rust, C# and JavaScript.
+- [x] Both the text and the binary protocol on every kind.
+- [x] Optional, interchangeable decorators on the client and the server side.
+- [x] Stackable: several `--serve` endpoints per store, and `--forward` relays.
+- [x] Case study in `docs/case-studies/issue-140` with research, plans and data.
 
-Verification budget: no local full Rust/C# builds; use small Python tests and
-CI's provisioned runners for actual server conversations and Windows natives.
-Keep every source file below the repository's 1000-line Python limit.
+From the owner's PR review:
+
+- [x] Full implementation in C# and in Rust, as decorators of their
+  `LinksServer` / `LinksClient` / `RemoteLinks`.
+- [x] Usable from JavaScript: `@link-foundation/link-cli-client/ipc`, native or
+  through the `clink` bridge.
+- [x] Correct and consistent: one written specification
+  (`docs/protocol/ipc-transports-v1.md`), and interop of every kind between
+  every implementation on Linux, macOS and Windows.
+- [x] Validated and tested: Rust and C# transport, server and CLI tests that
+  mirror each other; JavaScript unit tests covering `src/ipc*.js` fully, plus
+  tests against the Rust server.
+- [x] Documented: the specification, both CLI READMEs, the root README,
+  `docs/ARCHITECTURE.md`, the JavaScript client README and types,
+  `examples/ipc`, and this study.
+- [x] Logged: `--trace` / `CLINK_IPC_TRACE=1` traces every transport event in
+  all three implementations.
+- [x] Applied in every place: C# CLI parity with Rust (`--serve` repeats,
+  `--forward`, `--connect` to any endpoint, `--trace`). The Python relay
+  package, which the decorators replace, is removed together with its CI,
+  docs and experiment.
+- [x] Versions and changelogs: Rust fragments, a C# changeset, and the
+  JavaScript client at 0.5.0.
+- [ ] Every CI check passes on the final head. This is recorded in the PR
+  description.
+
+## Execution order
+
+1. Specify the wire contract first: endpoints, the rendezvous directory, ring
+   regions and the reliable datagram session.
+2. Write the Rust reference. Start with the POSIX kinds, then add the Windows
+   kinds, then the server, client and CLI (`--serve` repeats, `--forward`,
+   `--connect`).
+3. Port everything to C#, kind for kind and test for test, then do the same
+   for the CLI.
+4. Write the JavaScript client: native kinds, the bridge for the rest, types
+   and examples.
+5. Run cross-implementation interop for every kind on all three OSes in CI.
+6. Remove the superseded Python relay. Update every document, changelog and
+   this study.
+7. Merge main, review the full diff, and make sure every workflow passes on
+   the final head.
+8. Mark the PR ready.
 
 ## Verification record
 
-- Local native suite: 17 tests pass, covering ten Linux mechanisms including
-  anonymous pipes, composition, registration and failure regressions. Four
-  actual-server integration tests are deliberately supplied a built CLI by CI.
-- Local workflow helper/policy suite: 324 tests pass after merging main
-  (one environment-specific test is skipped). Ruff checks and formatting
-  pass with the repository configuration. The bounded signal experiment
-  completes 1000 notifications.
-- The first Windows native run passed ALPC, WM_COPYDATA, mailslots, named
-  pipes and shared storage. Later CI identified incorrect unpacking of the
-  Windows pipe polling result in the new cancellation path; the fix is included
-  with the original cross-process and blocked-reader regressions.
-- The first C# Windows protocol run passed all native text/binary combinations
-  and mixed-stack subscriptions; its anonymous-pipe failure was the same
-  polling result bug. System.CommandLine 3.0.0 builds without warnings.
-- Current Windows CI passes the native and real-server suites, including
-  anonymous-pipe binary conversations and delayed mapping-handle cleanup.
-  macOS exposed Darwin's 31-byte shared-memory name limit. A reproducing
-  regression failed before shortening names to fit and passes afterward.
-- A later Windows run completed every protocol exchange but exposed a test
-  cleanup race: force-terminating an exec relay left its child briefly holding
-  the inherited log file. Anonymous-pipe conversations now use `--once` and
-  wait for normal relay exit and child reaping. A native CLI test exchanges
-  bytes through that chain and verifies the inherited log can be removed.
-- At `259ded94`, all six IPC matrix jobs pass: native Linux/macOS/Windows
-  and real Rust/Linux plus C#/Linux/Windows conversations. The latter include
-  both protocols, anonymous pipes, JavaScript and mixed-stack subscriptions.
-  A subsequent commit refreshes webpki-roots for the existing freshness gate;
-  all final-head checks remain required by the publication protocol above.
-- Final current-head native/protocol jobs and all existing repository checks
-  must pass before PR #175 is marked ready. Their authoritative final record
-  and run URLs are maintained in the PR description, which can be updated
-  after CI without changing the code under test.
-- Windows pipe identifiers are independent of the client's/server's working
-  directory. A regression fails before removing filesystem normalization from
-  named-pipe identifiers and passes afterward; the Windows cross-process test
-  also uses a bare pipe name from different working directories.
-
-- Main advanced to `9bf97cee` during final CI. Its CI/refactoring changes are merged,
-  retaining its verified cargo-audit 0.22.2 hold (issue #176), resolving the
-  conflicting earlier freshness bump without weakening the security gate.
-- Register IPC with infrastructure reruns under the newly merged policy.
-  Use Rust/C# patch fragments as release triggers, allowing their automation
-  to update versions, lockfiles and changelogs together.
-
-- All ten workflows passed on `40522c14`. The final fetch found main's automated
-  Rust 3.0.0 release (`1674b770`), so that release is merged too. Its stale WASM
-  lock reproduced a `--locked` metadata failure. The release staging regression
-  fails before the fix and all 15 release-helper tests pass afterward. Sync,
-  verify and stage the dependent lock alongside the native lock on every release;
-  the final new-commit CI record remains required in the PR description.
+- **Linux interop.** `examples/ipc/interop.mjs` with the release Rust binary
+  and the C# build passed 226 of 226 conversations. Each kind was served by
+  Rust and by C#, written by every client in both protocols, relayed through
+  the other implementation, and run as `stdio` through `exec:`. The
+  JavaScript client passed every kind it reaches, the bridge kinds included
+  (with `CLINK_BIN`).
+- **Rust/C# interop by hand.** Checked over `mq`, `fifo` (binary) and a `udp`
+  relay.
+- **C# CLI tests.** All 67 pass, including the new `CliIpcEndpointsTests`.
+- **Found while testing and fixed with regression tests:**
+  - A ring reader could miss the bytes published with the end.
+  - A lost last acknowledgement could fail a half-close.
+  - The JavaScript ring hang-up differed from Rust and C#.
+- **CodeQL** needs `[DllImport]` declarations for the C# natives. The WASM
+  lockfile is refreshed along with the release fix.
+- **Windows and macOS** are verified by the IPC, Rust and C# workflow matrices
+  on the final head (see the PR description for the run links).
