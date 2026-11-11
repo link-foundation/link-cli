@@ -9,6 +9,7 @@ const STATUS_TIMEOUT: i32 = 0x102;
 const STATUS_PORT_DISCONNECTED: i32 = 0xC000_0037_u32 as i32;
 const ALPC_MSGFLG_SYNC_REQUEST: u32 = 0x0002_0000;
 const OBJ_CASE_INSENSITIVE: u32 = 0x40;
+const LPC_REQUEST: u16 = 1;
 const LPC_DATAGRAM: u16 = 3;
 const LPC_PORT_CLOSED: u16 = 5;
 const LPC_CLIENT_DIED: u16 = 6;
@@ -358,15 +359,19 @@ fn receive(port: &Handle, buffer: &mut Buffer, timeout: Duration) -> io::Result<
         return Err(status_error("NtAlpcSendWaitReceivePort", status));
     }
     let header = buffer.header();
-    if header.kind & 0xFF != LPC_DATAGRAM {
+    let kind = header.kind & 0xFF;
+    if kind != LPC_REQUEST && kind != LPC_DATAGRAM {
         trace!(
             "alpc received message type 0x{:04X} from process {}",
             header.kind,
             header.unique_process
         );
     }
-    Ok(match header.kind & 0xFF {
-        LPC_DATAGRAM => Received::Datagram,
+    Ok(match kind {
+        // A message sent without ALPC_MSGFLG_SYNC_REQUEST arrives as an
+        // `LPC_REQUEST` (0x2001 on Windows Server 2025), not as the
+        // `LPC_DATAGRAM` that legacy `NtRequestPort` sends; both carry a frame.
+        LPC_REQUEST | LPC_DATAGRAM => Received::Datagram,
         LPC_CONNECTION_REQUEST => Received::Connection(header),
         LPC_PORT_CLOSED | LPC_CLIENT_DIED => Received::Closed,
         _ => Received::Nothing,

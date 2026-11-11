@@ -324,6 +324,16 @@ public sealed class IpcTransportTests
         }
     }
 
+    /// <summary>Thousands of frames each way, none of them replied to: the ports must keep up.</summary>
+    [Fact]
+    public void AlpcCarriesManyFrames()
+    {
+        if (OperatingSystem.IsWindows() && Environment.Is64BitProcess)
+        {
+            CheckRendezvousKind("alpc", "", 8_000_000);
+        }
+    }
+
     [Fact]
     public void EveryKindIsReported()
     {

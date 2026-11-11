@@ -291,6 +291,14 @@ fn alpc_echoes() {
     check_kind(endpoint, 100_000);
 }
 
+/// Thousands of frames each way, none of them replied to: the ports must keep up.
+#[cfg(all(windows, target_pointer_width = "64"))]
+#[test]
+fn alpc_carries_many_frames() {
+    let (_dir, endpoint) = rendezvous_endpoint("alpc", "");
+    check_kind(endpoint, 8_000_000);
+}
+
 #[test]
 fn every_kind_is_reported() {
     for kind in KINDS {

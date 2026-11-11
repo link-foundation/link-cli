@@ -31,4 +31,4 @@ jobs:
         env:
           CLINK_IPC_TRACE: '1'
           RUST_BACKTRACE: '1'
-        run: cargo test --lib alpc_echoes -- --nocapture --test-threads 1
+        run: cargo test --lib alpc_ -- --nocapture --test-threads 1

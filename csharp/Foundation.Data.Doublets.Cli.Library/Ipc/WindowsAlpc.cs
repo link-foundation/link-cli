@@ -19,6 +19,7 @@ internal static unsafe class WindowsAlpc
     private const int StatusPortDisconnected = unchecked((int)0xC000_0037);
     private const uint SyncRequest = 0x0002_0000;
     private const uint ObjCaseInsensitive = 0x40;
+    private const ushort LpcRequest = 1;
     private const ushort LpcDatagram = 3;
     private const ushort LpcPortClosed = 5;
     private const ushort LpcClientDied = 6;
@@ -198,6 +199,7 @@ internal static unsafe class WindowsAlpc
             };
             status = nt.Create(&port, &objectAttributes, &attributes);
         }
+        IpcTransports.Trace($"alpc created port {name}: NTSTATUS 0x{unchecked((uint)status):X8}");
         return status == StatusSuccess ? new SafeFileHandle(port, true) : throw StatusError("NtAlpcCreatePort", status);
     }
 
@@ -220,8 +222,10 @@ internal static unsafe class WindowsAlpc
                 MaximumLength = (ushort)(name.Length * 2),
                 Buffer = chars,
             };
+            IpcTransports.Trace($"alpc connecting to port {name}");
             status = nt.Connect(&port, &unicode, null, &attributes, SyncRequest, 0, &message, &length, 0, 0, &interval);
         }
+        IpcTransports.Trace($"alpc connected to port {name}: NTSTATUS 0x{unchecked((uint)status):X8}");
         return status switch
         {
             StatusSuccess => new SafeFileHandle(port, true),
@@ -280,11 +284,19 @@ internal static unsafe class WindowsAlpc
             }
             if (status != StatusSuccess)
             {
+                IpcTransports.Trace($"alpc receive failed: NTSTATUS 0x{unchecked((uint)status):X8}");
                 throw StatusError("NtAlpcSendWaitReceivePort", status);
             }
-            return (Header.Kind & 0xFF) switch
+            var kind = Header.Kind & 0xFF;
+            if (kind != LpcRequest && kind != LpcDatagram)
             {
-                LpcDatagram => Received.Datagram,
+                IpcTransports.Trace($"alpc received message type 0x{Header.Kind:X4} from process {Header.UniqueProcess}");
+            }
+            return kind switch
+            {
+                // A message sent without ALPC_MSGFLG_SYNC_REQUEST arrives as an LPC_REQUEST (0x2001 on Windows
+                // Server 2025), not as the LPC_DATAGRAM that legacy NtRequestPort sends; both carry a frame.
+                LpcRequest or LpcDatagram => Received.Datagram,
                 LpcConnectionRequest => Received.Connection,
                 LpcPortClosed or LpcClientDied => Received.Closed,
                 _ => Received.Nothing,
@@ -316,6 +328,7 @@ internal static unsafe class WindowsAlpc
                 }
                 return null;
             }
+            IpcTransports.Trace($"alpc accepted a connection from process {from}: NTSTATUS 0x{unchecked((uint)status):X8}");
             return status == StatusSuccess
                 ? new SafeFileHandle(accepted, true)
                 : throw StatusError("NtAlpcAcceptConnectPort", status);
