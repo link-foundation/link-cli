@@ -245,8 +245,7 @@ impl LinksServer {
         })
     }
 
-    /// The endpoints the server listens on, separated by spaces; clients
-    /// connect to any of them.
+    /// The endpoints the server listens on, joined by spaces.
     pub fn endpoint(&self) -> String {
         self.listener.endpoint()
     }
