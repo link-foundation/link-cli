@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Foundation.Data.Doublets.Cli</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Foundation.Data.Doublets.Cli</AssemblyName>
   </PropertyGroup>
 
