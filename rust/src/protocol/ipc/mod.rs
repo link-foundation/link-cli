@@ -249,6 +249,16 @@ pub fn listen_endpoint(endpoint: &Endpoint) -> io::Result<Box<dyn Listener>> {
     Ok(listener)
 }
 
+/// Wraps a connected TCP stream (Nagle's algorithm is turned off).
+pub fn from_tcp_stream(stream: std::net::TcpStream) -> IpcStream {
+    net::tcp_stream(stream)
+}
+
+/// Wraps an already bound TCP listener.
+pub fn from_tcp_listener(listener: std::net::TcpListener) -> io::Result<Box<dyn Listener>> {
+    Ok(Box::new(net::TcpIpcListener::new(listener)?))
+}
+
 /// Listens on every endpoint at once; one listener is returned as it is.
 pub fn listen_all<S: AsRef<str>>(endpoints: &[S]) -> io::Result<Box<dyn Listener>> {
     let mut listeners = Vec::with_capacity(endpoints.len());

@@ -66,6 +66,17 @@ impl RemoteLinks {
         Ok(Self::new(LinksClient::connect(address, protocol)?))
     }
 
+    /// Connects to the server at an [IPC endpoint](super::ipc::Endpoint)
+    /// such as `unix:/tmp/links.sock` or `shm:/tmp/links`.
+    pub fn connect_endpoint(
+        endpoint: &str,
+        protocol: impl LinoProtocol + 'static,
+    ) -> ProtocolResult<Self> {
+        Ok(Self::new(LinksClient::connect_endpoint(
+            endpoint, protocol,
+        )?))
+    }
+
     /// Uses an existing connection.
     pub fn new(client: LinksClient) -> Self {
         Self {

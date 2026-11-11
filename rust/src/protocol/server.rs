@@ -1,4 +1,5 @@
-//! A TCP server exposing a links store through the LiNo protocols.
+//! A server exposing a links store through the LiNo protocols over TCP or
+//! any other [inter-process communication transport](super::ipc).
 //!
 //! Each connection gets its own thread that only parses messages and another
 //! that writes them; every request is executed by the thread that called
@@ -22,6 +23,7 @@
 //! triplets; see [`TripletsOperation`].
 
 use super::error::ProtocolResult;
+use super::ipc::{self, IpcStream, Listener, Waker};
 use super::links_operations::{
     matches, notification_document, parse_changes_for, subscription_document, Change,
     GenericLinksOperation, LinksOperation, Part,
@@ -44,11 +46,12 @@ use links_notation::LiNo;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 use std::io::{self, BufReader, BufWriter, Write};
-use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
+use std::net::{SocketAddr, TcpListener, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
+use std::time::Duration;
 
 #[path = "server_query.rs"]
 mod query;
@@ -134,11 +137,20 @@ enum Job {
 }
 
 /// Stops a running [`LinksServer::serve`] from another thread.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ShutdownHandle {
     jobs: Sender<Job>,
     stopping: Arc<AtomicBool>,
-    address: SocketAddr,
+    closer: Waker,
+}
+
+impl fmt::Debug for ShutdownHandle {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ShutdownHandle")
+            .field("stopping", &self.stopping)
+            .finish_non_exhaustive()
+    }
 }
 
 impl ShutdownHandle {
@@ -147,13 +159,13 @@ impl ShutdownHandle {
         self.stopping.store(true, Ordering::SeqCst);
         let _ = self.jobs.send(Job::Shutdown);
         // Wake the accept loop so it notices the flag.
-        let _ = TcpStream::connect(self.address);
+        (self.closer)();
     }
 }
 
 /// A bound, not yet serving, LiNo server.
 pub struct LinksServer {
-    listener: TcpListener,
+    listener: Box<dyn Listener>,
     options: ServerOptions,
     readable: Option<Readable>,
     jobs: Sender<Job>,
@@ -173,18 +185,39 @@ impl fmt::Debug for LinksServer {
 }
 
 impl LinksServer {
-    /// Binds to `address` (use port `0` for an ephemeral port).
+    /// Binds to the TCP `address` (use port `0` for an ephemeral port).
     pub fn bind(address: impl ToSocketAddrs, options: ServerOptions) -> ProtocolResult<Self> {
-        let listener = TcpListener::bind(address)?;
+        let listener = ipc::from_tcp_listener(TcpListener::bind(address)?)?;
+        Ok(Self::from_listener(listener, options))
+    }
+
+    /// Listens on an [IPC endpoint](ipc::Endpoint) such as `127.0.0.1:0`,
+    /// `unix:/tmp/links.sock`, `pipe:links` or `shm:/tmp/links`.
+    pub fn listen(endpoint: &str, options: ServerOptions) -> ProtocolResult<Self> {
+        Ok(Self::from_listener(ipc::listen(endpoint)?, options))
+    }
+
+    /// Listens on every endpoint at once; clients of all of them share the
+    /// store and see each other's changes.
+    pub fn listen_all<S: AsRef<str>>(
+        endpoints: &[S],
+        options: ServerOptions,
+    ) -> ProtocolResult<Self> {
+        Ok(Self::from_listener(ipc::listen_all(endpoints)?, options))
+    }
+
+    /// Serves the connections of any [`Listener`], such as a custom
+    /// transport registered with [`ipc::register`].
+    pub fn from_listener(listener: Box<dyn Listener>, options: ServerOptions) -> Self {
         let (jobs, queue) = mpsc::channel();
-        Ok(Self {
+        Self {
             listener,
             options,
             readable: None,
             jobs,
             queue,
             stopping: Arc::new(AtomicBool::new(false)),
-        })
+        }
     }
 
     /// Lets subscribers see only the links `readable` accepts; without it,
@@ -200,9 +233,22 @@ impl LinksServer {
         self
     }
 
-    /// The address the server listens on.
+    /// The TCP address the server listens on; an error for a server that
+    /// listens on no TCP endpoint.
     pub fn local_addr(&self) -> ProtocolResult<SocketAddr> {
-        Ok(self.listener.local_addr()?)
+        self.listener.local_addr().ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::Unsupported,
+                format!("`{}` is not a TCP endpoint", self.listener.endpoint()),
+            )
+            .into()
+        })
+    }
+
+    /// The endpoints the server listens on, separated by spaces; clients
+    /// connect to any of them.
+    pub fn endpoint(&self) -> String {
+        self.listener.endpoint()
     }
 
     /// A handle that stops [`serve`](Self::serve).
@@ -210,7 +256,7 @@ impl LinksServer {
         Ok(ShutdownHandle {
             jobs: self.jobs.clone(),
             stopping: Arc::clone(&self.stopping),
-            address: self.local_addr()?,
+            closer: self.listener.closer(),
         })
     }
 
@@ -682,18 +728,47 @@ impl Outbox {
     }
 }
 
+/// Accepts until the listener is closed or can accept no more (a `stdio`
+/// listener after its only connection), then stops the server.
 fn accept_loop(
-    listener: TcpListener,
+    mut listener: Box<dyn Listener>,
     jobs: Sender<Job>,
     stopping: Arc<AtomicBool>,
     options: ServerOptions,
     query_limits: Option<QueryLimits>,
 ) {
-    for stream in listener.incoming() {
+    loop {
         if stopping.load(Ordering::SeqCst) {
             return;
         }
-        let Ok(stream) = stream else { continue };
+        let stream = match listener.accept() {
+            Ok(Some(stream)) => stream,
+            Ok(None) => {
+                if options.trace && !stopping.load(Ordering::SeqCst) {
+                    crate::diagnostics::stderr!(
+                        "[server] {} accepts no more connections",
+                        listener.endpoint()
+                    );
+                }
+                let _ = jobs.send(Job::Shutdown);
+                return;
+            }
+            Err(error) => {
+                if options.trace {
+                    crate::diagnostics::stderr!("[server] accept failed: {error}");
+                }
+                // A failing listener must not spin.
+                thread::sleep(Duration::from_millis(10));
+                continue;
+            }
+        };
+        if stopping.load(Ordering::SeqCst) {
+            stream.shutdown();
+            return;
+        }
+        if options.trace {
+            crate::diagnostics::stderr!("[server] {} connection accepted", stream.kind());
+        }
         let jobs = jobs.clone();
         thread::spawn(move || {
             if let Err(error) = handle_connection(stream, jobs, options, query_limits) {
@@ -706,26 +781,23 @@ fn accept_loop(
 }
 
 fn handle_connection(
-    stream: TcpStream,
+    stream: IpcStream,
     jobs: Sender<Job>,
     options: ServerOptions,
     query_limits: Option<QueryLimits>,
 ) -> ProtocolResult<()> {
     static CONNECTIONS: AtomicU64 = AtomicU64::new(0);
     let connection = CONNECTIONS.fetch_add(1, Ordering::Relaxed);
-    let _ = stream.set_nodelay(true);
     let outbox = {
-        let stream = stream.try_clone()?;
+        let stream = stream.clone();
         Arc::new(Outbox::new(
             options.max_pending_notifications,
-            Box::new(move || {
-                let _ = stream.shutdown(Shutdown::Both);
-            }),
+            Box::new(move || stream.shutdown()),
         ))
     };
     let writer = {
         let outbox = Arc::clone(&outbox);
-        let mut stream = BufWriter::new(stream.try_clone()?);
+        let mut stream = BufWriter::new(stream.clone());
         thread::spawn(move || {
             if let Err(error) = outbox.write_all(&mut stream, options.limits) {
                 if options.trace {
@@ -743,7 +815,7 @@ fn handle_connection(
 }
 
 fn serve_connection(
-    stream: TcpStream,
+    stream: IpcStream,
     connection: u64,
     outbox: &Arc<Outbox>,
     jobs: &Sender<Job>,

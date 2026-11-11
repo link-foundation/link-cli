@@ -1,6 +1,8 @@
-//! A TCP client for [`LinksServer`](super::LinksServer).
+//! A client for [`LinksServer`](super::LinksServer) over TCP or any other
+//! [inter-process communication transport](super::ipc).
 
 use super::error::{ProtocolError, ProtocolResult};
+use super::ipc::{self, IpcStream};
 use super::links_operations::is_notification;
 use super::protocols::{LinoConnection, LinoProtocol};
 use super::server::error_message;
@@ -20,22 +22,40 @@ use std::time::Duration;
 /// pushes never get mixed up.
 #[derive(Debug)]
 pub struct LinksClient {
-    connection: LinoConnection<TcpStream, Box<dyn LinoProtocol>>,
+    connection: LinoConnection<IpcStream, Box<dyn LinoProtocol>>,
     notifications: VecDeque<LinoDocument>,
 }
 
 impl LinksClient {
-    /// Connects to `address` using `protocol` for every message.
+    /// Connects to the TCP `address` using `protocol` for every message.
     pub fn connect(
         address: impl ToSocketAddrs,
         protocol: impl LinoProtocol + 'static,
     ) -> ProtocolResult<Self> {
         let stream = TcpStream::connect(address)?;
-        let _ = stream.set_nodelay(true);
-        Ok(Self {
+        Ok(Self::from_stream(ipc::from_tcp_stream(stream), protocol))
+    }
+
+    /// Connects to an [IPC endpoint](ipc::Endpoint) such as `127.0.0.1:8080`,
+    /// `unix:/tmp/links.sock`, `pipe:links` or `shm:/tmp/links`.
+    pub fn connect_endpoint(
+        endpoint: &str,
+        protocol: impl LinoProtocol + 'static,
+    ) -> ProtocolResult<Self> {
+        Ok(Self::from_stream(ipc::connect(endpoint)?, protocol))
+    }
+
+    /// Talks over an already connected stream of any transport.
+    pub fn from_stream(stream: IpcStream, protocol: impl LinoProtocol + 'static) -> Self {
+        Self {
             connection: LinoConnection::new(stream, Box::new(protocol)),
             notifications: VecDeque::new(),
-        })
+        }
+    }
+
+    /// The endpoint kind of the connection, such as `tcp` or `shm`.
+    pub fn kind(&self) -> &'static str {
+        self.connection.stream().kind()
     }
 
     /// Sends a parsed document and returns the reply document.

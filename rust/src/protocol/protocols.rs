@@ -6,6 +6,7 @@
 //! `TcpStream`, a pipe, an in-memory buffer) with a protocol.
 
 use super::error::{ProtocolError, ProtocolResult};
+use super::ipc::IpcStream;
 use links_notation::binary::packet::BINARY_VERSION_1;
 use links_notation::binary::{
     decode_document, encode_document_with_limits, format_document, parse_document,
@@ -366,13 +367,48 @@ impl<S: Read + Write, P: LinoProtocol> LinoConnection<S, P> {
             .ok_or_else(|| ProtocolError::malformed("connection closed before the reply"))
     }
 
+    /// The underlying stream.
+    pub fn stream(&self) -> &S {
+        self.stream.get_ref()
+    }
+
     /// Unwraps the underlying stream.
     pub fn into_inner(self) -> S {
         self.stream.into_inner()
     }
 }
 
-impl<P: LinoProtocol> LinoConnection<TcpStream, P> {
+/// A stream whose reads can time out, so a [`LinoConnection`] over it can
+/// [wait](LinoConnection::wait_for_message) for a message.
+pub trait TimedStream: Read + Write {
+    /// The current read timeout; `None` waits forever.
+    fn current_read_timeout(&self) -> io::Result<Option<Duration>>;
+    /// Makes reads fail with a timeout after `timeout`.
+    fn change_read_timeout(&mut self, timeout: Option<Duration>) -> io::Result<()>;
+}
+
+impl TimedStream for TcpStream {
+    fn current_read_timeout(&self) -> io::Result<Option<Duration>> {
+        self.read_timeout()
+    }
+
+    fn change_read_timeout(&mut self, timeout: Option<Duration>) -> io::Result<()> {
+        self.set_read_timeout(timeout)
+    }
+}
+
+impl TimedStream for IpcStream {
+    fn current_read_timeout(&self) -> io::Result<Option<Duration>> {
+        Ok(self.read_timeout())
+    }
+
+    fn change_read_timeout(&mut self, timeout: Option<Duration>) -> io::Result<()> {
+        self.set_read_timeout(timeout);
+        Ok(())
+    }
+}
+
+impl<S: TimedStream, P: LinoProtocol> LinoConnection<S, P> {
     /// Waits up to `timeout` for the next message to start arriving; false
     /// when none did in time. True as well when the peer closed the stream,
     /// which the next [`receive`](Self::receive) reports.
@@ -380,12 +416,13 @@ impl<P: LinoProtocol> LinoConnection<TcpStream, P> {
         if !self.stream.buffer().is_empty() {
             return Ok(true);
         }
-        let stream = self.stream.get_ref();
-        let previous = stream.read_timeout()?;
-        // A zero timeout is refused by the socket; the shortest one waits 1 ms.
-        stream.set_read_timeout(Some(timeout.max(Duration::from_millis(1))))?;
+        let previous = self.stream.get_ref().current_read_timeout()?;
+        // A zero timeout is refused by a socket; the shortest one waits 1 ms.
+        self.stream
+            .get_mut()
+            .change_read_timeout(Some(timeout.max(Duration::from_millis(1))))?;
         let arrived = self.stream.fill_buf().map(|_| ());
-        self.stream.get_ref().set_read_timeout(previous)?;
+        self.stream.get_mut().change_read_timeout(previous)?;
         match arrived {
             Ok(()) => Ok(true),
             Err(error)
