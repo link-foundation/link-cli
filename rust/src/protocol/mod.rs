@@ -43,6 +43,7 @@
 pub mod archive;
 mod client;
 mod error;
+pub mod ipc;
 pub mod links_operations;
 mod protocols;
 mod remote_links;
