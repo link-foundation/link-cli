@@ -14,4 +14,5 @@ bump: minor
 
 ### Fixed
 
+- Drop `package.homepage`, which repeats `package.repository`; newer Cargo warns `cargo::redundant_homepage` about it, and CI denies manifest warnings.
 - Keep the dependent WASM lockfile in the same verified release commit as the native manifest and lockfile, preventing `--locked` CI failures after automatic releases.
