@@ -162,7 +162,7 @@ library API for explicit batches. End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and
 [`examples/version-control/`](../examples/version-control).
 
-### Serve Over TCP
+### Serve Over TCP and Other IPC Transports
 
 ```bash
 clink --db data.links --serve 127.0.0.1:7777                 # serve a database

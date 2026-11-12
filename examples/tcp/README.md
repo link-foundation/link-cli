@@ -1,7 +1,10 @@
 # LiNo over TCP — examples
 
 Runnable demonstrations of `clink --serve` and `clink --connect`, added for
-issue [#105](https://github.com/link-foundation/link-cli/issues/105).
+issue [#105](https://github.com/link-foundation/link-cli/issues/105). TCP is
+the default transport; [`examples/ipc`](../ipc/README.md) serves and connects
+the same way over every other IPC mechanism (issue
+[#140](https://github.com/link-foundation/link-cli/issues/140)).
 
 ## Scripts
 

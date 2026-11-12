@@ -371,11 +371,27 @@ JavaScript, every order and the test that checks it, and the scenarios each
 composition serves. [`examples/composition`](../examples/composition) runs a
 client joined to a served store with permissions, under UUIDs.
 
-## Serving Over TCP
+## Serving Over TCP and Other IPC Transports
 
-`clink --serve host:port` keeps a database open and answers LiNo requests
-over TCP. `clink --connect host:port [query]` sends one request and prints
-the reply.
+`clink --serve ENDPOINT` keeps a database open and answers LiNo requests.
+`clink --connect ENDPOINT [query]` sends one request and prints the reply.
+An endpoint without a kind is a TCP `host:port`. `KIND:ADDRESS` picks any
+other mechanism of [IPC transports v1](protocol/ipc-transports-v1.md) (#140):
+UDP, Unix sockets, named and anonymous pipes, FIFOs, shared memory, mapped
+files, files, signals, POSIX and System V message queues, mailslots,
+`WM_COPYDATA` and ALPC.
+
+- The transports are decorators under the protocol: each one hands the
+  server and the client a duplex byte stream, and the protocol above it does
+  not change. Stream mechanisms carry the bytes directly; shared memory,
+  mapped files, files and signals use a ring region; datagram and message
+  mechanisms use a reliable, ordered session.
+- `--serve` repeats, so one store is served on several endpoints at once and
+  every connection shares its pushes. `--forward ENDPOINT` relays each
+  connection byte for byte to another endpoint without opening a database,
+  so transports stack.
+- `--trace` (or `CLINK_IPC_TRACE=1`) logs every transport event on standard
+  error.
 
 - A request is the same substitution expression the CLI takes. The reply is
   the list of `(before) (after)` changes. An empty request lists every link.

@@ -22,10 +22,10 @@ links database.
 | `rust/scripts/` | Rust release, changelog, crate publication, and repository validation helpers. |
 | `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
 | `js/` | React/Vite browser workbench and JavaScript package lockfile. |
-| `js/client/` | `@link-foundation/link-cli-client`: the links contract in JavaScript and TypeScript over TCP, a `clink --serve` process or WebAssembly, plus the union, remap and external-id layers. |
+| `js/client/` | `@link-foundation/link-cli-client`: the links contract in JavaScript and TypeScript over TCP, any IPC endpoint (`./ipc`), a `clink --serve` process or WebAssembly, plus the union, remap and external-id layers. |
 | `docs/protocol/` | The links protocol: binary links notation, links operations and subscriptions, with test vectors, and the IPC transports every implementation carries it over. |
 | `docs/case-studies/` | Research notes per issue, with evidence. |
-| `examples/` | Runnable examples, one folder per feature (TCP, permissions, composition, transactions, version control, type hierarchy, archives, embedding). |
+| `examples/` | Runnable examples, one folder per feature (TCP, IPC transports, permissions, composition, transactions, version control, type hierarchy, archives, embedding). |
 | `.github/workflows/` | CI per part of the repository; see [CI Workflows](#ci-workflows). |
 
 ## C# Implementation
@@ -101,7 +101,8 @@ Storage and names:
 - `VersionControlDecorator.cs`: optional version-control layer that sits above
   the transactions decorator and provides branching, tagging, and time-travel
   checkout.
-- `Protocol/`: LiNo over TCP (#105). The binary links notation itself
+- `Protocol/`: LiNo over TCP (#105) and, through `Ipc/`, over every IPC
+  transport (#140). The binary links notation itself
   (`LinksPacket`, `LinoMapping`, `LinoFormat`, `PacketReader`) comes from
   `Link.Foundation.Links.Notation.Binary` (#104). This folder contains the
   transport around it:
@@ -213,7 +214,8 @@ Key files:
   transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
   branching, tagging, and time-travel checkout.
-- `rust/src/protocol/`: LiNo over TCP (#105). The binary links notation
+- `rust/src/protocol/`: LiNo over TCP (#105) and, through `ipc/`, over every
+  IPC transport (#140). The binary links notation
   itself comes from `links_notation::binary` (#104); the module adds the
   transport around it and mirrors the C# `Protocol/` folder file for file:
   - `protocols.rs`

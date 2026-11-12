@@ -19,6 +19,7 @@ which scenarios each composition serves.
 | Layer | C# | Rust | JavaScript | What it does |
 |-------|----|------|------------|--------------|
 | Store | `UnitedMemoryLinks`, `NamedTypesDecorator` | `LinkStorage`, `NamedTypesDecorator`, `DoubletsStorage` | `connect`, `connectProcess`, `WasmLinksClient` | Keeps the links and their names. |
+| Transport (#140) | `IpcTransports`, `LinksClient.ConnectEndpoint`, `RemoteLinks.ConnectEndpoint`, `LinksServer.ListenAll` | `ipc::connect`, `LinksClient::connect_endpoint`, `RemoteLinks::connect_endpoint`, `LinksServer::listen_all` | `connectIpc` | Carries the protocol to a served store over any [IPC endpoint](protocol/ipc-transports-v1.md); `--forward` stacks relays. |
 | Types (#148) | `TypesDecorator<T>`, `ITypes<T>` | `TypesDecorator`, `Types` | (served) | Type hierarchy: `(S: T S)` and `Extends`. |
 | Permissions (#149) | `PermissionsDecorator<T>`, `PermissionPolicy<T>`, `IPermissionPolicy<T>` | `PermissionsDecorator`, `PermissionPolicy`, `AccessPolicy` | (served: `--permissions`, `(auth: token)`) | The store as one subject sees it. |
 | Union (#149) | `UnionLinksDecorator<T>` | `UnionLinks` | `UnionLinks` | Many networks seen as one. |
@@ -179,7 +180,10 @@ ways:
 OffsetAddressMap(2^24))])`. The client's drafts live locally and may refer to
 the server's links. The server is served with `--permissions`, so its rules
 apply to what the client reads and writes there. The runnable version, with
-both CLIs, is [examples/composition](../examples/composition).
+both CLIs, is [examples/composition](../examples/composition). The server may
+listen on any [IPC endpoint](protocol/ipc-transports-v1.md), such as
+`shm:DIR` or `unix:PATH` on the same machine, and the client connects to it
+the same way.
 
 **An optimistic overlay (minilinks, minimongo).** Put a writable local
 network first and the server's network after it, with no offset, so local
