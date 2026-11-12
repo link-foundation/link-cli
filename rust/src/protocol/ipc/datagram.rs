@@ -73,6 +73,7 @@ pub(crate) struct Settings {
 
 /// The settings of a local datagram kind (`mq`, `sysvmq`, `mailslot`,
 /// `copydata`, `alpc`): no heartbeat, the peer's liveness is its process.
+#[cfg_attr(not(any(unix, windows)), allow(dead_code))] // used by the OS-specific kinds
 pub(crate) fn local_settings(endpoint: &super::Endpoint, chunk: usize) -> io::Result<Settings> {
     Ok(Settings {
         chunk,

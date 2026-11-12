@@ -14,5 +14,6 @@ bump: minor
 
 ### Fixed
 
+- The `clink-wasm` manifest declares `console_error_panic_hook` only for `wasm32` and drops the unused `web-sys`, which Cargo 1.100 reports as `cargo::unused_dependencies`; `link_cli::protocol::ipc` builds for `wasm32` without warnings.
 - Drop `package.homepage`, which repeats `package.repository`; newer Cargo warns `cargo::redundant_homepage` about it, and CI denies manifest warnings.
 - Keep the dependent WASM lockfile in the same verified release commit as the native manifest and lockfile, preventing `--locked` CI failures after automatic releases.

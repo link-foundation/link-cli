@@ -17,7 +17,6 @@ anyhow = "1.0.104"
 link-cli = { path = ".." }
 wasm-bindgen = "0.2.130"
 js-sys = "0.3.107"
-console_error_panic_hook = { version = "0.1.7", optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 
@@ -33,11 +32,9 @@ minicov = "=0.3.8"
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
 
-[dependencies.web-sys]
-version = "0.3.107"
-features = [
-  "console",
-]
+# Only the browser build installs the panic hook (`set_panic_hook`).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = { version = "0.1.7", optional = true }
 
 [features]
 default = ["console_error_panic_hook", "sorted-tables", "physical-lsm", "causal", "causal-merkle", "causal-batches", "causal-projection", "causal-sessions", "address-reservations", "author-fencing"]

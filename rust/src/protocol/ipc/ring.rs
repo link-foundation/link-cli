@@ -63,6 +63,7 @@ impl Mapping {
     ///
     /// `ptr` must point to `len` mapped, page-aligned bytes that stay valid
     /// until `release` runs.
+    #[cfg_attr(not(any(unix, windows)), allow(dead_code))] // only the OS kinds map memory
     pub(crate) unsafe fn new(ptr: *mut u8, len: usize, release: Box<dyn FnOnce() + Send>) -> Self {
         Self {
             ptr,
@@ -136,23 +137,7 @@ impl FileRegion {
     fn read_at(&self, offset: usize, buf: &mut [u8]) -> io::Result<()> {
         let mut done = 0;
         while done < buf.len() {
-            #[cfg(unix)]
-            let read = {
-                use std::os::unix::fs::FileExt;
-                self.file
-                    .read_at(&mut buf[done..], (offset + done) as u64)?
-            };
-            #[cfg(windows)]
-            let read = {
-                use std::os::windows::fs::FileExt;
-                self.file
-                    .seek_read(&mut buf[done..], (offset + done) as u64)?
-            };
-            #[cfg(not(any(unix, windows)))]
-            let read: usize = {
-                let _ = offset;
-                return Err(super::unsupported("file", "positioned reads"));
-            };
+            let read = self.read_some(&mut buf[done..], (offset + done) as u64)?;
             if read == 0 {
                 return Err(io::Error::new(
                     io::ErrorKind::UnexpectedEof,
@@ -167,22 +152,7 @@ impl FileRegion {
     fn write_at(&self, offset: usize, data: &[u8]) -> io::Result<()> {
         let mut done = 0;
         while done < data.len() {
-            #[cfg(unix)]
-            let written = {
-                use std::os::unix::fs::FileExt;
-                self.file.write_at(&data[done..], (offset + done) as u64)?
-            };
-            #[cfg(windows)]
-            let written = {
-                use std::os::windows::fs::FileExt;
-                self.file
-                    .seek_write(&data[done..], (offset + done) as u64)?
-            };
-            #[cfg(not(any(unix, windows)))]
-            let written: usize = {
-                let _ = offset;
-                return Err(super::unsupported("file", "positioned writes"));
-            };
+            let written = self.write_some(&data[done..], (offset + done) as u64)?;
             if written == 0 {
                 return Err(io::Error::new(
                     io::ErrorKind::WriteZero,
@@ -192,6 +162,38 @@ impl FileRegion {
             done += written;
         }
         Ok(())
+    }
+
+    #[cfg(unix)]
+    fn read_some(&self, buf: &mut [u8], position: u64) -> io::Result<usize> {
+        std::os::unix::fs::FileExt::read_at(&self.file, buf, position)
+    }
+
+    #[cfg(unix)]
+    fn write_some(&self, data: &[u8], position: u64) -> io::Result<usize> {
+        std::os::unix::fs::FileExt::write_at(&self.file, data, position)
+    }
+
+    #[cfg(windows)]
+    fn read_some(&self, buf: &mut [u8], position: u64) -> io::Result<usize> {
+        std::os::windows::fs::FileExt::seek_read(&self.file, buf, position)
+    }
+
+    #[cfg(windows)]
+    fn write_some(&self, data: &[u8], position: u64) -> io::Result<usize> {
+        std::os::windows::fs::FileExt::seek_write(&self.file, data, position)
+    }
+
+    // Without positioned I/O (WebAssembly) the `file` kind cannot work.
+    #[cfg(not(any(unix, windows)))]
+    fn read_some(&self, _buf: &mut [u8], _position: u64) -> io::Result<usize> {
+        let _ = &self.file;
+        Err(super::unsupported("file", "positioned reads"))
+    }
+
+    #[cfg(not(any(unix, windows)))]
+    fn write_some(&self, _data: &[u8], _position: u64) -> io::Result<usize> {
+        Err(super::unsupported("file", "positioned writes"))
     }
 }
 

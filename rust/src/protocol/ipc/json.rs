@@ -37,6 +37,7 @@ impl Object {
         }
     }
 
+    #[cfg_attr(not(any(unix, windows)), allow(dead_code))] // used by the OS-specific kinds
     pub(crate) fn require_number(&self, name: &str) -> io::Result<u64> {
         self.number(name)
             .ok_or_else(|| invalid(format!("the handshake lacks the number `{name}`")))

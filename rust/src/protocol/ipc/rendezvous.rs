@@ -377,6 +377,7 @@ fn refused(message: String) -> io::Error {
 }
 
 /// Answers rendezvous requests with `open` until one succeeds.
+#[cfg_attr(not(any(unix, windows)), allow(dead_code))] // used by the OS-specific kinds
 pub(crate) fn accept_with(
     rendezvous: &RendezvousListener,
     kind: &str,
