@@ -12,7 +12,10 @@
  * Set GITHUB_TOKEN (e.g. `GITHUB_TOKEN=$(gh auth token)`) to avoid rate limits.
  */
 const [tool = 'cargo-audit', version = '0.23.0'] = process.argv.slice(2);
-const headers = { 'User-Agent': 'link-cli-dependency-check', Accept: 'application/vnd.github+json' };
+const headers = {
+  'User-Agent': 'link-cli-dependency-check',
+  Accept: 'application/vnd.github+json',
+};
 if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
 
 async function json(url) {
@@ -25,7 +28,7 @@ const release = await json('https://api.github.com/repos/taiki-e/install-action/
 const tag = release.tag_name;
 const ref = await json(`https://api.github.com/repos/taiki-e/install-action/commits/${tag}`);
 const manifest = await json(
-  `https://raw.githubusercontent.com/taiki-e/install-action/${ref.sha}/manifests/${tool}.json`
+  `https://raw.githubusercontent.com/taiki-e/install-action/${ref.sha}/manifests/${tool}.json`,
 );
 const versions = Object.keys(manifest).filter((key) => /^\d+\.\d+\.\d+$/.test(key));
 const numeric = (v) => v.split('.').map(Number);
