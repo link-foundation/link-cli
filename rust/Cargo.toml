@@ -45,7 +45,7 @@ doublets = "0.21.0"
 links-notation = "0.31.3"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.5.0"
-ureq = { version = "3.5.1", features = ["json"], optional = true }
+ureq = { version = "3.5.2", features = ["json"], optional = true }
 base64 = { version = "0.23.1", optional = true }
 serde_json = { version = "1.0.154", optional = true }
 sha2 = { version = "0.11.1", default-features = false }
@@ -67,7 +67,7 @@ rusqlite = { version = "0.42.0", default-features = false, features = ["bundled"
 # POSIX IPC transports (`protocol::ipc`): FIFOs, shared memory, signals and
 # message queues; also the native page store.
 libc = "0.2.191"
-errno = "0.3.14"
+errno = "0.3.15"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61.2", features = [

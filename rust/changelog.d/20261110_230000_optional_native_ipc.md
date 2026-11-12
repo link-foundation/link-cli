@@ -10,6 +10,7 @@ bump: minor
 ### Changed
 
 - Update the optional `rusqlite` dependency of the `sqlite` feature to 0.42.0.
+- Update `errno` to 0.3.15 and the optional `ureq` dependency of the `etcd` feature to 3.5.2.
 
 ### Fixed
 
