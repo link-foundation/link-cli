@@ -9,7 +9,6 @@ description = "A CLI tool and reusable library for links manipulation backed by 
 license = "Unlicense"
 repository = "https://github.com/link-foundation/link-cli"
 documentation = "https://docs.rs/link-cli"
-homepage = "https://github.com/link-foundation/link-cli"
 readme = "README.md"
 authors = ["link-foundation"]
 keywords = ["links", "doublets", "cli", "database"]
@@ -45,7 +44,7 @@ doublets = "0.21.0"
 links-notation = "0.31.3"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.5.0"
-ureq = { version = "3.5.1", features = ["json"], optional = true }
+ureq = { version = "3.5.2", features = ["json"], optional = true }
 base64 = { version = "0.23.1", optional = true }
 serde_json = { version = "1.0.154", optional = true }
 sha2 = { version = "0.11.1", default-features = false }
@@ -61,11 +60,11 @@ serde_json = "1.0.154"
 ctrlc = { version = "3.5.2", features = ["termination"] }
 # Selected physical pager/WAL component; absent from default/native and WASM builds.
 getrandom = { version = "0.4.3", optional = true }
-rusqlite = { version = "0.41.1", default-features = false, features = ["bundled"], optional = true }
+rusqlite = { version = "0.42.0", default-features = false, features = ["bundled"], optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2.191", optional = true }
-errno = { version = "0.3.14", optional = true }
+errno = { version = "0.3.15", optional = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Memory", "Win32_Security"] }
