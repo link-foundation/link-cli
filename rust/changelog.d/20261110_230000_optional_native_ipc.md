@@ -9,11 +9,9 @@ bump: minor
 
 ### Changed
 
-- Update the optional `rusqlite` dependency of the `sqlite` feature to 0.42.0.
-- Update `errno` to 0.3.15 and the optional `ureq` dependency of the `etcd` feature to 3.5.2.
+- `libc` and `errno` are regular Unix dependencies again (not only of the `native-pages` feature), because the POSIX IPC transports of `protocol::ipc` use them in every build (#140).
 
 ### Fixed
 
-- The `clink-wasm` manifest declares `console_error_panic_hook` only for `wasm32` and drops the unused `web-sys`, which Cargo 1.100 reports as `cargo::unused_dependencies`; `link_cli::protocol::ipc` builds for `wasm32` without warnings.
-- Drop `package.homepage`, which repeats `package.repository`; newer Cargo warns `cargo::redundant_homepage` about it, and CI denies manifest warnings.
+- `link_cli::protocol::ipc` builds for `wasm32` without warnings.
 - Keep the dependent WASM lockfile in the same verified release commit as the native manifest and lockfile, preventing `--locked` CI failures after automatic releases.

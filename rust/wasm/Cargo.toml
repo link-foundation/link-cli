@@ -24,6 +24,11 @@ serde_json = "1.0.154"
 wasm-bindgen-test = "0.3.80"
 links-notation = "0.31.3"
 
+# Only the wasm32 entry point installs the panic hook (src/lib.rs), so a host
+# build would report the dependency as unused (cargo::unused_dependencies).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
 # The cdylib is linked before the test executable. It therefore needs the
 # profiling runtime itself when collecting experimental WASM coverage.
 [target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
@@ -31,10 +36,6 @@ minicov = "=0.3.8"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
-
-# Only the browser build installs the panic hook (`set_panic_hook`).
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-console_error_panic_hook = { version = "0.1.7", optional = true }
 
 [features]
 default = ["console_error_panic_hook", "sorted-tables", "physical-lsm", "causal", "causal-merkle", "causal-batches", "causal-projection", "causal-sessions", "address-reservations", "author-fencing"]

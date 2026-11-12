@@ -8,8 +8,16 @@ root=$(cd "$here/../.." && pwd)
 dir=$(mktemp -d)
 log="$dir/server.log"
 server=
+# Wait for the server to exit before removing its folder: a server still
+# writing on its way out made rm fail with "Directory not empty" after the
+# scenario passed (experiments/issue-176/cleanup-race.sh). Bounded to 10 s.
 cleanup() {
-  [ -n "$server" ] && kill "$server" 2>/dev/null || true
+  if [ -n "$server" ]; then
+    kill "$server" 2>/dev/null || true
+    for _ in $(seq 1 50); do kill -0 "$server" 2>/dev/null || break; sleep 0.2; done
+    kill -9 "$server" 2>/dev/null || true
+    wait "$server" 2>/dev/null || true
+  fi
   rm -rf "$dir"
 }
 trap cleanup EXIT
