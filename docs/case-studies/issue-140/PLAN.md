@@ -55,6 +55,15 @@ From the owner's PR review:
 - [x] Every CI check passes on the final head. This is recorded in the PR
   description.
 
+From the owner's repeated request after the session restart (the second
+entry of `evidence/pr-feedback.json`):
+
+- [x] Re-check every requirement against the whole repository. The sweep
+  found documents that still described serving as TCP only, and each now
+  names the IPC transports: the #140 row of `docs/REQUIREMENTS.md`,
+  `docs/HOW-IT-WORKS.md`, the transport row of `docs/COMPOSITION.md`,
+  `docs/ARCHITECTURE.md`, both CLI READMEs and `examples/tcp`.
+
 ## Execution order
 
 1. Specify the wire contract first: endpoints, the rendezvous directory, ring
