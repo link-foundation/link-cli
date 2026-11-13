@@ -40,7 +40,25 @@ function causalProjectionTypes(values: readonly CausalValue[]) {
 }
 import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links, UnionLinks, RemapLinks, CacheLinks, OffsetAddressMap, AddressTable, ExternalIdMap, LinksExternalIds, NotFoundError } from '../types/index.js';
 import { connectTcp } from '../types/tcp.js';
+import { connectIpc, connectStream, IpcTransport, KINDS, parseEndpoint, registerTransport, setTrace, supports, supportsNatively, type Endpoint, type IpcKind, type IpcStream } from '../types/ipc.js';
 import { connectProcess } from '../types/process.js';
+async function ipcTypes(custom: IpcStream) {
+  const endpoint: Endpoint = parseEndpoint('fifo:/tmp/r?timeout=500');
+  const kind: string = endpoint.kind;
+  const timeout: number = endpoint.timeout();
+  const first: IpcKind | undefined = KINDS[0];
+  registerTransport('loop', (parsed, { signal }) => (signal.aborted ? Promise.resolve(custom) : custom));
+  setTrace(supports('mq') && !supportsNatively('mq'));
+  const stream: IpcStream = await connectStream(endpoint, { timeout: 1000, clink: '/usr/bin/clink' });
+  stream.end();
+  const client = await connectIpc('shm:/tmp/r', { verify: false, maxInFlight: 8 });
+  const transport = await IpcTransport.connect('udp:127.0.0.1:9?chunk=1200');
+  const wrapped = new IpcTransport(custom, { owned: false, kind: 'loop' });
+  const name: string = transport.capabilities.transport;
+  void [kind, timeout, first, name, wrapped.kind, transport.endpoint];
+  return client.count([]);
+}
+void ipcTypes;
 import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
 import { CausalReplica, type CausalSnapshot } from '../types/engine-causal-replica.js';
 import { CausalBatch, type CausalBatchSnapshot } from '../types/engine-causal-batch.js';

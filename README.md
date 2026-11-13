@@ -641,6 +641,47 @@ C# and Rust servers and clients work with each other: see
 Ctrl+C or `SIGTERM` stops a server gracefully: it closes the store and exits
 with status 0, so it can run under a service manager or in a container.
 
+### Serve over any IPC mechanism
+
+TCP is one of many transports. Every `--serve`, `--connect` and `--forward`
+address is an endpoint of
+[IPC transports v1](docs/protocol/ipc-transports-v1.md), and every endpoint
+carries both protocols between the Rust and C# CLIs, their libraries and the
+[JavaScript client](js/client/README.md#ipc-endpoints):
+
+| Endpoint | Mechanism | Platforms |
+| --- | --- | --- |
+| `127.0.0.1:7777`, `tcp:HOST:PORT` | TCP/IP loopback (or network) | all |
+| `udp:127.0.0.1:7777` | UDP loopback with acknowledged, ordered delivery | all |
+| `unix:/tmp/links.sock` | Unix domain socket | Linux, macOS, Windows |
+| `pipe:NAME` | named pipe (on POSIX: a pair of FIFOs in a directory) | all |
+| `fifo:DIR` | two POSIX named pipes | Linux, macOS |
+| `stdio`, `exec:COMMAND` | anonymous pipes of a child process | all |
+| `shm:DIR` | shared memory | all |
+| `mmap:DIR` | memory-mapped file | all |
+| `file:DIR` | a file on disk, positioned reads and writes only | all |
+| `signal:DIR` | memory-mapped file woken by OS signals (Windows: events) | all |
+| `mq:DIR` | POSIX message queues | Linux |
+| `sysvmq:DIR` | System V message queues | Linux, macOS |
+| `mailslot:DIR`, `copydata:DIR`, `alpc:DIR` | mailslots, `WM_COPYDATA`, ALPC | Windows |
+
+The transports are decorators under the protocol, so they are optional,
+interchangeable and stack. `--serve` repeats to serve one store on several
+endpoints at once, and `--forward` relays every connection of its `--serve`
+endpoints to another endpoint, byte for byte, without opening a database:
+
+```bash
+clink --db db.links --serve 127.0.0.1:7777 --serve shm:/tmp/links   # terminal 1
+clink --serve mq:/tmp/links-queue --forward shm:/tmp/links          # terminal 2: a relay
+clink --connect mq:/tmp/links-queue --protocol binary '() ((1 1))'  # terminal 3
+() ((1: 1 1))
+clink --connect 'exec:clink --db db2.links --serve stdio'           # no listener at all
+```
+
+`--trace` (or `CLINK_IPC_TRACE=1`) logs each transport event to standard
+error. See [`examples/ipc/`](examples/ipc/README.md) for the runnable
+examples and the interop check of every kind between every implementation.
+
 ### Serving triplets
 
 `--triplets` makes a server read every request as
@@ -1019,7 +1060,7 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--db`                  | string  | `db.links`     | `--data-source`, `--data`, `-d`     | Path to the links database file                                            |
 | `--query`               | string  | _None_         | `--apply`, `--do`, `-q`             | LiNo query for CRUD operation                                              |
 | `query` (positional)    | string  | _None_         | _N/A_                               | LiNo query for CRUD operation (provided as the first positional argument)  |
-| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                              |
+| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output), including each IPC transport event of `--serve`, `--connect` and `--forward` (as `CLINK_IPC_TRACE=1` does) |
 | `--auto-create-missing-references` | bool | `false` | _None_                              | Create missing numeric and named references as self-referential point links |
 | `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                                     |
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
@@ -1036,8 +1077,9 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
 | `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
 | `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
-| `--serve`               | string  | _None_         | _None_                              | Serve the database over TCP at `host:port` (port `0` picks a free port)   |
-| `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server at `host:port` and print the reply |
+| `--serve`               | string  | _None_         | _None_                              | Serve the database on an endpoint: `host:port` (port `0` picks a free port) or `KIND:ADDRESS` of any [IPC transport](docs/protocol/ipc-transports-v1.md); repeat it to serve one store on several endpoints |
+| `--forward`             | string  | _None_         | _None_                              | With `--serve`: relay every connection, byte for byte, to this endpoint instead of serving a database |
+| `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server on any endpoint (`host:port`, `shm:/tmp/links`, ...) and print the reply |
 | `--protocol`            | string  | detected       | _None_                              | `text` or `binary` (with `--serve`, also `any`, which is the default)     |
 | `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
 | `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |

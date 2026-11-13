@@ -418,6 +418,8 @@ dependencies = [
  "anyhow",
  "ctrlc",
  "doublets",
+ "errno",
+ "libc",
  "links-notation",
  "lino-arguments",
  "lru",

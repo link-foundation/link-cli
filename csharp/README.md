@@ -162,7 +162,7 @@ library API for explicit batches. End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and
 [`examples/version-control/`](../examples/version-control).
 
-### Serve Over TCP
+### Serve Over TCP and Other IPC Transports
 
 ```bash
 clink --db data.links --serve 127.0.0.1:7777                 # serve a database
@@ -172,6 +172,23 @@ clink --connect 127.0.0.1:7777 --protocol binary --arity 1.. # binary protocol, 
 
 With `--triplets`, the server reads every request as triplets instead, as
 described in [docs/TRIPLETS.md](../docs/TRIPLETS.md#protocol).
+
+Every address is an endpoint of
+[IPC transports v1](../docs/protocol/ipc-transports-v1.md), so the same server
+also listens on UDP, Unix sockets, named and anonymous pipes, FIFOs, shared
+memory, mapped files, files, signals, POSIX and System V message queues,
+mailslots, `WM_COPYDATA` or ALPC. `--serve` repeats, and `--forward` stacks a
+relay on top without opening a database:
+
+```bash
+clink --db data.links --serve 127.0.0.1:7777 --serve shm:/tmp/links   # two endpoints, one store
+clink --serve udp:127.0.0.1:7778 --forward shm:/tmp/links              # a relay
+clink --connect udp:127.0.0.1:7778 --protocol binary '() ((1 1))'
+clink --connect 'exec:clink --db other.links --serve stdio' ''         # anonymous pipes
+```
+
+In the library, `Foundation.Data.Doublets.Cli.Ipc` connects, listens, relays and registers custom kinds,
+and `LinksServer.ListenAll` and `LinksClient.ConnectEndpoint` take any endpoint. See [`examples/ipc/`](../examples/ipc/README.md).
 
 In the library, `LinksServer` serves any `INamedTypesLinks<uint>`, and
 `LinksClient` queries a server through either `TextLinoProtocol` or

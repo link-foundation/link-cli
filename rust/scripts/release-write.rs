@@ -10,7 +10,7 @@
 use crate::release_changelog::list_fragments;
 use regex::Regex;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub fn cargo_lock_entry_regex(crate_name: &str) -> Regex {
     Regex::new(&format!(
@@ -62,6 +62,27 @@ pub fn update_cargo_lock(
         new_version
     );
     Ok(true)
+}
+
+/// Update the release crate wherever its local dependency is locked, and
+/// return the existing lockfiles that must be staged with the manifest.
+pub fn update_release_lockfiles(
+    cargo_lock_path: &Path,
+    crate_name: &str,
+    new_version: &str,
+) -> Result<Vec<PathBuf>, String> {
+    let mut lockfiles = Vec::new();
+    let wasm_lock = cargo_lock_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join("wasm/Cargo.lock");
+    for path in [cargo_lock_path.to_path_buf(), wasm_lock] {
+        if path.exists() {
+            update_cargo_lock(&path, crate_name, new_version)?;
+            lockfiles.push(path);
+        }
+    }
+    Ok(lockfiles)
 }
 
 /// The version commit is pushed straight to main with GITHUB_TOKEN, which does

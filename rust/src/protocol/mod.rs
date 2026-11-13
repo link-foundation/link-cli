@@ -43,6 +43,7 @@
 pub mod archive;
 mod client;
 mod error;
+pub mod ipc;
 pub mod links_operations;
 mod protocols;
 mod remote_links;
@@ -63,7 +64,7 @@ pub use links_notation::binary::{
 pub use links_operations::{GenericLinksOperation, LinksNotification, LinksOperation};
 pub use protocols::{
     is_binary_start, read_any_document, BinaryLinoProtocol, LinoConnection, LinoProtocol,
-    MessageFormat, ProtocolLimits, TextLinoProtocol, DEFAULT_MAX_TEXT_BYTES,
+    MessageFormat, ProtocolLimits, TextLinoProtocol, TimedStream, DEFAULT_MAX_TEXT_BYTES,
 };
 pub use remote_links::RemoteLinks;
 pub use server::{

@@ -1,0 +1,95 @@
+name: IPC
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/ipc/**'
+      - 'docs/protocol/ipc-transports-v1.md'
+      - '.github/workflows/ipc.yml'
+      - 'rust/**'
+      - 'csharp/**'
+      - 'js/client/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'examples/ipc/**'
+      - 'docs/protocol/ipc-transports-v1.md'
+      - '.github/workflows/ipc.yml'
+      - 'rust/**'
+      - 'csharp/**'
+      - 'js/client/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  interop:
+    name: IPC interop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-interop-${{ matrix.os }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Setup Rust
+        shell: bash
+        run: rustup toolchain install stable --profile minimal --no-self-update
+      - name: Build Rust CLI
+        run: cargo build --manifest-path rust/Cargo.toml --locked --bin clink -j 2
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - name: Build C# CLI
+        run: dotnet build csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj -c Release
+      - name: Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients
+        shell: bash
+        run: |
+          export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+          node examples/ipc/interop.mjs --js \
+            rust=rust/target/debug/clink \
+            'csharp=["dotnet","csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll"]'
+      - name: The JS client against the Rust server over every kind
+        shell: bash
+        working-directory: js/client
+        run: |
+          export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+          node --test --test-concurrency=1 --test-timeout=120000 test/ipc.test.mjs
+
+  pipeline-status:
+    name: Pipeline Status (ipc)
+    needs:
+      - interop
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

@@ -6,6 +6,7 @@ contract over several backends:
 | Backend | Entry point | Runtimes | Reaches |
 | --- | --- | --- | --- |
 | TCP | `@link-foundation/link-cli-client/tcp` | Node.js, Bun, Deno | a running `clink --serve` (Rust or C#) |
+| IPC | `@link-foundation/link-cli-client/ipc` | Node.js | a running `clink --serve ENDPOINT` on any [IPC endpoint](#ipc-endpoints): Unix sockets, named pipes, FIFOs, UDP, shared memory, message queues, ... |
 | CLI process | `@link-foundation/link-cli-client/process` | Node.js, Bun, Deno | a `clink --serve` the client starts and stops |
 | WebAssembly | `@link-foundation/link-cli-client` | browsers, Node.js, Bun, Deno | an in-process `Clink` store from `rust/wasm` |
 
@@ -86,6 +87,72 @@ import { createWasmClient } from '@link-foundation/link-cli-client';
 await init();
 const links = createWasmClient(new Clink(), { owned: true }); // close() frees it
 ```
+
+## IPC endpoints
+
+`clink --serve ENDPOINT` listens on any endpoint of
+[IPC transports v1](../../docs/protocol/ipc-transports-v1.md), and
+`connectIpc(ENDPOINT)` connects to it. An endpoint is
+`[kind:]address[?name=value&...]`, and text without a kind is a TCP
+`host:port`, so every TCP address works unchanged:
+
+```js
+import { connectIpc } from '@link-foundation/link-cli-client/ipc';
+
+// clink --db db.links --serve unix:/tmp/links.sock
+const links = await connectIpc('unix:/tmp/links.sock', { timeout: 5000 });
+try {
+  await links.create(1n, 1n);
+  console.log(links.capabilities.transport); // 'unix'
+} finally {
+  await links.close();
+}
+```
+
+Most kinds are spoken natively, byte for byte like the Rust reference. The rest
+go through a bridge: the client starts `clink --serve stdio --forward ENDPOINT`
+and talks the protocol over its standard input and output. Kinds Node.js
+cannot open (POSIX and System V message queues, mailslots, `WM_COPYDATA`,
+ALPC) work this way wherever the Rust `clink` supports them:
+
+| Kind | Linux | macOS and other POSIX | Windows |
+| --- | --- | --- | --- |
+| `tcp:HOST:PORT` | native | native | native |
+| `udp:HOST:PORT` | native | native | native |
+| `unix:PATH` | native; `unix:@NAME` is an abstract socket | native | bridge |
+| `pipe:NAME` | native (the FIFO rendezvous) | native (the FIFO rendezvous) | native (a named pipe `\\.\pipe\NAME`) |
+| `fifo:DIR` | native | native | none |
+| `exec:COMMAND` | native | native | native |
+| `file:DIR`, `mmap:DIR` | native | native | native |
+| `signal:DIR` | native | native | bridge |
+| `shm:DIR` | native (`/dev/shm`) | bridge | bridge |
+| `mq:DIR` | bridge | none | none |
+| `sysvmq:DIR` | bridge | bridge (macOS only) | none |
+| `mailslot:DIR`, `copydata:DIR` | none | none | bridge |
+| `alpc:DIR` | none | none | bridge (64-bit) |
+| `stdio` | serving only | serving only | serving only |
+
+`supportsNatively(kind)` and `supports(kind)` (natively or through the bridge)
+answer for the running platform, or for another one given as
+`supports(kind, 'win32', 'x64')`; `bridgeableKinds(platform, arch)` lists what
+the bridge reaches there. The bridge runs the command in the option
+`clink`, else the environment variable `CLINK_BIN`, else `clink` on the `PATH`;
+its stream has `bridged: true` and the child's `pid`. Every connect honours
+`signal`, `deadline` and `timeout`, and the endpoint's own `?timeout=MS`.
+The client's `capabilities.transport` is the kind (`rawTcp` is true for `tcp`
+only), and `client.transport.endpoint` is the canonical endpoint text.
+
+`connectStream(endpoint)` resolves to the raw byte stream (a `node:stream`
+Duplex with half-close) for other protocols, and `new IpcTransport(stream)`
+speaks the links protocol over any such stream. `registerTransport(kind,
+connect)` adds a custom kind: `connect(endpoint, { signal })` returns a stream
+or a promise of one, and `parseEndpoint('kind:...')` then knows the kind.
+Built-in kinds cannot be replaced.
+
+`CLINK_IPC_TRACE=1` (or `setTrace(true)`) logs every connect, handshake and
+hang-up to standard error as `[ipc] ...` lines, and passes the bridge's log
+through as `[ipc] bridge: ...`.
+[examples/ipc.mjs](examples/ipc.mjs) connects to the endpoint it is given.
 
 ## Contract
 

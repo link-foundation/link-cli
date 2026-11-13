@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
 using Foundation.Data.Doublets.Cli.Graphql;
+using Foundation.Data.Doublets.Cli.Ipc;
 using Foundation.Data.Doublets.Cli.Protocol;
 using Link.Foundation.Links.Notation;
 using Link.Foundation.Links.Notation.Binary;
@@ -33,7 +34,7 @@ var queryArgument = new Argument<string?>("query")
 
 var traceOption = new Option<bool>("--trace", "-t")
 {
-    Description = "Enable trace (verbose output)",
+    Description = "Enable trace (verbose output), including each transport event of --serve, --connect and --forward (as CLINK_IPC_TRACE=1 does)",
     DefaultValueFactory = _ => false
 };
 
@@ -191,14 +192,25 @@ var logOption = new Option<bool>("--log")
     DefaultValueFactory = _ => false
 };
 
-var serveOption = new Option<string?>("--serve")
+var serveOption = new Option<string[]>("--serve")
 {
-    Description = "Serve the database over TCP at host:port (port 0 picks a free port)"
+    Description = "Serve the database on an endpoint until stopped: a TCP address (e.g. 127.0.0.1:7878, port 0 picks a free port) "
+        + "or KIND:ADDRESS for another transport, such as unix:/tmp/links.sock, pipe:NAME, fifo:DIR, shm:DIR, mmap:DIR, file:DIR, "
+        + "signal:DIR, mq:DIR, sysvmq:DIR, udp:HOST:PORT, stdio, mailslot:DIR, copydata:DIR or alpc:DIR "
+        + "(see docs/protocol/ipc-transports-v1.md); repeat it to serve one store on several endpoints at once. "
+        + "Each message may use the text or the binary LiNo protocol",
+    Arity = ArgumentArity.OneOrMore,
+    AllowMultipleArgumentsPerToken = false,
+};
+
+var forwardOption = new Option<string?>("--forward")
+{
+    Description = "With --serve: relay every connection, byte for byte, to this endpoint instead of serving a database (stacks transports)"
 };
 
 var connectOption = new Option<string?>("--connect")
 {
-    Description = "Send the query to a clink server at host:port and print the reply"
+    Description = "Send the query to a clink server on a --serve endpoint (e.g. 127.0.0.1:7878 or shm:/tmp/links) instead of opening a database; an empty query reads every link"
 };
 
 var protocolOption = new Option<string?>("--protocol")
@@ -295,6 +307,7 @@ rootCommand.Options.Add(listBranchesOption);
 rootCommand.Options.Add(listTagsOption);
 rootCommand.Options.Add(logOption);
 rootCommand.Options.Add(serveOption);
+rootCommand.Options.Add(forwardOption);
 rootCommand.Options.Add(connectOption);
 rootCommand.Options.Add(protocolOption);
 rootCommand.Options.Add(externalReferencesOption);
@@ -344,7 +357,8 @@ rootCommand.SetAction(
       var listBranches = parseResult.GetValue(listBranchesOption);
       var listTags = parseResult.GetValue(listTagsOption);
       var showLog = parseResult.GetValue(logOption);
-      var serveAddress = parseResult.GetValue(serveOption);
+      var serveEndpoints = parseResult.GetValue(serveOption) ?? [];
+      var forwardEndpoint = parseResult.GetValue(forwardOption);
       var connectAddress = parseResult.GetValue(connectOption);
       var protocolName = parseResult.GetValue(protocolOption)?.Trim();
       var permissionsSource = parseResult.GetValue(permissionsOption)?.Trim();
@@ -374,10 +388,21 @@ rootCommand.SetAction(
           return 1;
       }
 
-      if (serveAddress is not null && connectAddress is not null)
+      if (serveEndpoints.Length > 0 && connectAddress is not null)
       {
           Console.Error.WriteLine("--serve and --connect cannot be used together.");
           return 1;
+      }
+
+      if (trace)
+      {
+          IpcTransports.SetTrace(true);
+      }
+
+      if (forwardEndpoint is not null)
+      {
+          var hasQuery = !string.IsNullOrWhiteSpace(queryOptionValue) || !string.IsNullOrWhiteSpace(queryArgumentValue);
+          return CliServe.RunRelay(serveEndpoints, forwardEndpoint, hasQuery, graphql.Enabled(parseResult), trace);
       }
 
       if (connectAddress is not null)
@@ -518,7 +543,7 @@ rootCommand.SetAction(
                   rulesStore = new NamedTypesDecorator<uint>(permissionsSource, trace);
               }
               permissionPolicy = new PermissionPolicy<uint>(decoratedLinks, rulesStore ?? decoratedLinks);
-              if (serveAddress is null)
+              if (serveEndpoints.Length == 0)
               {
                   undoableLinks = new UndoableLinksDecorator<uint>(decoratedLinks);
                   var subjectOfView = subject;
@@ -661,7 +686,7 @@ rootCommand.SetAction(
               return CliPermissions.RunTokens(new LinksTokenTable(tokensStore ?? storeLinks), subject, grantToken, revokeToken);
           }
 
-          if (serveAddress is not null)
+          if (serveEndpoints.Length > 0)
           {
               return RunServer();
           }
@@ -679,7 +704,9 @@ rootCommand.SetAction(
           }
           if (graphql.Enabled(parseResult))
           {
-              return graphql.Run(parseResult, serveAddress, decoratedLinks, permissionPolicy);
+              return CliServe.GraphqlAddress(serveEndpoints) is { } graphqlAddress
+                  ? graphql.Run(parseResult, graphqlAddress, decoratedLinks, permissionPolicy)
+                  : 1;
           }
           AcceptedProtocols accept;
           switch (protocolName?.ToLowerInvariant())
@@ -692,7 +719,7 @@ rootCommand.SetAction(
                   return 1;
           }
           var tokenTable = string.IsNullOrWhiteSpace(tokensSource) ? null : new LinksTokenTable(tokensStore ?? storeLinks);
-          using var server = LinksServer.Bind(serveAddress, new LinksServerOptions
+          using var server = LinksServer.ListenAll(serveEndpoints, new LinksServerOptions
           {
               Trace = trace,
               AutoCreateMissingReferences = autoCreateMissingReferences,
@@ -703,8 +730,7 @@ rootCommand.SetAction(
               Triplets = parseResult.GetValue(tripletsOption),
           });
           using var stopSignals = new StopSignals(server.Shutdown);
-          Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
-          Console.Out.Flush();
+          CliServe.PrintBanner(server.Endpoints);
           server.Serve(decoratedLinks);
           return 0;
       }
