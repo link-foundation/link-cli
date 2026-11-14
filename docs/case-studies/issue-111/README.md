@@ -49,6 +49,7 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 2026-11-14 17:16-18:36 | The port grows feature by feature: the query language and command line, undo, permissions and triggers, triplets, the doublets store with names and types, the LiNo parser, transactions and version control, GraphQL, `.lenv`/`.env`, the protocol server, client and IPC transports, and the `<db>.lock` file lock. JavaScript becomes the third suite that must load every golden fixture (4d350095). |
 | 2026-11-14 18:26 | The first CI run of `js-server.yml` on Linux, macOS and Windows with Node.js 20, 22 and 26 (1d825202) fails on Windows and on Node.js 20 and 22 (root causes 9-12). CodeQL flags two regular expressions as polynomial ReDoS (fixed by ac4526fe). |
 | 2026-11-14 18:51-18:58 | Windows and old Node.js fixes (d0c65de9, 4fc2204a, e1315be9), complete coverage of every source file, `LockFileEx` locking on Windows through `node:ffi` and `bun:ffi` (88f4279a), and the package README. |
+| 2026-11-14 19:14 | CI for 205c3c62 is green on Linux and macOS with Node.js 22 and 26, on Bun and Deno, and against the Rust `clink`. It fails on Node.js 20 and on Windows (root causes 13-14). |
 
 ## Requirements and how each is met
 
@@ -131,6 +132,20 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
     earlier.** A GraphQL test expected a reset and got an orderly close.
     The test now writes before it resets, which behaves the same everywhere
     ([`experiments/issue-111/reset-and-destroy-events.mjs`](../../../experiments/issue-111/reset-and-destroy-events.mjs)).
+13. **libuv opens a directory for writing on Windows.** It always passes
+    `FILE_FLAG_BACKUP_SEMANTICS`, so `openSync(dir, 'r+')`, `'a+'` and
+    `O_RDWR | O_CREAT` succeed there. A directory in place of the
+    transitions log or the lock file was opened silently, where `open(2)`
+    and Rust's `File::open` fail. `openFileSync` (`src/open-file.js`) now
+    checks what it opened and fails with `EISDIR` on every platform.
+14. **`LockFileEx` is mandatory, `flock(2)` is advisory.** The Windows
+    lock, like Rust's `File::lock`, covers the whole file, so another handle
+    can open a locked sidecar but cannot read it (`EBUSY`). The test now
+    expects this behaviour. The same CI run (205c3c62) also showed that Node.js 20's
+    test runner writes its serialized reports to the standard output the
+    `bin/clink.js` test captured, that `EWOULDBLOCK` is 140 on Windows
+    rather than an alias of `EAGAIN`, and that Node.js has no `AF_UNIX`
+    sockets on Windows. The tests now handle each of these.
 
 ## Solutions considered
 
