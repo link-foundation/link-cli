@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.1.0] - 2026-11-14
+
+### Added
+
+- `link_cli::protocol::ipc` carries the LiNo text and binary protocols over every IPC mechanism of IPC transports v1 (`docs/protocol/ipc-transports-v1.md`): TCP and UDP loopback, Unix domain sockets, Windows named pipes, POSIX FIFOs, anonymous pipes (`stdio` and `exec:`), shared memory, memory-mapped files, files on disk, OS signals, POSIX and System V message queues, mailslots, `WM_COPYDATA` and ALPC. An endpoint string selects the mechanism, `LinksServer` and `LinksClient` take any endpoint, `register` adds custom kinds, and every kind interoperates with the C# `clink` and the JavaScript client (#140).
+- `clink --serve` repeats to serve one store on several endpoints at once, `--forward` relays every connection of the `--serve` endpoints to another endpoint without opening a database (so transports stack), `--connect` takes any endpoint and `--trace` (or `CLINK_IPC_TRACE=1`) logs every transport event (#140).
+
+### Changed
+
+- `libc` and `errno` are regular Unix dependencies again (not only of the `native-pages` feature), because the POSIX IPC transports of `protocol::ipc` use them in every build (#140).
+
+### Fixed
+
+- `link_cli::protocol::ipc` builds for `wasm32` without warnings.
+- Keep the dependent WASM lockfile in the same verified release commit as the native manifest and lockfile, preventing `--locked` CI failures after automatic releases.
+
+### Fixed
+
+- Shared-memory, memory-mapped-file and file-ring IPC connections no longer drop the last bytes a peer writes right before it ends its direction: the reader reloads the ring positions after seeing the writer end and only reports the end of the stream once the ring is still empty (#140).
+
+### Fixed
+
+- Datagram IPC sessions (`udp`, `mq`, `sysvmq`, `mailslot`, `copydata`, `alpc`) acknowledge an in-order DATA or EOF frame before the reader can see it, and a half-close whose end the peer never acknowledged because it already hung up now succeeds like TCP's `shutdown(SHUT_WR)`. Before, a reader that hung up right after reading the end (removing a System V queue discards a pending acknowledgement, a full POSIX queue drops it) made the writer's half-close fail with "the peer no longer reads" although every byte was delivered (#140).
+- Failing to disable Nagle's algorithm on a TCP IPC stream is traced instead of being silently ignored (#140).
+
+Update links-notation to 0.31.4 and refresh locked dependencies.
+
 ## [3.0.1] - 2026-11-13
 
 Update rusqlite to 0.42.0, ureq to 3.5.2, errno to 0.3.15 and rustls-webpki to 0.103.17 so the Dependencies check passes; cargo-audit stays held back at 0.22.2 until taiki-e/install-action ships a verified 0.23.0 manifest (issue #176).
