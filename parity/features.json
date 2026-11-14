@@ -701,7 +701,7 @@
         "tests": [
           "js/server/test/link-storage*.test.mjs",
           "js/server/test/indexed-links.test.mjs",
-          "js/server/test/storage-lock.test.mjs"
+          "js/server/test/storage-lock*.test.mjs"
         ],
         "fingerprint": "bd3757ef8f5be9b6"
       }
