@@ -49,15 +49,17 @@ const STRERROR = {
   EXDEV: 'Invalid cross-device link',
 };
 
-/** Whether `error` is a Node.js system error (it has an `E…` code and an errno). */
+/**
+ * Whether `error` is a system error: Node.js and Bun give it an `E…` code and
+ * a numeric errno, Deno the `E…` code alone.
+ */
 export function isSystemError(error) {
   return (
-    error instanceof Error &&
-    typeof error.code === 'string' &&
-    /^E[A-Z0-9]+$/.test(error.code) &&
-    typeof error.errno === 'number'
+    error instanceof Error && typeof error.code === 'string' && /^E[A-Z0-9]+$/.test(error.code)
   );
 }
+
+const OS_ERROR = / \(os error (\d+)\)$/;
 
 /**
  * The `Display` text of the `std::io::Error` Rust would hold for a Node.js
@@ -65,10 +67,15 @@ export function isSystemError(error) {
  * Node.js text after its `CODE: ` prefix.
  */
 export function ioErrorText(error, errnos = constants.errno) {
-  const number = errnos[error.code] ?? Math.abs(error.errno);
+  // Deno already writes Rust's text, `Bad file descriptor (os error 9)`.
+  const deno = OS_ERROR.exec(error.message);
+  const number = errnos[error.code] ?? (deno ? Number(deno[1]) : Math.abs(error.errno));
   const description =
     STRERROR[error.code] ??
-    error.message.replace(/^[A-Z0-9]+: /, '').replace(/, [a-z]+(?: '.*')?$/, '');
+    error.message
+      .replace(OS_ERROR, '')
+      .replace(/^[A-Z0-9]+: /, '')
+      .replace(/, [a-z]+(?: '.*')?$/, '');
   return `${description} (os error ${number})`;
 }
 

@@ -48,9 +48,16 @@ describe('error reports', () => {
     );
   });
 
+  it('reads the Rust text Deno gives a system error without an errno', () => {
+    const error = Object.assign(new Error('Bad file descriptor (os error 9)'), { code: 'EBADF' });
+    assert.equal(isSystemError(error), true);
+    assert.equal(errorText(error), `Bad file descriptor (os error ${constants.errno.EBADF})`);
+    const odd = Object.assign(new Error('Something odd (os error 4242)'), { code: 'EODD' });
+    assert.equal(ioErrorText(odd, {}), 'Something odd (os error 4242)');
+  });
+
   it('is not fooled by errors that only look like system errors', () => {
     assert.equal(isSystemError(Object.assign(new Error('x'), { code: 'ERR_X' })), false);
-    assert.equal(isSystemError(Object.assign(new Error('x'), { code: 'ENOENT' })), false);
     assert.equal(isSystemError({ code: 'ENOENT', errno: -2 }), false);
     assert.equal(errorText('plain text'), 'plain text');
   });

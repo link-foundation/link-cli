@@ -17,15 +17,11 @@ import { NULL_LINK } from './link.js';
 export const storageError = (error) =>
   new StorageError(errorChain(error).map(errorText).join(': '));
 
-/**
- * Whether `error` is an `io::Error`: Node's system errors, and Deno's, which carry
- * the `E…` code without a numeric `errno`.
- */
-const isIoError = (error) => isSystemError(error) || /^E[A-Z0-9]+$/.test(Object(error).code);
-
 /** The `LinkError::Io` a `?` on an `io::Error` makes; other errors pass through. */
 export const ioError = (error) =>
-  isIoError(error) ? new LinkError(`I/O error: ${ioErrorText(error)}`, { cause: error }) : error;
+  isSystemError(error)
+    ? new LinkError(`I/O error: ${ioErrorText(error)}`, { cause: error })
+    : error;
 
 /** Runs `action`, reporting its failure as `storage_error` does. */
 export function guarded(action) {
