@@ -25,7 +25,7 @@ export { LinkStorage } from './link-storage.js';
 export { FileLock, LockMode, lockFilePath } from './storage-lock.js';
 export { NamedTypeLinks } from './named-type-links.js';
 export { NamedTypesDecorator, makeNamesDatabaseFilename } from './named-types.js';
-export { TypesDecorator, TypeMarkers } from './types.js';
+export { EXTENDS_NAME, ROOT_TYPE_NAME, TypeMarkers, TypesDecorator, ensurePoint } from './types.js';
 export { UnicodeStringStorage } from './unicode-string-storage.js';
 export { PinnedTypes } from './pinned-types.js';
 export { IndexedLinks } from './indexed-links.js';
@@ -46,31 +46,59 @@ export { QueryLimits, QueryOptions } from './query-options.js';
 export { LinkReferenceValidator } from './link-reference-validator.js';
 
 // Store policies: undo, transactions, version control, triggers, permissions.
-export { UndoableLinksDecorator } from './undoable-links.js';
+export { LinksUndoLog, UndoableLinksDecorator } from './undoable-links.js';
 export { TransactionsDecorator } from './transactions.js';
-export { VersionControlDecorator } from './version-control.js';
+export { FileTransitionLog } from './transactions-log.js';
 export {
+  CommitMode,
+  INFINITE_RETENTION,
+  RowUndoPolicy,
+  TransitionKind,
+  parseRetentionPolicy,
+} from './transactions-types.js';
+export {
+  DEFAULT_BRANCH_NAME,
+  VersionControlDecorator,
+  makeVersionControlDatabaseFilename,
+} from './version-control.js';
+export {
+  INTERNAL_NAME_PREFIX,
+  PersistentTransformation,
   PersistentTransformationDecorator,
   PersistentTransformationKind,
+  PersistentTransformationQuery,
   TriggerStore,
+  makeTriggersDatabaseFilename,
 } from './persistent-transformations.js';
 export {
   AccessPolicy,
   Forbidden,
   LinksTokenTable,
   PermissionAccess,
+  PermissionMarkers,
   PermissionPolicy,
   PermissionsDecorator,
 } from './permissions.js';
 
 // Triplets over doublets.
-export { TripletsOverDoublets, TripletMarkers } from './triplets.js';
+export {
+  DoubletRole,
+  NOTHING_MARKER_NAME,
+  PAIR_MARKER_NAME,
+  TripletMarkers,
+  TripletsOverDoublets,
+} from './triplets.js';
+export { TripletQuery } from './triplets-restriction.js';
+export { processTripletsQuery } from './triplets-query.js';
+export { importTripletsLino, tripletsToLino } from './triplets-lino.js';
 export { TripletsPermissionsDecorator } from './triplets-permissions.js';
 
 // Serving: the clink protocol over TCP and every IPC endpoint, and GraphQL.
 export { LinksServer, ServerOptions, AcceptedProtocols } from './protocol-server.js';
 export { LinksSessions } from './protocol-sessions.js';
 export { LinksClient } from './protocol-client.js';
+export { BinaryLinoProtocol, ProtocolLimits, TextLinoProtocol } from './protocol-protocols.js';
+export { BinaryLinoOptions } from './protocol-binary.js';
 export { Endpoint, connect, listen, listenAll } from './ipc.js';
 export { GraphqlServer } from './graphql-server.js';
 export { Settings as GraphqlSettings } from './graphql-execute.js';
