@@ -529,20 +529,22 @@ test('registry trust can be verified without versioning or publishing a release'
       );
     }
   }
-  const npm = workflows.find(({ name }) => name === 'js-client.yml');
-  const verify = readJobs(npm.text).find(({ name }) => name === 'verify-trusted-publishing');
-  assert.match(
-    verify.body,
-    /github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing/,
-  );
-  assert.match(verify.body, /^ {6}id-token: write$/m);
-  assert.match(verify.body, /node .github\/scripts\/verify-npm-trust.mjs/);
-  assert.doesNotMatch(verify.body, /secrets\.|npm publish/);
-  assert.doesNotMatch(
-    npm.text,
-    /secrets\.NPM_TOKEN|NODE_AUTH_TOKEN/,
-    'verified npm OIDC publishing must not fall back to a long-lived token',
-  );
+  for (const name of ['js-client.yml', 'js-server.yml']) {
+    const npm = workflows.find((workflow) => workflow.name === name);
+    const verify = readJobs(npm.text).find(({ name }) => name === 'verify-trusted-publishing');
+    assert.match(
+      verify.body,
+      /github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing/,
+    );
+    assert.match(verify.body, /^ {6}id-token: write$/m);
+    assert.match(verify.body, /node .github\/scripts\/verify-npm-trust.mjs/);
+    assert.doesNotMatch(verify.body, /secrets\.|npm publish/);
+    assert.doesNotMatch(
+      npm.text,
+      /secrets\.NPM_TOKEN|NODE_AUTH_TOKEN/,
+      `${name}: verified npm OIDC publishing must not fall back to a long-lived token`,
+    );
+  }
 });
 
 test('Dependabot watches every directory the dependency check reads', () => {
@@ -640,8 +642,9 @@ test('a failed release preflight blocks publishing but never the code checks', (
     'csharp.yml': ['release', 'instant-release'],
     'rust.yml': ['auto-release', 'manual-release'],
     'js-client.yml': ['release'],
+    'js-server.yml': ['release'],
   };
-  const checks = ['lint', 'test', 'fresh-merge', 'build', 'unit', 'conformance'];
+  const checks = ['lint', 'test', 'fresh-merge', 'build', 'unit', 'conformance', 'differential'];
   for (const [name, releaseJobs] of Object.entries(publishers)) {
     const { text } = workflows.find((workflow) => workflow.name === name);
     const jobs = readJobs(text);

@@ -33,6 +33,7 @@ updates:
     directories:
       - /js
       - /js/client
+      - /js/server
     schedule:
       interval: daily
     groups:

@@ -39,7 +39,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=1 --test-timeout=60000 test/*.test.mjs"
+    "test": "node --test --test-concurrency=1 --test-timeout=60000 test/*.test.mjs",
+    "test:coverage": "node --test --test-concurrency=1 --test-timeout=60000 --experimental-test-coverage --test-coverage-include=src/** --test-coverage-include=bin/** --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 test/*.test.mjs",
+    "test:differential": "node --test --test-concurrency=1 --test-timeout=120000 test/differential/*.test.mjs"
   },
   "dependencies": {
     "links-notation": "0.31.5"

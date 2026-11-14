@@ -177,7 +177,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        directory: [js, js/client]
+        directory: [js, js/client, js/server]
     name: Audit npm lock (${{ matrix.directory }})
     runs-on: ubuntu-24.04
     timeout-minutes: 10
