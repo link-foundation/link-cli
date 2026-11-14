@@ -804,7 +804,9 @@ function withTimeout(promise, ms, label) {
 async function main() {
   const backends = await backendsFromEnvironment();
   if (backends.length === 0) {
-    console.error('set CLINK_RUST, CLINK_CSHARP, CLINK_WASM and/or CLINK_JS; see the top of this file');
+    console.error(
+      'set CLINK_RUST, CLINK_CSHARP, CLINK_WASM and/or CLINK_JS; see the top of this file',
+    );
     process.exit(2);
   }
   console.log(
