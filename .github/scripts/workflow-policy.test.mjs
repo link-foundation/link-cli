@@ -875,3 +875,25 @@ test('both suites prove they loaded the shared golden fixtures (issue #111)', ()
     );
   }
 });
+
+test('idle pull requests are flagged after 60 days and then closed (issue #111)', () => {
+  const { text } = workflows.find(({ name }) => name === 'stale.yml');
+  assert.match(text, /uses: actions\/stale@v\d+/);
+  assert.match(text, /days-before-pr-stale: 60\n/);
+  assert.match(text, /days-before-pr-close: [1-9]\d*\n/);
+  // Issues track wanted work; only pull requests go stale.
+  assert.match(text, /days-before-issue-stale: -1\n/);
+  assert.match(text, /days-before-issue-close: -1\n/);
+  assert.match(text, /^ {2}schedule:/m);
+});
+
+test('a red Dependencies check on main opens or updates a tracking issue (issue #111)', () => {
+  const { text } = workflows.find(({ name }) => name === 'dependencies.yml');
+  const job = readJobs(text).find(({ name }) => name === 'tracking-issue');
+  assert.ok(job, 'dependencies.yml has no tracking-issue job');
+  assert.match(job.body, /^ {6}- latest$/m);
+  assert.match(job.body, /if: \$\{\{ !cancelled\(\) && github\.ref == 'refs\/heads\/main'/);
+  assert.match(job.body, /^ {6}issues: write$/m);
+  assert.match(job.body, /run: node \.github\/scripts\/dependency-tracking-issue\.mjs/);
+  assert.match(text, /^ {2}schedule:/m);
+});

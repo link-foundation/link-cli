@@ -30,6 +30,7 @@ on: # zizmor: ignore[dangerous-triggers]
       - Broken Link Checker
       - Crash tests
       - IPC
+      - Stale
     types: [completed]
 
 permissions:
