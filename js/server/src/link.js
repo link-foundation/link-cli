@@ -33,8 +33,6 @@ export const sameLink = (left, right) =>
 /** `(index source target)`, the debug form of `GenericLink::format`. */
 export const formatPlain = (value) => `(${value.index} ${value.source} ${value.target})`;
 
-export const byIndex = (left, right) => left.index - right.index;
-
 /** Whether `text` is what Rust's `str::parse::<u32>()` accepts. */
 export function isU32Text(text) {
   if (typeof text !== 'string') return false;

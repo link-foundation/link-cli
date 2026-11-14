@@ -1,17 +1,18 @@
 // Tests of `main` (src/main.js), the port of rust/src/main.rs, in-process:
 // help and version, the checks of the command line before any store opens,
-// `--structure`, and the `--serve`, `--forward` and `--connect` commands over
-// real TCP sockets on port 0. The differential tests run the same invocations
+// `--structure`, the transactions and version-control runs, the standard
+// output the pipeline falls back to, and the `--serve`, `--forward` and
+// `--connect` commands over real TCP sockets on port 0. The differential tests run the same invocations
 // through bin/clink.js and the Rust `clink` and compare them.
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { Cli } from '../src/cli.js';
 import { setTrace } from '../src/ipc.js';
-import { main } from '../src/main.js';
+import { finish, main, openNamedStorage, run, runQueryPipelineWith } from '../src/main.js';
 import { traced, until } from './helpers/protocol-server.mjs';
 
 const TIMEOUT = { timeout: 20_000 };
@@ -98,6 +99,124 @@ test('--structure prints the structure of a link and skips the query', async () 
   assert.deepEqual(result, { status: 0, out: '(2: (1: 1 1) 2)\n', err: '' });
   // The query was not run: the store still has two links.
   assert.equal((await clink(['--db', db, '--after'])).out, '(1: 1 1)\n(2: 1 2)\n');
+});
+
+test('--structure of a missing link fails as in the Rust clink', async () => {
+  const db = newDb();
+  assert.equal((await clink(['--db', db, '() ((1 1))'])).status, 0);
+  assert.deepEqual(await clink(['--db', db, '--structure', '99']), {
+    status: 1,
+    out: '',
+    err: 'Error: Link not found: 99\n',
+  });
+});
+
+test('--transactions runs the query pipeline over the transitions log', async () => {
+  const db = newDb();
+  // Every expected text is what the Rust clink prints for the same invocation.
+  assert.deepEqual(
+    await clink(['--db', db, '--transactions', '() ((1 1) (1 2))', '--changes', '--after']),
+    {
+      status: 0,
+      out: '() ((1: 1 1))\n() ((2: 1 2))\n(1: 1 1)\n(2: 1 2)\n',
+      err: '',
+    },
+  );
+  assert.deepEqual(
+    await clink(['--db', db, '--transactions', '--before', '((2: 1 2)) ()', '--changes']),
+    {
+      status: 0,
+      out: '(1: 1 1)\n(2: 1 2)\n((2: 1 2)) ()\n',
+      err: '',
+    },
+  );
+  assert.ok(existsSync(db.replace(/\.links$/, '.transitions.links')));
+  const log = await clink(['--db', db, '--log']);
+  assert.equal(log.status, 0);
+  const transitions = log.out
+    .trimEnd()
+    .split('\n')
+    .map((line) => line.split('\t'));
+  assert.deepEqual(
+    transitions.map(([sequence, , kind, , change]) => [sequence, kind, change]),
+    [
+      ['1', 'Create', '(0,0,0) -> (1,1,1)'],
+      ['2', 'Create', '(0,0,0) -> (2,1,2)'],
+      ['3', 'Delete', '(2,1,2) -> (0,0,0)'],
+    ],
+  );
+  for (const [, timestamp, , transaction] of transitions) {
+    assert.match(timestamp, /^[0-9]+$/);
+    assert.match(transaction, /^[0-9a-f]{32}$/);
+  }
+});
+
+test('--vc runs the query pipeline under version control', async () => {
+  const db = newDb();
+  const vc = (...args) => clink(['--db', db, '--vc', ...args]);
+  assert.deepEqual(await vc('() ((1 1))', '--changes', '--after'), {
+    status: 0,
+    out: '() ((1: 1 1))\n(1: 1 1)\n',
+    err: '',
+  });
+  assert.ok(existsSync(db.replace(/\.links$/, '.versioncontrol.links')));
+  assert.deepEqual(await vc('--tag', 'v1', '--list-tags'), { status: 0, out: 'v1\t1\n', err: '' });
+  assert.deepEqual(await vc('--before', '((1: 1 1)) ()', '--changes'), {
+    status: 0,
+    out: '(1: 1 1)\n((1: 1 1)) ()\n',
+    err: '',
+  });
+  assert.deepEqual(await vc('--list-branches'), {
+    status: 0,
+    out: '* main\tparent=-\tfork=0\thead=2\n',
+    err: '',
+  });
+  assert.deepEqual(await vc('--checkout', 'v1', '--after'), {
+    status: 0,
+    out: '(1: 1 1)\n',
+    err: '',
+  });
+});
+
+/**
+ * Runs `call()` with `process.stdout.write` captured and resolves what it
+ * printed. The capture lasts only while `call` runs synchronously, so the
+ * test runner's own output is never caught.
+ */
+async function printedBy(call) {
+  const chunks = [];
+  const write = process.stdout.write;
+  process.stdout.write = (chunk) => chunks.push(String(chunk)) > 0;
+  let result;
+  try {
+    result = call();
+  } finally {
+    process.stdout.write = write;
+  }
+  await result;
+  return chunks.join('');
+}
+
+test('the pipeline writes to the standard output when no stream is given', async () => {
+  const cli = (...args) => Cli.parse(['--db', newDb(), ...args]).cli;
+  const noTrigger = () => false;
+
+  const piped = cli('() ((1 1))', '--changes');
+  const pipedStore = openNamedStorage(piped.db, piped);
+  assert.equal(
+    await printedBy(() => runQueryPipelineWith(piped, pipedStore, noTrigger)),
+    '() ((1: 1 1))\n',
+  );
+
+  const ran = cli('() ((1 1) (1 2))', '--after');
+  const ranStore = openNamedStorage(ran.db, ran);
+  assert.equal(await printedBy(() => run(ran, ranStore, noTrigger)), '(1: 1 1)\n(2: 1 2)\n');
+
+  const finished = cli('--before', '() ((2 2))');
+  const finishedStore = openNamedStorage(finished.db, finished);
+  finishedStore.create(1, 1);
+  assert.equal(await printedBy(() => finish(finished, finishedStore)), '(1: 1 1)\n');
+  assert.deepEqual(finishedStore.linoLines(), ['(1: 1 1)', '(2: 2 2)']);
 });
 
 test('--serve, --forward and --connect run in-process until SIGINT', TIMEOUT, async () => {
