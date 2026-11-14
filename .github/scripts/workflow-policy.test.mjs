@@ -8,13 +8,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { dependencyFiles } from './check-latest-dependencies.mjs';
-
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const workflowsDir = join(repoRoot, '.github', 'workflows');
+import { readJobs, repoRoot, workflows, workflowsDir } from './workflow-files.mjs';
 
 test('generic hooks preserve immutable evidence while secrets still scan it', () => {
   const config = readFileSync(join(repoRoot, '.pre-commit-config.yaml'), 'utf8');
@@ -25,14 +22,6 @@ test('generic hooks preserve immutable evidence while secrets still scan it', ()
   assert.doesNotMatch(secrets, /\bexclude:/);
   assert.match(secrets, /entry: node \.github\/scripts\/check-secrets\.mjs/);
 });
-
-const workflows = readdirSync(workflowsDir)
-  .filter((name) => name.endsWith('.yml') || name.endsWith('.yaml'))
-  .map((name) => ({
-    name,
-    path: join(workflowsDir, name),
-    text: readFileSync(join(workflowsDir, name), 'utf8'),
-  }));
 
 test('there is at least one workflow to inspect', () => {
   assert.ok(workflows.length > 0, `no workflows found in ${workflowsDir}`);
@@ -45,32 +34,6 @@ test('CodeQL scans the complete checkout without a truncated PR diff', () => {
   assert.match(codeql.body, /^ {6}CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'$/m);
   assert.match(codeql.body, /check-codeql-results\.mjs codeql-results/);
 });
-
-/** Splits a workflow into `{ name, body }` entries, one per job. */
-function readJobs(text) {
-  const lines = text.split('\n');
-  const jobsStart = lines.findIndex((line) => line === 'jobs:');
-  if (jobsStart === -1) {
-    return [];
-  }
-  const jobs = [];
-  let current = null;
-  for (const line of lines.slice(jobsStart + 1)) {
-    if (/^[A-Za-z]/.test(line)) {
-      break; // back to a top-level key, the jobs mapping ended
-    }
-    const header = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(line);
-    if (header) {
-      current = { name: header[1], body: [] };
-      jobs.push(current);
-      continue;
-    }
-    if (current) {
-      current.body.push(line);
-    }
-  }
-  return jobs.map((job) => ({ name: job.name, body: job.body.join('\n') }));
-}
 
 /** A job that calls a reusable workflow instead of running steps. */
 function isCallerJob(body) {
@@ -842,58 +805,4 @@ test('the JavaScript stage needs no Rust or .NET and runs lint, tests and parity
   );
   const wasm = workflows.find(({ name }) => name === 'wasm.yml');
   assert.doesNotMatch(wasm.text, /run: npm run test:js/, 'test:js belongs to the JavaScript stage');
-});
-
-test('the required stage checks report on every pull request (issue #111)', () => {
-  for (const name of ['javascript.yml', 'rust.yml', 'csharp.yml']) {
-    const { text } = workflows.find((workflow) => workflow.name === name);
-    const on = text.slice(text.indexOf('\non:\n'), text.indexOf('\njobs:\n'));
-    assert.match(on, /^ {2}pull_request:/m, `${name} must run on pull requests`);
-    assert.doesNotMatch(
-      on,
-      /^ {4}paths(?:-ignore)?:/m,
-      `${name}: a path filter would skip the parity check and leave its required check pending`,
-    );
-    assert.match(text, /^ {2}pipeline-status:\n {4}name: Pipeline Status \(\w+\)/m);
-  }
-});
-
-test('both suites prove they loaded the shared golden fixtures (issue #111)', () => {
-  for (const [name, suite] of [
-    ['rust.yml', 'rust'],
-    ['csharp.yml', 'csharp'],
-  ]) {
-    const { text } = workflows.find((workflow) => workflow.name === name);
-    const tests = readJobs(text).find((job) => job.name === 'test').body;
-    assert.match(
-      tests,
-      new RegExp(`GOLDEN_FIXTURES_RECEIPT: \\$\\{\\{ runner\\.temp \\}\\}/golden-${suite}\\.json`),
-    );
-    assert.match(
-      tests,
-      new RegExp(`node parity/check-parity\\.mjs --receipt ${suite} "\\$RECEIPT"`),
-    );
-  }
-});
-
-test('idle pull requests are flagged after 60 days and then closed (issue #111)', () => {
-  const { text } = workflows.find(({ name }) => name === 'stale.yml');
-  assert.match(text, /uses: actions\/stale@v\d+/);
-  assert.match(text, /days-before-pr-stale: 60\n/);
-  assert.match(text, /days-before-pr-close: [1-9]\d*\n/);
-  // Issues track wanted work; only pull requests go stale.
-  assert.match(text, /days-before-issue-stale: -1\n/);
-  assert.match(text, /days-before-issue-close: -1\n/);
-  assert.match(text, /^ {2}schedule:/m);
-});
-
-test('a red Dependencies check on main opens or updates a tracking issue (issue #111)', () => {
-  const { text } = workflows.find(({ name }) => name === 'dependencies.yml');
-  const job = readJobs(text).find(({ name }) => name === 'tracking-issue');
-  assert.ok(job, 'dependencies.yml has no tracking-issue job');
-  assert.match(job.body, /^ {6}- latest$/m);
-  assert.match(job.body, /if: \$\{\{ !cancelled\(\) && github\.ref == 'refs\/heads\/main'/);
-  assert.match(job.body, /^ {6}issues: write$/m);
-  assert.match(job.body, /run: node \.github\/scripts\/dependency-tracking-issue\.mjs/);
-  assert.match(text, /^ {2}schedule:/m);
 });
