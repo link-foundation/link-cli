@@ -69,6 +69,8 @@ Language package documentation:
 
 - [C# NuGet tool and library](csharp/README.md)
 - [Rust crate (CLI + library)](rust/README.md)
+- [JavaScript server and embedded store (CLI + library)](js/server/README.md)
+- [JavaScript client](js/client/README.md)
 
 Each language ships **both** a CLI binary and a public library, so external
 projects can either run the tool directly or pull in the parser, query
@@ -96,11 +98,24 @@ cargo install link-cli
 cargo add link-cli
 ```
 
-Both implementations expose the same command surface, so a scenario written
-against one runs unchanged against the other: the query engine, named
+### JavaScript (Node.js, Bun, Deno)
+
+```bash
+# CLI: the `clink` command, a pure JavaScript port of the Rust one.
+npm install --global @link-foundation/link-cli-server
+
+# Library: embed the store, the query processor and the decorators.
+npm install @link-foundation/link-cli-server
+```
+
+All three implementations expose the same command surface, so a scenario
+written against one runs unchanged against the others: the query engine, named
 references, LiNo import/export, structure formatting, persistent
-transformation triggers, transactions and version control. The Rust crate adds
-the WebAssembly workbench API on top.
+transformation triggers, transactions, version control, triplets,
+permissions, the protocol server and the GraphQL endpoint. The JavaScript
+`clink` writes the same files as the Rust one, and its differential tests
+compare the two on every change. The Rust crate adds the WebAssembly workbench
+API on top.
 
 This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 
@@ -804,6 +819,13 @@ const link = await links.create(1n, 1n);
 await links.setName(link.index, 'a pair');
 await links.close();
 ```
+
+### Serve from JavaScript
+
+[`@link-foundation/link-cli-server`](js/server/README.md) runs the whole
+`clink` in a Node.js, Bun or Deno process: `clink --serve` from its
+executable, or `LinksServer` and `GraphqlServer` from its library over a store
+the process opened itself.
 
 ### Serve GraphQL for Deep
 

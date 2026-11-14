@@ -22,6 +22,7 @@ links database.
 | `rust/scripts/` | Rust release, changelog, crate publication, and repository validation helpers. |
 | `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
 | `js/` | React/Vite browser workbench and JavaScript package lockfile. |
+| `js/server/` | `@link-foundation/link-cli-server`: the Rust `clink` in pure JavaScript, as the `clink` executable, an embedded store and a server (protocol, IPC and GraphQL), with the Rust file formats. |
 | `js/client/` | `@link-foundation/link-cli-client`: the links contract in JavaScript and TypeScript over TCP, any IPC endpoint (`./ipc`), a `clink --serve` process or WebAssembly, plus the union, remap and external-id layers. |
 | `docs/protocol/` | The links protocol: binary links notation, links operations and subscriptions, with test vectors, and the IPC transports every implementation carries it over. |
 | `docs/case-studies/` | Research notes per issue, with evidence. |
@@ -275,6 +276,32 @@ Runtime flow:
 5. React renders the snapshot and mirrors it into `doublets-web` `UnitedLinks`.
 
 The committed lockfile currently pins `doublets-web` to `0.1.3`.
+
+## JavaScript Server and Embedded Store
+
+`js/server` is `@link-foundation/link-cli-server`, a module-for-module port of
+`rust/src` to JavaScript with no WebAssembly. See
+[js/server/README.md](../js/server/README.md).
+
+- `bin/clink.js`, `src/main*.js`, `src/cli.js`, `src/env-files.js`: the
+  command line of `rust/src/main.rs` and `rust/src/cli.rs`, `.lenv`/`.env`
+  included.
+- `src/link-storage*.js`, `src/storage-lock*.js`: the doublets store, its
+  file format and the `<database>.lock` sidecar lock (`flock` or
+  `LockFileEx` through the runtime's foreign function interface).
+- `src/named-types.js`, `src/named-type-links.js`, `src/types.js`,
+  `src/pinned-types.js`, `src/unicode-string-storage.js`: names, types and
+  strings.
+- `src/query-*.js`, `src/changes-simplifier.js`: the query processor.
+- `src/transactions*.js`, `src/version-control*.js`,
+  `src/persistent-transformations.js`, `src/permissions*.js`,
+  `src/triplets*.js`: the decorators.
+- `src/protocol-*.js`, `src/ipc*.js`, `src/graphql-*.js`: the protocol
+  server, client and relay over every IPC endpoint Node.js can reach, and
+  the GraphQL endpoint.
+
+`test/differential/` runs the same invocations through the Rust `clink` and
+`bin/clink.js` and compares their output and files.
 
 ## JavaScript Client
 
@@ -566,6 +593,7 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 | `.github/workflows/csharp.yml` | .NET restore, build, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (csharp)`. |
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (rust)`. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
+| `.github/workflows/js-server.yml` | `@link-foundation/link-cli-server` unit tests with complete coverage on Node.js, Bun and Deno; the unit tests on Linux, macOS and Windows with Node.js 20, 22 and 26; differential tests against the Rust `clink`; the client conformance scenarios against its `clink --serve`; and npm release with trusted publishing. |
 | `.github/workflows/js-client.yml` | `@link-foundation/link-cli-client` unit tests and type declarations, conformance against the Rust, C# and WebAssembly backends on Node.js, Bun and Deno, the composition example, and npm release with trusted publishing. |
 | `.github/workflows/ipc.yml` | Every IPC kind of Linux, macOS and Windows between the Rust and C# servers and relays and the Rust, C# and JavaScript clients, in both protocols (`examples/ipc/interop.mjs`). |
 | `.github/workflows/deep-client.yml` | The real `DeepClient` against the Rust and C# `clink --serve --graphql`. |
