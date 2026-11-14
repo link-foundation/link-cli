@@ -171,7 +171,7 @@ jobs:
       # buf_redux dependencies will be rejected by a future Rust
       # (wasm-bindgen/wasm-bindgen#3356; issue #172).
       - name: Install cargo-llvm-cov and wasm-bindgen-cli
-        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
         with:
           tool: cargo-llvm-cov@0.9.1,wasm-bindgen@0.2.130
 
