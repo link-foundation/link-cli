@@ -26,8 +26,17 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   codeql:
     name: CodeQL (${{ matrix.language }})
+    needs: [javascript]
     # Cached overlay-base SARIF retains extraction diagnostics from the base
     # even after the PR repairs the source (confirmed in run 42133108866).
     # A full database makes the completeness gate describe this checkout.
@@ -135,6 +144,7 @@ jobs:
 
   cargo-audit:
     name: Cargo audit (${{ matrix.manifest }})
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
@@ -189,6 +199,7 @@ jobs:
 
   nuget-audit:
     name: Audit every NuGet dependency graph
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     concurrency:
@@ -264,6 +275,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (security)
     needs:
+      - javascript
       - codeql
       - dependency-review
       - cargo-audit

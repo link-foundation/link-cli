@@ -17,6 +17,7 @@ on: # zizmor: ignore[dangerous-triggers]
   workflow_run:
     # Every workflow with a terminal Pipeline Status gate.
     workflows:
+      - JavaScript
       - Rust CI/CD Pipeline
       - C# CI/CD Pipeline
       - JS client CI

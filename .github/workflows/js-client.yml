@@ -113,6 +113,15 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    if: inputs.verify_trusted_publishing != true
+    uses: ./.github/workflows/javascript-stage.yml
+
   release-preflight:
     name: Release authentication preflight
     if: inputs.verify_trusted_publishing != true
@@ -270,7 +279,7 @@ jobs:
         run: npm run typecheck
 
   conformance:
-    needs: [unit]
+    needs: [javascript, unit]
     if: inputs.verify_trusted_publishing != true
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-24.04
@@ -670,6 +679,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (js-client)
     needs:
+      - javascript
       - release-preflight
       - verify-trusted-publishing
       - unit

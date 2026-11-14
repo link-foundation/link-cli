@@ -72,6 +72,11 @@ function readJobs(text) {
   return jobs.map((job) => ({ name: job.name, body: job.body.join('\n') }));
 }
 
+/** A job that calls a reusable workflow instead of running steps. */
+function isCallerJob(body) {
+  return /^ {4}uses: /m.test(body);
+}
+
 /** A job that pushes to the repository or publishes to a registry or Pages. */
 function isWriterJob(body) {
   // Coverage uses OIDC too, but does not mutate the repository or release.
@@ -183,8 +188,10 @@ test('the JavaScript unit tests are executed by a workflow', () => {
 for (const workflow of workflows) {
   // A job without a timeout can hang for the runner's six-hour default and
   // burn the whole CI budget before anyone notices.
+  // A job that calls a reusable workflow (`uses:`) cannot set
+  // timeout-minutes; the called workflow's own jobs carry it.
   test(`${workflow.name}: every job declares timeout-minutes`, () => {
-    for (const job of readJobs(workflow.text)) {
+    for (const job of readJobs(workflow.text).filter(({ body }) => !isCallerJob(body))) {
       assert.match(
         job.body,
         /^ {4}timeout-minutes: \d+$/m,
@@ -206,7 +213,7 @@ for (const workflow of workflows) {
   // or the workflow-level one (readers), so superseded runs do not pile up.
   test(`${workflow.name}: every job is covered by a concurrency group`, () => {
     const hasWorkflowLevel = /^concurrency:$/m.test(workflow.text);
-    for (const job of readJobs(workflow.text)) {
+    for (const job of readJobs(workflow.text).filter(({ body }) => !isCallerJob(body))) {
       assert.ok(
         hasWorkflowLevel || /^ {4}concurrency:$/m.test(job.body),
         `job "${job.name}" in ${workflow.name} has no concurrency group`,
@@ -691,5 +698,180 @@ test('a failed release preflight blocks publishing but never the code checks', (
     }
     const gate = jobs.find(({ name: job }) => job === 'pipeline-status');
     assert.match(gate.body, /- release-preflight/, `${name} gate ignores the preflight`);
+  }
+});
+
+// === Stage gate (issue #111) ===
+// Rust and C# jobs may start only after the JavaScript stage (lint,
+// `npm run test:js`, parity check) succeeded for the same commit. Each
+// workflow calls javascript-stage.yml as job `javascript`, and every job that
+// installs or runs Rust or .NET lists `javascript` in its own `needs:`. A job
+// whose `if:` overrides the implicit success check (`always()`,
+// `!cancelled()`, `failure()`) must test `needs.javascript.result` itself, or
+// a failed, cancelled or skipped JavaScript stage would still start it.
+const JS_STAGE = './.github/workflows/javascript-stage.yml';
+const nativeTooling =
+  /(?<![\w-])(?:cargo|rustup|rustc|wasm-pack|rust-script|dotnet)(?![\w-])|dtolnay\/rust-toolchain|actions\/setup-dotnet|taiki-e\/install-action/;
+
+/** Drops YAML comments so a comment that names cargo does not count. */
+function withoutComments(body) {
+  return body
+    .split('\n')
+    .filter((line) => !/^\s*#/.test(line))
+    .map((line) => line.replace(/\s+#\s.*$/, ''))
+    .join('\n');
+}
+
+/** Reads `needs: x`, `needs: [a, b]` and the block-list form. */
+function readNeeds(body) {
+  const inline = /^ {4}needs:[ \t]*(.+)$/m.exec(body);
+  if (inline) {
+    return inline[1]
+      .replace(/^\[|\]$/g, '')
+      .split(',')
+      .map((need) => need.trim())
+      .filter(Boolean);
+  }
+  const block = /^ {4}needs:\n((?: {6}- .+\n?)+)/m.exec(body);
+  return block
+    ? block[1]
+        .split('\n')
+        .map((line) => line.replace(/^ {6}- /, '').trim())
+        .filter(Boolean)
+    : [];
+}
+
+/** Reads a job's `if:`, including a `|` block. */
+function readIf(body) {
+  const match = /^ {4}if:[ \t]*(.*)$((?:\n {6}.*)*)/m.exec(body);
+  return match ? `${match[1]}${match[2]}` : '';
+}
+
+/** Lists the jobs of a workflow that could start Rust or C# without the gate. */
+export function gateViolations(text, readWorkflow = () => '') {
+  const jobs = readJobs(text);
+  const violations = [];
+  const caller = jobs.find(({ name }) => name === 'javascript');
+  for (const job of jobs) {
+    if (job.name === 'javascript') continue;
+    const called = /^ {4}uses: (\.\/\.github\/workflows\/[\w.-]+)/m.exec(job.body)?.[1];
+    const body = withoutComments(called ? readWorkflow(called) : job.body);
+    if (!nativeTooling.test(body)) continue;
+    if (!caller || !caller.body.includes(`uses: ${JS_STAGE}`)) {
+      violations.push(`${job.name}: the workflow has no "javascript" job calling ${JS_STAGE}`);
+      continue;
+    }
+    if (!readNeeds(job.body).includes('javascript')) {
+      violations.push(`${job.name}: runs Rust or .NET but does not list javascript in needs`);
+    }
+    const condition = readIf(job.body);
+    if (
+      /\b(?:always|cancelled|failure)\(\)/.test(condition) &&
+      !/needs\.javascript\.result == 'success'/.test(condition)
+    ) {
+      violations.push(
+        `${job.name}: its if: overrides the success check without needs.javascript.result == 'success'`,
+      );
+    }
+  }
+  return violations;
+}
+
+test('the gate rule rejects workflows that bypass the JavaScript stage', () => {
+  const stage = `  javascript:\n    uses: ${JS_STAGE}\n`;
+  const job = (lines) =>
+    `  rust:\n    runs-on: ubuntu-24.04\n${lines}    steps:\n      - run: cargo test\n`;
+  assert.deepEqual(gateViolations(`jobs:\n${stage}${job('    needs: [javascript]\n')}`), []);
+  assert.deepEqual(
+    gateViolations(`jobs:\n${stage}${job('    needs:\n      - lint\n      - javascript\n')}`),
+    [],
+  );
+  assert.match(gateViolations(`jobs:\n${job('')}`).join(), /no "javascript" job/);
+  assert.match(
+    gateViolations(`jobs:\n${stage}${job('    needs: lint\n')}`).join(),
+    /does not list/,
+  );
+  for (const condition of [
+    'always()',
+    '${{ !cancelled() }}',
+    "|\n      !cancelled() && x == 'y'",
+  ]) {
+    assert.match(
+      gateViolations(
+        `jobs:\n${stage}${job(`    needs: [javascript]\n    if: ${condition}\n`)}`,
+      ).join(),
+      /overrides the success check/,
+    );
+  }
+  const gated =
+    "    needs: [javascript]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' }}\n";
+  assert.deepEqual(gateViolations(`jobs:\n${stage}${job(gated)}`), []);
+  // Hyphenated names (`cargo-audit` in a needs list) and comments are not tooling.
+  const gate = `  status:\n    needs: [cargo-audit]\n    steps:\n      # cargo test runs in the rust job\n      - run: echo ok\n`;
+  assert.deepEqual(gateViolations(`jobs:\n${gate}`), []);
+  // A job calling another reusable workflow is judged by that workflow's steps.
+  const call = `  nested:\n    uses: ./.github/workflows/build.yml\n`;
+  assert.match(gateViolations(`jobs:\n${stage}${call}`, () => job('')).join(), /nested: runs Rust/);
+});
+
+for (const workflow of workflows.filter(({ name }) => name !== 'javascript-stage.yml')) {
+  test(`${workflow.name}: Rust and C# jobs wait for the JavaScript stage (issue #111)`, () => {
+    const read = (path) => readFileSync(join(repoRoot, path), 'utf8');
+    assert.deepEqual(gateViolations(workflow.text, read), []);
+  });
+}
+
+test('the JavaScript stage needs no Rust or .NET and runs lint, tests and parity', () => {
+  const stage = workflows.find(({ name }) => name === 'javascript-stage.yml');
+  assert.ok(stage, 'javascript-stage.yml is missing');
+  assert.doesNotMatch(withoutComments(stage.text), nativeTooling);
+  assert.match(stage.text, /^on:\n {2}workflow_call:\n/m);
+  for (const command of [
+    'npm ci',
+    'npm run lint',
+    'npm run test:js',
+    'node parity/check-parity.mjs',
+  ]) {
+    assert.ok(stage.text.includes(`run: ${command}`), `the JavaScript stage must run "${command}"`);
+  }
+  // The one-sided change rule needs the base commit in the clone.
+  assert.match(stage.text, /fetch-depth: 0/);
+  assert.match(
+    stage.text,
+    /PARITY_BASE_SHA: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.event\.before \}\}/,
+  );
+  const wasm = workflows.find(({ name }) => name === 'wasm.yml');
+  assert.doesNotMatch(wasm.text, /run: npm run test:js/, 'test:js belongs to the JavaScript stage');
+});
+
+test('the required stage checks report on every pull request (issue #111)', () => {
+  for (const name of ['javascript.yml', 'rust.yml', 'csharp.yml']) {
+    const { text } = workflows.find((workflow) => workflow.name === name);
+    const on = text.slice(text.indexOf('\non:\n'), text.indexOf('\njobs:\n'));
+    assert.match(on, /^ {2}pull_request:/m, `${name} must run on pull requests`);
+    assert.doesNotMatch(
+      on,
+      /^ {4}paths(?:-ignore)?:/m,
+      `${name}: a path filter would skip the parity check and leave its required check pending`,
+    );
+    assert.match(text, /^ {2}pipeline-status:\n {4}name: Pipeline Status \(\w+\)/m);
+  }
+});
+
+test('both suites prove they loaded the shared golden fixtures (issue #111)', () => {
+  for (const [name, suite] of [
+    ['rust.yml', 'rust'],
+    ['csharp.yml', 'csharp'],
+  ]) {
+    const { text } = workflows.find((workflow) => workflow.name === name);
+    const tests = readJobs(text).find((job) => job.name === 'test').body;
+    assert.match(
+      tests,
+      new RegExp(`GOLDEN_FIXTURES_RECEIPT: \\$\\{\\{ runner\\.temp \\}\\}/golden-${suite}\\.json`),
+    );
+    assert.match(
+      tests,
+      new RegExp(`node parity/check-parity\\.mjs --receipt ${suite} "\\$RECEIPT"`),
+    );
   }
 });

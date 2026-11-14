@@ -54,8 +54,16 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Both jobs below build the Rust crate, so they wait for the JavaScript
+  # stage (lint, `npm run test:js`, parity check) of the same commit.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   test:
     name: Test
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
@@ -107,11 +115,8 @@ jobs:
         working-directory: js
         run: npm run test:wasm
 
-      # js/test/*.test.mjs existed but no workflow ever ran it, so repository
-      # layout regressions passed CI unnoticed (issue #96).
-      - name: Test JavaScript
-        working-directory: js
-        run: npm run test:js
+      # `npm run test:js` (issue #96) moved to the JavaScript stage, which
+      # needs no Rust or wasm-pack (issue #111).
 
       - name: Build React WebAssembly app
         working-directory: js
@@ -139,6 +144,7 @@ jobs:
 
   coverage:
     name: WASM coverage
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
@@ -191,6 +197,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (wasm)
     needs:
+      - javascript
       - test
       - coverage
     if: ${{ !cancelled() }}

@@ -4,24 +4,13 @@ on:
   push:
     branches:
       - main
+  # No path filter (issue #111): the JavaScript stage and the parity check
+  # must run for every pull request, and "Pipeline Status (csharp)" is a
+  # required check that a filtered-out run would never report. The
+  # detect-changes job skips the C# jobs when no C# input changed
+  # (.github/scripts/stack-paths.mjs).
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - 'csharp/**'
-      - 'csharp/scripts/**'
-      - '.github/workflows/csharp.yml'
-      - '.github/scripts/**'
-      - '.github/scripts/coverage*'
-      - '.github/scripts/check-sqlite-optional.mjs'
-      - 'docs/protocol/native-pages*'
-      - 'docs/protocol/native-lsm-wal*'
-      - 'docs/protocol/checkpoint*'
-      - 'docs/protocol/journal-maintenance-v1.json'
-      - 'docs/protocol/reclamation-v1.json'
-      - 'docs/protocol/chunked-journal*'
-      - 'docs/protocol/reclaiming-chunks*'
-      - 'docs/protocol/causal-*'
-      - 'examples/*-csharp/**'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -77,6 +66,15 @@ defaults:
     working-directory: csharp
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Lint, JavaScript unit tests and the parity check. Every job that installs
+  # .NET lists `javascript` in its needs, so nothing C# starts unless this
+  # stage succeeded for the same commit.
+  javascript:
+    name: javascript
+    if: inputs.release_mode != 'verify-trusted-publishing'
+    uses: ./.github/workflows/javascript-stage.yml
+
   release-preflight:
     name: Release authentication preflight
     if: inputs.release_mode != 'verify-trusted-publishing'
@@ -156,8 +154,10 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
       cancel-in-progress: true
+    needs: [javascript]
     if: github.event_name != 'workflow_dispatch'
     outputs:
+      stack-changed: ${{ steps.stack.outputs.stack-changed }}
       cs-changed: ${{ steps.changes.outputs.cs-changed }}
       csproj-changed: ${{ steps.changes.outputs.csproj-changed }}
       sln-changed: ${{ steps.changes.outputs.sln-changed }}
@@ -187,6 +187,18 @@ jobs:
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node csharp/scripts/detect-code-changes.mjs
 
+      # Replaces the removed pull_request path filter: on a pull request
+      # that changes no C# input, lint (and with it test, build and
+      # fresh-merge) and the changeset check are skipped.
+      - name: Detect whether the C# stack changed
+        id: stack
+        working-directory: .
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          STACK_PATHS_DEBUG: ${{ runner.debug }}
+        run: node .github/scripts/stack-paths.mjs csharp
+
   # === CHANGESET CHECK - only runs on PRs with code changes ===
   changeset-check:
     name: Changeset Validation
@@ -195,8 +207,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
       cancel-in-progress: true
-    needs: [detect-changes]
-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
+    needs: [javascript, detect-changes]
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.csharp-code-changed == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -236,9 +248,11 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: true
-    needs: [detect-changes]
+    needs: [javascript, detect-changes]
     if: |
-      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
+      !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+        github.event_name != 'pull_request' || needs.detect-changes.outputs.stack-changed == 'true'
+      ) && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -264,13 +278,8 @@ jobs:
         with:
           node-version: '26.x'
 
-      - name: Run release script tests
-        working-directory: .
-        run: node --test csharp/scripts/*.test.mjs
-
-      - name: Run workflow policy tests
-        working-directory: .
-        run: node --test .github/scripts/*.test.mjs
+      # The release script and workflow policy tests moved to the JavaScript
+      # stage, which runs them through `npm run test:js` before this job.
 
       - name: Restore dependencies
         run: dotnet restore
@@ -296,8 +305,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changeset-check, lint]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+    needs: [javascript, detect-changes, changeset-check, lint]
+    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     permissions:
       contents: read
       id-token: write
@@ -321,7 +330,11 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
+      # GoldenFixturesTests writes the receipt that a later step checks, so
+      # a filtered or skipped golden fixture test fails CI (issue #111).
       - name: Run tests
+        env:
+          GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-csharp.json
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage;Format=json,cobertura"
 
       - name: Verify every compiled causal branch
@@ -356,6 +369,13 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '26.x'
+
+      - name: Check that the C# suite loaded every golden fixture
+        working-directory: .
+        shell: bash
+        env:
+          RECEIPT: ${{ runner.temp }}/golden-csharp.json
+        run: node parity/check-parity.mjs --receipt csharp "$RECEIPT"
 
       - name: Write coverage summary
         if: ${{ !cancelled() }}
@@ -404,7 +424,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
       cancel-in-progress: true
     if: github.event_name == 'pull_request'
-    needs: [detect-changes, lint]
+    needs: [javascript, detect-changes, lint]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -435,8 +455,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
       cancel-in-progress: true
-    needs: [lint, test]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
+    needs: [javascript, lint, test]
+    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -466,8 +486,8 @@ jobs:
   # === AUTOMATIC RELEASE ===
   release:
     name: Release
-    needs: [release-preflight, lint, test, build]
-    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, javascript, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
@@ -691,8 +711,8 @@ jobs:
   # === MANUAL INSTANT RELEASE ===
   instant-release:
     name: Instant Release
-    needs: [release-preflight, lint, test, build]
-    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, javascript, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
@@ -848,6 +868,7 @@ jobs:
   # prefix that changeset-check already skips.
   changeset-pr:
     name: Create Changeset PR
+    needs: [javascript]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changeset-pr'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -910,6 +931,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (csharp)
     needs:
+      - javascript
       - release-preflight
       - verify-trusted-publishing
       - detect-changes

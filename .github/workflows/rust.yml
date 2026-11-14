@@ -4,21 +4,13 @@ on:
   push:
     branches:
       - main
+  # No path filter (issue #111): the JavaScript stage and the parity check
+  # must run for every pull request, and "Pipeline Status (rust)" is a
+  # required check that a filtered-out run would never report. The
+  # detect-changes job skips the Rust jobs when no Rust input changed
+  # (.github/scripts/stack-paths.mjs).
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - 'rust/**'
-      - 'docs/protocol/native-pages*'
-      - 'docs/protocol/native-lsm-wal*'
-      - 'docs/protocol/checkpoint*'
-      - 'docs/protocol/journal-maintenance-v1.json'
-      - 'docs/protocol/reclamation-v1.json'
-      - 'docs/protocol/chunked-journal*'
-      - 'docs/protocol/reclaiming-chunks*'
-      - 'docs/protocol/causal-*'
-      - 'rust/scripts/**'
-      - '.github/workflows/rust.yml'
-      - '.github/scripts/**'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -65,6 +57,15 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Lint, JavaScript unit tests and the parity check. Every job that installs
+  # Rust lists `javascript` in its needs, so nothing Rust starts unless this
+  # stage succeeded for the same commit.
+  javascript:
+    name: javascript
+    if: inputs.release_mode != 'verify-trusted-publishing'
+    uses: ./.github/workflows/javascript-stage.yml
+
   release-preflight:
     name: Release authentication preflight
     if: inputs.release_mode != 'verify-trusted-publishing'
@@ -126,8 +127,10 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
       cancel-in-progress: true
+    needs: [javascript]
     if: github.event_name != 'workflow_dispatch'
     outputs:
+      stack-changed: ${{ steps.stack.outputs.stack-changed }}
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
       toml-changed: ${{ steps.changes.outputs.toml-changed }}
       mjs-changed: ${{ steps.changes.outputs.mjs-changed }}
@@ -158,6 +161,22 @@ jobs:
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: rust-script rust/scripts/detect-code-changes.rs
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      # Replaces the removed pull_request path filter: on a pull request
+      # that changes no Rust input, lint (and with it test, build and
+      # fresh-merge), coverage and the changelog check are skipped.
+      - name: Detect whether the Rust stack changed
+        id: stack
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          STACK_PATHS_DEBUG: ${{ runner.debug }}
+        run: node .github/scripts/stack-paths.mjs rust
+
   # === CHANGELOG CHECK - only runs on PRs with code changes ===
   changelog:
     name: Changelog Fragment Check
@@ -166,8 +185,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-changelog
       cancel-in-progress: true
-    needs: [detect-changes]
-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
+    needs: [javascript, detect-changes]
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -197,9 +216,11 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: true
-    needs: [detect-changes]
+    needs: [javascript, detect-changes]
     if: |
-      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
+      !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+        github.event_name != 'pull_request' || needs.detect-changes.outputs.stack-changed == 'true'
+      ) && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -274,15 +295,8 @@ jobs:
           cargo metadata --locked --format-version 1 --manifest-path rust/Cargo.toml > /dev/null
           cargo metadata --locked --format-version 1 --manifest-path rust/wasm/Cargo.toml > /dev/null
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '26.x'
-
-      # Guards the workflow invariants restored in issue #96 (timeouts, least
-      # privilege, no masked failures, no dead release modes).
-      - name: Run workflow policy tests
-        run: node --test .github/scripts/*.test.mjs
+      # The workflow policy tests (issue #96) moved to the JavaScript stage,
+      # which runs them through `npm run test:js` before this job starts.
 
       # Pull request caches are scoped to their merge ref, so only main
       # saves; every branch restores main's cache (issue #172).
@@ -304,8 +318,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changelog, lint]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+    needs: [javascript, detect-changes, changelog, lint]
+    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -368,8 +382,18 @@ jobs:
       - name: Test native stores without optional providers
         run: cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests
 
+      # golden_fixtures_tests writes the receipt that the next step checks,
+      # so a filtered or skipped golden fixture test fails CI (issue #111).
       - name: Run tests
+        env:
+          GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-rust.json
         run: cargo test --manifest-path rust/Cargo.toml --all-features --verbose
+
+      - name: Check that the Rust suite loaded every golden fixture
+        shell: bash
+        env:
+          RECEIPT: ${{ runner.temp }}/golden-rust.json
+        run: node parity/check-parity.mjs --receipt rust "$RECEIPT"
 
       - name: Run doc tests
         run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
@@ -392,7 +416,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-coverage
       cancel-in-progress: true
-    if: github.event_name == 'pull_request'
+    needs: [javascript, detect-changes]
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -445,7 +470,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
       cancel-in-progress: true
     if: github.event_name == 'pull_request'
-    needs: [detect-changes, lint]
+    needs: [javascript, detect-changes, lint]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -499,8 +524,8 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
       cancel-in-progress: true
-    needs: [lint, test]
-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
+    needs: [javascript, lint, test]
+    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -545,8 +570,8 @@ jobs:
   # === AUTO RELEASE ===
   auto-release:
     name: Auto Release
-    needs: [release-preflight, lint, test, build]
-    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, javascript, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a
@@ -661,8 +686,8 @@ jobs:
   # === MANUAL RELEASE ===
   manual-release:
     name: Manual Release
-    needs: [release-preflight, lint, test, build]
-    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    needs: [release-preflight, javascript, lint, test, build]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a
@@ -753,6 +778,7 @@ jobs:
   # so the release goes through the normal review path (issue #96).
   changelog-pr:
     name: Create Changelog PR
+    needs: [javascript]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changelog-pr'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -814,6 +840,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (rust)
     needs:
+      - javascript
       - release-preflight
       - verify-trusted-publishing
       - detect-changes

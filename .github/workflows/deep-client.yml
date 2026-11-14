@@ -38,8 +38,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   deep-client:
     name: DeepClient (${{ matrix.implementation }})
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -69,6 +78,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (deep-client)
     needs:
+      - javascript
       - deep-client
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04

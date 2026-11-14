@@ -25,6 +25,7 @@ const common = [
   'docs/protocol/**',
   'parity/**',
   '.github/workflows/javascript.yml',
+  '.github/workflows/javascript-stage.yml',
   '.github/scripts/**',
 ];
 export const STACK_PATHS = {

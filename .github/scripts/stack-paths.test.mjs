@@ -18,6 +18,7 @@ test('each stack keeps the inputs its old pull_request path filter listed', () =
       'docs/protocol/graphql/deep-fresh.json.gz',
       'parity/golden-fixtures.json',
       '.github/workflows/javascript.yml',
+      '.github/workflows/javascript-stage.yml',
       '.github/scripts/pipeline-status.mjs',
       `.github/workflows/${stack}.yml`,
     ])
@@ -34,7 +35,10 @@ test('only pull requests may skip a stack, and the verdict reaches GITHUB_OUTPUT
     writeFileSync(output, '');
     const lines = [];
     for (const event of ['push', 'workflow_dispatch', 'schedule'])
-      assert.equal(run('rust', { GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output }, (l) => lines.push(l)), true);
+      assert.equal(
+        run('rust', { GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output }, (l) => lines.push(l)),
+        true,
+      );
     assert.equal(readFileSync(output, 'utf8'), 'stack-changed=true\n'.repeat(3));
     assert.throws(() => run('rust', { GITHUB_EVENT_NAME: 'pull_request' }), /are required/);
   } finally {

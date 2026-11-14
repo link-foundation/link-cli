@@ -80,8 +80,17 @@ env:
   CRASH_POWER_LOSSES: ${{ inputs.power_losses || '8' }}
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   rust:
     name: Kill and repair (Rust)
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -142,6 +151,7 @@ jobs:
 
   csharp:
     name: Kill and repair (C#)
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -178,6 +188,7 @@ jobs:
 
   js:
     name: Kill and repair (JS/WASM)
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -241,6 +252,7 @@ jobs:
 
   docker-in-docker:
     name: Kill and repair inside docker:dind (Rust)
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -323,6 +335,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (crash)
     needs:
+      - javascript
       - rust
       - csharp
       - js

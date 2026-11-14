@@ -1,5 +1,5 @@
 {
-  "$comment": "Cross-language parity manifest (issue #111). Run `node parity/check-parity.mjs --help` text in the file header; docs/PARITY.md explains the rules.",
+  "$comment": "Cross-language parity manifest (issue #111). The header of parity/check-parity.mjs lists its commands; docs/PARITY.md explains the rules.",
   "schema": 1,
   "languages": {
     "csharp": {
