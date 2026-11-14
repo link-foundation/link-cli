@@ -9,20 +9,20 @@ Each section was recorded when its runs completed.
 | ------------ | ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Workflows    | —           | failure | zizmor 1.32.0 exited 12, raising `self-repository` on every `uses: ./.github/workflows/javascript-stage.yml`. Fixed in eb278c5f (see root cause 5). |
 | Dependencies | 43579423907 | failure | Issue #176 closed at 08:27 and three new releases appeared: `cargo-audit` 0.23.0, `taiki-e/install-action` v2.90.4 and `lucide-react` 1.73.0. Fixed in f3639fbe. |
-| Rust CI/CD   | 43579423628 | failure | "Changelog Fragment Check": the fragment was not committed yet. Every build and test job passed, including the golden fixture receipt. |
-| C# CI/CD     | 43579423919 | failure | "Changeset Validation": the changeset was not committed yet. Every build and test job passed, including the golden fixture receipt.      |
+| Rust CI/CD   | 43579423628 | failure | "Changelog Fragment Check": the fragment was not committed yet. The Test jobs need that check, so they were skipped. Lint, Rust coverage (Linux, golden fixture test included) and Simulate Fresh Merge passed. |
+| C# CI/CD     | 43579423919 | failure | "Changeset Validation": the changeset was not committed yet. The Test jobs need that check, so they were skipped. Lint and Simulate Fresh Merge passed. |
 | JavaScript, IPC, Docs, Security, Crash tests, DeepClient, Broken Link Checker | — | success | — |
 
 In every one of these workflows, the `javascript / JavaScript stage` job ran
 first, and the Rust and .NET jobs started only after it succeeded.
 
-The JavaScript stage did not change in the later commits, and the pending
-sections are filled in from the next runs.
+The Rust and C# Test jobs did not run here, so the golden fixture tests
+first ran on Windows for b6eb70db (next section).
 
 ## Golden fixtures on Windows (commit b6eb70db)
 
-This was the first run in which the C# Test jobs ran (they had been skipped
-for 4e540213). Eleven workflows passed. Two failed only on `windows-2025`:
+This was the first run in which the Rust and C# Test jobs ran (they had
+been skipped for 4e540213). Eleven workflows passed. Two failed only on `windows-2025`:
 
 | Workflow   | Run         | Failed job          | Cause |
 | ---------- | ----------- | ------------------- | ----- |
@@ -36,6 +36,34 @@ Windows runners check out with `core.autocrlf=true`. A local clone with that
 setting reproduced it: 39 of 41 fixture hashes differed before
 `.gitattributes` marked `docs/protocol/**` as `-text`, and 0 differed after.
 The fix is in 03e3b8f3 (root cause 8 of the case study).
+
+## Gate demonstration (requirement 1, commit 2c57efc5)
+
+Commit 2c57efc5 added `js/test/issue-111-gate-demo.test.mjs`, a test that
+fails on purpose, and the next commit reverted it. In every workflow below,
+the `javascript / JavaScript stage` job failed at its "Test JavaScript" step
+(`npm run test:js`); "Check cross-language parity" was skipped. No Rust,
+.NET or WASM job started:
+
+| Workflow    | Run         | Skipped after the failed stage |
+| ----------- | ----------- | ------------------------------ |
+| Rust CI/CD  | 43589754262 | Detect Changes, Lint and Format Check, Test (all OSes), Rust coverage, Simulate Fresh Merge, Changelog Fragment Check, Build Package, Auto Release, Manual Release, Create Changelog PR, Verify crates.io trusted publishing |
+| C# CI/CD    | 43589754138 | Detect Changes, Lint and Format Check, Test (all OSes), Simulate Fresh Merge, Changeset Validation, Build Package, Release, Instant Release, Create Changeset PR, Verify NuGet trusted publishing |
+| WebAssembly | 43589754218 | Test, WASM coverage |
+| Crash tests | 43589754147 | Kill and repair (Rust, C#, JS/WASM, docker:dind) |
+| IPC         | 43589754411 | IPC interop |
+| DeepClient  | 43589754144 | DeepClient (every implementation) |
+| JS client   | 43589754120 | Conformance on Node.js, Bun and Deno; Release to npm |
+| Docs        | 43589754270 | Build documentation, Deploy to GitHub Pages |
+| Security    | 43589754152 | Cargo audit, CodeQL, Audit every NuGet dependency graph |
+| Dependencies | 43589754132 | Dependencies are on their latest versions, Track a red check on main |
+| JavaScript  | 43589754110 | (the stage itself) |
+
+`Pipeline Status (javascript)`, `(rust)` and `(csharp)` all failed, so the
+ruleset blocks the merge. Jobs that need neither toolchain still ran: the
+release authentication preflights (Node.js and the registries' OIDC token
+exchange), the npm and secret audits, the JS client's unit tests, `Workflows`
+and the link checker.
 
 ## Protection of main (requirement 6)
 
