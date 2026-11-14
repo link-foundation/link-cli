@@ -8,9 +8,9 @@
 // query to completion before they answer. Addresses are numbers in
 // `0..=0xffffffff`; a link is a frozen `{ index, source, target }`.
 //
-// A change observer is `(before, after) => void`, where `before`/`after` are
-// links or `null` for "no link": `(null, link)` is a creation and
-// `(link, null)` a deletion.
+// A change observer is `(before, after) => void` over links, as the Rust
+// `ChangeObserver`: the null link `(0: 0 0)` stands for "no link", so
+// `(NULL_LINK, link)` is a creation and `(link, NULL_LINK)` a deletion.
 import { writeFileSync } from 'node:fs';
 import { formatStructure } from './structure-format.js';
 import { InvalidFormatError } from './errors.js';
