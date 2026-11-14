@@ -327,7 +327,14 @@ export class DoubletsStorage {
     io(() => {
       const fd = openFileSync(this.storePath, 'r+');
       try {
-        futimesSync(fd, fstatSync(fd).atime, new Date());
+        // The clock has millisecond resolution here, where Rust's SystemTime::now() has
+        // nanoseconds: a flush in the millisecond of the last change would publish the revision
+        // every holder already knows. So the new modification time is a later millisecond than
+        // the current one. Deno keeps whole milliseconds and rounds a Date down to the one before
+        // about half the time, so the time asked for is the middle of the millisecond.
+        const stats = fstatSync(fd);
+        const millisecond = Math.max(Date.now(), Math.floor(stats.mtimeMs) + 1);
+        futimesSync(fd, stats.atime, (millisecond + 0.5) / 1000);
       } finally {
         closeSync(fd);
       }

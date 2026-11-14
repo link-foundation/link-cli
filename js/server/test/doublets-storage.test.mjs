@@ -3,7 +3,7 @@
 // without the sidecar lock), adopting a store, every `LinksStorage` method,
 // the resolution decorators, flushing and change detection.
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
@@ -329,6 +329,18 @@ describe('flushing a doublets storage', () => {
     assert.equal(storage.hasExternalChanges(), false);
     assert.notDeepEqual(storage.knownRevision, opened);
     assert.equal(readFileSync(path).readUInt32LE(64), 1);
+    storage.close();
+  });
+
+  it('publishes a later revision even within the millisecond of the last one', () => {
+    const path = databasePath();
+    const storage = DoubletsStorage.open(path);
+    // Another holder published a revision this clock has not reached yet.
+    const ahead = new Date(Date.now() + 60_000);
+    utimesSync(path, ahead, ahead);
+    const published = statSync(path, { bigint: true }).mtimeNs;
+    storage.flush();
+    assert.ok(storage.knownRevision.modified > published);
     storage.close();
   });
 

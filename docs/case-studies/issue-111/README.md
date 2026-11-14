@@ -52,6 +52,7 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 2026-11-14 19:14 | CI for 205c3c62 is green on Linux and macOS with Node.js 22 and 26, on Bun and Deno, and against the Rust `clink`. It fails on Node.js 20 and on Windows (root causes 13-14). |
 | 2026-11-14 20:10 | `js-server.yml` for 24656c61 is green on every operating system and Node.js version. `DoubletsStorage`, a port of `rust/src/storage/doublets_storage.rs` and of the file-mapped doublets unit store, joins the package; `TransactionsDecorator` writes through it directly, and the JavaScript embedded-store example writes the same `db.links` as the Rust one. |
 | 2026-11-14 20:15 | C# CI for 24656c61 crashes its test host in `IpcTransportTests` (root cause 15). Rust, C# and the JS server now end a stream when the peer removes the link before acknowledging the end (5a7064a5). |
+| 2026-11-14 21:00 | The Deno unit tests of `js-server.yml` for 5a7064a5 fail: a flush did not publish a new revision (root cause 16). |
 
 ## Requirements and how each is met
 
@@ -156,6 +157,16 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
     ABORT could be read. Rust, C# and the JS server now treat that failure
     while sending the end as a hang-up (5a7064a5). In each language a
     regression test uses a link that vanishes on EOF.
+16. **Deno stores a modification time one millisecond early.**
+    `DoubletsStorage.flush` publishes a revision by setting the file's
+    modification time to now, as Rust does with `SystemTime::now()`. The
+    JavaScript clock has only milliseconds, so a flush in the millisecond of
+    the last change kept the old revision. Deno 2.9 also truncates the time it
+    is given to whole milliseconds, and `x.370` as a binary fraction is
+    `x.36999…`, so about half the times land one millisecond early. The Deno
+    unit tests for 5a7064a5 failed on this. The flush now asks for the middle
+    of a millisecond later than the current modification time
+    ([`experiments/issue-111/futimes-millisecond-truncation.mjs`](../../../experiments/issue-111/futimes-millisecond-truncation.mjs)).
 
 ## Solutions considered
 
