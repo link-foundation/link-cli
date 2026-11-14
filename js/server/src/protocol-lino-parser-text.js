@@ -1,4 +1,4 @@
-// Ports the byte-level helpers of the Rust links-notation 0.31.5 crate that the
+// Ports the byte-level helpers of the Rust links-notation 0.31.6 crate that the
 // text parser uses: src/quotes.rs (delimited references with any number of
 // delimiters), src/reference_literal.rs (`~1{hex}` reference literals),
 // src/comments.rs (blanking `#` line comments) and `char::escape_debug`, which

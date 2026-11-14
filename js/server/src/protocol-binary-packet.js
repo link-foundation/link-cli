@@ -1,4 +1,4 @@
-// Binary links notation packets, version 1: ports links-notation 0.31.5
+// Binary links notation packets, version 1: ports links-notation 0.31.6
 // src/binary/packet.rs (`ArityRange`, `DecodeLimits`, `LinksPacket` with its
 // `pack` section planner, `to_bytes`, `from_bytes` and `read_from`).
 //

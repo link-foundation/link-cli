@@ -1,4 +1,4 @@
-// Ports the text parser of the Rust links-notation 0.31.5 crate, the one the
+// Ports the text parser of the Rust links-notation 0.31.6 crate, the one the
 // Rust server reads LiNo requests with: `parse_lino_to_links` and
 // `parse_lino_to_links_with_config` of src/lib.rs (`read_links`, the
 // flattening of indented and nested links, and the `ParseError` messages),

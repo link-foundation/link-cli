@@ -1,5 +1,5 @@
 // Tests of src/protocol-lino.js. The expected texts come from links-notation
-// 0.31.5 (src/binary/format.rs: format_reference, format_link,
+// 0.31.6 (src/binary/format.rs: format_reference, format_link,
 // format_document, canonical, parse_document) and from
 // rust/src/protocol/server.rs and server_query.rs (error_document,
 // error_message, query_document, admit_document, parse_document_with_limits),

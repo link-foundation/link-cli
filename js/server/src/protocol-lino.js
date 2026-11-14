@@ -1,4 +1,4 @@
-// The LiNo document model of the protocols: ports links-notation 0.31.5
+// The LiNo document model of the protocols: ports links-notation 0.31.6
 // `binary::{format_document, format_link, format_reference, parse_document,
 // canonical}` (src/binary/format.rs, src/reference_literal.rs) and, from
 // rust/src/protocol/server.rs and server_query.rs, `error_document`,

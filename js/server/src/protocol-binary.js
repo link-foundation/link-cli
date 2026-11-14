@@ -1,5 +1,5 @@
 // The lossless mapping between LiNo documents and binary links packets: ports
-// links-notation 0.31.5 src/binary/mapping.rs (`BinaryLinoOptions`,
+// links-notation 0.31.6 src/binary/mapping.rs (`BinaryLinoOptions`,
 // `encode_document_with_limits`, `decode_document`) and the `BinaryLinoCodec`
 // of src/binary/mod.rs. The npm links-notation package has an encoder of its
 // own; this port keeps Rust's link order and error texts.

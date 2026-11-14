@@ -1,5 +1,5 @@
 // The parts of the links notation the CLI needs beyond `Parser`. They come
-// from the `links-notation` package, the same 0.31.5 release the Rust crate
+// from the `links-notation` package, the same 0.31.6 release the Rust crate
 // pins (rust/Cargo.toml), so names are quoted and decoded identically.
 import {
   decodeReferenceLiteral,

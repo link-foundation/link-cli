@@ -1,4 +1,4 @@
-// Binary links notation packets, a port of links-notation 0.31.5
+// Binary links notation packets, a port of links-notation 0.31.6
 // src/binary/packet.rs. The golden vectors come from
 // docs/protocol/binary-links-notation-vectors.txt (checked as
 // rust/tests/protocol_packet_tests.rs does); every other expectation is the

@@ -1,4 +1,4 @@
-// Ports src/parser.rs of the Rust links-notation 0.31.5 crate: the `nom`
+// Ports src/parser.rs of the Rust links-notation 0.31.6 crate: the `nom`
 // grammar of the text notation, its `ParserState` (indentation, nesting depth,
 // the furthest failure and the cache of unreadable lines) and
 // `ParserState::failure`, which turns a failed parse into a position.

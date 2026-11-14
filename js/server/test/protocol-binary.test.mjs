@@ -1,4 +1,4 @@
-// The LiNo mapping of binary links notation, a port of links-notation 0.31.5
+// The LiNo mapping of binary links notation, a port of links-notation 0.31.6
 // src/binary/mapping.rs. The golden vectors come from
 // docs/protocol/binary-links-notation-vectors.txt; the corpus and the other
 // expectations come from rust/tests/protocol_packet_tests.rs and

@@ -1,4 +1,4 @@
-// Ports the parse errors of src/lib.rs of the Rust links-notation 0.31.5
+// Ports the parse errors of src/lib.rs of the Rust links-notation 0.31.6
 // crate: `ParseError` and its `Display`, `SyntaxError` and `NestingTooDeep`
 // with their summaries and snippets, and `locate`, which turns the byte offset
 // a parse stopped at into a line, a column and the character found there.

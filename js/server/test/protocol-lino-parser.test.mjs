@@ -1,4 +1,4 @@
-// The LiNo text parser, a port of the Rust links-notation 0.31.5 crate. Every
+// The LiNo text parser, a port of the Rust links-notation 0.31.6 crate. Every
 // expectation below was produced by that crate: parse_lino_to_links_with_config
 // for the links, and the Display of its ParseError for the messages.
 import assert from 'node:assert/strict';

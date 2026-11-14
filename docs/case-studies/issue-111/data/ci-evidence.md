@@ -106,6 +106,7 @@ again. The branches were never deleted.
 | ------------ | ----------- | ------------------- | ----- |
 | Dependencies | 43590164570 | Dependencies are on their latest versions | `links-notation` 0.31.5 was published during the run; `rust/` and `rust/wasm/` used 0.31.4. Updated in the next commit. |
 | C# CI/CD     | 43590164676 | Test (windows-2025) | `VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(mode: "checkpoint", automatic: True, names: False)` hit its 30 s xUnit timeout. |
+| Dependencies | 43631012367 | Dependencies are on their latest versions | (commit 205c3c62) `links-notation` 0.31.6 was published; it changes only the version of the crate and the npm package. `rust/`, `rust/wasm/` and `js/server/` were updated in the next commit. |
 
 The C# timeout is not caused by this change. The test starts a child
 `dotnet` process. On the three previous green Windows runs (43585591670,

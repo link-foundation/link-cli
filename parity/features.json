@@ -104,7 +104,7 @@
           "js/server/test/parser.test.mjs",
           "js/server/test/notation.test.mjs"
         ],
-        "fingerprint": "e5d88fa227ca6e13"
+        "fingerprint": "f6dbe93629066a8d"
       }
     },
     {
@@ -773,7 +773,7 @@
           "js/server/test/protocol-server-faults.test.mjs",
           "js/server/test/differential/protocol.test.mjs"
         ],
-        "fingerprint": "3205dc34bd43a733"
+        "fingerprint": "94b983c508476cb8"
       }
     },
     {
