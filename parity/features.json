@@ -17,11 +17,20 @@
     "javascript": {
       "roots": [
         "js/src/**",
-        "js/client/src/**/*.js"
+        "js/client/src/**/*.js",
+        "js/server/src/**",
+        "js/server/bin/**"
       ]
     }
   },
-  "shared": [],
+  "shared": [
+    {
+      "paths": [
+        "js/src/**"
+      ],
+      "reason": "The browser workbench (docs/JS-WORKBENCH.md): a user interface over the WebAssembly build of the Rust clink (webassembly-bindings). Each clink feature it shows is implemented for JavaScript in js/server."
+    }
+  ],
   "features": [
     {
       "requirements": "docs/REQUIREMENTS.md#query-language",
@@ -76,17 +85,26 @@
         "fingerprint": "4282b668f5027f47"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/query-*.js",
+          "js/server/src/link-reference-validator.js",
+          "js/server/src/hybrid-reference.js",
+          "js/server/src/link.js",
+          "js/server/src/parser.js",
+          "js/server/src/notation.js",
+          "js/server/src/protocol-lino-parser*.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/query-*.test.mjs",
+          "js/server/test/link-reference-validator.test.mjs",
+          "js/server/test/hybrid-reference.test.mjs",
+          "js/server/test/protocol-lino-parser.test.mjs",
+          "js/server/test/link.test.mjs",
+          "js/server/test/parser.test.mjs",
+          "js/server/test/notation.test.mjs"
+        ],
+        "fingerprint": "e5d88fa227ca6e13"
       }
     },
     {
@@ -113,17 +131,15 @@
         "fingerprint": "46231cb39b60d28a"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/changes-simplifier.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/changes-simplifier.test.mjs",
+          "js/server/test/query-processor.test.mjs"
+        ],
+        "fingerprint": "e0af271e637d06d5"
       }
     },
     {
@@ -159,17 +175,16 @@
         "fingerprint": "83bf273973b092ed"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/named-type-links.js",
+          "js/server/src/named-types.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/named-types.test.mjs",
+          "js/server/test/named-type-links.test.mjs"
+        ],
+        "fingerprint": "eaca02aa7898412f"
       }
     },
     {
@@ -196,17 +211,14 @@
         "fingerprint": "0d5c1ca2238be6fc"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/pinned-types.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/pinned-types.test.mjs"
+        ],
+        "fingerprint": "c0de4df3f2bef5a9"
       }
     },
     {
@@ -233,17 +245,14 @@
         "fingerprint": "be06a9cb382d7cd6"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/types.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/types.test.mjs"
+        ],
+        "fingerprint": "250ea3229ce4788a"
       }
     },
     {
@@ -273,17 +282,16 @@
         "fingerprint": "72a5a62a0a4c0c5f"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/unicode-string-storage.js",
+          "js/server/src/sequences.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/unicode-string-storage.test.mjs",
+          "js/server/test/sequences.test.mjs"
+        ],
+        "fingerprint": "a0c788c61527c759"
       }
     },
     {
@@ -319,17 +327,18 @@
         "fingerprint": "0455ab419322eab4"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/lino-database-input.js",
+          "js/server/src/text-storage-format.js",
+          "js/server/src/structure-format.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/lino-database-input.test.mjs",
+          "js/server/test/text-storage-format.test.mjs",
+          "js/server/test/structure-format.test.mjs"
+        ],
+        "fingerprint": "c6a8309be0beda64"
       }
     },
     {
@@ -357,8 +366,14 @@
         "fingerprint": "dc1bb5f80290461a"
       },
       "javascript": {
-        "status": "not-applicable",
-        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+        "status": "implemented",
+        "sources": [
+          "js/server/src/persistent-transformations.js"
+        ],
+        "tests": [
+          "js/server/test/persistent-transformations.test.mjs"
+        ],
+        "fingerprint": "742cee0295885317"
       }
     },
     {
@@ -398,8 +413,17 @@
         "fingerprint": "8b2b9b5ff1cf6f7e"
       },
       "javascript": {
-        "status": "not-applicable",
-        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+        "status": "implemented",
+        "sources": [
+          "js/server/src/transactions*.js",
+          "js/server/src/undoable-links.js"
+        ],
+        "tests": [
+          "js/server/test/transactions*.test.mjs",
+          "js/server/test/undoable-links.test.mjs",
+          "js/server/test/differential/transactions.test.mjs"
+        ],
+        "fingerprint": "796ad18725cbb4de"
       }
     },
     {
@@ -426,8 +450,14 @@
         "fingerprint": "62cc1dcbbf33536f"
       },
       "javascript": {
-        "status": "not-applicable",
-        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+        "status": "implemented",
+        "sources": [
+          "js/server/src/version-control*.js"
+        ],
+        "tests": [
+          "js/server/test/version-control*.test.mjs"
+        ],
+        "fingerprint": "5390ffafeb26f4fb"
       }
     },
     {
@@ -460,8 +490,16 @@
         "fingerprint": "b1b1face05c64a63"
       },
       "javascript": {
-        "status": "not-applicable",
-        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+        "status": "implemented",
+        "sources": [
+          "js/server/src/triplets*.js",
+          "js/server/src/protocol-triplets-operations.js"
+        ],
+        "tests": [
+          "js/server/test/triplets*.test.mjs",
+          "js/server/test/protocol-triplets-operations.test.mjs"
+        ],
+        "fingerprint": "835cdcab8852ba38"
       }
     },
     {
@@ -494,8 +532,15 @@
         "fingerprint": "6e067e7389d7e4fe"
       },
       "javascript": {
-        "status": "not-applicable",
-        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+        "status": "implemented",
+        "sources": [
+          "js/server/src/permissions*.js"
+        ],
+        "tests": [
+          "js/server/test/permissions*.test.mjs",
+          "js/server/test/differential/permissions.test.mjs"
+        ],
+        "fingerprint": "e538d5a086af5688"
       }
     },
     {
@@ -564,12 +609,14 @@
         "status": "implemented",
         "sources": [
           "js/client/src/remap.js",
-          "js/client/src/external-ids.js"
+          "js/client/src/external-ids.js",
+          "js/server/src/external-ids.js"
         ],
         "tests": [
-          "js/client/test/union-remap.test.mjs"
+          "js/client/test/union-remap.test.mjs",
+          "js/server/test/external-ids.test.mjs"
         ],
-        "fingerprint": "bf58ff36543b14f3"
+        "fingerprint": "f5c66339581d019b"
       }
     },
     {
@@ -644,17 +691,19 @@
         "fingerprint": "05a3defdc2e14529"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "rust/wasm/src/lib.rs",
-          "js/client/src/wasm.js",
-          "js/src/App.jsx"
+        "status": "implemented",
+        "sources": [
+          "js/server/src/link-storage.js",
+          "js/server/src/link-storage-doublets.js",
+          "js/server/src/indexed-links.js",
+          "js/server/src/storage-lock*.js"
         ],
         "tests": [
-          "rust/wasm/tests/core.rs",
-          "js/client/test/wasm.test.mjs"
-        ]
+          "js/server/test/link-storage*.test.mjs",
+          "js/server/test/indexed-links.test.mjs",
+          "js/server/test/storage-lock.test.mjs"
+        ],
+        "fingerprint": "bd3757ef8f5be9b6"
       }
     },
     {
@@ -709,7 +758,8 @@
           "js/client/src/tcp.js",
           "js/client/src/process.js",
           "js/client/src/errors.js",
-          "js/client/src/deadline.js"
+          "js/client/src/deadline.js",
+          "js/server/src/protocol-{binary,binary-packet,client,errors,links-operations,lino,protocols,remote-links,server,server-dispatch,server-query,sessions,store-file}.js"
         ],
         "tests": [
           "js/client/test/client.test.mjs",
@@ -718,9 +768,12 @@
           "js/client/test/tcp*.test.mjs",
           "js/client/test/process.test.mjs",
           "js/client/test/protocol-edge.test.mjs",
-          "js/client/test/utf8-preservation.test.mjs"
+          "js/client/test/utf8-preservation.test.mjs",
+          "js/server/test/protocol-{binary,binary-packet,client,errors,links-operations,lino,protocols,remote-links,server,server-dispatch,server-query,sessions,store-file}.test.mjs",
+          "js/server/test/protocol-server-faults.test.mjs",
+          "js/server/test/differential/protocol.test.mjs"
         ],
-        "fingerprint": "4c37a485c44b558c"
+        "fingerprint": "3205dc34bd43a733"
       }
     },
     {
@@ -752,12 +805,14 @@
       "javascript": {
         "status": "implemented",
         "sources": [
-          "js/client/src/ipc*.js"
+          "js/client/src/ipc*.js",
+          "js/server/src/ipc*.js"
         ],
         "tests": [
-          "js/client/test/ipc*.test.mjs"
+          "js/client/test/ipc*.test.mjs",
+          "js/server/test/ipc*.test.mjs"
         ],
-        "fingerprint": "b1f06fd8b9b80698"
+        "fingerprint": "8ac42ebed5eac05d"
       }
     },
     {
@@ -784,8 +839,15 @@
         "fingerprint": "b2f7394fcdcc5742"
       },
       "javascript": {
-        "status": "not-applicable",
-        "reason": "The GraphQL endpoint is served by the C# and Rust CLIs; JavaScript DeepClient consumers call it over HTTP (examples/deep-client)."
+        "status": "implemented",
+        "sources": [
+          "js/server/src/graphql-*"
+        ],
+        "tests": [
+          "js/server/test/graphql-*.test.mjs",
+          "js/server/test/differential/graphql.test.mjs"
+        ],
+        "fingerprint": "ac380a2b8105b3a9"
       }
     },
     {
@@ -822,16 +884,25 @@
         "fingerprint": "d5efa640432aa019"
       },
       "javascript": {
-        "status": "delegated",
-        "to": "rust",
-        "via": [
-          "js/src/**",
-          "rust/wasm/src/lib.rs"
+        "status": "implemented",
+        "sources": [
+          "js/server/bin/clink.js",
+          "js/server/src/cli.js",
+          "js/server/src/main*.js",
+          "js/server/src/index.js",
+          "js/server/src/errors.js",
+          "js/server/src/error-report.js",
+          "js/server/src/env-files.js"
         ],
         "tests": [
-          "js/test/linkGraph.test.mjs",
-          "rust/wasm/tests/web.rs"
-        ]
+          "js/server/test/cli.test.mjs",
+          "js/server/test/main*.test.mjs",
+          "js/server/test/entry-points.test.mjs",
+          "js/server/test/error-report.test.mjs",
+          "js/server/test/env-files.test.mjs",
+          "js/server/test/differential/cli.test.mjs"
+        ],
+        "fingerprint": "ec7a9d58fecd1676"
       }
     },
     {
