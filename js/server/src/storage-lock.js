@@ -4,19 +4,22 @@
 // The lock is taken on a dedicated sidecar `<database>.lock` file opened
 // create + read + write without truncation, as the Rust std `File::lock`,
 // `lock_shared` and `try_lock` do: `flock(2)` on Unix, `LockFileEx` on Windows.
-// Locks belong to an open file description, so two `FileLock`s in one process
-// contend exactly as two processes do -- and as a Rust process does.
+// Locks belong to an open file description (a file handle on Windows), so two
+// `FileLock`s in one process contend exactly as two processes do -- and as a
+// Rust process does.
 //
-// Node.js has no `flock` in `node:fs`, so the primitive is picked per runtime
-// when a lock is taken:
+// Node.js has no `flock` or `LockFileEx` in `node:fs`, so the primitive is
+// picked per runtime when a lock is taken:
 // - Deno: `Deno.FsFile` `lockSync` / `tryLockSync` / `unlockSync`, the same
-//   Rust std calls (so Windows works too);
-// - Bun: `flock(2)` of the C library through `bun:ffi`;
-// - Node.js >= 26: `flock(2)` through `node:ffi`, which prints Node's
+//   Rust std calls on every platform;
+// - Bun: `flock(2)` of the C library through `bun:ffi` on Unix, and on
+//   Windows the kernel32 calls of the Rust std (storage-lock-windows.js) --
+//   `CreateFileW`, `LockFileEx`, `UnlockFile`, `CloseHandle`;
+// - Node.js >= 26: the same through `node:ffi`, which prints Node's
 //   "FFI is an experimental feature" warning once per process.
-// Anything else -- an older Node.js, Bun or Node.js on Windows, an unknown
-// platform -- fails with a `LockError` naming what is missing; it never
-// pretends to hold a lock.
+// Anything else -- an older Node.js, an unknown platform, a C library or
+// kernel32.dll that does not load -- fails with a `LockError` naming what is
+// missing; it never pretends to hold a lock.
 //
 // Rust releases the lock when the guard is dropped; here `release()` (or
 // `using`, through `Symbol.dispose`) does. The operating system still drops
@@ -26,7 +29,8 @@ import { constants as osConstants } from 'node:os';
 import { dirname } from 'node:path';
 
 import { errorText } from './error-report.js';
-import { LockError } from './errors.js';
+import { LinkError, LockError } from './errors.js';
+import { kernel32Backend, loadKernel32, WindowsIoError } from './storage-lock-windows.js';
 import { ioError } from './transactions-storage.js';
 
 /** Requested sharing mode for a `FileLock`. */
@@ -153,33 +157,61 @@ const FFI = {
   },
 };
 
-// Loaded C libraries: ffi module -> platform -> backend or unavailable reason.
+/** The libraries that may hold `platform`'s lock calls, and how to bind one. */
+function nativeLibraries(platform, arch) {
+  if (platform === 'win32') {
+    const pointerSize = arch === 'ia32' || arch === 'arm' ? 4 : 8;
+    return {
+      what: 'kernel32.dll',
+      names: ['kernel32.dll'],
+      bind: (ffi, id) =>
+        kernel32Backend(
+          `LockFileEx through ${id}`,
+          loadKernel32(ffi, id, pointerSize),
+          pointerSize,
+        ),
+    };
+  }
+  const libc = LIBC[platform];
+  return (
+    libc && {
+      what: 'the C library',
+      names: libc.names,
+      bind: (ffi, id, name) =>
+        flockBackend(`flock(2) through ${id}`, FFI[id](ffi, name, libc.errno)),
+    }
+  );
+}
+
+// Loaded libraries: ffi module -> platform and architecture -> backend or
+// unavailable reason.
 const loaded = new WeakMap();
 
-function libcBackend(ffi, id, runtime, platform) {
-  const libc = LIBC[platform];
-  if (libc === undefined) {
+function nativeBackend(ffi, id, runtime, platform, arch) {
+  const libraries = nativeLibraries(platform, arch);
+  if (libraries === undefined) {
     return { unavailable: `${runtime} on ${platform} has no known C library for flock(2)` };
   }
-  let byPlatform = loaded.get(ffi);
-  if (byPlatform === undefined) loaded.set(ffi, (byPlatform = new Map()));
-  if (!byPlatform.has(platform)) {
+  let cache = loaded.get(ffi);
+  if (cache === undefined) loaded.set(ffi, (cache = new Map()));
+  const key = `${platform}-${arch}`;
+  if (!cache.has(key)) {
     let result;
     const failures = [];
-    for (const name of libc.names) {
+    for (const name of libraries.names) {
       try {
-        result = flockBackend(`flock(2) through ${id}`, FFI[id](ffi, name, libc.errno));
+        result = libraries.bind(ffi, id, name);
         break;
       } catch (error) {
         failures.push(error.message);
       }
     }
     result ??= {
-      unavailable: `${runtime} cannot load the C library through ${id} (${failures.join('; ')})`,
+      unavailable: `${runtime} cannot load ${libraries.what} through ${id} (${failures.join('; ')})`,
     };
-    byPlatform.set(platform, result);
+    cache.set(key, result);
   }
-  return byPlatform.get(platform);
+  return cache.get(key);
 }
 
 /**
@@ -192,6 +224,7 @@ export function detectLockBackend({
   deno = globalThis.Deno,
   versions = process.versions,
   platform = process.platform,
+  arch = process.arch,
   builtin = (id) => process.getBuiltinModule?.(id),
 } = {}) {
   if (deno) {
@@ -202,11 +235,6 @@ export function detectLockBackend({
   const bun = versions.bun !== undefined;
   const runtime = bun ? `Bun ${versions.bun}` : `Node.js ${versions.node}`;
   const id = bun ? 'bun:ffi' : 'node:ffi';
-  if (platform === 'win32') {
-    return {
-      unavailable: `${runtime} on Windows has no LockFileEx binding in this port; use Deno or the Rust clink`,
-    };
-  }
   let ffi;
   try {
     ffi = builtin(id);
@@ -214,11 +242,12 @@ export function detectLockBackend({
     ffi = undefined;
   }
   if (ffi === undefined) {
+    const call = platform === 'win32' ? 'LockFileEx' : 'flock(2)';
     return {
-      unavailable: `${runtime} has no ${id} to call flock(2); use Node.js >= 26, Bun or Deno`,
+      unavailable: `${runtime} has no ${id} to call ${call}; use Node.js >= 26, Bun or Deno`,
     };
   }
-  return libcBackend(ffi, id, runtime, platform);
+  return nativeBackend(ffi, id, runtime, platform, arch);
 }
 
 let override = null;
@@ -287,7 +316,8 @@ export class FileLock {
       if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
       return [backend, backend.open(path), path];
     } catch (error) {
-      throw ioError(error);
+      if (!(error instanceof WindowsIoError)) throw ioError(error);
+      throw new LinkError(`I/O error: ${error.message}`, { cause: error });
     }
   }
 
