@@ -12,6 +12,16 @@ export function scratchDirectory() {
   return directory;
 }
 
+/**
+ * Why a test that needs POSIX permission bits is skipped: on Windows, `chmod`
+ * only toggles the read-only attribute. `false` where the test runs.
+ */
+export const NO_POSIX_PERMISSIONS =
+  process.platform === 'win32' && 'Windows has no POSIX permission bits (chmod)';
+
+/** `text` as a regular expression that matches exactly it, such as a Windows path. */
+export const literally = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /** A writable that collects its text in `text`. */
 export function capture() {
   return {

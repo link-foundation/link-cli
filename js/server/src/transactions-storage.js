@@ -56,6 +56,14 @@ export function syncPath(path, flags = 'r') {
 /** The directory `Path::parent` names for a file, `.` when it has none. */
 export const parentDirectory = (path) => dirname(path);
 
+/**
+ * `File::open(parent)?.sync_all()?` on the directory of `path`. Rust does it
+ * only under `#[cfg(unix)]`: Windows opens no directory as a file.
+ */
+export function syncParentDirectory(path, platform = process.platform) {
+  if (platform !== 'win32') syncPath(parentDirectory(path));
+}
+
 /** Whether `store` is a `NamedTypesDecorator` (it has the logical names). */
 const isNamed = (store) => typeof store.logicalNames === 'function';
 
@@ -64,7 +72,7 @@ function flushLinkStorage(storage) {
   guarded(() => storage.save());
   if (!storage.isInMemory()) {
     syncPath(storage.databasePath(), 'r+');
-    syncPath(parentDirectory(storage.databasePath()));
+    syncParentDirectory(storage.databasePath());
   }
   storage.refreshObservedRevision();
 }

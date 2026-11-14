@@ -16,7 +16,13 @@ import { formatErrorReport } from '../src/error-report.js';
 import { link } from '../src/link.js';
 import { LinkStorage, NO_REVISION, sameRevision, storageRevision } from '../src/link-storage.js';
 import { FileLock, lockBackend, LockMode } from '../src/storage-lock.js';
-import { capture, scratchDirectory, traceLines } from './helpers/storage.mjs';
+import {
+  capture,
+  literally,
+  NO_POSIX_PERMISSIONS,
+  scratchDirectory,
+  traceLines,
+} from './helpers/storage.mjs';
 
 const parts = (value) => [value.index, value.source, value.target];
 const rows = (storage) => storage.all().map(parts);
@@ -467,14 +473,22 @@ describe('LinkStorage errors', () => {
     assert.fail('expected an error');
   };
 
-  it('reports a database below a file as the Rust I/O error', () => {
-    const directory = scratchDirectory();
-    writeFileSync(join(directory, 'f'), 'x');
-    assert.equal(
-      report(() => new LinkStorage(join(directory, 'f', 'db.links'))),
-      'I/O error: Not a directory (os error 20)\n\nCaused by:\n    Not a directory (os error 20)',
-    );
-  });
+  it(
+    'reports a database below a file as the Rust I/O error',
+    {
+      skip:
+        process.platform === 'win32' &&
+        'Windows finds no path below a file (ERROR_PATH_NOT_FOUND), so the store opens empty',
+    },
+    () => {
+      const directory = scratchDirectory();
+      writeFileSync(join(directory, 'f'), 'x');
+      assert.equal(
+        report(() => new LinkStorage(join(directory, 'f', 'db.links'))),
+        'I/O error: Not a directory (os error 20)\n\nCaused by:\n    Not a directory (os error 20)',
+      );
+    },
+  );
 
   it('reports a database that is a directory', () => {
     const path = join(scratchDirectory(), 'd.links');
@@ -485,7 +499,7 @@ describe('LinkStorage errors', () => {
     );
   });
 
-  it('reports a database it may not open', () => {
+  it('reports a database it may not open', { skip: NO_POSIX_PERMISSIONS }, () => {
     const path = database('(1 1 1)\n');
     chmodSync(path, 0o000);
     try {
@@ -530,7 +544,7 @@ describe('LinkStorage errors', () => {
     writeFileSync(join(path, 'kept'), '');
     assert.match(
       report(() => replaced.save()),
-      new RegExp(`^Failed to replace database: ${path}\n\nCaused by:\n    `),
+      new RegExp(`^Failed to replace database: ${literally(path)}\n\nCaused by:\n    `),
     );
     assert.equal(existsSync(join(path, 'kept')), true);
   });

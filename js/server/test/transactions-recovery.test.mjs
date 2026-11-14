@@ -14,7 +14,7 @@ import {
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { LinkStorage } from '../src/link-storage.js';
-import { newTransactionId } from '../src/transactions-recovery.js';
+import { joinPath, newTransactionId } from '../src/transactions-recovery.js';
 import {
   APPLIED_MARKER_PREFIX,
   COMMIT_MARKER_PREFIX,
@@ -25,7 +25,7 @@ import {
   TRANSITION_NAME_PREFIX,
   TransactionsDecorator,
 } from '../src/transactions.js';
-import { capture, scratchDirectory } from './helpers/storage.mjs';
+import { capture, literally, NO_POSIX_PERMISSIONS, scratchDirectory } from './helpers/storage.mjs';
 import { entriesWith, faulty, memoryLog, namedMemory, openTx } from './helpers/transactions.mjs';
 
 const T = TRANSITION_NAME_PREFIX;
@@ -270,14 +270,31 @@ describe('retention', () => {
       tx.create(1, 1);
       return path;
     });
-    assert.match(errors.text, new RegExp(`Archive entry already owned: ${taken}\\.`));
+    assert.match(errors.text, new RegExp(`Archive entry already owned: ${literally(taken)}\\.`));
     const archive = join(
       directory,
       readdirSync(directory).find((name) => join(directory, name) !== taken),
     );
-    assert.match(errors.text, new RegExp(`Archived 1 transitions to ${archive}\\.`));
+    assert.match(errors.text, new RegExp(`Archived 1 transitions to ${literally(archive)}\\.`));
     assert.equal(readFileSync(archive, 'utf8'), `${serializeRecord(archived(tx))}\n`);
     assert.equal(tx.records.length, 0);
+  });
+
+  it('joins archive names as Path::join does on each platform', () => {
+    const cases = [
+      [['d', 'n', 'linux'], 'd/n'],
+      [['d/', 'n', 'linux'], 'd/n'],
+      [['', 'n', 'linux'], 'n'],
+      [['d\\', 'n', 'linux'], 'd\\/n'],
+      [['C:', 'n', 'linux'], 'C:/n'],
+      [['d', 'n', 'win32'], 'd\\n'],
+      [['d/', 'n', 'win32'], 'd/n'],
+      [['d\\', 'n', 'win32'], 'd\\n'],
+      [['C:', 'n', 'win32'], 'C:n'],
+      [['C:\\', 'n', 'win32'], 'C:\\n'],
+    ];
+    for (const [args, joined] of cases) assert.equal(joinPath(...args), joined, args.join(' '));
+    assert.equal(joinPath('d', 'n'), process.platform === 'win32' ? 'd\\n' : 'd/n');
   });
 
   it('joins archive names onto a directory with a trailing slash', () => {
@@ -287,7 +304,7 @@ describe('retention', () => {
     assert.equal(readdirSync(directory).length, 1);
   });
 
-  it('reports an archive file that cannot be created', () => {
+  it('reports an archive file that cannot be created', { skip: NO_POSIX_PERMISSIONS }, () => {
     const directory = scratchDirectory();
     mkdirSync(directory, { recursive: true });
     chmodSync(directory, 0o500);

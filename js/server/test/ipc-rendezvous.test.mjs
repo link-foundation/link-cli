@@ -225,7 +225,7 @@ describe('rendezvous client', { timeout: 30_000 }, () => {
       });
     }
     fs.writeFileSync(join(dir, 'listener.json'), listenerJson({ v: 1, kind: 'fifo', pid: 5 }));
-    const rendezvous = Rendezvous.begin(Endpoint.parse(`pipe:${dir}?poll=3`), 'pipe', () => true);
+    const rendezvous = Rendezvous.begin(Endpoint.parse(`fifo:${dir}?poll=3`), 'pipe', () => true);
     assert.deepEqual([rendezvous.serverPid, rendezvous.poll], [5, 3]);
     assert.match(rendezvous.id, /^[0-9a-f]{20}$/);
   });

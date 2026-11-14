@@ -21,7 +21,7 @@ import { dirname } from 'node:path';
 
 import { InvalidFormatError, LinkError, LockError } from './errors.js';
 import { FileLock, LockMode, lockFilePath } from './storage-lock.js';
-import { io, parentDirectory, syncPath } from './transactions-storage.js';
+import { io, syncParentDirectory } from './transactions-storage.js';
 
 const SCAN_BUFFER = 8192;
 const NEWLINE = 0x0a;
@@ -112,7 +112,7 @@ export class FileTransitionLog {
       repairFile(path, existsSync(path) ? 'r+' : 'w+', false);
       const fd = openSync(path, 'a+');
       try {
-        syncPath(parentDirectory(path));
+        syncParentDirectory(path);
       } catch (error) {
         closeSync(fd);
         throw error;

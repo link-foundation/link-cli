@@ -26,12 +26,13 @@ import {
   NamedTransitionLog,
   parentDirectory,
   storageError,
+  syncParentDirectory,
   syncPath,
   TransactionStorage,
   transitionLogStore,
 } from '../src/transactions-storage.js';
 import { memoryLog, namedMemory } from './helpers/transactions.mjs';
-import { scratchDirectory } from './helpers/storage.mjs';
+import { NO_POSIX_PERMISSIONS, scratchDirectory } from './helpers/storage.mjs';
 
 /** The bytes `truncate_torn_tail` keeps of a file holding `contents`. */
 function repaired(contents) {
@@ -210,6 +211,7 @@ describe('FileTransitionLog', () => {
     assert.throws(() => log.flushLog(), badDescriptor);
     assert.equal(log.tailMayBeTorn, true);
     // A failed repair keeps the flag, so the next operation retries it.
+    if (NO_POSIX_PERMISSIONS) return;
     chmodSync(path, 0o000);
     try {
       assert.throws(
@@ -223,32 +225,40 @@ describe('FileTransitionLog', () => {
     assert.deepEqual(log.readLogEntries(), ['kept']);
   });
 
-  it('reports a parent that is not a directory', () => {
-    const directory = scratchDirectory();
-    writeFileSync(join(directory, 'file'), '');
-    assert.throws(
-      () => FileTransitionLog.open(join(directory, 'file', 'sub', 'journal.log')),
-      (error) => error.message === 'I/O error: Not a directory (os error 20)',
-    );
-    assert.throws(
-      () => FileTransitionLog.open(join(directory, 'file', 'journal.log')),
-      (error) => error.message === 'I/O error: Not a directory (os error 20)',
-    );
-  });
-
-  it('closes the log when its directory cannot be synced', () => {
-    const directory = join(scratchDirectory(), 'unreadable');
-    FileTransitionLog.open(join(directory, 'journal.log')).close();
-    chmodSync(directory, 0o300);
-    try {
+  it(
+    'reports a parent that is not a directory',
+    { skip: process.platform === 'win32' && 'Windows finds no path below a file' },
+    () => {
+      const directory = scratchDirectory();
+      writeFileSync(join(directory, 'file'), '');
       assert.throws(
-        () => FileTransitionLog.open(join(directory, 'journal.log')),
-        (error) => error.message === 'I/O error: Permission denied (os error 13)',
+        () => FileTransitionLog.open(join(directory, 'file', 'sub', 'journal.log')),
+        (error) => error.message === 'I/O error: Not a directory (os error 20)',
       );
-    } finally {
-      chmodSync(directory, 0o700);
-    }
-  });
+      assert.throws(
+        () => FileTransitionLog.open(join(directory, 'file', 'journal.log')),
+        (error) => error.message === 'I/O error: Not a directory (os error 20)',
+      );
+    },
+  );
+
+  it(
+    'closes the log when its directory cannot be synced',
+    { skip: process.platform === 'win32' && 'Rust syncs the directory only under cfg(unix)' },
+    () => {
+      const directory = join(scratchDirectory(), 'unreadable');
+      FileTransitionLog.open(join(directory, 'journal.log')).close();
+      chmodSync(directory, 0o300);
+      try {
+        assert.throws(
+          () => FileTransitionLog.open(join(directory, 'journal.log')),
+          (error) => error.message === 'I/O error: Permission denied (os error 13)',
+        );
+      } finally {
+        chmodSync(directory, 0o700);
+      }
+    },
+  );
 });
 
 describe('error helpers', () => {
@@ -299,6 +309,18 @@ describe('error helpers', () => {
   it('names the parent directory as Path::parent', () => {
     assert.equal(parentDirectory('/var/data/db.links'), '/var/data');
     assert.equal(parentDirectory('db.links'), '.');
+  });
+
+  it('syncs the parent directory only where Rust does, under cfg(unix)', () => {
+    const missing = join(scratchDirectory(), 'missing', 'db.links');
+    // Windows opens no directory as a file, so Rust skips the sync there.
+    assert.equal(syncParentDirectory(missing, 'win32'), undefined);
+    assert.throws(
+      () => syncParentDirectory(missing, 'linux'),
+      (error) =>
+        error instanceof LinkError &&
+        error.message === 'I/O error: No such file or directory (os error 2)',
+    );
   });
 });
 
@@ -424,7 +446,7 @@ describe('TransactionStorage', () => {
     assert.equal(named.hasExternalChanges(), false);
   });
 
-  it('reports a failed save as a storage error', () => {
+  it('reports a failed save as a storage error', { skip: NO_POSIX_PERMISSIONS }, () => {
     const directory = join(scratchDirectory(), 'locked');
     mkdirSync(directory);
     const storage = new TransactionStorage(new LinkStorage(join(directory, 'db.links')));

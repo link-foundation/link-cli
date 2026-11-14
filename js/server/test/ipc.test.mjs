@@ -61,8 +61,30 @@ async function readToEnd(stream) {
   }
 }
 
+/** `read_exact`: the next `length` bytes of `stream`. */
+async function readExact(stream, length) {
+  const parts = [];
+  let read = 0;
+  while (read < length) {
+    const part = await stream.read(length - read);
+    assert.notEqual(part.length, 0, `the stream ended after ${read} of ${length} bytes`);
+    parts.push(part);
+    read += part.length;
+  }
+  return Buffer.concat(parts);
+}
+
+/**
+ * How a test marks the end of a payload (`Framing` of rust/src/protocol/ipc/tests.rs):
+ * the writer ends its outgoing direction, or an 8-byte little-endian length
+ * comes first, for kinds that cannot half-close (a Windows named pipe closes
+ * both directions at once).
+ */
+const HALF_CLOSE = 'half-close';
+const LENGTH_PREFIX = 'length-prefix';
+
 /** `serve`: echoes every connection until the listener closes; resolves to the count. */
-async function echoServer(listener) {
+async function echoServer(listener, framing = HALF_CLOSE) {
   let served = 0;
   const connections = [];
   for (;;) {
@@ -71,10 +93,16 @@ async function echoServer(listener) {
     served += 1;
     connections.push(
       (async () => {
-        const received = await readToEnd(stream);
-        await stream.write(received);
-        await stream.flush();
-        await stream.closeWrite();
+        if (framing === LENGTH_PREFIX) {
+          const length = Number((await readExact(stream, 8)).readBigUInt64LE());
+          await stream.write(await readExact(stream, length));
+          await stream.flush();
+        } else {
+          await stream.write(await readToEnd(stream));
+          await stream.flush();
+          await stream.closeWrite();
+        }
+        // Wait for the client to hang up.
         await stream.read(1).catch(() => {});
         stream.shutdown();
       })(),
@@ -84,34 +112,44 @@ async function echoServer(listener) {
   return served;
 }
 
-async function roundTrip(endpoint, length, seed) {
+async function roundTrip(endpoint, length, seed, framing = HALF_CLOSE) {
   const client = await connect(endpoint);
   const sent = payload(length, seed);
   const writing = (async () => {
+    if (framing === LENGTH_PREFIX) {
+      const prefix = Buffer.alloc(8);
+      prefix.writeBigUInt64LE(BigInt(sent.length));
+      await client.write(prefix);
+    }
     await client.write(sent);
     await client.flush();
-    await client.closeWrite();
+    if (framing === HALF_CLOSE) await client.closeWrite();
   })();
-  const echoed = await readToEnd(client);
+  const echoed =
+    framing === LENGTH_PREFIX ? await readExact(client, length) : await readToEnd(client);
   await writing;
   assert.equal(echoed.length, sent.length, `${endpoint}: echoed length`);
   assert.ok(echoed.equals(sent), `${endpoint}: echoed bytes differ`);
   client.shutdown();
 }
 
-async function checkKind(endpoint, length) {
+async function checkKind(endpoint, length, framing = HALF_CLOSE) {
   const listener = await listen(endpoint);
   const address = listener.endpoint();
-  const server = echoServer(listener);
-  await roundTrip(address, length, 1);
-  await roundTrip(address, 1, 2);
-  await Promise.all([0, 1].map((index) => roundTrip(address, length / 2 + index, 3 + index)));
+  const server = echoServer(listener, framing);
+  await roundTrip(address, length, 1, framing);
+  await roundTrip(address, 1, 2, framing);
+  await Promise.all(
+    [0, 1].map((index) => roundTrip(address, length / 2 + index, 3 + index, framing)),
+  );
   listener.close();
   assert.equal(await server, 4);
 }
 
 describe('every kind echoes', { timeout: 120_000 }, () => {
   it('tcp', () => checkKind('tcp:127.0.0.1:0', 100_000));
+  // The framing the Windows named pipe echoes with, checked on every platform.
+  it('tcp with length prefixes', () => checkKind('tcp:127.0.0.1:0', 20_000, LENGTH_PREFIX));
 
   it('a bare address is tcp', async () => {
     const listener = await listen('127.0.0.1:0');
@@ -141,7 +179,7 @@ describe('every kind echoes', { timeout: 120_000 }, () => {
   it('pipe', () =>
     POSIX
       ? checkKind(rendezvous('pipe'), 50_000)
-      : checkKind(`pipe:clink-test-${randomId()}`, 50_000));
+      : checkKind(`pipe:clink-test-${randomId()}`, 50_000, LENGTH_PREFIX));
 });
 
 describe('kinds', () => {

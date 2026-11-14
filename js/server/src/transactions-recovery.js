@@ -143,9 +143,20 @@ export function parseJournal(entries) {
   return { log, committed, rolledBack, applied, sequence, appliedSequence, images };
 }
 
-/** `Path::join` of a file name onto a directory. */
-const joinPath = (directory, name) =>
-  directory.endsWith('/') ? `${directory}${name}` : `${directory}/${name}`;
+/**
+ * `Path::join` of a file name onto a directory: the separator of `platform`
+ * goes between them unless the directory is empty, ends with a separator
+ * (Windows takes a slash or a backslash) or is a bare Windows drive such as `C:`.
+ */
+export function joinPath(directory, name, platform = process.platform) {
+  const windows = platform === 'win32';
+  const last = directory.at(-1);
+  const joined =
+    directory === '' ||
+    last === '/' ||
+    (windows && (last === '\\' || /^[A-Za-z]:$/.test(directory)));
+  return joined ? `${directory}${name}` : `${directory}${windows ? '\\' : '/'}${name}`;
+}
 
 /** Replay, recovery, retention and the commit checkpoint of the decorator. */
 export class TransactionsReplay extends NamedTypeLinks {

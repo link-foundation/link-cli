@@ -4,3 +4,7 @@
 # runners with core.autocrlf=true do not turn LF into CRLF (issue #111).
 # node parity/check-parity.mjs fails if a fixture loses this attribute.
 docs/protocol/** -text
+
+# The fixtures of the JavaScript server tests are compared byte for byte too,
+# such as the Rust help text in js/server/test/fixtures/clink-help.txt.
+js/server/test/fixtures/** -text
