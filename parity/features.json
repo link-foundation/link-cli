@@ -797,7 +797,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/LinksServerIpcTests.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/CliIpcEndpointsTests.cs"
         ],
-        "fingerprint": "acea95a09ce44613"
+        "fingerprint": "ada10f50bff8ef62"
       },
       "rust": {
         "status": "implemented",
@@ -808,7 +808,7 @@
           "rust/tests/protocol_ipc_tests.rs",
           "rust/tests/cli_ipc_tests.rs"
         ],
-        "fingerprint": "8314818d5c8be7c1"
+        "fingerprint": "971075e67c76c455"
       },
       "javascript": {
         "status": "implemented",
@@ -820,7 +820,7 @@
           "js/client/test/ipc*.test.mjs",
           "js/server/test/ipc*.test.mjs"
         ],
-        "fingerprint": "8ac42ebed5eac05d"
+        "fingerprint": "aa781fc0b7abcd75"
       }
     },
     {

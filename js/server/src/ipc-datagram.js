@@ -10,7 +10,7 @@
 // an optional `peerAlive()`. Rust's `Drop` of a session hangs up; JavaScript
 // has no destructors, so `shutdown()` does, and `stopped` settles once the
 // session lingered for the end of the stream and stopped receiving.
-import { IoError } from './protocol-errors.js';
+import { IoError, ioErrorKind } from './protocol-errors.js';
 import { trace } from './ipc-trace.js';
 import { brokenPipe, ByteQueue, hungUp, outgoingClosed, Signal, timedOut } from './ipc-util.js';
 
@@ -178,7 +178,16 @@ export class Session {
     const bytes = frame(kind, seq, payload);
     let rto = Math.max(this.#settings.rto, 1);
     for (;;) {
-      await this.#send(bytes);
+      try {
+        await this.#send(bytes);
+      } catch (error) {
+        // The link found the peer gone while (re)sending the end: a System V peer that read the
+        // end and hung up removes both queues, its ACK and ABORT included. That is a hang-up,
+        // which ends the stream below.
+        if (kind !== EOF || ioErrorKind(error) !== 'ConnectionReset') throw error;
+        trace(`${this.kind} link found the peer gone while sending the end`);
+        this.#hangUp();
+      }
       const deadline = now() + rto;
       for (;;) {
         if ((this.#acknowledged - seq) >>> 0 <= HALF) return;

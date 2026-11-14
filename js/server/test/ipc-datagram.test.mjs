@@ -1,6 +1,7 @@
 // Unit tests of ipc-datagram.js, the reliable session of
 // rust/src/protocol/ipc/datagram.rs: the `datagram_sessions_survive_loss`,
-// `a_peer_hanging_up_instead_of_acknowledging_the_end_still_ends_the_stream`
+// `a_peer_hanging_up_instead_of_acknowledging_the_end_still_ends_the_stream`,
+// `a_peer_removing_the_link_before_the_end_is_acknowledged_still_ends_the_stream`
 // and `datagram_frames_round_trip` tests of rust/src/protocol/ipc/tests.rs
 // over an in-memory link (Rust's `memory::pair`), plus the frames a peer may
 // send out of order, heartbeats, dead peers and the lingering hang-up.
@@ -19,7 +20,7 @@ import {
   Session,
 } from '../src/ipc-datagram.js';
 import { IpcStream } from '../src/ipc-stream.js';
-import { sleep } from '../src/ipc-util.js';
+import { hungUp, sleep } from '../src/ipc-util.js';
 
 /** One end of an in-memory link; every `loseEvery`-th frame of the pair is lost. */
 class MemoryLink {
@@ -27,6 +28,8 @@ class MemoryLink {
   sent = [];
   closed = false;
   failing = false;
+  /** Once set, sends fail as a removed System V queue does (`EIDRM`). */
+  gone = false;
 
   constructor(counter, loseEvery) {
     this.counter = counter;
@@ -35,6 +38,7 @@ class MemoryLink {
 
   async send(bytes) {
     if (this.failing) throw new Error('the link failed');
+    if (this.gone) throw hungUp();
     this.sent.push(parseFrame(bytes));
     this.counter.count += 1;
     if (this.loseEvery > 0 && this.counter.count % this.loseEvery === 0) return true;
@@ -141,6 +145,48 @@ describe('datagram sessions', { timeout: 60_000 }, () => {
     a.shutdown();
     await a.transport.stopped;
     assert.equal(link.sent.length, before);
+  });
+
+  it('end the stream when the peer removes the link before acknowledging the end', async () => {
+    const [link, peer] = memoryPair();
+    const received = [];
+    let accepted = 0;
+    peer.onFrame = (bytes) => {
+      const { kind, seq, payload: data } = parseFrame(bytes);
+      if (kind === DATA) {
+        if (seq === accepted + 1) {
+          accepted = seq;
+          received.push(data);
+        }
+        peer.send(frame(ACK, seq));
+      } else if (kind === EOF) {
+        // The end is read; the queues are removed with the ACK unread.
+        link.gone = true;
+      }
+    };
+    const a = new IpcStream(Session.start('test', link, SETTINGS));
+    await a.write(Buffer.from('links'));
+    await a.closeWrite();
+    assert.equal(Buffer.concat(received).toString(), 'links');
+    await assert.rejects(a.write(Buffer.from('more')), { kind: 'BrokenPipe' });
+    a.shutdown();
+    await a.transport.stopped;
+  });
+
+  it('fail a write or an end whose link fails otherwise', async () => {
+    const [vanished] = memoryPair();
+    const writer = new IpcStream(Session.start('test', vanished, SETTINGS));
+    vanished.gone = true;
+    await assert.rejects(writer.write(Buffer.from('links')), { kind: 'ConnectionReset' });
+    writer.shutdown();
+    await writer.transport.stopped;
+
+    const [broken] = memoryPair();
+    const ender = new IpcStream(Session.start('test', broken, SETTINGS));
+    broken.failing = true;
+    await assert.rejects(ender.closeWrite(), { message: 'the link failed' });
+    ender.shutdown();
+    await ender.transport.stopped;
   });
 
   it('acknowledge frames out of order as Rust does', async () => {
