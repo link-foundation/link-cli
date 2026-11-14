@@ -413,6 +413,7 @@ npm run typecheck         # the .d.ts files against test/types.ts, strict
 CLINK_RUST=../../rust/target/release/clink \
 CLINK_CSHARP=../../csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink \
 CLINK_WASM=../pkg \
+CLINK_JS=../server/bin/clink.js \
   npm run test:conformance   # also: bun test/conformance/run.mjs, deno run -A test/conformance/run.mjs
 npm run benchmark -- --backend rust --records 300
 ```
@@ -420,8 +421,10 @@ npm run benchmark -- --backend rust --records 300
 The conformance runner replays `docs/protocol/links-operations.txt` and, over
 two connections, `docs/protocol/subscriptions.txt` and
 `docs/protocol/triplets.txt`, the golden conversations that the Rust and C#
-test suites also replay. It covers
-u32 addresses, duplicates, holes and reuse, append and restart through a fresh
+test suites also replay, against every backend that is set: the Rust and C#
+executables, the WebAssembly package, and `bin/clink.js` of
+`@link-foundation/link-cli-server` (js/server), the pure JavaScript server. It
+covers u32 addresses, duplicates, holes and reuse, append and restart through a fresh
 server process, aborted batches read back by a fresh client, a server stopped
 in the middle of a write, Unicode and LiNo quoting of names, size limits, a
 server that refuses the text protocol, and process ownership. The benchmark (`examples/synthetic-consumer.mjs`) writes
