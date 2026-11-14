@@ -1,0 +1,536 @@
+{
+  "$comment": "Golden fixtures shared by the C# and Rust suites (issue #111). Both suites load every entry in their GoldenFixtures test and write a receipt that CI checks with `node parity/check-parity.mjs --receipt <suite> <file>`.",
+  "schema": 1,
+  "suites": [
+    "csharp",
+    "rust"
+  ],
+  "include": [
+    "docs/protocol/**/*.{json,txt,gz}"
+  ],
+  "fixtures": [
+    {
+      "path": "docs/protocol/address-reservations-v1.json",
+      "sha256": "b534de7c6578341950ebdee695744d948858728f77181153d3626e50def865a9",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/AddressAllocatorTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_address_allocator_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/author-fence-v1.json",
+      "sha256": "f0d862090fdcb5e41946652dc5d9d8fd0b93165f9f9f9865551a6bfe3be45a5f",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_author_fence_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/binary-links-notation-vectors.txt",
+      "sha256": "3ec8589a11350c8dd71bc394f2c4d34ebd627e699eb1e7316506df56fbcc7265",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/BinaryLinksNotationTests.cs"
+        ],
+        "rust": [
+          "rust/tests/protocol_packet_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-batch-v1.json",
+      "sha256": "8e77f5096910ce09a912bce334b74bb73bae26f3877c47f25d637f38b6a47a3f",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalBatchTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_batch_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-merkle-v1.json",
+      "sha256": "cc8f8f990e7ba1fc9b5de0441c39aff09d1125f48900adc074202bf411d9e370",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalMerkleTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_merkle_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-projection-v1.json",
+      "sha256": "7721ae3a544982be39db91f429e113b59bbb3dc395f01bc6210952cd988b16b4",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalProjectionTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_projection_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-query-v1.json",
+      "sha256": "3407750f00ed0056396e10c8e28e91a6841a995cc0709fc4cac28d54dc127aa1",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalQueryTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_protocol_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-replica-v1.json",
+      "sha256": "9f5480f7f2f366fa17dff217e8749720ec97908734ed569618ad9a002dd4b6e8",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalReplicaTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_replica_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-session-v1.json",
+      "sha256": "3809805c537fb9cd595fbceeed822da478ee781d9912575f8422e3834f6ea4f6",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalSessionTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_session_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/causal-version-v1.json",
+      "sha256": "2c23b20fd0a73db01c2ef1089a4f7118a8aea3f41add8784a8bcce1b3f118b37",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CausalVersionTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_causal_version_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/checkpoint-pages-v1.json",
+      "sha256": "ff6bf86a899f20c3f346282d8027841e1997ac1b429559e4bd9cd0668763a0c9",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CheckpointPagesTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_checkpoint_pages_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/checkpoint-root-mirror-v1.json",
+      "sha256": "6bf9a696c31fb425941538e39381d19a94cbd95c9307a88e782dd60efa8bd142",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CheckpointRootTests.cs"
+        ],
+        "rust": [
+          "rust/tests/support/checkpoint_root.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/chunked-journal-vectors.json",
+      "sha256": "9ca41d1b736cd99633ab4e9fd734883b435d0ce1c386f345a25ed7f0d9713b67",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PartitionedJournalChunkTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_chunked_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/engine-change-vectors.json",
+      "sha256": "ca52cb60fadee9fdbaf12c2662571cde0bfbc2de68928fe5d0a3c7ce20c9f8a9",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineChangeReplayTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_change_replay_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/engine-checkpoint-vectors.json",
+      "sha256": "40ec3f1c168a2c0b978f914c08f2906bac1b04588b717eb16234b039256eceaf",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CheckpointDeltaTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineCheckpointTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineCompactionContracts.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_checkpoint_delta_tests.rs",
+          "rust/tests/engine_checkpoint_tests.rs",
+          "rust/tests/engine_compaction_tests.rs"
+        ],
+        "examples": [
+          "examples/native-pages/run-interop.sh"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/engine-delta-vectors.json",
+      "sha256": "d1eafd3cd25991804a7a962b236e9be0b39a25b7143114bf824edd0fbcabdaf9",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/DeltaCommitLogTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_delta_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/engine-revision-vectors.json",
+      "sha256": "65c350a0ebf68c1ea89c4ad3878820192cb333f5968d68c47bdd2778a43d765d",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineFailureTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineSharedCompositionTests.cs"
+        ],
+        "rust": [
+          "rust/src/engine/journal.rs",
+          "rust/tests/engine_portable_recovery_tests.rs",
+          "rust/tests/engine_shared_state_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/deep-core.json",
+      "sha256": "5a72403334470c73a0139fe528bca3a23a5203c959b961743188c6274c4e4fd9",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlPolicyTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlRareTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlServerProtocolTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlServerTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlTests.cs"
+        ],
+        "rust": [
+          "rust/tests/graphql_policy.rs",
+          "rust/tests/graphql_server.rs",
+          "rust/tests/graphql_server_protocol.rs",
+          "rust/tests/graphql_vectors.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/deep-fresh.json.gz",
+      "sha256": "6c0b93d07f86d0ee58baafb2a7f90ed81e0da9e7d10eea3a174a11e38747d9d2",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GoldenFixturesTests.cs"
+        ],
+        "rust": [
+          "rust/tests/golden_fixtures_tests.rs"
+        ],
+        "examples": [
+          "examples/deep-client/run.sh"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/deepclient-operations.json",
+      "sha256": "d18315fbb36ebd7a0e563ce86c4ba56b55e79158a19f96cb46e89d0f50f3d0e1",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GoldenFixturesTests.cs"
+        ],
+        "rust": [
+          "rust/tests/golden_fixtures_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/edge-vectors.json",
+      "sha256": "078c9c8f1b9bf2ba3e46b849cb141289fce53e5c252af34d717a998aa6cfeae2",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlTests.cs"
+        ],
+        "rust": [
+          "rust/tests/graphql_vectors.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/execute-vectors.json",
+      "sha256": "93b0a1c082044e9c3ef6ff6c6da367a5039cb00d0d105b38e911c58e2060c686",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlTests.cs"
+        ],
+        "rust": [
+          "rust/tests/graphql_vectors.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/introspection.json",
+      "sha256": "bf831235aa966d9d807b4582e4268812a4b2dff7517c35f1e130b18b9cd094b5",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlServerTests.cs"
+        ],
+        "rust": [
+          "rust/src/graphql/execute.rs",
+          "rust/tests/graphql_server.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/graphql/where-vectors.json",
+      "sha256": "c2a56a86ab6cdf8a0ef70c5a438b106ac4b2770d83f950589fda46d4c85a59af",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GraphqlTests.cs"
+        ],
+        "rust": [
+          "rust/src/graphql/plan.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/journal-maintenance-v1.json",
+      "sha256": "a789b6bad305cce04190bd99686dbea1b9e04221607c88852c93d1ffc3f3ee1e",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EtcdMaintenanceTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_etcd_maintenance_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/links-operations.txt",
+      "sha256": "cebee46f234985845ff8cc55ac76599887362df6774ecc9d762734350aeb2ab3",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/RemoteLinksTests.cs"
+        ],
+        "rust": [
+          "rust/tests/remote_links_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/native-lsm-wal-v1.json",
+      "sha256": "7732fd8c453b7674639e5f02581c6b8f1d8696b58986a1cde6c50c1fe19fcae2",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/LsmWalTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_lsm_wal_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/native-pages-mirrored-v1.json",
+      "sha256": "8c7f4e0647c5ebde9372536116840fe8167e408432f144e02508448722889e90",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/MirroredTestDevice.cs"
+        ],
+        "rust": [
+          "rust/tests/support/mirrored_pages.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/native-pages-v1.json",
+      "sha256": "879df8eef114532341c6ccc369a48afff58a5db47f52050163ec079881c3732e",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PagedCommitLogTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PagedTestDevice.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_paged_file_tests.rs",
+          "rust/tests/engine_paged_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/native-sorted-table-v1.json",
+      "sha256": "95b44d283e1fd67f4f2fe6df66e9e94b0bb7ad664ad760734440327ec71e9fd3",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/SortedJournalTableTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_paged/sorted_table.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/partitioned-journal-vectors.json",
+      "sha256": "cb2f8af18dca0b3b938b8f0859c8e7a34a5b6fb9e7947512150206ab9c4eff4f",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PartitionedJournalStoreTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_partitioned_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/reclaiming-chunks-vectors.json",
+      "sha256": "54e4904bea5fbd0a7b460ae3ba08cdfc06db83348acee9ac90e264a7d5aa2095",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/ReclamationChunkVectorTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_reclaiming/chunk_vectors.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/reclamation-v1.json",
+      "sha256": "20711cffe65b268e87b014176aa9f6aeb52ba97afe0a84d4f3b99b75f7cf205e",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/ReclamationVectorTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_reclaiming/vectors.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/sqlite-log-vectors.json",
+      "sha256": "1969de0e35ab08dcf31e8d37ca420d9b8c6cb5920a79b4fa0c7553ff3048e400",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/SqliteCommitLogTests.cs"
+        ],
+        "rust": [
+          "rust/tests/engine_sqlite_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/subscriptions.txt",
+      "sha256": "b6abdddb2cd7edfc9dd59a7988c4b0f37b58de2ffc19a1940e22f875f3b9c20c",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/SubscriptionsTests.cs"
+        ],
+        "rust": [
+          "rust/tests/subscriptions_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/transaction-name-vectors.json",
+      "sha256": "68b029e263914d9a92cb4a83d815c5905d7be5dd4ce28babf15c81e768dfe030",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNameCodecTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNameRecoveryTests.cs"
+        ],
+        "rust": [
+          "rust/tests/transaction_name_codec_tests.rs",
+          "rust/tests/transaction_name_failure_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/transaction-undo-vectors.json",
+      "sha256": "fc318ffacd5efd9d07e734d229cfb6875af2dadff8ef9a0098adb1e1c768f16f",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowUndoCodecTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRowUndoWideTests.cs"
+        ],
+        "rust": [
+          "rust/tests/common/transaction_row_wal_wide.rs",
+          "rust/tests/transaction_row_wal_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/triplets.txt",
+      "sha256": "3f3aaa47ed7720d47b535e383740e5c0df9116335fcc187e6b659771c135ff81",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/TripletsProtocolTests.cs"
+        ],
+        "rust": [
+          "rust/tests/triplets_protocol_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/version-metadata-vectors.json",
+      "sha256": "9e668fc2b0f9dda27e7f8755fee2a3d3edd13651e97295a369899440f5b66af8",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/VersionMetadataNamesTests.cs"
+        ],
+        "rust": [
+          "rust/src/version_control/tests.rs",
+          "rust/tests/version_metadata_names_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/version-movement-vectors.json",
+      "sha256": "35e2cbb6ff44ac8011a291282d9cd83b30aec560acd1514f670edcc030f9e662",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementMarkerTests.cs"
+        ],
+        "rust": [
+          "rust/src/version_control/movement.rs",
+          "rust/tests/version_movement_failure_tests.rs"
+        ]
+      }
+    },
+    {
+      "path": "docs/protocol/version-publication-vectors.json",
+      "sha256": "558a8101da9acc501bebdcb296d5e72df7dcbb2bf5edf0ecb77180656fc3e584",
+      "consumers": {
+        "csharp": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/VersionPublicationContradictionTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/VersionPublicationMarkerTests.cs"
+        ],
+        "rust": [
+          "rust/src/version_control/publication.rs",
+          "rust/tests/version_publication_failure_tests.rs"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1265 @@
+{
+  "$comment": "Cross-language parity manifest (issue #111). Run `node parity/check-parity.mjs --help` text in the file header; docs/PARITY.md explains the rules.",
+  "schema": 1,
+  "languages": {
+    "csharp": {
+      "roots": [
+        "csharp/Foundation.Data.Doublets.Cli.Library/**/*.cs",
+        "csharp/Foundation.Data.Doublets.Cli/**/*.cs"
+      ]
+    },
+    "rust": {
+      "roots": [
+        "rust/src/**/*.rs",
+        "rust/wasm/src/**/*.rs"
+      ]
+    },
+    "javascript": {
+      "roots": [
+        "js/src/**",
+        "js/client/src/**/*.js"
+      ]
+    }
+  },
+  "shared": [],
+  "features": [
+    {
+      "requirements": "docs/REQUIREMENTS.md#query-language",
+      "id": "query-language",
+      "title": "LiNo query language: parse, match, create, update, delete, substitute",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/QueryParser.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/QueryConstants.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/QueryLimits.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/QueryPreviewLease.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/BasicQueryProcessor.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/MixedQueryProcessor.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinkParts.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/EnumerableExtensions.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/BasicQueryProcessor.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/MixedQueryProcessor.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Query*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/GenericQueryAddressTests.cs"
+        ],
+        "fingerprint": "63036e0194d286bf"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/parser.rs",
+          "rust/src/query_parser.rs",
+          "rust/src/query_processor.rs",
+          "rust/src/query_processor/**",
+          "rust/src/query_processor_substitution.rs",
+          "rust/src/query_types.rs",
+          "rust/src/query_options.rs",
+          "rust/src/query_address.rs",
+          "rust/src/query_reply_budget.rs",
+          "rust/src/link_reference_validator.rs",
+          "rust/src/hybrid_reference.rs",
+          "rust/src/lino_link.rs",
+          "rust/src/link.rs"
+        ],
+        "tests": [
+          "rust/tests/parser_tests.rs",
+          "rust/tests/query_*_tests.rs",
+          "rust/tests/quoted_query_references_tests.rs",
+          "rust/tests/lino_link_tests.rs",
+          "rust/tests/link_tests.rs"
+        ],
+        "fingerprint": "4282b668f5027f47"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "change-reports",
+      "title": "Simplified before/after change reports",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/ChangesSimplifier.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/ChangesSimplifier.cs"
+        ],
+        "fingerprint": "12452f6507c3edca"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/changes_simplifier.rs"
+        ],
+        "tests": [
+          "rust/tests/changes_simplifier_tests.rs"
+        ],
+        "fingerprint": "46231cb39b60d28a"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "names",
+      "title": "Named links and named types",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/NamedLinks.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/NamedLinksDecorator.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/NamedTypesDecorator*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/NamesDatabase.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/INamedTypes.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/NamedLinksDecoratorTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/NamedTypesDecoratorTests.cs"
+        ],
+        "fingerprint": "e78b9b84e3722cfb"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/named_links.rs",
+          "rust/src/named_type_links.rs",
+          "rust/src/named_types.rs"
+        ],
+        "tests": [
+          "rust/tests/named_types_decorator_tests.rs",
+          "rust/tests/named_type_links_bridge_tests.rs",
+          "rust/tests/inline_name_persistence_tests.rs"
+        ],
+        "fingerprint": "83bf273973b092ed"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "pinned-types",
+      "title": "Pinned type links",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/PinnedTypes*.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PinnedTypes*.cs"
+        ],
+        "fingerprint": "dc77f16c6368aea5"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/pinned_types.rs"
+        ],
+        "tests": [
+          "rust/tests/pinned_types_decorator_tests.rs"
+        ],
+        "fingerprint": "0d5c1ca2238be6fc"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "types",
+      "title": "Type links decorator",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/TypesDecorator.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TypesDecoratorTests.cs"
+        ],
+        "fingerprint": "7f2e06c73184abb5"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/types.rs"
+        ],
+        "tests": [
+          "rust/tests/types_decorator_tests.rs"
+        ],
+        "fingerprint": "be06a9cb382d7cd6"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "unicode-strings",
+      "title": "Unicode strings stored as link sequences",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/UnicodeStringStorage.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/CheckedUnicodeSequenceWalker.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/UnicodeStringStorageTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/UnicodeGraph*.cs"
+        ],
+        "fingerprint": "e062800b2fa78f50"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/unicode_string_storage.rs",
+          "rust/src/sequences/**"
+        ],
+        "tests": [
+          "rust/tests/unicode_*_tests.rs"
+        ],
+        "fingerprint": "72a5a62a0a4c0c5f"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "lino-input-output",
+      "title": "LiNo import, export and --structure output",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinoDatabaseInput.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinoDatabaseOutput.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/LinoDatabase*Tests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Structure*Tests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CliExportIntegrationTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CliImportAtomicityTests.cs"
+        ],
+        "fingerprint": "f1679499f1d83a77"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/lino_database_input.rs",
+          "rust/src/text_storage_format.rs",
+          "rust/src/structure_format.rs"
+        ],
+        "tests": [
+          "rust/tests/lino_database_input_tests.rs",
+          "rust/tests/structure_*_tests.rs",
+          "rust/tests/cli_export_tests.rs",
+          "rust/tests/cli_import_tests.rs"
+        ],
+        "fingerprint": "0455ab419322eab4"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "persistent-transformations",
+      "title": "Persistent transformations (triggers)",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/PersistentTransformationDecorator.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PersistentTransformationDecoratorTests.cs"
+        ],
+        "fingerprint": "c07e50a706629cc9"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/persistent_transformations.rs"
+        ],
+        "tests": [
+          "rust/tests/persistent_transformations*_tests.rs",
+          "rust/tests/cli_triggers_tests.rs"
+        ],
+        "fingerprint": "dc1bb5f80290461a"
+      },
+      "javascript": {
+        "status": "not-applicable",
+        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+      }
+    },
+    {
+      "id": "transactions",
+      "title": "Transactions, undo images, journal and crash recovery",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/TransactionUndoImage.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/JournalRecord.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksUndoLog.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/IDurableLinks.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/DurableMappedMemory.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksFileLock.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/ChunkArchive.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Transaction*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryValidationTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/LinksFileLockTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/ChunkArchiveOwnershipTests.cs"
+        ],
+        "fingerprint": "abbea9659191d571"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/transactions/**",
+          "rust/src/undoable_links.rs"
+        ],
+        "tests": [
+          "rust/tests/transactions_*_tests.rs",
+          "rust/tests/transaction_*_tests.rs",
+          "rust/tests/undoable_links_edges_tests.rs"
+        ],
+        "fingerprint": "8b2b9b5ff1cf6f7e"
+      },
+      "javascript": {
+        "status": "not-applicable",
+        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+      }
+    },
+    {
+      "id": "version-control",
+      "title": "Versions: commits, ancestry, movement and publication",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator*.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Version*.cs"
+        ],
+        "fingerprint": "b4df1c17fcc0fea2"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/version_control/**"
+        ],
+        "tests": [
+          "rust/tests/version_*_tests.rs"
+        ],
+        "fingerprint": "62cc1dcbbf33536f"
+      },
+      "javascript": {
+        "status": "not-applicable",
+        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+      }
+    },
+    {
+      "id": "triplets",
+      "title": "Triplets over doublets and the triplets protocol",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Triplets*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Protocol/RemoteTriplets.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Protocol/TripletsOperation.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TripletsPermissionsDirectTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/TripletsProtocolTests.cs"
+        ],
+        "fingerprint": "906651d846d8e99e"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/triplets/**",
+          "rust/src/protocol/remote_triplets.rs",
+          "rust/src/protocol/triplets_operations.rs"
+        ],
+        "tests": [
+          "rust/tests/triplets_*_tests.rs"
+        ],
+        "fingerprint": "b1b1face05c64a63"
+      },
+      "javascript": {
+        "status": "not-applicable",
+        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+      }
+    },
+    {
+      "id": "permissions",
+      "title": "Permissions, tokens and authenticated sessions",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Permissions.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/PermissionsDecorator.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksTokenTable.cs",
+          "csharp/Foundation.Data.Doublets.Cli/CliPermissions.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Permissions*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CliPermissionsTests.cs"
+        ],
+        "fingerprint": "4d0b383355a9c293"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/permissions.rs",
+          "rust/src/permissions/**"
+        ],
+        "tests": [
+          "rust/tests/permissions_*_tests.rs",
+          "rust/tests/cli_permissions_tests.rs"
+        ],
+        "fingerprint": "6e067e7389d7e4fe"
+      },
+      "javascript": {
+        "status": "not-applicable",
+        "reason": "Server-side store policy. JavaScript reaches it as a protocol client (js/client/src/client.js); the WASM build does not expose it."
+      }
+    },
+    {
+      "id": "union-links",
+      "title": "Union of several link networks",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/UnionLinksDecorator.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/UnionAndRemapLinksTests.cs"
+        ],
+        "fingerprint": "bc2246ce5e68581f"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/union_links.rs"
+        ],
+        "tests": [
+          "rust/tests/union_and_remap_links_tests.rs"
+        ],
+        "fingerprint": "ee2a95ec5e44e622"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/union.js",
+          "js/client/src/composed.js"
+        ],
+        "tests": [
+          "js/client/test/union-remap.test.mjs",
+          "js/client/test/composition-edges.test.mjs"
+        ],
+        "fingerprint": "f83a97692a9d3176"
+      }
+    },
+    {
+      "id": "remap-links",
+      "title": "Address remapping and external ids",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/RemapLinksDecorator.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/AddressMaps.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksExternalIds.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/UnionAndRemapLinksTests.cs"
+        ],
+        "fingerprint": "0d32e6dbb9a2d2ea"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/remap_links.rs",
+          "rust/src/external_ids.rs"
+        ],
+        "tests": [
+          "rust/tests/union_and_remap_links_tests.rs"
+        ],
+        "fingerprint": "fd2d0050734afb54"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/remap.js",
+          "js/client/src/external-ids.js"
+        ],
+        "tests": [
+          "js/client/test/union-remap.test.mjs"
+        ],
+        "fingerprint": "bf58ff36543b14f3"
+      }
+    },
+    {
+      "id": "cache-links",
+      "title": "Read cache decorator",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/CacheLinksDecorator.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CacheLinksDecoratorTests.cs"
+        ],
+        "fingerprint": "c788198f9280f88d"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/cache_links.rs"
+        ],
+        "tests": [
+          "rust/tests/cache_links_tests.rs"
+        ],
+        "fingerprint": "d434dcb551bdc87a"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/cache.js"
+        ],
+        "tests": [
+          "js/client/test/cache.test.mjs"
+        ],
+        "fingerprint": "e233f8b46747fa15"
+      }
+    },
+    {
+      "id": "doublets-storage",
+      "title": "Doublets storage, uniqueness resolver and decorator plumbing",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/SimpleLinksDecorator.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksFacadeDisposer.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/LinksUniquenessAndUsagesRepointingResolver.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Exceptions.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/SimpleLinksDecoratorTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/LinksUniquenessAndUsagesRepointingResolverTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Decorator*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/MappedGrowthTests.cs"
+        ],
+        "fingerprint": "467e34ce152f28c0"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/link_storage.rs",
+          "rust/src/link_storage_doublets.rs",
+          "rust/src/indexed_links.rs",
+          "rust/src/storage/**"
+        ],
+        "tests": [
+          "rust/tests/doublets_*_tests.rs",
+          "rust/tests/link_storage_tests.rs",
+          "rust/tests/indexed_links_tests.rs",
+          "rust/tests/mapped_*_tests.rs",
+          "rust/tests/storage_*_tests.rs"
+        ],
+        "fingerprint": "05a3defdc2e14529"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "rust/wasm/src/lib.rs",
+          "js/client/src/wasm.js",
+          "js/src/App.jsx"
+        ],
+        "tests": [
+          "rust/wasm/tests/core.rs",
+          "js/client/test/wasm.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "protocol",
+      "title": "LinksOperation protocol: client, server, sessions, subscriptions and store archives",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Protocol/Links*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinoProtocol*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Protocol/RemoteLinks*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Protocol/StoreArchive.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/ProtocolEdgeTests.cs"
+        ],
+        "fingerprint": "90febc461ce47ed1"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/protocol/archive.rs",
+          "rust/src/protocol/client.rs",
+          "rust/src/protocol/error.rs",
+          "rust/src/protocol/links_operations.rs",
+          "rust/src/protocol/mod.rs",
+          "rust/src/protocol/protocols.rs",
+          "rust/src/protocol/remote_links.rs",
+          "rust/src/protocol/server.rs",
+          "rust/src/protocol/server/**",
+          "rust/src/protocol/server_query.rs",
+          "rust/src/protocol/sessions.rs"
+        ],
+        "tests": [
+          "rust/tests/protocol_*_tests.rs",
+          "rust/tests/remote_links_tests.rs",
+          "rust/tests/links_sessions_tests.rs",
+          "rust/tests/store_archive_*tests.rs",
+          "rust/tests/subscriptions_tests.rs",
+          "rust/tests/checked_sessions_tests.rs"
+        ],
+        "fingerprint": "428339f3390e5c05"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/client.js",
+          "js/client/src/framing.js",
+          "js/client/src/lino.js",
+          "js/client/src/operations.js",
+          "js/client/src/tcp.js",
+          "js/client/src/process.js",
+          "js/client/src/errors.js",
+          "js/client/src/deadline.js"
+        ],
+        "tests": [
+          "js/client/test/client.test.mjs",
+          "js/client/test/framing.test.mjs",
+          "js/client/test/lino.test.mjs",
+          "js/client/test/tcp*.test.mjs",
+          "js/client/test/process.test.mjs",
+          "js/client/test/protocol-edge.test.mjs",
+          "js/client/test/utf8-preservation.test.mjs"
+        ],
+        "fingerprint": "4c37a485c44b558c"
+      }
+    },
+    {
+      "id": "ipc-transports",
+      "title": "Local IPC transports (pipes, sockets, queues, rings, datagrams)",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Ipc/**"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/IpcTransportTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/LinksServerIpcTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CliIpcEndpointsTests.cs"
+        ],
+        "fingerprint": "acea95a09ce44613"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/protocol/ipc/**"
+        ],
+        "tests": [
+          "rust/tests/protocol_ipc_tests.rs",
+          "rust/tests/cli_ipc_tests.rs"
+        ],
+        "fingerprint": "8314818d5c8be7c1"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/ipc*.js"
+        ],
+        "tests": [
+          "js/client/test/ipc*.test.mjs"
+        ],
+        "fingerprint": "b1f06fd8b9b80698"
+      }
+    },
+    {
+      "id": "graphql",
+      "title": "GraphQL server and DeepClient compatibility",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli/Graphql/**"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Graphql*.cs"
+        ],
+        "fingerprint": "f6c09f8426bd06f5"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/graphql/**"
+        ],
+        "tests": [
+          "rust/tests/graphql_*.rs"
+        ],
+        "fingerprint": "b2f7394fcdcc5742"
+      },
+      "javascript": {
+        "status": "not-applicable",
+        "reason": "The GraphQL endpoint is served by the C# and Rust CLIs; JavaScript DeepClient consumers call it over HTTP (examples/deep-client)."
+      }
+    },
+    {
+      "id": "cli",
+      "title": "clink command line: arguments, serve, stop signals and diagnostics",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli/Program.cs",
+          "csharp/Foundation.Data.Doublets.Cli/CliIo.cs",
+          "csharp/Foundation.Data.Doublets.Cli/CliServe.cs",
+          "csharp/Foundation.Data.Doublets.Cli/StopSignals.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/DiagnosticOutput.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
+        ],
+        "fingerprint": "6c0a67d3c8f7c5c8"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/cli.rs",
+          "rust/src/main.rs",
+          "rust/src/diagnostics.rs",
+          "rust/src/error.rs",
+          "rust/src/lib.rs"
+        ],
+        "tests": [
+          "rust/tests/cli_*_tests.rs",
+          "rust/tests/diagnostic_*.rs"
+        ],
+        "fingerprint": "d5efa640432aa019"
+      },
+      "javascript": {
+        "status": "delegated",
+        "to": "rust",
+        "via": [
+          "js/src/**",
+          "rust/wasm/src/lib.rs"
+        ],
+        "tests": [
+          "js/test/linkGraph.test.mjs",
+          "rust/wasm/tests/web.rs"
+        ]
+      }
+    },
+    {
+      "id": "engine-core",
+      "title": "Staged engine: sessions, rows, journal, commit logs, savepoints, branches, group commit",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/LinksEngine.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/Engine{Session,Rows,Journal,Savepoint,Fork,QueryReservations}.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/{QueryReservations,QueryAddressScope,QueryMatching,QueryPreview}.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/{CommitLog,DeltaCommitLog,TimedCommitLog,GroupCommit,PessimisticWrites,ConstraintIndex}.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/{ImmutableObjectCache,BackgroundCompaction,ChangeRevisionJournal,RevisionJournal}.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/{JournalMaintenance,SortedRunRows}.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Engine*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/DeltaCommitLogTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/TimedCommitLogTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PessimisticEngineTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/SortedRunRowsTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/JournalLiveTailTests.cs"
+        ],
+        "fingerprint": "7b680883f7a6239f"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/mod.rs",
+          "rust/src/engine/{rows,journal,savepoint,branch,constraint_index,pessimistic}.rs",
+          "rust/src/engine/{query_reservation,query_scratch,commit,delta,timed_log,group,object_cache}.rs",
+          "rust/src/engine/{background_compaction,changes,transaction,validation,recovery,sorted_runs,named}.rs",
+          "rust/src/engine/{replication,maintenance}.rs",
+          "rust/src/engine/*tests.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_*_tests.rs"
+        ],
+        "fingerprint": "15cc5839f313fdf8"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine.js",
+          "js/client/src/engine-delta.js",
+          "js/client/src/engine-timed-log.js",
+          "js/client/src/engine-logs.js",
+          "js/client/src/engine-file-log.js",
+          "js/client/src/engine-lock-wait.js",
+          "js/client/src/index.js",
+          "js/client/src/capabilities.js"
+        ],
+        "tests": [
+          "js/client/test/engine.test.mjs",
+          "js/client/test/engine-delta.test.mjs",
+          "js/client/test/engine-logs.test.mjs",
+          "js/client/test/engine-compaction*.test.mjs",
+          "js/client/test/conformance/*.mjs"
+        ],
+        "fingerprint": "1eeedf0a995f4dbb"
+      }
+    },
+    {
+      "id": "engine-causal",
+      "title": "Causal sessions, batches, replicas, projections and Merkle summaries",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/Causal*.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Causal*.cs"
+        ],
+        "fingerprint": "463417b547a7effc"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/causal*.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_causal_*_tests.rs"
+        ],
+        "fingerprint": "bba39c4fec19c919"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine-causal-*.js"
+        ],
+        "tests": [
+          "js/client/test/engine-causal-*.test.mjs"
+        ],
+        "fingerprint": "b0267346dd729022"
+      }
+    },
+    {
+      "id": "engine-native-pages",
+      "title": "Native page format, checkpoints and mirrored page devices",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/Checkpoint*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileCheckpointPagedCommitLog.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/*PageDevice.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/JournalCheckpoint.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/MirroredCheckpointRoot.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/PageFormat.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/PagedCommitLog.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Checkpoint*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Paged*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Mirrored*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/NativeCheckpoint*.cs"
+        ],
+        "fingerprint": "f3666e0e318ac2c8"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/checkpoint.rs",
+          "rust/src/engine/paged/{checkpoint,checkpoint_format,checkpoint_inspect,checkpoint_root}.rs",
+          "rust/src/engine/paged/{file,file_checkpoint,file_checkpoint_process_tests,file_checkpoint_tests,file_events}.rs",
+          "rust/src/engine/paged/{format,mirrored,mod}.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_checkpoint*_tests.rs",
+          "rust/tests/engine_paged*_tests.rs",
+          "rust/tests/engine_mirrored*_tests.rs",
+          "rust/tests/engine_file_checkpoint*_tests.rs"
+        ],
+        "fingerprint": "6a4b8e043f27408c"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine-checkpoint-*.js",
+          "js/client/src/engine-file-checkpoint-pages.js",
+          "js/client/src/engine-file-mirrored-pages.js",
+          "js/client/src/engine-file-paged-log.js",
+          "js/client/src/engine-mirrored-pages.js",
+          "js/client/src/engine-page-*.js",
+          "js/client/src/engine-paged-log.js"
+        ],
+        "tests": [
+          "js/client/test/engine-checkpoint-*.test.mjs",
+          "js/client/test/engine-file-checkpoint-*.test.mjs",
+          "js/client/test/engine-*mirrored-pages.test.mjs",
+          "js/client/test/engine-*paged-*.test.mjs"
+        ],
+        "fingerprint": "e7859dabbeafad1b"
+      }
+    },
+    {
+      "id": "engine-native-lsm",
+      "title": "Native LSM write-ahead log, sorted tables and read-only inspection",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileLsm*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/LsmWal.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/NativeLsm*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/PhysicalLsm*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/SortedJournalTable.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/LsmWalTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/NativeLsm*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PhysicalLsm*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/SortedJournalTableTests.cs"
+        ],
+        "fingerprint": "b73e690011616d1e"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/lsm.rs",
+          "rust/src/engine/lsm/**",
+          "rust/src/engine/paged/sorted_table.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_lsm_*_tests.rs",
+          "rust/tests/engine_native_lsm_tests.rs"
+        ],
+        "fingerprint": "0bd86b7907735c6a"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine-lsm-*.js",
+          "js/client/src/engine-file-lsm-*.js",
+          "js/client/src/engine-sorted-table.js"
+        ],
+        "tests": [
+          "js/client/test/engine-lsm-*.test.mjs",
+          "js/client/test/engine-file-lsm-*.test.mjs",
+          "js/client/test/engine-sorted-table.test.mjs"
+        ],
+        "fingerprint": "833f0a2ca62e8dcf"
+      }
+    },
+    {
+      "id": "engine-cluster",
+      "title": "Raft cluster, etcd journal store and partitioned journals",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/ClusterEngine.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/RaftNode.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/Etcd*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/PartitionedJournalStore.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineCluster*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/RaftNodeTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Etcd*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PartitionedJournalStoreTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PartitionedObjectCache*.cs"
+        ],
+        "fingerprint": "8b24bff2f6178baa"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/cluster.rs",
+          "rust/src/engine/raft.rs",
+          "rust/src/engine/etcd.rs",
+          "rust/src/engine/etcd/**",
+          "rust/src/engine/partitioned.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_cluster_tests.rs",
+          "rust/tests/engine_raft_simulation_tests.rs",
+          "rust/tests/engine_etcd_*tests.rs",
+          "rust/tests/engine_partitioned_tests.rs"
+        ],
+        "fingerprint": "84703b742ee441e7"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/cluster.js",
+          "js/client/src/cluster-maintenance.js",
+          "js/client/src/raft.js",
+          "js/client/src/partitioned.js"
+        ],
+        "tests": [
+          "js/client/test/cluster*.test.mjs",
+          "js/client/test/raft.test.mjs",
+          "js/client/test/engine-raft-simulation.test.mjs",
+          "js/client/test/partitioned*.test.mjs"
+        ],
+        "fingerprint": "827cb16954f2fde8"
+      }
+    },
+    {
+      "id": "engine-reclamation",
+      "title": "Journal reclamation and chunked journals",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/Reclaim*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/Reclamation*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/JournalChunks.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/Reclamation*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/PartitionedJournalChunk*.cs"
+        ],
+        "fingerprint": "e6d4a56f485992a1"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/reclaiming.rs",
+          "rust/src/engine/reclaiming/**",
+          "rust/src/engine/partitioned/chunks.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_reclaiming_tests.rs",
+          "rust/tests/engine_chunked_tests.rs"
+        ],
+        "fingerprint": "a8f2f1a6fbab968a"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/reclaiming*.js",
+          "js/client/src/journal-chunks.js"
+        ],
+        "tests": [
+          "js/client/test/reclaiming*.test.mjs",
+          "js/client/test/partitioned-chunks.test.mjs"
+        ],
+        "fingerprint": "3af5a07e416d03ff"
+      }
+    },
+    {
+      "id": "engine-sqlite",
+      "title": "SQLite commit log",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/SqliteCommitLog.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/SqliteCommitLogTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/EngineSqliteExitTests.cs"
+        ],
+        "fingerprint": "fce82b97a052ece5"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/sqlite.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_sqlite_*tests.rs"
+        ],
+        "fingerprint": "6c5d3b635743bd8c"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine-sqlite-log.js"
+        ],
+        "tests": [
+          "js/client/test/engine-sqlite-log.test.mjs"
+        ],
+        "fingerprint": "38dffd75d26b6b88"
+      }
+    },
+    {
+      "id": "engine-author-fence",
+      "title": "Author fences for concurrent writers",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/AuthorFence.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFence*.cs"
+        ],
+        "fingerprint": "728eccfbf12404ac"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/author_fence.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_author_fence_tests.rs"
+        ],
+        "fingerprint": "e89f1ad85f517a1c"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine-author-fence.js"
+        ],
+        "tests": [
+          "js/client/test/engine-author-fence.test.mjs"
+        ],
+        "fingerprint": "f084135727a371ab"
+      }
+    },
+    {
+      "id": "engine-address-allocator",
+      "title": "Engine address allocation",
+      "csharp": {
+        "status": "implemented",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/Engine/AddressAllocator.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/AddressAllocatorTests.cs"
+        ],
+        "fingerprint": "49e00c29b8dd71f4"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/engine/address_allocator.rs"
+        ],
+        "tests": [
+          "rust/tests/engine_address_allocator_tests.rs"
+        ],
+        "fingerprint": "189ebb34488a8e52"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/engine-address-allocator.js"
+        ],
+        "tests": [
+          "js/client/test/engine-address-allocator.test.mjs"
+        ],
+        "fingerprint": "22f487fcf197e867"
+      }
+    },
+    {
+      "id": "webassembly-bindings",
+      "title": "WebAssembly bindings of the Rust core (Clink, staged engine, causal sessions)",
+      "csharp": {
+        "status": "not-applicable",
+        "reason": ".NET consumers reference the C# library directly; the WebAssembly build exists for browsers and Node.js."
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/wasm/src/**"
+        ],
+        "tests": [
+          "rust/wasm/tests/*.rs"
+        ],
+        "fingerprint": "b80abf23107b26e7"
+      },
+      "javascript": {
+        "status": "implemented",
+        "sources": [
+          "js/client/src/wasm.js"
+        ],
+        "tests": [
+          "js/client/test/wasm.test.mjs"
+        ],
+        "fingerprint": "a66ca5e157f55af8"
+      }
+    }
+  ]
+}
