@@ -7,6 +7,12 @@
 //
 // A save writes `<db>.saving` and renames it over the database, so a process
 // stopped in the middle leaves the previous complete file (issue #108).
+//
+// Several processes share a database through the advisory `<db>.lock` sidecar
+// lock of storage-lock.js, with the open and lock helpers of
+// rust/src/storage/doublets_storage.rs (`open_shared`, `open_exclusive`,
+// `try_open_exclusive`, `lock_shared`, `lock_exclusive`, `held_lock`). A lock
+// the store holds is released by `close`, where Rust releases it on drop.
 import {
   closeSync,
   existsSync,
@@ -17,11 +23,12 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { ioErrorText } from './error-report.js';
-import { LinkError, NotFoundError } from './errors.js';
+import { LinkError, LockError, NotFoundError } from './errors.js';
 import { IndexedLinks } from './indexed-links.js';
 import { link, parseU32 } from './link.js';
 import { resolvedDelete, resolvedUpdate } from './link-storage-doublets.js';
 import { NamedTypeLinks } from './named-type-links.js';
+import { FileLock, LockMode, lockFilePath } from './storage-lock.js';
 import {
   NAME_HEADER,
   nameMetadata,
@@ -80,6 +87,9 @@ function parseUnusedHeader(addresses) {
     .reverse();
 }
 
+/** `require_lock_path` of a store without a database file. */
+const notBackedByFile = () => new LockError('this doublets storage is not backed by a known file');
+
 export class LinkStorage extends NamedTypeLinks {
   /**
    * Opens the database at `dbPath`, loading it when the file exists.
@@ -99,6 +109,7 @@ export class LinkStorage extends NamedTypeLinks {
     this.trace = trace;
     this.stderr = stderr;
     this.indexedLookups = false;
+    this.fileLock = null;
     // An empty path never exists, which is what makes the store in-memory.
     if (existsSync(dbPath)) this.load();
     this.revision = storageRevision(dbPath);
@@ -107,6 +118,74 @@ export class LinkStorage extends NamedTypeLinks {
   /** A store that never reads or writes a file; `save` keeps nothing. */
   static inMemory({ trace = false, stderr = process.stderr } = {}) {
     return new LinkStorage('', { trace, stderr });
+  }
+
+  /**
+   * Opens the database holding a **shared** advisory lock until `close`,
+   * excluding concurrent writers. Blocks while a writer holds it.
+   */
+  static openShared(dbPath, options) {
+    return LinkStorage.openLocked(dbPath, options, (path) =>
+      FileLock.acquire(path, LockMode.Shared),
+    );
+  }
+
+  /**
+   * Opens the database holding an **exclusive** advisory lock until `close`,
+   * excluding every other reader and writer that honours the same protocol.
+   */
+  static openExclusive(dbPath, options) {
+    return LinkStorage.openLocked(dbPath, options, (path) =>
+      FileLock.acquire(path, LockMode.Exclusive),
+    );
+  }
+
+  /** Like `openExclusive`, but `null` instead of blocking while the lock is held. */
+  static tryOpenExclusive(dbPath, options) {
+    return LinkStorage.openLocked(dbPath, options, (path) =>
+      FileLock.tryAcquire(path, LockMode.Exclusive),
+    );
+  }
+
+  static openLocked(dbPath, options, take) {
+    // An empty path is the in-memory store, which has no lock file.
+    if (dbPath === '') throw notBackedByFile();
+    const lock = take(lockFilePath(dbPath));
+    if (lock === null) return null;
+    try {
+      const storage = new LinkStorage(dbPath, options);
+      storage.fileLock = lock;
+      return storage;
+    } catch (error) {
+      lock.release();
+      throw error;
+    }
+  }
+
+  /** Acquires a shared advisory lock on this database's sidecar lock file. */
+  lockShared() {
+    return FileLock.acquire(this.requireLockPath(), LockMode.Shared);
+  }
+
+  /** Acquires an exclusive advisory lock on this database's sidecar lock file. */
+  lockExclusive() {
+    return FileLock.acquire(this.requireLockPath(), LockMode.Exclusive);
+  }
+
+  /** The advisory lock held for the lifetime of this storage, if any. */
+  heldLock() {
+    return this.fileLock;
+  }
+
+  /** Releases the lock the store was opened with; the links stay usable. */
+  close() {
+    this.fileLock?.release();
+    this.fileLock = null;
+  }
+
+  requireLockPath() {
+    if (this.isInMemory()) throw notBackedByFile();
+    return lockFilePath(this.dbPath);
   }
 
   traceLine(text) {
@@ -177,6 +256,7 @@ export class LinkStorage extends NamedTypeLinks {
   reloadFromDisk() {
     const loaded = new LinkStorage(this.dbPath, { trace: this.trace, stderr: this.stderr });
     if (this.indexedLookups) loaded.enableIndexedLookups();
+    loaded.fileLock = this.fileLock;
     Object.assign(this, loaded);
   }
 

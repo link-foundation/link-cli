@@ -2,9 +2,8 @@
 // (`FileTransitionLog` and `truncate_torn_tail`): one entry per line,
 // `fdatasync`ed on every append by default, an incomplete or zeroed tail
 // discarded on open and before a writer is reused after an I/O error.
-//
-// `FileTransitionLog::open_exclusive` is not ported: it needs the sidecar
-// lock of storage-lock.js.
+// `openExclusive` holds the `<log>.lock` sidecar lock of storage-lock.js until
+// `close`, as the Rust log holds it until drop.
 import {
   closeSync,
   existsSync,
@@ -20,7 +19,8 @@ import {
 } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { InvalidFormatError, LinkError } from './errors.js';
+import { InvalidFormatError, LinkError, LockError } from './errors.js';
+import { FileLock, LockMode, lockFilePath } from './storage-lock.js';
 import { io, parentDirectory, syncPath } from './transactions-storage.js';
 
 const SCAN_BUFFER = 8192;
@@ -101,6 +101,7 @@ export class FileTransitionLog {
     this.fd = fd;
     this.syncOnAppendEnabled = true;
     this.tailMayBeTorn = false;
+    this.lock = null;
   }
 
   /** Opens (creating if needed) the log at `path`, discarding a torn tail. */
@@ -120,6 +121,25 @@ export class FileTransitionLog {
     });
   }
 
+  /**
+   * Opens the log holding the conventional sidecar lock until `close`.
+   * Contention fails fast; all writers must follow the same advisory
+   * locking convention.
+   */
+  static openExclusive(path) {
+    const lock = FileLock.tryAcquire(lockFilePath(path), LockMode.Exclusive);
+    if (lock === null) throw new LockError('journal writer is busy');
+    let log;
+    try {
+      log = FileTransitionLog.open(path);
+    } catch (error) {
+      lock.release();
+      throw error;
+    }
+    log.lock = lock;
+    return log;
+  }
+
   /** Path of the backing file. */
   path() {
     return this.filePath;
@@ -134,9 +154,14 @@ export class FileTransitionLog {
     this.syncOnAppendEnabled = value;
   }
 
-  /** Releases the file descriptor (the Rust log closes it on drop). */
+  /** Releases the file descriptor and the lock (the Rust log does on drop). */
   close() {
-    closeSync(this.fd);
+    try {
+      closeSync(this.fd);
+    } finally {
+      this.lock?.release();
+      this.lock = null;
+    }
   }
 
   supportsDurableFlush() {

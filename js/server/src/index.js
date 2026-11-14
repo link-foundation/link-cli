@@ -22,6 +22,7 @@ export {
 // The store: links, names, types, Unicode strings, LiNo and store archives.
 export { ANY, MAX_ADDRESS, NULL_LINK, link } from './link.js';
 export { LinkStorage } from './link-storage.js';
+export { FileLock, LockMode, lockFilePath } from './storage-lock.js';
 export { NamedTypeLinks } from './named-type-links.js';
 export { NamedTypesDecorator, makeNamesDatabaseFilename } from './named-types.js';
 export { TypesDecorator, TypeMarkers } from './types.js';

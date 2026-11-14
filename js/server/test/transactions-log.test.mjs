@@ -14,9 +14,10 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { InvalidFormatError, LinkError, StorageError } from '../src/errors.js';
+import { InvalidFormatError, LinkError, LockError, StorageError } from '../src/errors.js';
 import { LinkStorage } from '../src/link-storage.js';
 import { NamedTypesDecorator } from '../src/named-types.js';
+import { FileLock, lockBackend, lockFilePath, LockMode } from '../src/storage-lock.js';
 import { FileTransitionLog, truncateTornTail } from '../src/transactions-log.js';
 import {
   guarded,
@@ -95,6 +96,39 @@ describe('FileTransitionLog', () => {
     } finally {
       log.close();
     }
+  });
+
+  const lockable = { skip: lockBackend().unavailable };
+
+  it('holds the sidecar writer lock until closed', lockable, () => {
+    const path = join(scratchDirectory(), 'journal.log');
+    const log = FileTransitionLog.openExclusive(path);
+    try {
+      assert.ok(existsSync(`${path}.lock`));
+      assert.throws(
+        () => FileTransitionLog.openExclusive(path),
+        (error) =>
+          error instanceof LockError && error.message === 'Lock error: journal writer is busy',
+      );
+      assert.equal(FileLock.tryAcquire(lockFilePath(path), LockMode.Shared), null);
+      log.appendLogEntry('locked');
+    } finally {
+      log.close();
+    }
+    const reopened = FileTransitionLog.openExclusive(path);
+    assert.deepEqual(reopened.readLogEntries(), ['locked']);
+    reopened.close();
+  });
+
+  it('releases the writer lock when the log cannot open', lockable, () => {
+    const path = join(scratchDirectory(), 'journal.log');
+    mkdirSync(path);
+    assert.throws(() => FileTransitionLog.openExclusive(path), {
+      message: /^I\/O error: Is a directory \(os error \d+\)$/,
+    });
+    const lock = FileLock.tryAcquire(lockFilePath(path), LockMode.Exclusive);
+    assert.notEqual(lock, null);
+    lock.release();
   });
 
   it('opens a log in the current directory', () => {

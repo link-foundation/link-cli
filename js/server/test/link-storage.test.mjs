@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { formatErrorReport } from '../src/error-report.js';
 import { link } from '../src/link.js';
 import { LinkStorage, NO_REVISION, sameRevision, storageRevision } from '../src/link-storage.js';
+import { FileLock, lockBackend, LockMode } from '../src/storage-lock.js';
 import { capture, scratchDirectory, traceLines } from './helpers/storage.mjs';
 
 const parts = (value) => [value.index, value.source, value.target];
@@ -540,5 +541,74 @@ describe('LinkStorage links', () => {
     const storage = LinkStorage.inMemory();
     storage.create(1, 2);
     assert.deepEqual(storage.get(1), link(1, 1, 2));
+  });
+});
+
+describe('LinkStorage advisory locks', () => {
+  const lockable = { skip: lockBackend().unavailable };
+  const NOT_BACKED = {
+    name: 'LockError',
+    message: 'Lock error: this doublets storage is not backed by a known file',
+  };
+
+  it('has no lock file in memory, as require_lock_path refuses', () => {
+    const storage = LinkStorage.inMemory();
+    assert.throws(() => storage.lockShared(), NOT_BACKED);
+    assert.throws(() => storage.lockExclusive(), NOT_BACKED);
+    assert.equal(storage.heldLock(), null);
+    storage.close();
+    for (const open of ['openShared', 'openExclusive', 'tryOpenExclusive']) {
+      assert.throws(() => LinkStorage[open](''), NOT_BACKED);
+    }
+  });
+
+  it('holds an exclusive lock until closed, across reloads', lockable, () => {
+    const path = database('1 1 1\n');
+    const stderr = capture();
+    const storage = LinkStorage.openExclusive(path, { trace: true, stderr });
+    assert.deepEqual(traceLines(stderr), [`[TRACE] Loaded 1 links from ${path}`]);
+    assert.equal(storage.heldLock().path(), `${path}.lock`);
+    assert.equal(storage.heldLock().mode(), LockMode.Exclusive);
+    assert.equal(LinkStorage.tryOpenExclusive(path), null);
+    assert.equal(FileLock.tryAcquire(`${path}.lock`, LockMode.Shared), null);
+    const held = storage.heldLock();
+    storage.reloadFromDisk();
+    assert.equal(storage.heldLock(), held);
+    storage.close();
+    assert.equal(storage.heldLock(), null);
+    assert.equal(held.isReleased(), true);
+    const again = LinkStorage.tryOpenExclusive(path);
+    assert.deepEqual(rows(again), [[1, 1, 1]]);
+    again.close();
+  });
+
+  it('lets shared holders read together and keeps writers out', lockable, () => {
+    const path = database('');
+    const first = LinkStorage.openShared(path);
+    const second = LinkStorage.openShared(path);
+    assert.equal(first.heldLock().mode(), LockMode.Shared);
+    assert.equal(LinkStorage.tryOpenExclusive(path), null);
+    first.close();
+    second.close();
+    const plain = new LinkStorage(path);
+    assert.equal(plain.heldLock(), null);
+    const exclusive = plain.lockExclusive();
+    assert.equal(exclusive.path(), `${path}.lock`);
+    assert.equal(LinkStorage.tryOpenExclusive(path), null);
+    exclusive.release();
+    const shared = plain.lockShared();
+    assert.equal(shared.mode(), LockMode.Shared);
+    shared.release();
+  });
+
+  it('releases the lock when the database cannot load', lockable, () => {
+    const path = join(scratchDirectory(), 'db.links');
+    mkdirSync(path);
+    assert.throws(() => LinkStorage.openExclusive(path), {
+      message: `Failed to read ${path} at line 1`,
+    });
+    const lock = FileLock.tryAcquire(`${path}.lock`, LockMode.Exclusive);
+    assert.notEqual(lock, null);
+    lock.release();
   });
 });
