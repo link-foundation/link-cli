@@ -201,18 +201,23 @@ test('missing, delegated and new features do not need the other languages', () =
   assert.deepEqual(checkOneSidedChanges(head, undefined), []);
 });
 
-test('golden fixtures must match their hash and stay referenced by both suites', () => {
-  const fixtureFiles = ['docs/v.json', 'cs/T.cs', 'rs/t.rs', 'docs/extra.json'];
-  const text = { 'docs/v.json': '{}', 'cs/T.cs': 'read("v.json")', 'rs/t.rs': 'nothing here' };
+test('golden fixtures must match their hash and stay referenced by every suite', () => {
+  const fixtureFiles = ['docs/v.json', 'cs/T.cs', 'rs/t.rs', 'js/t.mjs', 'docs/extra.json'];
+  const text = {
+    'docs/v.json': '{}',
+    'cs/T.cs': 'read("v.json")',
+    'rs/t.rs': 'nothing here',
+    'js/t.mjs': 'read("v.json")',
+  };
   const golden = {
     schema: 1,
-    suites: ['csharp', 'rust'],
+    suites: ['csharp', 'rust', 'javascript'],
     include: ['docs/*.json'],
     fixtures: [
       {
         path: 'docs/v.json',
         sha256: sha256('{}'),
-        consumers: { csharp: ['cs/T.cs'], rust: ['rs/t.rs'] },
+        consumers: { csharp: ['cs/T.cs'], rust: ['rs/t.rs'], javascript: ['js/t.mjs'] },
       },
     ],
   };
@@ -236,6 +241,16 @@ test('golden fixtures must match their hash and stay referenced by both suites',
   );
   assert.match(stale.join('\n'), /docs\/v\.json: sha256 \w+ differs/);
   assert.match(stale.join('\n'), /list at least one rust test that reads it/);
+  golden.suites = ['csharp', 'rust'];
+  assert.match(
+    checkGoldenFixtures(
+      golden,
+      fixtureFiles,
+      (f) => Buffer.from(text[f] ?? ''),
+      (f) => text[f],
+    )[0],
+    /"suites" must include csharp, rust and javascript/,
+  );
 });
 
 test('golden fixtures must be checked out byte for byte (-text)', () => {

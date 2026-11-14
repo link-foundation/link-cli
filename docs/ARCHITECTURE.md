@@ -562,7 +562,7 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 
 | Workflow | Scope |
 |----------|-------|
-| `.github/workflows/javascript.yml` | Stage 1, the entry for `.github/workflows/javascript-stage.yml`: `npm ci`, ESLint and Prettier, `npm run test:js` and the parity checker (`parity/check-parity.mjs`), with no Rust or .NET. Reports the required `Pipeline Status (javascript)`. |
+| `.github/workflows/javascript.yml` | Stage 1, the entry for `.github/workflows/javascript-stage.yml`: `npm ci`, ESLint and Prettier, `npm run test:js`, the JavaScript golden fixture receipt and the parity checker (`parity/check-parity.mjs`), with no Rust or .NET. Reports the required `Pipeline Status (javascript)`. |
 | `.github/workflows/csharp.yml` | .NET restore, build, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (csharp)`. |
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (rust)`. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |

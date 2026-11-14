@@ -255,8 +255,8 @@ export function checkGoldenFixtures(golden, files, readBuffer, readText) {
   if (golden?.schema !== 1 || !Array.isArray(golden.fixtures) || !golden.fixtures.length)
     return [`${GOLDEN_PATH}: needs "schema": 1 and a non-empty "fixtures" array`];
   const suites = golden.suites ?? [];
-  if (!suites.includes('csharp') || !suites.includes('rust'))
-    fail(errors, `${GOLDEN_PATH}: "suites" must include csharp and rust`);
+  if (!['csharp', 'rust', 'javascript'].every((suite) => suites.includes(suite)))
+    fail(errors, `${GOLDEN_PATH}: "suites" must include csharp, rust and javascript`);
   const listed = new Set();
   for (const fixture of golden.fixtures) {
     listed.add(fixture.path);

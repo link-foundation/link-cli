@@ -63,9 +63,18 @@ jobs:
       # js/test, csharp/scripts, .github/scripts and parity unit tests. Until
       # issue #111 these ran only inside wasm.yml, after a Rust toolchain and
       # wasm-pack install.
+      # js/test/golden-fixtures.test.mjs writes the receipt of the fixtures
+      # it loaded; the next step proves none was skipped (docs/PARITY.md).
       - name: Test JavaScript
         working-directory: js
+        env:
+          GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-javascript.json
         run: npm run test:js
+
+      - name: Check that the JavaScript suite loaded every golden fixture
+        env:
+          RECEIPT: ${{ runner.temp }}/golden-javascript.json
+        run: node parity/check-parity.mjs --receipt javascript "$RECEIPT"
 
       # Fails on a one-sided feature change, a stale fingerprint, an
       # unassigned source file or a drifted golden fixture (docs/PARITY.md).

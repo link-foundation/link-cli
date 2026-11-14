@@ -9,7 +9,7 @@ starts (see [CI stages](ci-cd/troubleshooting.md#stages)).
 | File                          | What it records                                                                                |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- |
 | `parity/features.json`        | Every CLI and library feature, with its status, sources and tests in C#, Rust and JavaScript.  |
-| `parity/golden-fixtures.json` | The shared `docs/protocol` fixtures that both the C# and the Rust test suites must load.       |
+| `parity/golden-fixtures.json` | The shared `docs/protocol` fixtures that the C#, Rust and JavaScript test suites must load.    |
 | `parity/check-parity.mjs`     | The checker. It has no dependencies, and its header lists every command.                       |
 
 ## The feature manifest
@@ -42,9 +42,9 @@ these holds:
    feature's `implemented` cells changed, and no `parityExceptions` entry
    acknowledges exactly those new fingerprints.
 6. `parity/golden-fixtures.json` disagrees with the fixture files. This covers
-   a hash mismatch, a fixture missing from the manifest, a fixture with no C#
-   or Rust consumer test, and a consumer test that no longer mentions its
-   fixture.
+   a hash mismatch, a fixture missing from the manifest, a fixture with no C#,
+   Rust or JavaScript consumer test, and a consumer test that no longer
+   mentions its fixture.
 7. A golden fixture is not marked `-text` in `.gitattributes`. Without it,
    git on Windows (`core.autocrlf=true`) checks the fixture out with CRLF
    line endings, and its hash no longer matches.
@@ -88,26 +88,29 @@ A `missing` cell links the issue that tracks the gap.
 ## Golden fixtures
 
 Golden fixtures are the files under `docs/protocol/` that match
-`include` in `parity/golden-fixtures.json`. Both suites have to load them:
+`include` in `parity/golden-fixtures.json`. All three suites have to load them:
 
 - Rust: `rust/tests/golden_fixtures_tests.rs`
 - C#: `csharp/Foundation.Data.Doublets.Cli.Tests/GoldenFixturesTests.cs`
+- JavaScript: `js/test/golden-fixtures.test.mjs`, run by `npm run test:js`
 
 Each test reads every listed fixture and checks its SHA-256. When the
 `GOLDEN_FIXTURES_RECEIPT` variable is set, the test also writes a receipt,
-`{ "suite", "fixtures": { path: sha256 } }`. In `rust.yml` and `csharp.yml`,
-the step after the tests runs `node parity/check-parity.mjs --receipt <suite>
-<file>`. If a suite filtered the test out, skipped it, or was not built, the
-receipt is missing or incomplete and CI fails.
+`{ "suite", "fixtures": { path: sha256 } }`. In `rust.yml`, `csharp.yml` and
+`javascript-stage.yml`, the step after the tests runs
+`node parity/check-parity.mjs --receipt <suite> <file>`. If a suite filtered
+the test out, skipped it, or was not built, the receipt is missing or
+incomplete and CI fails.
 
 To change a fixture:
 
 1. Edit the file.
 2. Run `node parity/check-parity.mjs --update`.
-3. Make both suites pass.
+3. Make all three suites pass.
 
-To add a fixture, list it with at least one C# and one Rust consumer test
-that mentions its file name.
+To add a fixture, list it with at least one C#, one Rust and one JavaScript
+consumer test that mentions its file name. The JavaScript consumers are the
+tests in `js/client/test` and `js/server/test` that read the fixture.
 
 ## Related
 

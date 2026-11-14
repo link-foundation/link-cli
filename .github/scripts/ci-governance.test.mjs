@@ -1,6 +1,6 @@
 // Repository governance rules of issue #111 that are not the stage gate
 // itself (the gate rule lives in workflow-policy.test.mjs): the required
-// status checks always report, both suites prove they loaded the golden
+// status checks always report, every suite proves it loaded the golden
 // fixtures, no workflow closes or flags pull requests because of age, and a
 // red Dependencies check on main is tracked in an issue.
 import assert from 'node:assert/strict';
@@ -21,13 +21,14 @@ test('the required stage checks report on every pull request (issue #111)', () =
   }
 });
 
-test('both suites prove they loaded the shared golden fixtures (issue #111)', () => {
-  for (const [name, suite] of [
-    ['rust.yml', 'rust'],
-    ['csharp.yml', 'csharp'],
+test('every suite proves it loaded the shared golden fixtures (issue #111)', () => {
+  for (const [name, suite, job] of [
+    ['rust.yml', 'rust', 'test'],
+    ['csharp.yml', 'csharp', 'test'],
+    ['javascript-stage.yml', 'javascript', 'stage'],
   ]) {
     const { text } = workflows.find((workflow) => workflow.name === name);
-    const tests = readJobs(text).find((job) => job.name === 'test').body;
+    const tests = readJobs(text).find((candidate) => candidate.name === job).body;
     assert.match(
       tests,
       new RegExp(`GOLDEN_FIXTURES_RECEIPT: \\$\\{\\{ runner\\.temp \\}\\}/golden-${suite}\\.json`),

@@ -3,7 +3,8 @@
   "schema": 1,
   "suites": [
     "csharp",
-    "rust"
+    "rust",
+    "javascript"
   ],
   "include": [
     "docs/protocol/**/*.{json,txt,gz}"
@@ -18,6 +19,9 @@
         ],
         "rust": [
           "rust/tests/engine_address_allocator_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-address-allocator.test.mjs"
         ]
       }
     },
@@ -30,6 +34,9 @@
         ],
         "rust": [
           "rust/tests/engine_author_fence_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-author-fence.test.mjs"
         ]
       }
     },
@@ -42,6 +49,10 @@
         ],
         "rust": [
           "rust/tests/protocol_packet_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/protocol-binary-packet.test.mjs",
+          "js/server/test/protocol-binary.test.mjs"
         ]
       }
     },
@@ -54,6 +65,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_batch_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-causal-batch.test.mjs"
         ]
       }
     },
@@ -66,6 +80,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_merkle_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-causal-merkle.test.mjs"
         ]
       }
     },
@@ -78,6 +95,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_projection_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-causal-projection.test.mjs"
         ]
       }
     },
@@ -90,6 +110,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_protocol_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/causal-query.mjs"
         ]
       }
     },
@@ -102,6 +125,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_replica_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-causal-replica.test.mjs"
         ]
       }
     },
@@ -114,6 +140,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_session_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/causal-session.mjs"
         ]
       }
     },
@@ -126,6 +155,9 @@
         ],
         "rust": [
           "rust/tests/engine_causal_version_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-causal-version.test.mjs"
         ]
       }
     },
@@ -138,6 +170,9 @@
         ],
         "rust": [
           "rust/tests/engine_checkpoint_pages_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/support/checkpoint-pages.mjs"
         ]
       }
     },
@@ -150,6 +185,9 @@
         ],
         "rust": [
           "rust/tests/support/checkpoint_root.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-checkpoint-root.test.mjs"
         ]
       }
     },
@@ -162,6 +200,9 @@
         ],
         "rust": [
           "rust/tests/engine_chunked_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/partitioned-chunks.test.mjs"
         ]
       }
     },
@@ -174,6 +215,10 @@
         ],
         "rust": [
           "rust/tests/engine_change_replay_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/change-records.mjs",
+          "js/client/test/engine-delta.test.mjs"
         ]
       }
     },
@@ -193,6 +238,10 @@
         ],
         "examples": [
           "examples/native-pages/run-interop.sh"
+        ],
+        "javascript": [
+          "js/client/test/engine-checkpoint-delta.test.mjs",
+          "js/client/test/engine-compaction-delta.test.mjs"
         ]
       }
     },
@@ -205,6 +254,10 @@
         ],
         "rust": [
           "rust/tests/engine_delta_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/engine.mjs",
+          "js/client/test/engine-delta.test.mjs"
         ]
       }
     },
@@ -220,6 +273,10 @@
           "rust/src/engine/journal.rs",
           "rust/tests/engine_portable_recovery_tests.rs",
           "rust/tests/engine_shared_state_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/engine.mjs",
+          "js/client/test/conformance/shared-state.mjs"
         ]
       }
     },
@@ -239,6 +296,9 @@
           "rust/tests/graphql_server.rs",
           "rust/tests/graphql_server_protocol.rs",
           "rust/tests/graphql_vectors.rs"
+        ],
+        "javascript": [
+          "js/server/test/graphql-vectors.test.mjs"
         ]
       }
     },
@@ -254,6 +314,9 @@
         ],
         "examples": [
           "examples/deep-client/run.sh"
+        ],
+        "javascript": [
+          "js/server/test/graphql-vectors.test.mjs"
         ]
       }
     },
@@ -266,6 +329,9 @@
         ],
         "rust": [
           "rust/tests/golden_fixtures_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/graphql-vectors.test.mjs"
         ]
       }
     },
@@ -278,6 +344,9 @@
         ],
         "rust": [
           "rust/tests/graphql_vectors.rs"
+        ],
+        "javascript": [
+          "js/server/test/graphql-vectors.test.mjs"
         ]
       }
     },
@@ -290,6 +359,9 @@
         ],
         "rust": [
           "rust/tests/graphql_vectors.rs"
+        ],
+        "javascript": [
+          "js/server/test/graphql-vectors.test.mjs"
         ]
       }
     },
@@ -303,6 +375,9 @@
         "rust": [
           "rust/src/graphql/execute.rs",
           "rust/tests/graphql_server.rs"
+        ],
+        "javascript": [
+          "js/server/test/graphql-vectors.test.mjs"
         ]
       }
     },
@@ -315,6 +390,9 @@
         ],
         "rust": [
           "rust/src/graphql/plan.rs"
+        ],
+        "javascript": [
+          "js/server/test/graphql-plan.test.mjs"
         ]
       }
     },
@@ -327,6 +405,9 @@
         ],
         "rust": [
           "rust/tests/engine_etcd_maintenance_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/cluster-maintenance.test.mjs"
         ]
       }
     },
@@ -339,6 +420,11 @@
         ],
         "rust": [
           "rust/tests/remote_links_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/run.mjs",
+          "js/server/test/protocol-links-operations.test.mjs",
+          "js/server/test/protocol-remote-links.test.mjs"
         ]
       }
     },
@@ -351,6 +437,9 @@
         ],
         "rust": [
           "rust/tests/engine_lsm_wal_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-lsm-wal.test.mjs"
         ]
       }
     },
@@ -363,6 +452,9 @@
         ],
         "rust": [
           "rust/tests/support/mirrored_pages.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-mirrored-pages.test.mjs"
         ]
       }
     },
@@ -377,6 +469,9 @@
         "rust": [
           "rust/tests/engine_paged_file_tests.rs",
           "rust/tests/engine_paged_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-paged-log.test.mjs"
         ]
       }
     },
@@ -389,6 +484,9 @@
         ],
         "rust": [
           "rust/tests/engine_paged/sorted_table.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-sorted-table.test.mjs"
         ]
       }
     },
@@ -401,6 +499,9 @@
         ],
         "rust": [
           "rust/tests/engine_partitioned_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/partitioned.test.mjs"
         ]
       }
     },
@@ -413,6 +514,9 @@
         ],
         "rust": [
           "rust/tests/engine_reclaiming/chunk_vectors.rs"
+        ],
+        "javascript": [
+          "js/client/test/reclaiming-chunks.test.mjs"
         ]
       }
     },
@@ -425,6 +529,9 @@
         ],
         "rust": [
           "rust/tests/engine_reclaiming/vectors.rs"
+        ],
+        "javascript": [
+          "js/client/test/reclaiming-vectors.test.mjs"
         ]
       }
     },
@@ -437,6 +544,9 @@
         ],
         "rust": [
           "rust/tests/engine_sqlite_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/engine-sqlite-log.test.mjs"
         ]
       }
     },
@@ -449,6 +559,10 @@
         ],
         "rust": [
           "rust/tests/subscriptions_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/run.mjs",
+          "js/server/test/protocol-server.test.mjs"
         ]
       }
     },
@@ -463,6 +577,10 @@
         "rust": [
           "rust/tests/transaction_name_codec_tests.rs",
           "rust/tests/transaction_name_failure_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/transactions-types.test.mjs",
+          "js/server/test/transactions.test.mjs"
         ]
       }
     },
@@ -477,6 +595,10 @@
         "rust": [
           "rust/tests/common/transaction_row_wal_wide.rs",
           "rust/tests/transaction_row_wal_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/transactions-types.test.mjs",
+          "js/server/test/transactions.test.mjs"
         ]
       }
     },
@@ -489,6 +611,11 @@
         ],
         "rust": [
           "rust/tests/triplets_protocol_tests.rs"
+        ],
+        "javascript": [
+          "js/client/test/conformance/run.mjs",
+          "js/server/test/protocol-triplets-operations.test.mjs",
+          "js/server/test/triplets-golden.test.mjs"
         ]
       }
     },
@@ -502,6 +629,9 @@
         "rust": [
           "rust/src/version_control/tests.rs",
           "rust/tests/version_metadata_names_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/version-control.test.mjs"
         ]
       }
     },
@@ -515,6 +645,10 @@
         "rust": [
           "rust/src/version_control/movement.rs",
           "rust/tests/version_movement_failure_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/version-control-recovery.test.mjs",
+          "js/server/test/version-control.test.mjs"
         ]
       }
     },
@@ -529,6 +663,10 @@
         "rust": [
           "rust/src/version_control/publication.rs",
           "rust/tests/version_publication_failure_tests.rs"
+        ],
+        "javascript": [
+          "js/server/test/version-control-recovery.test.mjs",
+          "js/server/test/version-control.test.mjs"
         ]
       }
     }
