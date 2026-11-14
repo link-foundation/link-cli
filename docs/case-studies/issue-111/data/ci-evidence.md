@@ -97,3 +97,19 @@ to restart the work. The branches were kept, and issues #35, #34, #33, #32,
 | #41 | closed | 2026-11-14T09:43:08Z | [comment](https://github.com/link-foundation/link-cli/pull/41#issuecomment-6875393018) |
 | #49 | closed | 2026-11-14T09:43:11Z | [comment](https://github.com/link-foundation/link-cli/pull/49#issuecomment-6875393759) |
 | #57 | closed | 2026-11-14T09:43:14Z | [comment](https://github.com/link-foundation/link-cli/pull/57#issuecomment-6875394501) |
+
+## Two failures after the demonstration (commit 273a33e4)
+
+| Workflow     | Run         | Failed job          | Cause |
+| ------------ | ----------- | ------------------- | ----- |
+| Dependencies | 43590164570 | Dependencies are on their latest versions | `links-notation` 0.31.5 was published during the run; `rust/` and `rust/wasm/` used 0.31.4. Updated in the next commit. |
+| C# CI/CD     | 43590164676 | Test (windows-2025) | `VersionProcessExitTests.AbruptExitRecoversExactBranchAttribution(mode: "checkpoint", automatic: True, names: False)` hit its 30 s xUnit timeout. |
+
+The C# timeout is not caused by this change. The test starts a child
+`dotnet` process. On the three previous green Windows runs (43585591670,
+43332420816, 43325870929) each of its 12 cases took 1 to 5 s. In this run the
+whole Windows job was slower: its tests of 1 s or more took 1830 s, against
+1596 s on 43585591670, and the `rollback` case of the same test took 19 s.
+This pull request does not change the C# engine or that test; on the C# side
+it only adds `GoldenFixturesTests.cs`, which reads 41 small files. The next
+commit's run is the retry.
