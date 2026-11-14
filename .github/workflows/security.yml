@@ -26,8 +26,17 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   codeql:
     name: CodeQL (${{ matrix.language }})
+    needs: [javascript]
     # Cached overlay-base SARIF retains extraction diagnostics from the base
     # even after the PR repairs the source (confirmed in run 42133108866).
     # A full database makes the completeness gate describe this checkout.
@@ -135,6 +144,7 @@ jobs:
 
   cargo-audit:
     name: Cargo audit (${{ matrix.manifest }})
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
@@ -149,9 +159,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+      - uses: taiki-e/install-action@4a76afe23f9e08d2d9550fb56e556444e8611d21 # v2.90.4
         with:
-          tool: cargo-audit@0.22.2 # held back: https://github.com/link-foundation/link-cli/issues/176
+          tool: cargo-audit@0.23.0
 
       # `unmaintained`, `unsound` and `yanked` advisories are warnings, and a
       # warning does not move `cargo audit`'s exit status: it prints
@@ -189,6 +199,7 @@ jobs:
 
   nuget-audit:
     name: Audit every NuGet dependency graph
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     concurrency:
@@ -264,6 +275,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (security)
     needs:
+      - javascript
       - codeql
       - dependency-review
       - cargo-audit

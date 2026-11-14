@@ -30,3 +30,16 @@ rules:
   # every Dependabot pull request before it merges.
   dependabot-cooldown:
     disable: true
+  # zizmor 1.30+ asks for GitHub's `uses: $/...` self-repository syntax
+  # (github.blog changelog 2026-07-30) instead of `uses: ./...`. actionlint
+  # 1.7.12, which workflows.yml also runs, rejects `$/` as an invalid
+  # reusable workflow reference (rhysd/actionlint#711, open), so the two
+  # linters cannot both pass. The risk the audit names, a step-level
+  # `uses: ./action` loading code a previous step cloned into the workspace,
+  # does not apply here: the only local references are job-level calls of
+  # .github/workflows/javascript-stage.yml (issue #111), which GitHub
+  # resolves from the caller's commit, not from a runner's filesystem, and
+  # workflow-policy.test.mjs fails on any step-level `uses: ./`. Re-enable
+  # this audit and switch to `$/` once an actionlint release accepts it.
+  self-repository:
+    disable: true

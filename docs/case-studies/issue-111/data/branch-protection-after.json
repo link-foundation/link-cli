@@ -1,0 +1,144 @@
+{
+  "recorded_at": "2026-11-14T09:39:58Z",
+  "branch_protection_status": "HTTP/2.0 200 OK",
+  "branch_protection": {
+    "url": "https://api.github.com/repos/link-foundation/link-cli/branches/main/protection",
+    "required_signatures": {
+      "url": "https://api.github.com/repos/link-foundation/link-cli/branches/main/protection/required_signatures",
+      "enabled": false
+    },
+    "enforce_admins": {
+      "url": "https://api.github.com/repos/link-foundation/link-cli/branches/main/protection/enforce_admins",
+      "enabled": false
+    },
+    "required_linear_history": {
+      "enabled": false
+    },
+    "allow_force_pushes": {
+      "enabled": false
+    },
+    "allow_deletions": {
+      "enabled": false
+    },
+    "block_creations": {
+      "enabled": false
+    },
+    "required_conversation_resolution": {
+      "enabled": false
+    },
+    "lock_branch": {
+      "enabled": false
+    },
+    "allow_fork_syncing": {
+      "enabled": false
+    }
+  },
+  "rulesets": {
+    "bypass_actors": [
+      {
+        "actor_id": null,
+        "actor_type": "DeployKey",
+        "bypass_mode": "always"
+      }
+    ],
+    "conditions": {
+      "ref_name": {
+        "exclude": [],
+        "include": [
+          "~DEFAULT_BRANCH"
+        ]
+      }
+    },
+    "enforcement": "active",
+    "id": 27257766,
+    "name": "main requires the JavaScript, Rust and C# stages",
+    "rules": [
+      {
+        "type": "deletion"
+      },
+      {
+        "type": "non_fast_forward"
+      },
+      {
+        "parameters": {
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "Pipeline Status (javascript)",
+              "integration_id": 15368
+            },
+            {
+              "context": "Pipeline Status (rust)",
+              "integration_id": 15368
+            },
+            {
+              "context": "Pipeline Status (csharp)",
+              "integration_id": 15368
+            }
+          ],
+          "strict_required_status_checks_policy": true
+        },
+        "type": "required_status_checks"
+      }
+    ],
+    "target": "branch"
+  },
+  "effective_rules_on_main": [
+    {
+      "parameters": null,
+      "ruleset_id": 27257766,
+      "type": "deletion"
+    },
+    {
+      "parameters": null,
+      "ruleset_id": 27257766,
+      "type": "non_fast_forward"
+    },
+    {
+      "parameters": {
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          {
+            "context": "Pipeline Status (javascript)",
+            "integration_id": 15368
+          },
+          {
+            "context": "Pipeline Status (rust)",
+            "integration_id": 15368
+          },
+          {
+            "context": "Pipeline Status (csharp)",
+            "integration_id": 15368
+          }
+        ],
+        "strict_required_status_checks_policy": true
+      },
+      "ruleset_id": 27257766,
+      "type": "required_status_checks"
+    }
+  ],
+  "release_environment": {
+    "deployment_branch_policy": {
+      "custom_branch_policies": true,
+      "protected_branches": false
+    },
+    "name": "release"
+  },
+  "release_environment_branch_policies": [
+    {
+      "name": "main",
+      "type": "branch"
+    }
+  ],
+  "release_environment_secrets": [
+    "RELEASE_DEPLOY_KEY"
+  ],
+  "deploy_keys": [
+    {
+      "created_at": "2026-11-14T09:39:35Z",
+      "id": 169860720,
+      "read_only": false,
+      "title": "Release bot: version commits to main (issue #111)"
+    }
+  ]
+}

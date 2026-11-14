@@ -1,0 +1,54 @@
+name: JavaScript
+
+# Entry point of the JavaScript stage (issue #111). It has no path filter, so
+# the required "Pipeline Status (javascript)" check reports on every pull
+# request, even one that no Rust or C# workflow would build. The stage itself
+# lives in javascript-stage.yml, which the Rust and C# workflows call first.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+# Concurrency is set per job (issue #134); the stage cancels its own
+# superseded runs.
+
+permissions:
+  contents: read
+
+# Configure checkout's git init before the first step runs.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
+  pipeline-status:
+    name: Pipeline Status (javascript)
+    needs:
+      - javascript
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

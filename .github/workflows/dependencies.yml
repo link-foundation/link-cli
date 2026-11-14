@@ -21,7 +21,8 @@ on:
 permissions:
   contents: read
   # A dependency held back by a manifest comment links an issue; the check
-  # reads that issue to make sure it is still open.
+  # reads that issue to make sure it is still open. The tracking-issue job
+  # alone gets issues: write.
   issues: read
 
 concurrency:
@@ -37,8 +38,17 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   latest:
     name: Dependencies are on their latest versions
+    needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -62,10 +72,43 @@ jobs:
           CHECK_DEPENDENCIES_MODE: ${{ github.event_name == 'pull_request' && 'enforce' || 'report' }}
         run: node .github/scripts/check-latest-dependencies.mjs
 
+  # A red check on main used to stay silently red (issue #111): the daily
+  # runs of 2026-10-08 and 2026-10-09 failed and nobody acted. A failure on
+  # main now opens or updates a tracking issue, and the next passing run on
+  # main closes it. TRACKING_ISSUE_DEBUG logs each API call when the run is
+  # re-run with debug logging.
+  tracking-issue:
+    name: Track a red check on main
+    needs:
+      - javascript
+      - latest
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Open, update or close the tracking issue
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TRACKING_ISSUE_DEBUG: ${{ runner.debug }}
+        run: node .github/scripts/dependency-tracking-issue.mjs
+
   pipeline-status:
     name: Pipeline Status (dependencies)
     needs:
+      - javascript
       - latest
+      - tracking-issue
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

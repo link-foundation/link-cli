@@ -562,9 +562,11 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 
 | Workflow | Scope |
 |----------|-------|
-| `.github/workflows/csharp.yml` | .NET restore, build, tests, package, and release. |
-| `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
+| `.github/workflows/javascript.yml` | Stage 1, the entry for `.github/workflows/javascript-stage.yml`: `npm ci`, ESLint and Prettier, `npm run test:js` and the parity checker (`parity/check-parity.mjs`), with no Rust or .NET. Reports the required `Pipeline Status (javascript)`. |
+| `.github/workflows/csharp.yml` | .NET restore, build, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (csharp)`. |
+| `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (rust)`. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
+| `.github/workflows/stale.yml` | Labels pull requests idle for 60 days as `stale` and closes them 14 days later; `keep-open` exempts one. Issues never go stale. |
 | `.github/workflows/js-client.yml` | `@link-foundation/link-cli-client` unit tests and type declarations, conformance against the Rust, C# and WebAssembly backends on Node.js, Bun and Deno, the composition example, and npm release with trusted publishing. |
 | `.github/workflows/ipc.yml` | Every IPC kind of Linux, macOS and Windows between the Rust and C# servers and relays and the Rust, C# and JavaScript clients, in both protocols (`examples/ipc/interop.mjs`). |
 | `.github/workflows/deep-client.yml` | The real `DeepClient` against the Rust and C# `clink --serve --graphql`. |
@@ -572,10 +574,17 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 | `.github/workflows/links.yml` | Checks the links of every Markdown and HTML file with lychee, falling back to the Web Archive. |
 | `.github/workflows/security.yml` | CodeQL, dependency review, `cargo audit` of every committed `Cargo.lock`, and `npm audit`. |
 | `.github/workflows/workflows.yml` | actionlint, zizmor, and the workflow policy tests. |
-| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version declared in any tracked manifest is behind its latest release, unless a comment on its manifest line links an open issue that blocks the update. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
+| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version declared in any tracked manifest is behind its latest release, unless a comment on its manifest line links an open issue that blocks the update. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. On `main`, a failure opens or updates the tracking issue "Dependencies check is failing on main", and the next green run closes it. |
 
-Path filters keep most workflows focused on the parts of the repository they
-own.
+Since issue #111 the workflows run in two stages. Every workflow that builds
+or runs Rust or .NET calls `javascript-stage.yml` as its `javascript` job and
+lists it in `needs:`, so a failing JavaScript stage starts no Rust or C# job;
+`.github/scripts/workflow-policy.test.mjs` enforces this. `rust.yml`,
+`csharp.yml` and `javascript.yml` have no path filter, because their status
+checks are required on `main`; `.github/scripts/stack-paths.mjs` skips a
+stack's build jobs inside the run when a pull request does not touch it.
+See [ci-cd/troubleshooting.md](ci-cd/troubleshooting.md) and
+[PARITY.md](PARITY.md).
 
 ## External References
 

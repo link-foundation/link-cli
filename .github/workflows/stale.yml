@@ -1,0 +1,93 @@
+name: Stale
+
+# Flags pull requests that have been idle for 60 days and closes them 14 days
+# later unless someone updates them (issue #111, requirement 7). Eight pull
+# requests from 2025 (#36-#41, #49, #57) sat open for 13 months with no CI
+# result because nothing flagged them. Issues are never touched: they track
+# work that is still wanted even when a pull request for it went stale.
+#
+# A label `keep-open` exempts a pull request. Removing the `stale` label or
+# pushing a commit resets the clock. To preview the decisions without
+# changing anything, run the workflow by hand with `debug_only` set; the
+# action then logs every pull request it would flag or close. Re-running with
+# "Enable debug logging" prints the action's own debug output as well.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+    inputs:
+      debug_only:
+        description: Log what would be flagged or closed without changing anything
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stale-${{ github.ref }}
+  cancel-in-progress: false
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  stale:
+    name: Flag and close idle pull requests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      # The action saves its progress in the Actions cache and deletes the
+      # previous entry first.
+      actions: write
+      # Labels and comments on pull requests go through the issues API.
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v11
+        with:
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          days-before-pr-stale: 60
+          days-before-pr-close: 14
+          stale-pr-label: stale
+          exempt-pr-labels: keep-open
+          stale-pr-message: >-
+            This pull request has had no activity for 60 days, so it is
+            marked stale. It will be closed in 14 days unless it is updated
+            or the `stale` label is removed. Add the `keep-open` label to
+            exempt it. See CONTRIBUTING.md, "Stale pull requests".
+          close-pr-message: >-
+            Closed after 74 days without activity. The branch is kept: reopen
+            the pull request, or rebase it onto main and open a new one, to
+            continue. The linked issue stays open.
+          delete-branch: false
+          operations-per-run: 100
+          enable-statistics: true
+          debug-only: ${{ inputs.debug_only == true }}
+
+  pipeline-status:
+    name: Pipeline Status (stale)
+    needs:
+      - stale
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

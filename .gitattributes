@@ -1,0 +1,6 @@
+# The golden fixtures in docs/protocol are hashed byte for byte
+# (parity/golden-fixtures.json), and the C# and Rust suites check those hashes
+# on every operating system. Check them out exactly as stored, so Windows
+# runners with core.autocrlf=true do not turn LF into CRLF (issue #111).
+# node parity/check-parity.mjs fails if a fixture loses this attribute.
+docs/protocol/** -text

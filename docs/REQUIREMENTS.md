@@ -68,6 +68,8 @@ the core CLI behavior and is also used by the WebAssembly browser workbench.
 | Provide Rust parity for core behavior. | #63, #67, #68 | Rust mirrors query processing, names, import/export, structure formatting, and Unicode sequence support. |
 | Run in a browser. | #12, #52, #69, #70 | The Rust query processor is wrapped with `wasm-bindgen` and surfaced through a React/Vite workbench. |
 | Keep CI split by surface area. | #63, #69 | Separate C#, Rust, and WebAssembly workflows run relevant checks. |
+| Gate Rust and C# CI on a JavaScript stage, and check parity. | #111 | The JavaScript stage (lint, `npm run test:js`, `parity/check-parity.mjs`) runs first and every Rust or .NET job `needs` it. `parity/features.json` records each feature's C#, Rust and JavaScript status, and the checker fails on a one-sided change that is not acknowledged. Both suites must load every fixture in `parity/golden-fixtures.json`, proven by a receipt. `main` requires the three `Pipeline Status` checks. See [PARITY.md](PARITY.md), [JS-WORKBENCH.md](JS-WORKBENCH.md) and [case-studies/issue-111](case-studies/issue-111/README.md). |
+| Document how to contribute and keep pull requests moving. | #111 | [CONTRIBUTING.md](../CONTRIBUTING.md) and [AGENTS.md](../AGENTS.md) state the single-pusher rule for CI fixes; `.github/CODEOWNERS` requests a review; `stale.yml` flags pull requests idle for 60 days. |
 
 ## Open Requirements
 
@@ -90,6 +92,9 @@ When adding a code feature:
 
 - Prefer matching behavior in C# and Rust unless the issue explicitly scopes a
   feature to one implementation.
+- Record the feature in `parity/features.json` and run
+  `node parity/check-parity.mjs --update`; a deliberately one-sided change
+  needs `--acknowledge` with a reason (see [PARITY.md](PARITY.md)).
 - Add tests in the implementation-specific test tree.
 - Keep Rust tests in separate files under `rust/tests/`.
 - Add C# changesets or Rust changelog fragments when code changes affect a

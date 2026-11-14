@@ -1,0 +1,77 @@
+name: JavaScript stage
+
+# The JavaScript stage of the stage gate (issue #111): ESLint and Prettier,
+# every Node unit test (`npm run test:js`) and the cross-language parity
+# checker. It needs no Rust, wasm-pack or .NET, so it finishes in a few
+# minutes.
+#
+# Every workflow that runs Rust or C# calls this file as its first job
+# (`javascript: uses: ./.github/workflows/javascript-stage.yml`) and lists
+# `javascript` in the `needs:` of each Rust or C# job, so those jobs start
+# only after this stage succeeded for the same commit. A failed, cancelled or
+# skipped stage leaves them skipped. .github/scripts/workflow-policy.test.mjs
+# enforces that wiring. javascript.yml runs the same stage on its own for
+# every pull request, with no path filter, behind the required
+# "Pipeline Status (javascript)" check.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  stage:
+    name: JavaScript stage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # In a called workflow, github.workflow is the caller's name, so each
+    # caller cancels only its own superseded stage.
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-javascript-stage
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # The parity checker compares the manifest with the base commit.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+          cache: npm
+          cache-dependency-path: js/package-lock.json
+
+      - name: Install npm dependencies
+        working-directory: js
+        run: npm ci
+
+      - name: Lint and format check
+        working-directory: js
+        run: npm run lint
+
+      # js/test, csharp/scripts, .github/scripts and parity unit tests. Until
+      # issue #111 these ran only inside wasm.yml, after a Rust toolchain and
+      # wasm-pack install.
+      - name: Test JavaScript
+        working-directory: js
+        run: npm run test:js
+
+      # Fails on a one-sided feature change, a stale fingerprint, an
+      # unassigned source file or a drifted golden fixture (docs/PARITY.md).
+      # Pull requests compare with their base; pushes with the previous tip.
+      - name: Check cross-language parity
+        env:
+          PARITY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PARITY_DEBUG: ${{ runner.debug }}
+        run: node parity/check-parity.mjs
