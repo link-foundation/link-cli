@@ -11,9 +11,18 @@ import { join } from 'node:path';
 const ffi = process.getBuiltinModule('node:ffi');
 console.log('node:ffi exports', ffi && Object.keys(ffi).length);
 const shapes = [
-  { flock: { parameters: ['int32', 'int32'], result: 'int32' }, __errno_location: { parameters: [], result: 'pointer' } },
-  { flock: { args: ['int32', 'int32'], returns: 'int32' }, __errno_location: { args: [], returns: 'pointer' } },
-  { flock: { arguments: ['int32', 'int32'], return: 'int32' }, __errno_location: { arguments: [], return: 'pointer' } },
+  {
+    flock: { parameters: ['int32', 'int32'], result: 'int32' },
+    __errno_location: { parameters: [], result: 'pointer' },
+  },
+  {
+    flock: { args: ['int32', 'int32'], returns: 'int32' },
+    __errno_location: { args: [], returns: 'pointer' },
+  },
+  {
+    flock: { arguments: ['int32', 'int32'], return: 'int32' },
+    __errno_location: { arguments: [], return: 'pointer' },
+  },
 ];
 for (const shape of shapes) {
   try {

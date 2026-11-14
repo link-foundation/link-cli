@@ -68,17 +68,33 @@ const exited = (child) => new Promise((resolve) => child.on('exit', resolve));
 if (rust) {
   const held = FileLock.acquire(lockPath, LockMode.Exclusive);
   check('JS exclusive held, Rust try_lock', run(rust, ['try', lockPath]).stdout.trim(), 'busy');
-  check('JS exclusive held, Rust try_lock_shared', run(rust, ['try', lockPath, 'shared']).stdout.trim(), 'busy');
+  check(
+    'JS exclusive held, Rust try_lock_shared',
+    run(rust, ['try', lockPath, 'shared']).stdout.trim(),
+    'busy',
+  );
   held.release();
   check('JS released, Rust try_lock', run(rust, ['try', lockPath]).stdout.trim(), 'locked');
   const shared = FileLock.acquire(lockPath, LockMode.Shared);
-  check('JS shared held, Rust try_lock_shared', run(rust, ['try', lockPath, 'shared']).stdout.trim(), 'locked');
+  check(
+    'JS shared held, Rust try_lock_shared',
+    run(rust, ['try', lockPath, 'shared']).stdout.trim(),
+    'locked',
+  );
   check('JS shared held, Rust try_lock', run(rust, ['try', lockPath]).stdout.trim(), 'busy');
   shared.release();
 
   const child = await holder(rust, ['hold', lockPath], 'locked');
-  check('Rust lock held, JS tryAcquire(Exclusive)', FileLock.tryAcquire(lockPath, LockMode.Exclusive), null);
-  check('Rust lock held, JS tryAcquire(Shared)', FileLock.tryAcquire(lockPath, LockMode.Shared), null);
+  check(
+    'Rust lock held, JS tryAcquire(Exclusive)',
+    FileLock.tryAcquire(lockPath, LockMode.Exclusive),
+    null,
+  );
+  check(
+    'Rust lock held, JS tryAcquire(Shared)',
+    FileLock.tryAcquire(lockPath, LockMode.Shared),
+    null,
+  );
   const started = Date.now();
   const blocking = FileLock.acquire(lockPath, LockMode.Exclusive);
   check('JS acquire blocked until Rust exited', Date.now() - started > 100, true);
@@ -89,7 +105,11 @@ if (rust) {
 const flock = run('flock', ['--version']).status === 0;
 if (flock) {
   const held = FileLock.acquire(lockPath, LockMode.Exclusive);
-  check('JS exclusive held, flock -n exit status', run('flock', ['-n', lockPath, 'true']).status, 1);
+  check(
+    'JS exclusive held, flock -n exit status',
+    run('flock', ['-n', lockPath, 'true']).status,
+    1,
+  );
   held.release();
   check('JS released, flock -n exit status', run('flock', ['-n', lockPath, 'true']).status, 0);
   const child = await holder('flock', [lockPath, 'sleep', '0.6'], null);

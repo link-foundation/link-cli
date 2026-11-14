@@ -22,7 +22,11 @@ try {
   store.create(2, 2);
   store.rollback();
   store.save();
-  console.log(open().all().map((link) => [link.index, link.source, link.target])); // [ [ 1, 1, 1 ] ]
+  console.log(
+    open()
+      .all()
+      .map((link) => [link.index, link.source, link.target]),
+  ); // [ [ 1, 1, 1 ] ]
   // --- end ---
 } finally {
   rmSync(directory, { recursive: true, force: true });
