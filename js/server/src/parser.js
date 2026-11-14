@@ -26,7 +26,9 @@ export function parseLino(text, { maxDepth } = {}) {
   try {
     parsed = parser.parse(text);
   } catch (error) {
-    throw new ParseError(error.message, { cause: error });
+    // Rust's `LinkError::ParseError(String)` has no source, so no `cause`
+    // (it would print as `Caused by:`); some notation errors carry the prefix.
+    throw new ParseError(error.message.replace(/^Parse error: /, ''));
   }
   return parsed.map(convert);
 }
