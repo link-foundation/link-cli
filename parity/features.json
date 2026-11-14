@@ -423,7 +423,7 @@
           "js/server/test/undoable-links.test.mjs",
           "js/server/test/differential/transactions.test.mjs"
         ],
-        "fingerprint": "796ad18725cbb4de"
+        "fingerprint": "3e26e1af317b5048"
       }
     },
     {
@@ -696,14 +696,16 @@
           "js/server/src/link-storage.js",
           "js/server/src/link-storage-doublets.js",
           "js/server/src/indexed-links.js",
-          "js/server/src/storage-lock*.js"
+          "js/server/src/storage-lock*.js",
+          "js/server/src/open-file.js"
         ],
         "tests": [
           "js/server/test/link-storage*.test.mjs",
           "js/server/test/indexed-links.test.mjs",
-          "js/server/test/storage-lock*.test.mjs"
+          "js/server/test/storage-lock*.test.mjs",
+          "js/server/test/open-file.test.mjs"
         ],
-        "fingerprint": "bd3757ef8f5be9b6"
+        "fingerprint": "a4fe487cdbe50781"
       }
     },
     {
@@ -902,7 +904,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "ec7a9d58fecd1676"
+        "fingerprint": "314258076802e8b2"
       }
     },
     {
