@@ -206,8 +206,12 @@ describe('FileLock over an injected backend', () => {
     );
     const blocker = join(directory, 'file');
     writeFileSync(blocker, '');
+    // Windows names a file in place of a directory ERROR_PATH_NOT_FOUND, ENOENT.
+    const notDirectory = WINDOWS
+      ? `No such file or directory (os error ${errno.ENOENT})`
+      : `Not a directory (os error ${errno.ENOTDIR})`;
     assert.throws(() => FileLock.tryAcquire(join(blocker, 'db.lock'), LockMode.Shared), {
-      message: `I/O error: Not a directory (os error ${errno.ENOTDIR})`,
+      message: `I/O error: ${notDirectory}`,
     });
     setLockBackend({ open: () => assert.fail('unused'), lock: () => {} });
     assert.throws(() => FileLock.acquire(join(directory, 'x', 'db.lock'), LockMode.Shared), {
@@ -336,10 +340,20 @@ describe('lock primitives', () => {
     const node = { node: '20.0.0' };
     const bun = { node: '24.3.0', bun: '1.4.4' };
     const none = () => undefined;
-    assert.deepEqual(detectLockBackend({ deno: null, versions: node, builtin: none }), {
-      unavailable:
-        'Node.js 20.0.0 has no node:ffi to call flock(2); use Node.js >= 26, Bun or Deno',
-    });
+    assert.deepEqual(
+      detectLockBackend({ deno: null, versions: node, platform: 'linux', builtin: none }),
+      {
+        unavailable:
+          'Node.js 20.0.0 has no node:ffi to call flock(2); use Node.js >= 26, Bun or Deno',
+      },
+    );
+    assert.deepEqual(
+      detectLockBackend({ deno: null, versions: node, platform: 'win32', builtin: none }),
+      {
+        unavailable:
+          'Node.js 20.0.0 has no node:ffi to call LockFileEx; use Node.js >= 26, Bun or Deno',
+      },
+    );
     const throwing = () => {
       throw new Error('ERR_ACCESS_DENIED');
     };

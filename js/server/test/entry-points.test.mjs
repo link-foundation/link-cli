@@ -56,7 +56,14 @@ test('bin/clink.js runs main with the command line and sets the exit status', as
   const exitCode = process.exitCode;
   const written = [];
   process.argv = [argv[0], 'clink', '--version'];
-  process.stdout.write = (text) => written.push(String(text)) > 0;
+  // Only the strings clink prints are kept: on Node.js 20 the test runner
+  // itself writes its serialized reports (buffers) to the same stream while
+  // the import is awaited, and those go through.
+  process.stdout.write = function (chunk, ...rest) {
+    if (typeof chunk !== 'string') return write.call(this, chunk, ...rest);
+    written.push(chunk);
+    return true;
+  };
   try {
     await import('../bin/clink.js');
     assert.equal(process.exitCode, 0);

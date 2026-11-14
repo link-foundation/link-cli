@@ -40,6 +40,9 @@ import { scratchDirectory } from './helpers/storage.mjs';
 
 const SILENCE_TIMEOUT = 200;
 const TIMEOUT = { timeout: 60_000 };
+// Node.js has no `AF_UNIX` sockets on Windows (src/ipc-net.js): the tests of
+// several endpoints and of a taken endpoint use a second TCP port there.
+const WINDOWS = process.platform === 'win32';
 const FIXTURE = new URL('../../../docs/protocol/subscriptions.txt', import.meta.url);
 
 /** Text, and binary with every option, as the `protocols()` of the Rust tests. */
@@ -319,7 +322,9 @@ test('shutdown stops the server', TIMEOUT, async () => {
   });
 });
 
-test('a server listens on a unix socket, which has no TCP address', TIMEOUT, async () => {
+const NO_UNIX = { ...TIMEOUT, skip: WINDOWS && 'Node.js has no AF_UNIX sockets on Windows' };
+
+test('a server listens on a unix socket, which has no TCP address', NO_UNIX, async () => {
   const path = join(scratchDirectory(), 'links.sock');
   const lines = await traced(async (lines) => {
     await withServer(
@@ -349,14 +354,18 @@ test('a server listens on a unix socket, which has no TCP address', TIMEOUT, asy
 });
 
 test('a server listens on several endpoints at once, sharing one store', TIMEOUT, async () => {
-  const path = join(scratchDirectory(), 'shared.sock');
-  const server = await LinksServer.listenAll(['127.0.0.1:0', `unix:${path}`]);
+  const local = WINDOWS ? '127.0.0.1:0' : `unix:${join(scratchDirectory(), 'shared.sock')}`;
+  const server = await LinksServer.listenAll(['127.0.0.1:0', local]);
   const tcp = `127.0.0.1:${server.localAddr().port}`;
-  assert.deepEqual(server.endpoints(), [tcp, `unix:${path}`]);
-  assert.equal(server.endpoint(), `${tcp} unix:${path}`);
+  const [, other] = server.endpoints();
+  if (WINDOWS) assert.match(other, /^127\.0\.0\.1:[1-9][0-9]*$/);
+  else assert.equal(other, local);
+  assert.notEqual(other, tcp);
+  assert.deepEqual(server.endpoints(), [tcp, other]);
+  assert.equal(server.endpoint(), `${tcp} ${other}`);
   const serving = server.serve(LinkStorage.inMemory());
   const overTcp = await clientOf(tcp);
-  const overUnix = await clientOf(`unix:${path}`);
+  const overUnix = await clientOf(other);
   try {
     assert.equal(await overTcp.queryText('() ((1 1))'), '() ((1: 1 1))');
     assert.equal(await overUnix.queryText(''), '(1: 1 1)');
@@ -374,10 +383,11 @@ test('listening failures are protocol errors', TIMEOUT, async () => {
     name: 'ProtocolError',
     message: 'I/O error: no endpoint to listen on',
   });
-  const path = join(scratchDirectory(), 'taken.sock');
-  const first = await LinksServer.listen(`unix:${path}`);
+  const path = `unix:${join(scratchDirectory(), 'taken.sock')}`;
+  const first = await LinksServer.listen(WINDOWS ? '127.0.0.1:0' : path);
+  const taken = WINDOWS ? `127.0.0.1:${first.localAddr().port}` : path;
   try {
-    await assert.rejects(LinksServer.listen(`unix:${path}`), (error) => {
+    await assert.rejects(LinksServer.listen(taken), (error) => {
       assert.ok(error instanceof ProtocolError, String(error));
       assert.equal(error.kind, 'io');
       return true;

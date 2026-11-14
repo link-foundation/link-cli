@@ -2,7 +2,7 @@
 // Windows (src/storage-lock-windows.js): over a model of kernel32 on every
 // platform, and over the real kernel32 on Windows.
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { closeSync, mkdirSync, openSync, readSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { formatErrorReport } from '../src/error-report.js';
@@ -444,8 +444,18 @@ describe('FileLock on Windows through kernel32', { skip: kernel32Skip }, () => {
     const path = join(scratchDirectory(), 'db.links.lock');
     writeFileSync(path, 'kept');
     const lock = FileLock.acquire(path, LockMode.Exclusive);
-    assert.equal(readFileSync(path, 'utf8'), 'kept', 'readable by others, not truncated');
-    lock.release();
+    // Every FILE_SHARE_* mode: another handle opens the sidecar. The range
+    // lock of LockFileEx is mandatory, as under Rust's File::lock, so that
+    // handle cannot read it until the lock is released.
+    const fd = openSync(path, 'r');
+    try {
+      assert.throws(() => readSync(fd, Buffer.alloc(4), 0, 4, 0), { code: 'EBUSY' });
+      lock.release();
+      const bytes = Buffer.alloc(8);
+      assert.equal(bytes.toString('utf8', 0, readSync(fd, bytes, 0, 8, 0)), 'kept');
+    } finally {
+      closeSync(fd);
+    }
   });
 
   it('locks a sidecar past MAX_PATH through the \\\\?\\ prefix', () => {

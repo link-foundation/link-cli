@@ -12,7 +12,6 @@ import {
   fsyncSync,
   ftruncateSync,
   mkdirSync,
-  openSync,
   readFileSync,
   readSync,
   writeSync,
@@ -20,6 +19,7 @@ import {
 import { dirname } from 'node:path';
 
 import { InvalidFormatError, LinkError, LockError } from './errors.js';
+import { openFileSync } from './open-file.js';
 import { FileLock, LockMode, lockFilePath } from './storage-lock.js';
 import { io, syncParentDirectory } from './transactions-storage.js';
 
@@ -76,7 +76,7 @@ export function truncateTornTail(fd) {
 
 /** Opens `path` with `flags`, repairs its tail, and closes it. */
 function repairFile(path, flags, sync) {
-  const fd = openSync(path, flags);
+  const fd = openFileSync(path, flags);
   try {
     truncateTornTail(fd);
     if (sync) fsyncSync(fd);
@@ -110,7 +110,7 @@ export class FileTransitionLog {
       const parent = dirname(path);
       if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
       repairFile(path, existsSync(path) ? 'r+' : 'w+', false);
-      const fd = openSync(path, 'a+');
+      const fd = openFileSync(path, 'a+');
       try {
         syncParentDirectory(path);
       } catch (error) {

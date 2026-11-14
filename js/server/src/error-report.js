@@ -46,6 +46,7 @@ const STRERROR = {
   EPIPE: 'Broken pipe',
   EROFS: 'Read-only file system',
   ETIMEDOUT: 'Connection timed out',
+  EWOULDBLOCK: 'Resource temporarily unavailable', // EAGAIN; 140 on Windows
   EXDEV: 'Invalid cross-device link',
 };
 

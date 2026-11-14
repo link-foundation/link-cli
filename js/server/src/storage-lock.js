@@ -24,12 +24,13 @@
 // Rust releases the lock when the guard is dropped; here `release()` (or
 // `using`, through `Symbol.dispose`) does. The operating system still drops
 // it when the process exits, so a crashed holder never leaves it locked.
-import { closeSync, constants as fsConstants, existsSync, mkdirSync, openSync } from 'node:fs';
+import { closeSync, constants as fsConstants, existsSync, mkdirSync } from 'node:fs';
 import { constants as osConstants } from 'node:os';
 import { dirname } from 'node:path';
 
 import { errorText } from './error-report.js';
 import { LinkError, LockError } from './errors.js';
+import { openFileSync } from './open-file.js';
 import { kernel32Backend, loadKernel32, WindowsIoError } from './storage-lock-windows.js';
 import { ioError } from './transactions-storage.js';
 
@@ -109,7 +110,7 @@ export function flockBackend(primitive, libc, errnos = osConstants.errno) {
   };
   return {
     primitive,
-    open: (path) => openSync(path, fsConstants.O_RDWR | fsConstants.O_CREAT, 0o666),
+    open: (path) => openFileSync(path, fsConstants.O_RDWR | fsConstants.O_CREAT, 0o666),
     lock: (fd, exclusive) => {
       call(fd, exclusive ? LOCK_EX : LOCK_SH);
     },
