@@ -1,8 +1,10 @@
 // Parses LiNo text into `LinoLink` trees: `{ id, values }`, where `id` is a
 // string or null and `values` an array or null. The port of rust/src/parser.rs
-// and rust/src/lino_link.rs over the links-notation package.
-import { Parser as NotationParser } from 'links-notation';
+// and rust/src/lino_link.rs over protocol-lino-parser.js, the port of the
+// links-notation crate the Rust `clink` parses with, so the same text gives
+// the same links and the same syntax errors.
 import { ParseError } from './errors.js';
+import { parseLinoToLinks } from './protocol-lino-parser.js';
 
 export const lino = (id, values = null) => ({ id: id ?? null, values: values ?? null });
 
@@ -13,22 +15,22 @@ export const valuesCount = (value) => (value.values == null ? 0 : value.values.l
 export const isVariable = (value) => typeof value.id === 'string' && value.id.startsWith('$');
 export const isWildcard = (value) => value.id === '*';
 
+/** `Parser::convert_link`: a reference, or a link with or without values. */
 function convert(node) {
-  const values = node.values ?? [];
-  if (values.length === 0) return node.id == null ? lino(null) : lino(String(node.id));
-  return lino(node.id == null ? null : String(node.id), values.map(convert));
+  if (typeof node === 'string') return lino(node);
+  if (node.values.length === 0) return lino(node.id);
+  return lino(node.id, node.values.map(convert));
 }
 
 /** Parses `text`; a syntax error becomes a `ParseError`, as `LinkError::ParseError` in Rust. */
 export function parseLino(text, { maxDepth } = {}) {
-  const parser = new NotationParser(maxDepth === undefined ? {} : { maxDepth });
   let parsed;
   try {
-    parsed = parser.parse(text);
+    parsed = parseLinoToLinks(text, maxDepth === undefined ? {} : { maxDepth });
   } catch (error) {
     // Rust's `LinkError::ParseError(String)` has no source, so no `cause`
-    // (it would print as `Caused by:`); some notation errors carry the prefix.
-    throw new ParseError(error.message.replace(/^Parse error: /, ''));
+    // (it would print as `Caused by:`).
+    throw new ParseError(error.message);
   }
   return parsed.map(convert);
 }
