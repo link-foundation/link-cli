@@ -114,6 +114,7 @@ The common ones:
 | `belongs to no feature`                                    | Add the new file to a feature's `sources`/`tests`, or to `shared` with a reason.                      |
 | `matches no tracked file`                                  | A file was renamed or deleted. Update the glob.                                                        |
 | `base commit … is not in this clone`                       | The checkout is shallow. The stage needs `fetch-depth: 0`, so do not change it.                        |
+| `text attribute is …; mark it -text`                       | Keep the fixture under `docs/protocol/**`, which `.gitattributes` marks `-text`, or add its path there. |
 
 To print every matched file and fingerprint:
 
@@ -132,6 +133,10 @@ The "Check that the Rust/C# suite loaded every golden fixture" step in
   because a filter excluded it, it was skipped, or the build failed first;
 - the receipt lists fewer fixtures, or other hashes, than
   `parity/golden-fixtures.json`.
+
+If the golden fixture test fails on Windows only with "changed; review both
+suites", git converted the fixture's line endings on checkout. Check that
+`git check-attr text -- <fixture>` prints `unset`.
 
 Run the test locally with a receipt:
 

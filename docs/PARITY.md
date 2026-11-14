@@ -45,7 +45,10 @@ these holds:
    a hash mismatch, a fixture missing from the manifest, a fixture with no C#
    or Rust consumer test, and a consumer test that no longer mentions its
    fixture.
-7. With `--receipt`: a test suite did not report loading every golden fixture
+7. A golden fixture is not marked `-text` in `.gitattributes`. Without it,
+   git on Windows (`core.autocrlf=true`) checks the fixture out with CRLF
+   line endings, and its hash no longer matches.
+8. With `--receipt`: a test suite did not report loading every golden fixture
    with the expected hash.
 
 The JavaScript stage passes the base commit as `PARITY_BASE_SHA`. On a pull

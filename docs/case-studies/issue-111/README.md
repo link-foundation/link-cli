@@ -41,6 +41,8 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 2026-11-14       | PR #180 adds the parity manifest, the checker and golden fixtures (50fc778d), stack path detection (6baffe6c), the JavaScript stage gate (4e540213), the stale workflow and tracking issue (62802d79), the zizmor reconciliation (eb278c5f) and the dependency bumps (f3639fbe). |
 | 2026-11-14       | CI for 4e540213 fails `Workflows`, because zizmor 1.32's `self-repository` audit flags every `uses: ./…/javascript-stage.yml`. It also fails `Dependencies`, because #176 closed and three upstream releases appeared that morning. Both are fixed before the next push. |
 | 2026-11-14 09:39 | The ruleset, classic protection, the deploy key and the `release` environment are configured on the repository; `GET /branches/main/protection` changes from 404 to 200. |
+| 2026-11-14 09:43 | PRs #36-#41, #49 and #57 are closed with a comment; their branches and issues stay. |
+| 2026-11-14 09:52 | The C# golden fixture test, which ran for the first time on Windows, fails on `windows-2025` with a hash mismatch: Windows checkouts had CRLF line endings (root cause 8). |
 
 ## Requirements and how each is met
 
@@ -95,6 +97,14 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
    owner organization" ([`data/actions-bypass-422.json`](data/actions-bypass-422.json)).
    Classic protection cannot exempt anyone but administrators from required
    checks.
+8. **Windows checkouts change the golden fixtures.** The fixtures are hashed
+   byte for byte, but Windows runners default to `core.autocrlf=true`, so
+   git wrote CRLF into 39 of the 41 fixtures and both suites' hash checks
+   failed on `windows-2025` only (C# run 43581837745). The fixtures were
+   already read on Windows before, but by parsers that accept either line
+   ending, so nothing had noticed. `.gitattributes` now marks
+   `docs/protocol/**` as `-text`, and the parity checker fails if a fixture
+   loses that attribute, so the JavaScript stage catches it on Linux.
 
 ## Solutions considered
 

@@ -2,6 +2,7 @@
 // JavaScript stage through `npm run test:js`, before any Rust or C# job.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,7 @@ import {
   checkCoverage,
   checkFingerprints,
   checkGlobs,
+  checkFixtureAttributes,
   checkGoldenFixtures,
   checkOneSidedChanges,
   checkReceipt,
@@ -17,6 +19,7 @@ import {
   fingerprint,
   globToRegExp,
   readBaseManifest,
+  readTextAttributes,
   sha256,
   updateManifest,
   validateManifest,
@@ -233,6 +236,27 @@ test('golden fixtures must match their hash and stay referenced by both suites',
   );
   assert.match(stale.join('\n'), /docs\/v\.json: sha256 \w+ differs/);
   assert.match(stale.join('\n'), /list at least one rust test that reads it/);
+});
+
+test('golden fixtures must be checked out byte for byte (-text)', () => {
+  const golden = { fixtures: [{ path: 'a.json' }, { path: 'b.txt' }, { path: 'c.gz' }] };
+  assert.deepEqual(
+    checkFixtureAttributes(golden, { 'a.json': 'unset', 'b.txt': 'unset', 'c.gz': 'unset' }),
+    [],
+  );
+  const errors = checkFixtureAttributes(golden, { 'a.json': 'unset', 'b.txt': 'set' });
+  assert.equal(errors.length, 2);
+  assert.match(errors[0], /^b\.txt: text attribute is set; mark it -text/);
+  assert.match(errors[1], /^c\.gz: text attribute is unspecified/);
+});
+
+test('every repository golden fixture is marked -text', () => {
+  const golden = JSON.parse(readFileSync(resolve(root, 'parity/golden-fixtures.json'), 'utf8'));
+  const attributes = readTextAttributes(
+    root,
+    golden.fixtures.map((fixture) => fixture.path),
+  );
+  assert.deepEqual(checkFixtureAttributes(golden, attributes), []);
 });
 
 test('a suite receipt must list every golden fixture with its hash', () => {

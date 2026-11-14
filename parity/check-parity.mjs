@@ -12,6 +12,8 @@
 //     changed and no parity exception acknowledges the one-sided change;
 //   - parity/golden-fixtures.json does not match the fixture files, or a
 //     consumer test no longer mentions its fixture;
+//   - git may convert line endings of a golden fixture on checkout, which
+//     would change its hash on Windows (.gitattributes must set -text);
 //   - a suite receipt (--receipt) does not list every golden fixture.
 //
 // Usage:
@@ -284,6 +286,32 @@ export function checkGoldenFixtures(golden, files, readBuffer, readText) {
   return errors;
 }
 
+// Each fixture is hashed byte for byte on every operating system, so git must
+// check it out unchanged. With core.autocrlf=true (the Windows runner default)
+// git writes CRLF into any file it treats as text. `attributes` maps each path
+// to its `text` attribute as `git check-attr text` reports it.
+export function checkFixtureAttributes(golden, attributes) {
+  const errors = [];
+  for (const fixture of golden.fixtures ?? []) {
+    const value = attributes[fixture.path] ?? 'unspecified';
+    if (value !== 'unset')
+      fail(
+        errors,
+        `${fixture.path}: text attribute is ${value}; mark it -text in .gitattributes ` +
+          'so checkouts keep its bytes and its sha256',
+      );
+  }
+  return errors;
+}
+
+export function readTextAttributes(root, paths) {
+  if (!paths.length) return {};
+  const fields = git(root, ['check-attr', '-z', 'text', '--', ...paths]).split('\0');
+  const attributes = {};
+  for (let i = 0; i + 2 < fields.length; i += 3) attributes[fields[i]] = fields[i + 2];
+  return attributes;
+}
+
 // A receipt is written by the golden fixture test of one suite. It proves that
 // the suite loaded and hashed every fixture of the manifest.
 export function checkReceipt(golden, suite, receipt) {
@@ -436,6 +464,13 @@ export function run(argv, root = resolve(dirname(fileURLToPath(import.meta.url))
     ...checkFingerprints(manifest, current),
     ...oneSided(),
     ...checkGoldenFixtures(golden, files, readBuffer, readText),
+    ...checkFixtureAttributes(
+      golden,
+      readTextAttributes(
+        root,
+        (golden.fixtures ?? []).map((fixture) => fixture.path),
+      ),
+    ),
   ];
   for (const error of errors) console.error(`::error::${error}`);
   const counts = Object.fromEntries(
