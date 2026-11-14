@@ -45,6 +45,9 @@ package built from `doublets-rs`.
 - [docs/GRAPHQL.md](docs/GRAPHQL.md): the Hasura-compatible GraphQL server for Deep, `clink --serve --graphql`.
 - [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
 - [examples/](examples): runnable examples, one folder per feature.
+- [docs/PARITY.md](docs/PARITY.md): the cross-language parity manifest, its checker and the shared golden fixtures.
+- [docs/JS-WORKBENCH.md](docs/JS-WORKBENCH.md): what the JavaScript workbench and client implement and what they delegate to the Rust WebAssembly build.
+- [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/ci-cd/troubleshooting.md](docs/ci-cd/troubleshooting.md): the CI stages, the single-pusher rule, and how to read a failed check.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
@@ -52,6 +55,7 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-98/README.md](docs/case-studies/issue-98/README.md): evidence and analysis for making the libraries reusable as a doublets-backed transactional store.
 - [docs/case-studies/issue-105/README.md](docs/case-studies/issue-105/README.md): requirements, prior art and the wire formats of the LiNo text and binary protocols over TCP.
 - [docs/case-studies/issue-108/README.md](docs/case-studies/issue-108/README.md): the JS/TS client, the guarantees of each backend, what conformance found and the synthetic consumer benchmark.
+- [docs/case-studies/issue-111/README.md](docs/case-studies/issue-111/README.md): the JavaScript-first CI gate, cross-language parity, branch protection and repository governance.
 
 ### API references
 

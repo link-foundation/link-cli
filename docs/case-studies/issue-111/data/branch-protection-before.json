@@ -1,0 +1,1 @@
+{"request":"GET /repos/link-foundation/link-cli/branches/main/protection","collected":"2026-11-14","httpStatus":404,"response":{"message":"Branch not protected","documentation_url":"https://docs.github.com/rest/branches/branch-protection#get-branch-protection","status":"404"},"rulesets":[]}
