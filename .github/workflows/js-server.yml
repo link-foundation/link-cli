@@ -152,8 +152,11 @@ jobs:
       - name: Unit tests on Bun
         run: bun test --timeout 60000 test/
 
+      # The package is plain JavaScript without type declarations; without
+      # --no-check Deno's TypeScript host stops before any test runs because
+      # it cannot resolve npm:@types/node, which the package does not use.
       - name: Unit tests on Deno
-        run: deno test --allow-all test/
+        run: deno test --allow-all --no-check test/
 
   differential:
     needs: [javascript, unit]
