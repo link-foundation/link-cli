@@ -18,10 +18,10 @@ function fakeApi(issues) {
 
 test('any job that did not succeed counts as a failure', () => {
   assert.deepEqual(failedJobs(ok), []);
-  assert.deepEqual(failedJobs({ javascript: { result: 'failure' }, latest: { result: 'skipped' } }), [
-    'javascript (failure)',
-    'latest (skipped)',
-  ]);
+  assert.deepEqual(
+    failedJobs({ javascript: { result: 'failure' }, latest: { result: 'skipped' } }),
+    ['javascript (failure)', 'latest (skipped)'],
+  );
   assert.throws(() => failedJobs({}), /lists no jobs/);
   assert.equal(decide(['x'], undefined), 'create');
   assert.equal(decide(['x'], { number: 1 }), 'comment');
