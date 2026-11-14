@@ -158,6 +158,50 @@ jobs:
       - name: Unit tests on Deno
         run: deno test --allow-all --no-check test/
 
+  # The package supports Node.js 20 and later on every desktop and server
+  # operating system (`engines` in package.json), so the unit tests also run
+  # on the oldest supported Node.js and on macOS and Windows. Tests of
+  # primitives a platform lacks (FIFOs, Unix sockets on old Windows, ...)
+  # skip with the reason the port reports there.
+  portability:
+    if: inputs.verify_trusted_publishing != true
+    name: Unit tests on ${{ matrix.os }} with Node.js ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-portability-${{ matrix.os }}-${{ matrix.node }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        node: ['20.x', '22.x', '26.x']
+        exclude:
+          # Node.js 26 on Ubuntu is the coverage run of the unit job.
+          - os: ubuntu-24.04
+            node: '26.x'
+    defaults:
+      run:
+        shell: bash
+        working-directory: js/server
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: js/server/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
   differential:
     needs: [javascript, unit]
     if: inputs.verify_trusted_publishing != true
@@ -235,7 +279,7 @@ jobs:
 
   release:
     name: Release to npm
-    needs: [release-preflight, unit, differential]
+    needs: [release-preflight, unit, portability, differential]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a publish that may already be under way.
@@ -319,6 +363,7 @@ jobs:
       - release-preflight
       - verify-trusted-publishing
       - unit
+      - portability
       - differential
       - release
     if: ${{ !cancelled() }}

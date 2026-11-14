@@ -21,6 +21,7 @@ on: # zizmor: ignore[dangerous-triggers]
       - Rust CI/CD Pipeline
       - C# CI/CD Pipeline
       - JS client CI
+      - JS server CI
       - DeepClient CI
       - WebAssembly CI
       - Docs
