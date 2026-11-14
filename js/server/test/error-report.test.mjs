@@ -9,6 +9,7 @@ import {
   ioErrorText,
   isSystemError,
   reportError,
+  withoutSyscall,
 } from '../src/error-report.js';
 import { ParseError } from '../src/errors.js';
 
@@ -111,5 +112,28 @@ describe('error reports', () => {
     const written = [];
     reportError(new Error('boom'), { write: (text) => written.push(text) });
     assert.deepEqual(written, ['Error: boom\n']);
+  });
+
+  it('drops the syscall and path Node.js appends, in linear time', () => {
+    const cases = [
+      ["no such file or directory, open 'a, b'", 'no such file or directory'],
+      ['permission denied, mkdir', 'permission denied'],
+      ["busy, open ''", 'busy'],
+      // Not a syscall suffix: no letters, capitals, an unclosed or multi-line path.
+      ['a, , b', 'a, '],
+      ['a, 1', 'a, 1'],
+      ['a, Open', 'a, Open'],
+      ["a, open 'x", "a, open 'x"],
+      ["a, open '\n'", "a, open '\n'"],
+      ["a, open 'x' y", "a, open 'x' y"],
+      ['plain', 'plain'],
+    ];
+    for (const [text, expected] of cases) assert.equal(withoutSyscall(text), expected, text);
+    // CodeQL js/polynomial-redos: the regular expression this replaces took
+    // quadratic time on this input (experiments/issue-111/without-syscall-equivalence.mjs).
+    const started = performance.now();
+    // The whole input is one `, a '…'` suffix, as the regular expression read it.
+    assert.equal(withoutSyscall(", a '".repeat(50_000)), '');
+    assert.ok(performance.now() - started < 1000);
   });
 });

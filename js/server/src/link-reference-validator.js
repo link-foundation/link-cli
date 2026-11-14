@@ -48,7 +48,10 @@ const debugSet = (set, format) => `{${[...set].map(format).join(', ')}}`;
 
 function concreteIdentifier(id) {
   if (id == null) return null;
-  const identifier = id.replace(/:+$/, '');
+  // Rust `trim_end_matches(':')`, without a backtracking regular expression.
+  let end = id.length;
+  while (end > 0 && id[end - 1] === ':') end--;
+  const identifier = id.slice(0, end);
   if (identifier === '' || identifier === '*' || identifier.startsWith('$')) return null;
   return identifier;
 }

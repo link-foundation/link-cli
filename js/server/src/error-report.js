@@ -62,6 +62,30 @@ export function isSystemError(error) {
 const OS_ERROR = / \(os error (\d+)\)$/;
 
 /**
+ * `text` without the `, <syscall>` or `, <syscall> '<path>'` that Node.js
+ * appends to a system error message: the first `, ` followed by lowercase
+ * letters and then the end, or a quoted path that runs to the end on one line.
+ * A scan, not a regular expression, so it is linear in the message length.
+ */
+export function withoutSyscall(text) {
+  // A quoted path must close at the end, after the last line break (`.` of
+  // the regular expression this replaces matches no line terminator).
+  let lineStart = text.length;
+  while (lineStart > 0 && !'\n\r\u2028\u2029'.includes(text[lineStart - 1])) lineStart--;
+  const closesQuoted = text.endsWith("'");
+  for (let comma = text.indexOf(', '); comma !== -1; comma = text.indexOf(', ', comma + 1)) {
+    let end = comma + 2;
+    while (end < text.length && text[end] >= 'a' && text[end] <= 'z') end++;
+    if (end === comma + 2) continue;
+    if (end === text.length) return text.slice(0, comma);
+    const quoted =
+      closesQuoted && text.length - end >= 3 && text.startsWith(" '", end) && end >= lineStart;
+    if (quoted) return text.slice(0, comma);
+  }
+  return text;
+}
+
+/**
  * The `Display` text of the `std::io::Error` Rust would hold for a Node.js
  * system error: `{strerror} (os error {errno})`. Unknown codes keep the
  * Node.js text after its `CODE: ` prefix.
@@ -72,10 +96,7 @@ export function ioErrorText(error, errnos = constants.errno) {
   const number = errnos[error.code] ?? (deno ? Number(deno[1]) : Math.abs(error.errno));
   const description =
     STRERROR[error.code] ??
-    error.message
-      .replace(OS_ERROR, '')
-      .replace(/^[A-Z0-9]+: /, '')
-      .replace(/, [a-z]+(?: '.*')?$/, '');
+    withoutSyscall(error.message.replace(OS_ERROR, '').replace(/^[A-Z0-9]+: /, ''));
   return `${description} (os error ${number})`;
 }
 

@@ -88,6 +88,30 @@ describe('LinkReferenceValidator', () => {
     ]);
   });
 
+  it('reads an identifier without its trailing colons, as trim_end_matches does', () => {
+    const storage = LinkStorage.inMemory();
+    const lines = [];
+    const validator = new LinkReferenceValidator(true, false, {
+      stderr: (line) => lines.push(line),
+    });
+    const substitution = patterns('((b: 1 1) (c: 1 1) (7: 1 1))');
+    substitution[0].values[0].id = 'b:::';
+    substitution[0].values[1].id = ':::';
+    substitution[0].values[2].id = '7::';
+    validator.validateLinksExistOrWillBeCreated(storage, [], substitution);
+    assert.ok(
+      lines.includes('[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {7, 1}'),
+    );
+    assert.ok(
+      lines.includes('[ValidateLinksExistOrWillBeCreated] Named links to be created: {"b"}'),
+    );
+    // CodeQL js/polynomial-redos: a long run of colons is trimmed in linear time.
+    substitution[0].values[0].id = `b${':'.repeat(200_000)}x`;
+    const started = performance.now();
+    validator.validateLinksExistOrWillBeCreated(storage, [], substitution);
+    assert.ok(performance.now() - started < 1000);
+  });
+
   it('rejects a missing reference unless asked to create it', () => {
     const storage = LinkStorage.inMemory();
     assert.throws(
