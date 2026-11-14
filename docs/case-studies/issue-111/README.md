@@ -41,10 +41,14 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 2026-11-14       | PR #180 adds the parity manifest, the checker and golden fixtures (50fc778d), stack path detection (6baffe6c), the JavaScript stage gate (4e540213), a stale workflow (later removed) and the tracking issue (62802d79), the zizmor reconciliation (eb278c5f) and the dependency bumps (f3639fbe). |
 | 2026-11-14       | CI for 4e540213 fails `Workflows`, because zizmor 1.32's `self-repository` audit flags every `uses: ./…/javascript-stage.yml`. It also fails `Dependencies`, because #176 closed and three upstream releases appeared that morning. Both are fixed before the next push. |
 | 2026-11-14 09:39 | The ruleset, classic protection, the deploy key and the `release` environment are configured on the repository; `GET /branches/main/protection` changes from 404 to 200. |
+| 2026-11-14 09:52 | The Rust and C# golden fixture tests, which ran on Windows for the first time, fail on `windows-2025` with a hash mismatch: Windows checkouts had CRLF line endings (root cause 8). |
 | 2026-11-14 09:43 | PRs #36-#41, #49 and #57 are closed with a comment; their branches and issues stay. |
 | 2026-11-14 16:13 | The owner's review: reopen every closed pull request, remove the stale requirement (no stale pull request policy may exist), and add a full JavaScript server/embedded implementation next to the client. |
 | 2026-11-14 16:16 | PRs #36-#41, #49 and #57 are reopened with a comment each; `stale.yml` is removed and a test forbids any stale policy. |
-| 2026-11-14 09:52 | The Rust and C# golden fixture tests, which ran on Windows for the first time, fail on `windows-2025` with a hash mismatch: Windows checkouts had CRLF line endings (root cause 8). |
+| 2026-11-14 16:31 | `js/server`, the package `@link-foundation/link-cli-server`, starts (1ce61b6a): a port of `rust/src/**` to plain JavaScript with no WebAssembly. Its own workflow, `js-server.yml`, runs behind the JavaScript stage (611bc991). |
+| 2026-11-14 17:16-18:36 | The port grows feature by feature: the query language and command line, undo, permissions and triggers, triplets, the doublets store with names and types, the LiNo parser, transactions and version control, GraphQL, `.lenv`/`.env`, the protocol server, client and IPC transports, and the `<db>.lock` file lock. JavaScript becomes the third suite that must load every golden fixture (4d350095). |
+| 2026-11-14 18:26 | The first CI run of `js-server.yml` on Linux, macOS and Windows with Node.js 20, 22 and 26 (1d825202) fails on Windows and on Node.js 20 and 22 (root causes 9-12). CodeQL flags two regular expressions as polynomial ReDoS (fixed by ac4526fe). |
+| 2026-11-14 18:51-18:58 | Windows and old Node.js fixes (d0c65de9, 4fc2204a, e1315be9), complete coverage of every source file, `LockFileEx` locking on Windows through `node:ffi` and `bun:ffi` (88f4279a), and the package README. |
 
 ## Requirements and how each is met
 
@@ -61,6 +65,7 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 9  | `workflows.yml`, `.github/zizmor.yml`, the CodeQL config, and ESLint/Prettier for `js/`, with their findings fixed. | All of these already existed on `main` (see the timeline). This PR fixed zizmor's new `self-repository` finding (see root cause 5), and documented every linter and its local command in [troubleshooting](../../ci-cd/troubleshooting.md#workflow-lint-actionlint-and-zizmor). | `Workflows` and the JavaScript stage are green. Locally, actionlint 1.7.12 and zizmor 1.32.0 report nothing.                          |
 | 10 | `CONTRIBUTING.md`, `AGENTS.md`/`CLAUDE.md` and `.github/CODEOWNERS` with the single-pusher rule. | [CONTRIBUTING.md](../../../CONTRIBUTING.md) and [AGENTS.md](../../../AGENTS.md) state the rule and give the command that confirms no run is in progress. `CLAUDE.md` imports `AGENTS.md`. `.github/CODEOWNERS` requests the maintainer's review.                                                                                                                         | Review. CODEOWNERS is valid when GitHub shows no error banner on the file.                                                            |
 | 11 | A CI check that fails if a workflow can start Rust or C# without the JavaScript gate.         | `gateViolations()` in `workflow-policy.test.mjs` finds every job that installs or runs `cargo`, `rustup`, `wasm-pack`, `dotnet` or `setup-dotnet`. That includes jobs reached through nested reusable workflows. It fails unless the job transitively `needs` a job that calls `javascript-stage.yml`, and unless every `always()`/`!cancelled()` condition also requires that job's success. | Synthetic positive and negative cases, plus a check of every real workflow, in `Workflow Policy Tests`.                              |
+| 12 | A full JavaScript server/embedded implementation next to the JavaScript client (the owner's review). | `js/server` is `@link-foundation/link-cli-server`: the Rust `clink` in plain JavaScript for Node.js 20+, Bun and Deno. It has the same command line, output, errors and exit codes, writes the same store files, and has the same embedded API (`NamedTypesDecorator`, `QueryProcessor`, the transactions, version control, trigger and permission decorators, triplets), the protocol server and client over every IPC kind the runtimes support, `--serve --graphql`, and the `<db>.lock` lock. See [its README](../../../js/server/README.md) and [ARCHITECTURE.md](../../ARCHITECTURE.md#javascript-server-and-embedded-store). Each feature's `javascript` cell in `parity/features.json` points at it. | `js-server.yml`: unit tests with 100 % line, branch and function coverage on Node.js, Bun and Deno; the unit tests on Linux, macOS and Windows with Node.js 20, 22 and 26; differential tests that run each invocation through the Rust `clink` and `bin/clink.js` and compare output, status and files; and the client's conformance scenarios against `clink --serve` from JavaScript (`CLINK_JS`). |
 
 ## Root causes
 
@@ -109,6 +114,24 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
    `docs/protocol/**` as `-text`, and the parity checker fails if a fixture
    loses that attribute, so the JavaScript stage catches it on Linux.
 
+9. **Windows has no directory `fsync`.** The JavaScript store synced the
+   parent directory after it wrote a file, as on POSIX. Windows cannot open
+   a directory that way, and the Rust store syncs the parent directory only
+   under `cfg(unix)`. `syncParentDirectory` now skips it on Windows too, and
+   paths are joined with a backslash there, as Rust's `Path::join` does.
+   The test fixtures also needed LF line endings in `.gitattributes`.
+10. **A Windows named pipe cannot half-close.** `pipe:` is a named pipe on
+    Windows and a FIFO elsewhere. The IPC tests that ended a request by
+    closing their write side now frame it with a length prefix on Windows,
+    and the rendezvous test uses `fifo:`.
+11. **Node.js 20 does not expand test globs.** `node --test 'test/**/*.test.mjs'`
+    needs Node.js 21 or later, and Windows shells expand no globs either.
+    `scripts/run-tests.mjs` lists the test files itself.
+12. **`socket.resetAndDestroy()` before a write sends FIN on Node.js 22 and
+    earlier.** A GraphQL test expected a reset and got an orderly close.
+    The test now writes before it resets, which behaves the same everywhere
+    ([`experiments/issue-111/reset-and-destroy-events.mjs`](../../../experiments/issue-111/reset-and-destroy-events.mjs)).
+
 ## Solutions considered
 
 | Problem                    | Options                                                                                                                                                       | Chosen, and why                                                                                                                                                                                                                                                                                                                                      |
@@ -153,3 +176,13 @@ is re-run with debug logging. The switches are listed in
 - `STACK_PATHS_DEBUG`
 - `TRACKING_ISSUE_DEBUG`
 - `TRACKING_ISSUE_DRY_RUN`
+
+The JavaScript server adds three more:
+
+- `clink --trace` prints each step of the store, the transactions layer and
+  every transport event of `--serve`, `--connect` and `--forward`.
+- `CLINK_IPC_TRACE=1` turns the transport trace on without `--trace`.
+- `CLINK_DIFFERENTIAL_DEBUG=1` makes the differential tests print each
+  invocation and both implementations' outputs.
+
+The experiments behind the fixes above are kept in `experiments/issue-111/`.
