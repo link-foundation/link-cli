@@ -12,8 +12,9 @@ agent writes it. Agents also follow [AGENTS.md](AGENTS.md).
 
 ## Before you open a pull request
 
-1. Branch from `main`. Nobody pushes to `main` directly: branch protection
-   requires the three stage checks listed below.
+1. Branch from `main`. Nobody pushes to `main` directly: a ruleset requires
+   the three stage checks listed below on every commit there. Only the
+   release jobs, which push with a deploy key, bypass it.
 2. Install the JavaScript tools once: `npm ci --prefix js`.
 3. Run the JavaScript stage locally. Every pull request runs it first in CI.
 
@@ -40,7 +41,8 @@ agent writes it. Agents also follow [AGENTS.md](AGENTS.md).
 
 ## CI stages
 
-All three stage checks are required on `main`:
+All three stage checks are required on `main`, and a pull request must be up
+to date with `main` before it merges:
 
 | Order | Required check                 | Workflow                         | Runs                                                                                     |
 | ----- | ------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------- |
@@ -99,8 +101,8 @@ from a superseded commit also proves nothing. So:
 ## Pull request hygiene
 
 - Each pull request closes an issue: write `Fixes #<n>` in its description.
-- Keep pull requests green. A red pull request cannot merge, because of
-  branch protection.
+- Keep pull requests green. A red pull request cannot merge, because the
+  ruleset on `main` requires the three stage checks.
 - **Stale pull requests.** `stale.yml` labels a pull request `stale` after 60
   days without activity and closes it 14 days later. Any update, or removing
   the label, resets the clock. Add the `keep-open` label to exempt one. Issues

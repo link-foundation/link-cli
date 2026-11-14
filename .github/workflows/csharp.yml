@@ -500,11 +500,17 @@ jobs:
       packages: write
       # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.
       id-token: write
+    environment: release
     steps:
       - uses: actions/checkout@v7
+        # Rules on main admit pushes only from the release deploy key (issue
+        # #111). The key is a secret of the `release` environment, which only
+        # main can use. Without it the version push is declined; see
+        # docs/ci-cd/troubleshooting.md#a-release-push-was-declined.
         with:
           persist-credentials: true
           fetch-depth: 0
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -725,12 +731,17 @@ jobs:
       packages: write
       # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.
       id-token: write
+    environment: release
     steps:
       - uses: actions/checkout@v7
+        # Rules on main admit pushes only from the release deploy key (issue
+        # #111). The key is a secret of the `release` environment, which only
+        # main can use. Without it the version push is declined; see
+        # docs/ci-cd/troubleshooting.md#a-release-push-was-declined.
         with:
           persist-credentials: true
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6

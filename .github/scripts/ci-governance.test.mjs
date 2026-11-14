@@ -71,3 +71,31 @@ test('no step loads a local action from the workspace', () => {
     assert.doesNotMatch(text, /^ {6,}uses: \.\//m, `${name}: a step-level uses: ./ action`);
   }
 });
+
+// The rules on main require the three stage checks, and the release jobs'
+// version commits are new commits without checks. Only the release deploy key
+// bypasses those rules; GITHUB_TOKEN cannot be a bypass actor (issue #111).
+test('jobs that push a version commit to main use the release deploy key (issue #111)', () => {
+  const pushers = workflows.flatMap(({ name, text }) =>
+    readJobs(text)
+      .filter(({ body }) => /version-and-commit\.(?:mjs|rs)/.test(body))
+      .map((job) => ({ workflow: name, ...job })),
+  );
+  assert.deepEqual(pushers.map(({ workflow, name }) => `${workflow}: ${name}`).sort(), [
+    'csharp.yml: instant-release',
+    'csharp.yml: release',
+    'rust.yml: auto-release',
+    'rust.yml: manual-release',
+  ]);
+  for (const { workflow, name, body } of pushers) {
+    const where = `${workflow}: ${name}`;
+    assert.match(
+      body,
+      /^ {4}environment: release$/m,
+      `${where} must run in the release environment`,
+    );
+    const checkout = /- uses: actions\/checkout@\S+\n(?: {8}.*\n)+/.exec(body)?.[0] ?? '';
+    assert.match(checkout, /^ {10}ssh-key: \$\{\{ secrets\.RELEASE_DEPLOY_KEY \}\}$/m, where);
+    assert.doesNotMatch(checkout, /^ {10}token:/m, `${where} must not push with a token`);
+  }
+});

@@ -7,8 +7,9 @@ single-pusher rule in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 ## Stages
 
 CI runs in two stages. The JavaScript stage must succeed before any Rust or
-C# job starts. Since issue #111, branch protection on `main` requires these
-three checks:
+C# job starts. Since issue #111, the ruleset "main requires the JavaScript,
+Rust and C# stages" requires these three checks on `main`, up to date with
+`main`:
 
 | Stage | Required check                 | Entry workflow   | What fails it                                                                 |
 | ----- | ------------------------------ | ---------------- | ----------------------------------------------------------------------------- |
@@ -61,6 +62,43 @@ locally:
 ```bash
 STACK_PATHS_DEBUG=1 GITHUB_EVENT_NAME=pull_request GITHUB_BASE_SHA="$(git merge-base origin/main HEAD)" \
   GITHUB_HEAD_SHA=HEAD node .github/scripts/stack-paths.mjs rust
+```
+
+### "A pull request opened by a release job has no checks"
+
+`changelog-pr` (Rust) and `changeset-pr` (C#) open their pull requests with
+`GITHUB_TOKEN`, and GitHub starts no workflow for events made with that token.
+The required checks then never report. Close and reopen the pull request, or
+push a commit to it, to start CI.
+
+### "A release push was declined"
+
+The release jobs (`auto-release` and `manual-release` in `rust.yml`,
+`release` and `instant-release` in `csharp.yml`) push a version commit to
+`main`. That commit has no checks yet, so the ruleset declines it unless it
+comes from a deploy key, the ruleset's only bypass actor. GitHub Actions
+itself cannot be a bypass actor here: GitHub answers 422 "Actor GitHub Actions
+integration must be part of the ruleset source or owner organization". The
+release scripts then stop with "The push to 'main' was declined by a
+repository rule (GH006/GH013)" and push no tag.
+
+The jobs run in the `release` environment and check out with
+`ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}`. If the secret is missing or its
+key was removed, a repository administrator sets up a new key:
+
+```bash
+ssh-keygen -t ed25519 -N '' -C 'link-cli release bot' -f release-key
+gh repo deploy-key add release-key.pub --allow-write --title 'Release bot: version commits to main'
+gh secret set RELEASE_DEPLOY_KEY --env release < release-key
+shred -u release-key release-key.pub
+```
+
+Then re-run the failed release job. Only `main` can deploy to the `release`
+environment, so workflows on other branches cannot read the key. To see the
+rules in effect on `main`:
+
+```bash
+gh api repos/link-foundation/link-cli/rules/branches/main
 ```
 
 ## Parity failures

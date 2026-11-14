@@ -537,7 +537,7 @@ fn main() {
         };
         match classify_push_failure(&push_error) {
             PushFailure::RepositoryRules => fail(&format!(
-                "The push to '{}' was declined by a repository rule (GH006/GH013). Rebasing cannot change repository policy: allow the release bot to push to '{}' or release through a pull request. git output: {}",
+                "The push to '{}' was declined by a repository rule (GH006/GH013). Rebasing cannot change repository policy. The rules on '{}' admit only the release deploy key: give the 'release' environment a RELEASE_DEPLOY_KEY secret whose public key is a deploy key with write access (docs/ci-cd/troubleshooting.md#a-release-push-was-declined). git output: {}",
                 current_branch, current_branch, push_error
             )),
             PushFailure::Other => fail(&format!("Error pushing: {}", push_error)),
