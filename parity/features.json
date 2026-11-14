@@ -423,7 +423,7 @@
           "js/server/test/undoable-links.test.mjs",
           "js/server/test/differential/transactions.test.mjs"
         ],
-        "fingerprint": "3e26e1af317b5048"
+        "fingerprint": "5dcc1b1f8b4ca7db"
       }
     },
     {
@@ -686,7 +686,8 @@
           "rust/tests/link_storage_tests.rs",
           "rust/tests/indexed_links_tests.rs",
           "rust/tests/mapped_*_tests.rs",
-          "rust/tests/storage_*_tests.rs"
+          "rust/tests/storage_*_tests.rs",
+          "rust/examples/unit_store_trace.rs"
         ],
         "fingerprint": "05a3defdc2e14529"
       },
@@ -697,15 +698,20 @@
           "js/server/src/link-storage-doublets.js",
           "js/server/src/indexed-links.js",
           "js/server/src/storage-lock*.js",
-          "js/server/src/open-file.js"
+          "js/server/src/open-file.js",
+          "js/server/src/doublets-storage.js",
+          "js/server/src/unit-store*.js"
         ],
         "tests": [
           "js/server/test/link-storage*.test.mjs",
           "js/server/test/indexed-links.test.mjs",
           "js/server/test/storage-lock*.test.mjs",
-          "js/server/test/open-file.test.mjs"
+          "js/server/test/open-file.test.mjs",
+          "js/server/test/doublets-storage*.test.mjs",
+          "js/server/test/unit-store*.test.mjs",
+          "js/server/test/differential/doublets-storage.test.mjs"
         ],
-        "fingerprint": "a4fe487cdbe50781"
+        "fingerprint": "37e8fced07360295"
       }
     },
     {
@@ -904,7 +910,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "314258076802e8b2"
+        "fingerprint": "93b0ec97c080b766"
       }
     },
     {

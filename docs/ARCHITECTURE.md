@@ -408,8 +408,9 @@ extra runtime cost is paid.
 
 ## Embedding the Library
 
-Both packages are usable as libraries, not just as the backing code of a CLI
-(issue #98). The transactions layer is written against a storage abstraction
+The Rust and C# packages, and the JavaScript server package
+`@link-foundation/link-cli-server`, are usable as libraries, not just as the
+backing code of a CLI (issue #98). The transactions layer is written against a storage abstraction
 rather than against one concrete store, so an embedding application can supply
 its own.
 
@@ -440,6 +441,25 @@ C#:
 - `LinksFileLock` and `StorageRevision` provide the same locking and
   external-change primitives as the Rust `storage::lock` module.
 
+JavaScript (`js/server`, Node.js, Bun and Deno):
+
+- `DoubletsStorage` (`src/doublets-storage.js`) is the port of
+  `storage::DoubletsStorage` over a port of the file-mapped
+  `doublets::unit::Store` (`src/unit-store*.js`). It writes the same database
+  file byte for byte (golden fixtures and differential runs against
+  `rust/examples/unit_store_trace.rs` check it), changes links in place and
+  writes each change through to the file before it returns, so the file is
+  never renamed and other holders, Rust mappings included, keep a valid view.
+  `DoubletsStorage.open`, `openShared`, `openExclusive`, `tryOpenExclusive` and
+  `wrap` mirror the Rust constructors. A `u64` address is limited to
+  `Number.MAX_SAFE_INTEGER`; a larger one fails with `AddressOverflowError`.
+- `TransactionsDecorator` takes a `DoubletsStorage` as is (the role of
+  `GenericTransactionsDecorator`), or adapts a `LinkStorage` or a
+  `NamedTypesDecorator`; `FileTransitionLog` is the same `fsync`-per-append
+  log.
+- `FileLock`, `storageRevision` and `sameRevision` are the `<database>.lock`
+  sidecar lock and the change fingerprint of the Rust `storage::lock` module.
+
 The transition wire format writes addresses in decimal, so it is identical
 across address types: a log written by a `u32`/`uint` store reads back
 unchanged in a `u64`/`ulong` one, and an address too wide for the target type
@@ -451,6 +471,7 @@ is rejected rather than silently truncated.
 |-------|-------------------------------|------------------------------------|
 | In-memory (`LinkStorage` and the CLI decorators) | Nothing that was not saved — `flush()`/`save()` is required. | Same. |
 | File-mapped (`DoubletsStorage`) | Every write: the mapping is the page cache, and the kernel writes dirty pages back. | `flush()`, which `fsync`s the mapping. A clean drop also syncs. |
+| JavaScript `DoubletsStorage` | Every write: each change is written through to the file before it returns. | `flush()`, which `fsync`s the file. |
 | `FileTransitionLog` | Every append (`fsync` per append by default); at most the in-flight entry is lost. | Same. |
 
 Transitions are appended to the log before the write they describe is reported
@@ -460,11 +481,11 @@ transitions and roll back transitions that were never committed.
 ### Multi-Process Access
 
 A doublets store has no internal concurrency control, so concurrent writers to
-one file corrupt it. Both implementations therefore expose advisory locking of
+one file corrupt it. All implementations therefore expose advisory locking of
 a `<database>.lock` sidecar — shared for readers, exclusive for writers, with a
 blocking acquire and a non-blocking try-acquire — plus a cheap
 `StorageRevision` fingerprint (`has_external_changes()` in Rust,
-`StorageRevision.HasChanged` in C#) that answers "has anyone else written since
+`StorageRevision.HasChanged` in C#, `hasExternalChanges()` in JavaScript) that answers "has anyone else written since
 I last looked?" without reparsing the database. Rust uses `std::fs::File::lock`
 (hence the 1.89 minimum supported Rust version); C# expresses the same
 semantics through `FileShare`, which the runtime maps onto `flock` on Unix and

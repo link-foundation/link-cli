@@ -13,6 +13,7 @@ your process, or serves one to clients over TCP, IPC or GraphQL.
 | --- | --- |
 | Command line | `clink` (`bin/clink.js`), or `main(args, io)` in-process |
 | Embedded store | `NamedTypesDecorator.open(path)` and `QueryProcessor` |
+| File-backed doublets store, as Rust's `storage::DoubletsStorage` | `DoubletsStorage.open(path)` under `TransactionsDecorator` |
 | Transactions, version control, triggers, permissions | the decorators of `src/index.js` |
 | Protocol server and client | `LinksServer`, `LinksClient`, `Endpoint` |
 | GraphQL endpoint for Deep | `GraphqlServer`, or `clink --serve ADDR --graphql` |
@@ -94,6 +95,56 @@ store.save();
 console.log(open().all().map((link) => [link.index, link.source, link.target])); // [[1, 1, 1]]
 ```
 
+### File-backed doublets storage
+
+`DoubletsStorage` is the port of Rust's `storage::DoubletsStorage` over a
+file-mapped `doublets::unit::Store` (`src/unit-store*.js`): the database file
+it writes is byte for byte the one Rust writes for the same operations, links
+are changed **in place** (the file only grows and is never renamed, so a Rust
+or JavaScript process holding it keeps a valid view), and each write reaches
+the file before it returns, so committed links survive a process crash
+without a `save`; `flush()` adds the `fsync` that a machine crash needs.
+`TransactionsDecorator` writes through it directly, as Rust's
+`GenericTransactionsDecorator` does:
+
+```js
+import {
+  CommitMode,
+  DoubletsStorage,
+  FileTransitionLog,
+  INFINITE_RETENTION,
+  TransactionsDecorator,
+} from '@link-foundation/link-cli-server';
+
+const store = DoubletsStorage.openExclusive('db.links'); // holds db.links.lock until close()
+const transactions = new TransactionsDecorator(
+  store,
+  FileTransitionLog.open('db.transitions.log'),
+  INFINITE_RETENTION,
+  CommitMode.Sync,
+);
+transactions.beginTransaction();
+const point = transactions.create(0, 0);
+transactions.update(point, point, point);
+transactions.commit();
+console.log(store.allLinks().map((link) => [link.index, link.source, link.target])); // [[1, 1, 1]]
+transactions.logStore().close();
+store.close();
+```
+
+`openShared`, `openExclusive` and `tryOpenExclusive` take the `<db>.lock`
+sidecar lock of the Rust storage, `open(path, { addressType: AddressType.U32 })`
+opens a `u32`-addressed store, `DoubletsStorage.wrap(store)` adopts a
+`UnitStore` the caller owns, `withAutomaticUniquenessAndUsagesResolution()`
+adds the resolution decorators of the Rust storage, and `hasExternalChanges()`
+with `reload()` (or `storageRevision(path)` and `sameRevision`) tells whether
+the file changed since this storage last flushed or reloaded it, that is
+whether another holder published a write (`flush` publishes this storage's
+own writes).
+[`examples/embedded-store/embedded-store.mjs`](../../examples/embedded-store/embedded-store.mjs)
+is the JavaScript twin of the Rust embedded-store example and writes the same
+database file.
+
 `VersionControlDecorator` adds branches, tags and checkout on top of it,
 `PersistentTransformationDecorator` the `--always`/`--once` triggers,
 `PermissionsDecorator` the permission policies and tokens, and
@@ -150,6 +201,9 @@ The endpoints are those of the Rust `clink --serve` (see
   The command line itself does not lock, as in Rust.
 - I/O error texts use the POSIX wording of the Rust standard library on
   every platform.
+- A JavaScript number is exact only up to 2^53 - 1, so a `u64` address of
+  `DoubletsStorage` is limited to `Number.MAX_SAFE_INTEGER`: a larger value in
+  a database file fails with `AddressOverflowError` instead of being rounded.
 
 ## Debugging
 
@@ -167,12 +221,20 @@ npm test                     # unit tests (Node.js)
 npm run test:coverage        # with 100 % line, branch and function coverage
 bun test --timeout 60000 test/
 deno test --allow-all --no-check test/
-CLINK_RUST=../../rust/target/release/clink npm run test:differential
+CLINK_RUST=../../rust/target/release/clink \
+  CLINK_RUST_UNIT_STORE=../../rust/target/release/examples/unit_store_trace \
+  npm run test:differential
 ```
 
 The differential tests run each invocation through the Rust `clink` and
 through `bin/clink.js`, each in its own sandbox, and compare standard output,
-standard error, the exit status and every file written.
+standard error, the exit status and every file written, and replay the
+unit-store scenarios of `test/fixtures/unit-store-scenarios.json` (and random
+ones) through the Rust `DoubletsStorage` driver
+([`rust/examples/unit_store_trace.rs`](../../rust/examples/unit_store_trace.rs))
+and through `DoubletsStorage`, comparing every printed result and the bytes of
+the database file. Build the driver with
+`cargo build --release --manifest-path ../../rust/Cargo.toml --example unit_store_trace`.
 `node test/conformance/run.mjs` in `js/client`, with
 `CLINK_JS=js/server/bin/clink.js`, runs the client's conformance scenarios
 against this package's `clink --serve`. CI runs all of them in

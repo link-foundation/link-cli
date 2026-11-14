@@ -75,7 +75,12 @@ export class TransactionsDecorator extends TransactionsRecording {
   ) {
     super();
     this.innerStore = inner;
-    this.storage = new TransactionStorage(inner);
+    // A store that already speaks the transaction storage protocol (the
+    // file-backed `DoubletsStorage`, as `GenericTransactionsDecorator` takes
+    // any `TransactionStorage` in Rust) is used as is; a `LinkStorage` or a
+    // `NamedTypesDecorator` is adapted.
+    this.storage =
+      typeof inner.createLinkObserved === 'function' ? inner : new TransactionStorage(inner);
     this.rawLogStore = logStore;
     this.transitionLog = transitionLogStore(logStore);
     this.records = [];

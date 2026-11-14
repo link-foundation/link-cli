@@ -21,7 +21,14 @@ export {
 
 // The store: links, names, types, Unicode strings, LiNo and store archives.
 export { ANY, MAX_ADDRESS, NULL_LINK, link } from './link.js';
-export { LinkStorage } from './link-storage.js';
+export { LinkStorage, sameRevision, storageRevision } from './link-storage.js';
+// The file-backed doublets unit store, byte for byte the Rust
+// `DoubletsStorage<usize, FileMappedUnitStore<usize>>` (rust/src/doublets_storage.rs).
+export { DoubletsStorage } from './doublets-storage.js';
+export { UnitStore } from './unit-store.js';
+export { AddressType } from './unit-store-memory.js';
+export { DoubletsError } from './unit-store-doublets.js';
+export { withAutomaticUniquenessAndUsagesResolution } from './unit-store-resolution.js';
 export { FileLock, LockMode, lockFilePath } from './storage-lock.js';
 export { NamedTypeLinks } from './named-type-links.js';
 export { NamedTypesDecorator, makeNamesDatabaseFilename } from './named-types.js';

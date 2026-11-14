@@ -158,6 +158,18 @@ jobs:
       - name: Unit tests on Deno
         run: deno test --allow-all --no-check test/
 
+      # The embedded-store example (the twin of rust/examples/embedded_store.rs)
+      # on every runtime: each run asserts recovery, the lock and the in-place
+      # writes, and all three must leave the same database file.
+      - name: Embedded store example on Node.js, Bun and Deno
+        run: |
+          example=../../examples/embedded-store/embedded-store.mjs
+          node "$example" "$RUNNER_TEMP/embedded-node"
+          bun "$example" "$RUNNER_TEMP/embedded-bun"
+          deno run --allow-all --node-modules-dir=manual "$example" "$RUNNER_TEMP/embedded-deno"
+          cmp "$RUNNER_TEMP/embedded-node/db.links" "$RUNNER_TEMP/embedded-bun/db.links"
+          cmp "$RUNNER_TEMP/embedded-node/db.links" "$RUNNER_TEMP/embedded-deno/db.links"
+
   # The package supports Node.js 20 and later on every desktop and server
   # operating system (`engines` in package.json), so the unit tests also run
   # on the oldest supported Node.js and on macOS and Windows. Tests of
@@ -213,6 +225,9 @@ jobs:
       cancel-in-progress: true
     env:
       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+      # The Rust `DoubletsStorage` driver test/differential/doublets-storage
+      # replays the unit-store scenarios through (rust/examples/unit_store_trace.rs).
+      CLINK_RUST_UNIT_STORE: ${{ github.workspace }}/rust/target/release/examples/unit_store_trace
       CLINK_JS: ${{ github.workspace }}/js/server/bin/clink.js
     steps:
       - uses: actions/checkout@v7
@@ -248,8 +263,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-js-server-cargo-
 
-      - name: Build the Rust clink
-        run: cargo build --release --manifest-path rust/Cargo.toml --bin clink
+      - name: Build the Rust clink and the unit-store driver
+        run: >-
+          cargo build --release --manifest-path rust/Cargo.toml
+          --bin clink --example unit_store_trace
 
       # The same invocations through both executables: stdout, stderr, exit
       # status and every file they write must be identical.

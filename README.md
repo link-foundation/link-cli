@@ -587,8 +587,8 @@ separately so the primary links database remains numeric.
 
 ## Use as an embedded store
 
-Both libraries can be embedded as a transactional links store instead of being
-driven through the CLI. The transactions layer is written against a storage
+The Rust, C# and JavaScript server libraries can be embedded as a
+transactional links store instead of being driven through the CLI. The transactions layer is written against a storage
 abstraction rather than one concrete store, so an application can supply its
 own:
 
@@ -601,20 +601,23 @@ own:
 - **A real doublets store.** Rust's `storage::DoubletsStorage` wraps a
   file-mapped `doublets::unit::Store`, or adopts one the caller already owns.
   Its links are mutated **in place**, so the inode never changes and other
-  processes that mapped the same file keep observing the same data.
+  processes that mapped the same file keep observing the same data. The
+  JavaScript `DoubletsStorage` of `@link-foundation/link-cli-server` is its
+  port: it writes the same database file byte for byte, in place.
 - **Stated durability.** Writes to a file-mapped store survive a *process*
   crash with no explicit save; surviving a *machine* crash needs the `fsync`
   that `flush()` performs. Crash recovery replays committed-but-unapplied
   transitions and rolls back uncommitted ones when the store is reopened.
-- **Multi-process access.** Both implementations lock a `<database>.lock`
+- **Multi-process access.** All three implementations lock a `<database>.lock`
   sidecar — shared for readers, exclusive for writers — and expose a cheap
   fingerprint that answers "has anyone else written since I last looked?".
 
-Runnable demos for both languages live in
+Runnable demos for all three languages live in
 [`examples/embedded-store/`](examples/embedded-store).
 
 See [rust/README.md](rust/README.md#use-as-a-library),
-[csharp/README.md](csharp/README.md#use-as-a-library), and
+[csharp/README.md](csharp/README.md#use-as-a-library),
+[js/server/README.md](js/server/README.md#file-backed-doublets-storage), and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#embedding-the-library) for the
 details.
 
