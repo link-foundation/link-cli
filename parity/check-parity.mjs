@@ -338,7 +338,16 @@ export function readBaseManifest(root, base, log = () => {}) {
     return undefined;
   }
   try {
-    return JSON.parse(git(root, ['show', `${base}:${FEATURES_PATH}`]));
+    git(root, ['cat-file', '-e', `${base}^{commit}`]);
+  } catch {
+    // A shallow clone hides the base; skipping would silently pass every
+    // one-sided change, so this is an error (check out with fetch-depth: 0).
+    throw new Error(`base commit ${base} is not in this clone; fetch it first`);
+  }
+  try {
+    const manifest = JSON.parse(git(root, ['show', `${base}:${FEATURES_PATH}`]));
+    log(`One-sided changes are compared with ${base}.`);
+    return manifest;
   } catch (error) {
     log(
       `Base ${base} has no readable ${FEATURES_PATH} (${error.message.split('\n')[0]}); skipped.`,
@@ -413,12 +422,19 @@ export function run(argv, root = resolve(dirname(fileURLToPath(import.meta.url))
     write(GOLDEN_PATH, golden);
     console.log(`Updated ${FEATURES_PATH} and ${GOLDEN_PATH}`);
   }
+  const oneSided = () => {
+    try {
+      return checkOneSidedChanges(manifest, readBaseManifest(root, base, console.log));
+    } catch (error) {
+      return [error.message];
+    }
+  };
   const errors = [
     ...validateManifest(manifest),
     ...checkGlobs(manifest, files),
     ...checkCoverage(manifest, files),
     ...checkFingerprints(manifest, current),
-    ...checkOneSidedChanges(manifest, readBaseManifest(root, base, log)),
+    ...oneSided(),
     ...checkGoldenFixtures(golden, files, readBuffer, readText),
   ];
   for (const error of errors) console.error(`::error::${error}`);

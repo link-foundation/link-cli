@@ -16,6 +16,7 @@ import {
   computeFingerprints,
   fingerprint,
   globToRegExp,
+  readBaseManifest,
   sha256,
   updateManifest,
   validateManifest,
@@ -258,4 +259,10 @@ test('the repository manifest is complete and current', () => {
     env: { ...process.env, PARITY_BASE_SHA: '' },
   });
   assert.match(output, /Parity: \d+ features, .* 0 findings/);
+});
+
+test('a base commit missing from a shallow clone fails instead of skipping the rule', () => {
+  assert.equal(readBaseManifest(root, ''), undefined);
+  assert.equal(readBaseManifest(root, '0'.repeat(40)), undefined);
+  assert.throws(() => readBaseManifest(root, 'f'.repeat(40)), /is not in this clone/);
 });
