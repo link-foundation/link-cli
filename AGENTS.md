@@ -28,6 +28,14 @@ before.
 4. Do not push only to retry an infrastructure failure, such as a runner that
    was never acquired. `rerun-infrastructure-failures.yml` reruns those.
 
+## Pull requests are never closed for age
+
+There is no stale pull request policy, and there must never be one. Do not
+close, label as stale or rebase an open pull request because it is old or
+idle, and do not add a workflow (such as `actions/stale`) that would. An old
+pull request is work that can still continue. Close one only when its owner
+asks for it.
+
 ## Stage order and parity
 
 - The JavaScript stage runs first: lint, `npm run test:js` and

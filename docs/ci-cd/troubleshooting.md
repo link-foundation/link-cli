@@ -202,15 +202,6 @@ NEEDS_JSON='{"latest":{"result":"failure"}}' TRACKING_ISSUE_DRY_RUN=1 \
   GITHUB_TOKEN="$(gh auth token)" node .github/scripts/dependency-tracking-issue.mjs
 ```
 
-## Stale pull requests
-
-`stale.yml` runs daily. To see what it would label or close without changing
-anything, run it with the `debug_only` input:
-
-```bash
-gh workflow run stale.yml -f debug_only=true
-```
-
 ## Debug switches
 
 | Switch                                  | Effect                                                                         |
@@ -220,4 +211,3 @@ gh workflow run stale.yml -f debug_only=true
 | `STACK_PATHS_DEBUG=1`                   | `stack-paths.mjs` prints each changed file and which stack it counts for.      |
 | `TRACKING_ISSUE_DEBUG=1`                | `dependency-tracking-issue.mjs` logs each GitHub API request.                  |
 | `TRACKING_ISSUE_DRY_RUN=1`              | `dependency-tracking-issue.mjs` decides but writes nothing.                    |
-| `debug_only` input of `stale.yml`       | actions/stale reports without labelling or closing anything.                   |

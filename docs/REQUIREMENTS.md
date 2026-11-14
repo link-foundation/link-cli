@@ -69,7 +69,7 @@ the core CLI behavior and is also used by the WebAssembly browser workbench.
 | Run in a browser. | #12, #52, #69, #70 | The Rust query processor is wrapped with `wasm-bindgen` and surfaced through a React/Vite workbench. |
 | Keep CI split by surface area. | #63, #69 | Separate C#, Rust, and WebAssembly workflows run relevant checks. |
 | Gate Rust and C# CI on a JavaScript stage, and check parity. | #111 | The JavaScript stage (lint, `npm run test:js`, `parity/check-parity.mjs`) runs first and every Rust or .NET job `needs` it. `parity/features.json` records each feature's C#, Rust and JavaScript status, and the checker fails on a one-sided change that is not acknowledged. Both suites must load every fixture in `parity/golden-fixtures.json`, proven by a receipt. `main` requires the three `Pipeline Status` checks. See [PARITY.md](PARITY.md), [JS-WORKBENCH.md](JS-WORKBENCH.md) and [case-studies/issue-111](case-studies/issue-111/README.md). |
-| Document how to contribute and keep pull requests moving. | #111 | [CONTRIBUTING.md](../CONTRIBUTING.md) and [AGENTS.md](../AGENTS.md) state the single-pusher rule for CI fixes; `.github/CODEOWNERS` requests a review; `stale.yml` flags pull requests idle for 60 days. |
+| Document how to contribute and keep pull requests moving. | #111 | [CONTRIBUTING.md](../CONTRIBUTING.md) and [AGENTS.md](../AGENTS.md) state the single-pusher rule for CI fixes; `.github/CODEOWNERS` requests a review. There is no stale pull request policy: no workflow closes, labels or rebases a pull request because of age, and `ci-governance.test.mjs` enforces that. |
 
 ## Open Requirements
 

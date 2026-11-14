@@ -1,8 +1,8 @@
 // Repository governance rules of issue #111 that are not the stage gate
 // itself (the gate rule lives in workflow-policy.test.mjs): the required
 // status checks always report, both suites prove they loaded the golden
-// fixtures, idle pull requests go stale, and a red Dependencies check on main
-// is tracked in an issue.
+// fixtures, no workflow closes or flags pull requests because of age, and a
+// red Dependencies check on main is tracked in an issue.
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readJobs, workflows } from './workflow-files.mjs';
@@ -39,15 +39,27 @@ test('both suites prove they loaded the shared golden fixtures (issue #111)', ()
   }
 });
 
-test('idle pull requests are flagged after 60 days and then closed (issue #111)', () => {
-  const { text } = workflows.find(({ name }) => name === 'stale.yml');
-  assert.match(text, /uses: actions\/stale@v\d+/);
-  assert.match(text, /days-before-pr-stale: 60\n/);
-  assert.match(text, /days-before-pr-close: [1-9]\d*\n/);
-  // Issues track wanted work; only pull requests go stale.
-  assert.match(text, /days-before-issue-stale: -1\n/);
-  assert.match(text, /days-before-issue-close: -1\n/);
-  assert.match(text, /^ {2}schedule:/m);
+// link-foundation repositories have no stale pull request policy: work on a
+// pull request can always continue, so nothing closes, labels or rebases one
+// because time has passed (the owner's review of PR #180 for issue #111).
+test('no workflow flags or closes pull requests for inactivity (issue #111)', () => {
+  for (const { name, text } of workflows) {
+    assert.doesNotMatch(text, /uses: actions\/stale@/, `${name}: actions/stale is not allowed`);
+    assert.doesNotMatch(
+      text,
+      /days-before-(?:pr-)?(?:stale|close)|stale-pr-label|close-pr-message/,
+      `${name}: a stale pull request setting is not allowed`,
+    );
+    assert.doesNotMatch(
+      text,
+      /gh pr close|pulls\/[^\n]*state[^\n]*closed|pulls\.update\([^)]*state: ['"]closed/,
+      `${name}: a workflow must not close pull requests`,
+    );
+  }
+  assert.ok(
+    !workflows.some(({ name }) => /^stale\.ya?ml$/.test(name)),
+    'a stale workflow is not allowed',
+  );
 });
 
 test('a red Dependencies check on main opens or updates a tracking issue (issue #111)', () => {

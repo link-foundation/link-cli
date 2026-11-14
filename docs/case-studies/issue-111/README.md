@@ -7,7 +7,7 @@ The issue audits link-cli against the standard in link-assistant/router#759
 (requirements 3, 4, 6 and 8), the shared pipeline templates, and
 hive-mind's `docs/CI-CD-BEST-PRACTICES.md`. Its finding: the three stacks
 were built in parallel with no gate between them, no check kept them at
-parity, `main` was unprotected, and the open pull requests were stale or red.
+parity, `main` was unprotected, and the only active pull request and the default branch were red.
 
 ## Data collected
 
@@ -17,7 +17,7 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | File                                                       | What it holds                                                                    |
 | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | [`issue-111.json`](data/issue-111.json)                    | The issue body. It has no comments ([`issue-111-comments.json`](data/issue-111-comments.json) is `[]`). |
-| [`pr-180-comments.json`](data/pr-180-comments.json)        | Pull request conversation comments. It was empty when collected.                 |
+| [`pr-180-comments.json`](data/pr-180-comments.json)        | Pull request conversation comments, including the owner's review of 2026-11-14 16:13. |
 | [`branch-protection-before.json`](data/branch-protection-before.json) | `GET /branches/main/protection` before the change: 404 "Branch not protected". |
 | [`branch-protection-after.json`](data/branch-protection-after.json) | After the change: the 200 from `GET /branches/main/protection`, the ruleset, the rules in effect on `main`, the `release` environment and the deploy key's metadata. |
 | [`actions-bypass-422.json`](data/actions-bypass-422.json)  | GitHub's 422 when GitHub Actions is made a ruleset bypass actor. `experiments/issue-111/probe-actions-bypass.sh` reproduces it. |
@@ -38,10 +38,12 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 2026-11-06       | ESLint, Prettier and the `lint` script for `js/` land on `main` (fd17aa4e).                                                 |
 | 2026-11-10/13    | Scheduled and push runs of `Dependencies` on `main` are green.                                                               |
 | 2026-11-14 08:27 | Issue #176 closes. It held back `cargo-audit` 0.22.2 until `taiki-e/install-action` shipped a 0.23.0 manifest (v2.90.4). |
-| 2026-11-14       | PR #180 adds the parity manifest, the checker and golden fixtures (50fc778d), stack path detection (6baffe6c), the JavaScript stage gate (4e540213), the stale workflow and tracking issue (62802d79), the zizmor reconciliation (eb278c5f) and the dependency bumps (f3639fbe). |
+| 2026-11-14       | PR #180 adds the parity manifest, the checker and golden fixtures (50fc778d), stack path detection (6baffe6c), the JavaScript stage gate (4e540213), a stale workflow (later removed) and the tracking issue (62802d79), the zizmor reconciliation (eb278c5f) and the dependency bumps (f3639fbe). |
 | 2026-11-14       | CI for 4e540213 fails `Workflows`, because zizmor 1.32's `self-repository` audit flags every `uses: ./…/javascript-stage.yml`. It also fails `Dependencies`, because #176 closed and three upstream releases appeared that morning. Both are fixed before the next push. |
 | 2026-11-14 09:39 | The ruleset, classic protection, the deploy key and the `release` environment are configured on the repository; `GET /branches/main/protection` changes from 404 to 200. |
 | 2026-11-14 09:43 | PRs #36-#41, #49 and #57 are closed with a comment; their branches and issues stay. |
+| 2026-11-14 16:13 | The owner's review: reopen every closed pull request, remove the stale requirement (no stale pull request policy may exist), and add a full JavaScript server/embedded implementation next to the client. |
+| 2026-11-14 16:16 | PRs #36-#41, #49 and #57 are reopened with a comment each; `stale.yml` is removed and a test forbids any stale policy. |
 | 2026-11-14 09:52 | The Rust and C# golden fixture tests, which ran on Windows for the first time, fail on `windows-2025` with a hash mismatch: Windows checkouts had CRLF line endings (root cause 8). |
 
 ## Requirements and how each is met
@@ -54,7 +56,7 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 4  | Shared golden fixtures that both suites must load, and a CI job that fails otherwise.         | `parity/golden-fixtures.json` lists 41 `docs/protocol` fixtures with SHA-256. `rust/tests/golden_fixtures_tests.rs` and `GoldenFixturesTests.cs` load and hash all of them and write a receipt. `--receipt` in `rust.yml` and `csharp.yml` fails if a receipt is missing or incomplete.                                                                                     | The receipt steps in CI. `ci-governance.test.mjs` checks that both workflows keep them.                                              |
 | 5  | Document what the `js/` workbench implements and what it delegates.                           | [JS-WORKBENCH.md](../../JS-WORKBENCH.md). The per-feature truth is the `javascript` cell in `parity/features.json`.                                                                                                                                                                                                                                                      | The parity checker keeps that cell honest. Review of the page.                                                                       |
 | 6  | Branch protection or a ruleset on `main` that requires the three stage checks; the protection API returns 200. | Both, because neither alone works. The ruleset "main requires the JavaScript, Rust and C# stages" requires `Pipeline Status (javascript)`, `Pipeline Status (rust)` and `Pipeline Status (csharp)` from GitHub Actions, up to date with `main`, and forbids force pushes and deletion. Classic protection forbids force pushes and deletion too, which makes the protection API return 200. The release jobs push their version commits to `main`, and those commits carry no checks, so the ruleset lets only deploy keys bypass it. The jobs push with the deploy key in the `RELEASE_DEPLOY_KEY` secret of the `release` environment, which only `main` can use (root cause 7). | `gh api repos/link-foundation/link-cli/branches/main/protection` returns 200; `gh api repos/link-foundation/link-cli/rules/branches/main` lists the three checks. Both are saved in [`data/branch-protection-after.json`](data/branch-protection-after.json). `ci-governance.test.mjs` checks that every job that pushes a version commit uses the deploy key. |
-| 7  | Triage PRs #36-#41, #49 and #57, and flag or close PRs idle for more than 60 days.           | The eight PRs are closed with a comment. Their branches are kept and their issues stay open, so the work can be restarted from a fresh branch. `stale.yml` (actions/stale v11) labels a PR `stale` after 60 idle days and closes it 14 days later; `keep-open` exempts a PR. Issues are never marked stale.                                                                     | `ci-governance.test.mjs` checks the stale configuration. The PR states are recorded in [`data/ci-evidence.md`](data/ci-evidence.md). |
+| 7  | ~~Triage PRs #36-#41, #49 and #57, and flag or close PRs idle for more than 60 days.~~ **Reverted by the owner's review.** | The eight PRs were closed on 2026-11-14 and reopened the same day after the owner's review (see "Review feedback"). link-foundation repositories have no stale pull request policy: `stale.yml` was removed, and no workflow may close, label or rebase a pull request because of age. | `ci-governance.test.mjs` fails if any workflow uses `actions/stale`, a stale setting or closes pull requests. The reopening is recorded in [`data/ci-evidence.md`](data/ci-evidence.md). |
 | 8  | Fix or close PR #109, and make a red scheduled `Dependencies` on `main` open or update a tracking issue. | #109 was already closed on 2026-10-12. The new `tracking-issue` job in `dependencies.yml` runs on `main` after `latest`. It opens "Dependencies check is failing on main", comments on it while the check stays red, and closes it after the next green run. The held-back `cargo-audit` pin became due during this work and was updated.                                       | `dependency-tracking-issue.test.mjs`, and a dry run against the live repository (see [troubleshooting](../../ci-cd/troubleshooting.md#dependencies)). |
 | 9  | `workflows.yml`, `.github/zizmor.yml`, the CodeQL config, and ESLint/Prettier for `js/`, with their findings fixed. | All of these already existed on `main` (see the timeline). This PR fixed zizmor's new `self-repository` finding (see root cause 5), and documented every linter and its local command in [troubleshooting](../../ci-cd/troubleshooting.md#workflow-lint-actionlint-and-zizmor). | `Workflows` and the JavaScript stage are green. Locally, actionlint 1.7.12 and zizmor 1.32.0 report nothing.                          |
 | 10 | `CONTRIBUTING.md`, `AGENTS.md`/`CLAUDE.md` and `.github/CODEOWNERS` with the single-pusher rule. | [CONTRIBUTING.md](../../../CONTRIBUTING.md) and [AGENTS.md](../../../AGENTS.md) state the rule and give the command that confirms no run is in progress. `CLAUDE.md` imports `AGENTS.md`. `.github/CODEOWNERS` requests the maintainer's review.                                                                                                                         | Review. CODEOWNERS is valid when GitHub shows no error banner on the file.                                                            |
@@ -75,9 +77,10 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
    The path filters also meant that a C#-only change never ran the Rust
    workflow at all.
 4. **Governance was never set up.** The repository had no protection,
-   rulesets, CODEOWNERS or stale policy. Red and idle pull requests stayed
-   open, and a failing scheduled run produced only an email to whoever had
-   notifications on.
+   rulesets or CODEOWNERS, and a failing scheduled run produced only an email
+   to whoever had notifications on. (Old pull requests staying open is not a
+   defect: the owner's review states that link-foundation repositories have no
+   stale pull request policy.)
 5. **zizmor 1.32 versus actionlint 1.7.12.** The gate adds
    `uses: ./.github/workflows/javascript-stage.yml` to ten workflows. zizmor
    1.32's new `self-repository` audit asks for the `$/` syntax that GitHub
@@ -115,14 +118,12 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | Parity manifest            | Hand-written checklists; a generated feature list; per-feature fingerprints with a one-sided-change rule.                                                     | **Fingerprints.** A checklist does not notice drift. A fingerprint of each language's sources makes any change visible, and the base-commit comparison tells a one-sided change from a parallel one. `--acknowledge` records deliberate exceptions, each with a reason and a link.                                                                         |
 | Fixture enforcement        | Rely on the tests existing; parse test output; receipts.                                                                                                      | **Receipts.** A test that is filtered out, skipped or never built writes nothing, so a missing or short receipt proves the suite did not load the fixtures. Parsing logs would be fragile across `cargo test` and `dotnet test`.                                                                                                                          |
 | Branch protection          | (a) Classic protection with required checks; (b) a ruleset with GitHub Actions as bypass actor; (c) a ruleset with a deploy key as bypass actor; (d) release through a pull request. | **(c), plus classic protection without required checks.** (a) rejects every release push, because `GITHUB_TOKEN` is not an administrator. (b) is rejected by GitHub with a 422 (root cause 7). (d) would rewrite both release pipelines. A deploy key is the bypass actor GitHub accepts. Its private key is a secret of the `release` environment, which only `main` can deploy to, so a workflow on another branch cannot read it. Classic protection without required checks keeps the protection endpoint at 200 and does not block the deploy key. |
-| Stale pull requests        | actions/stale; a custom script; manual triage.                                                                                                                | **actions/stale v11** for the policy, plus manual closing of the eight 2025 pull requests now. It is the maintained GitHub action for this job and has a dry-run mode (`debug-only`).                                                                                                                                                                    |
+| Stale pull requests        | actions/stale; a custom script; manual triage; no policy.                                                                                                      | **No policy** (the owner's decision in review). An old pull request is work that can still continue, so none is ever closed, labelled or rebased for age. The first version of this PR used actions/stale v11 and closed eight PRs; both were reverted. |
 | Red `Dependencies` on main | GitHub's email notifications; an issue per failure; one tracking issue.                                                                                       | **One tracking issue**, opened, updated and closed by the workflow, found by a hidden marker. It does not depend on anyone's notification settings and never creates duplicates.                                                                                                                                                                         |
 | zizmor versus actionlint   | Use `$/` and disable actionlint; ignore each finding inline; disable the audit with a reason and a replacement test.                                          | **Disable with a reason, plus a test.** Reusable workflows called through `./` are resolved from the same commit, so the risk the audit targets, unpinned local *actions* after a checkout, is covered by a policy test that forbids step-level `uses: ./`. Re-enable the audit when rhysd/actionlint#711 is fixed.                                               |
 
 ## Existing components used
 
-- [`actions/stale`](https://github.com/actions/stale) v11.0.0 (released
-  2026-07-28) for the stale policy.
 - [actionlint](https://github.com/rhysd/actionlint) 1.7.12 with shellcheck
   through its Docker image, and [zizmor](https://docs.zizmor.sh/) 1.32.0.
   Both already ran in `workflows.yml`.
@@ -152,4 +153,3 @@ is re-run with debug logging. The switches are listed in
 - `STACK_PATHS_DEBUG`
 - `TRACKING_ISSUE_DEBUG`
 - `TRACKING_ISSUE_DRY_RUN`
-- the `debug_only` input of `stale.yml`

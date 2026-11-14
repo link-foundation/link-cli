@@ -103,10 +103,10 @@ from a superseded commit also proves nothing. So:
 - Each pull request closes an issue: write `Fixes #<n>` in its description.
 - Keep pull requests green. A red pull request cannot merge, because the
   ruleset on `main` requires the three stage checks.
-- **Stale pull requests.** `stale.yml` labels a pull request `stale` after 60
-  days without activity and closes it 14 days later. Any update, or removing
-  the label, resets the clock. Add the `keep-open` label to exempt one. Issues
-  never go stale: they track work that is still wanted.
+- **No stale pull request policy.** A pull request is never closed, labelled
+  stale or rebased just because time has passed: work on any open pull request
+  can always continue. No workflow, bot or agent may close pull requests for
+  inactivity; `ci-governance.test.mjs` fails if one tries.
 - Dependency updates come from Dependabot, and `dependencies.yml` keeps every
   dependency on its latest release. A dependency that cannot be updated yet
   carries a comment linking the open issue that blocks it. When the check

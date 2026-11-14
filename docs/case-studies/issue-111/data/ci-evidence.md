@@ -81,22 +81,24 @@ Making GitHub Actions a bypass actor was refused with HTTP 422
 ([`actions-bypass-422.json`](actions-bypass-422.json)), so the release jobs
 push with deploy key 169860720 from the `release` environment.
 
-## Stale pull request triage (requirement 7)
+## Pull request triage (requirement 7, reverted)
 
-Each pull request was closed with a comment that explains the triage and how
-to restart the work. The branches were kept, and issues #35, #34, #33, #32,
-#31, #30, #18 and #56 are still open.
+Each pull request was first closed with a comment. The owner's review on
+2026-11-14 16:13 ([comment](https://github.com/link-foundation/link-cli/pull/180#issuecomment-6880431278))
+reverted the requirement: link-foundation repositories have no stale pull
+request policy. All eight were reopened, each with a comment, and are open
+again. The branches were never deleted.
 
-| Pull request | State  | Closed at (UTC)      | Comment |
-| ------------ | ------ | -------------------- | ------- |
-| #36 | closed | 2026-11-14T09:42:53Z | [comment](https://github.com/link-foundation/link-cli/pull/36#issuecomment-6875389721) |
-| #37 | closed | 2026-11-14T09:42:56Z | [comment](https://github.com/link-foundation/link-cli/pull/37#issuecomment-6875390459) |
-| #38 | closed | 2026-11-14T09:42:59Z | [comment](https://github.com/link-foundation/link-cli/pull/38#issuecomment-6875391101) |
-| #39 | closed | 2026-11-14T09:43:02Z | [comment](https://github.com/link-foundation/link-cli/pull/39#issuecomment-6875391731) |
-| #40 | closed | 2026-11-14T09:43:05Z | [comment](https://github.com/link-foundation/link-cli/pull/40#issuecomment-6875392440) |
-| #41 | closed | 2026-11-14T09:43:08Z | [comment](https://github.com/link-foundation/link-cli/pull/41#issuecomment-6875393018) |
-| #49 | closed | 2026-11-14T09:43:11Z | [comment](https://github.com/link-foundation/link-cli/pull/49#issuecomment-6875393759) |
-| #57 | closed | 2026-11-14T09:43:14Z | [comment](https://github.com/link-foundation/link-cli/pull/57#issuecomment-6875394501) |
+| Pull request | Closed at (UTC)      | Closing comment | Reopened, with comment |
+| ------------ | -------------------- | --------------- | ---------------------- |
+| #36 | 2026-11-14T09:42:53Z | [comment](https://github.com/link-foundation/link-cli/pull/36#issuecomment-6875389721) | [reopened](https://github.com/link-foundation/link-cli/pull/36#issuecomment-6880480027) |
+| #37 | 2026-11-14T09:42:56Z | [comment](https://github.com/link-foundation/link-cli/pull/37#issuecomment-6875390459) | [reopened](https://github.com/link-foundation/link-cli/pull/37#issuecomment-6880481026) |
+| #38 | 2026-11-14T09:42:59Z | [comment](https://github.com/link-foundation/link-cli/pull/38#issuecomment-6875391101) | [reopened](https://github.com/link-foundation/link-cli/pull/38#issuecomment-6880482053) |
+| #39 | 2026-11-14T09:43:02Z | [comment](https://github.com/link-foundation/link-cli/pull/39#issuecomment-6875391731) | [reopened](https://github.com/link-foundation/link-cli/pull/39#issuecomment-6880483102) |
+| #40 | 2026-11-14T09:43:05Z | [comment](https://github.com/link-foundation/link-cli/pull/40#issuecomment-6875392440) | [reopened](https://github.com/link-foundation/link-cli/pull/40#issuecomment-6880484286) |
+| #41 | 2026-11-14T09:43:08Z | [comment](https://github.com/link-foundation/link-cli/pull/41#issuecomment-6875393018) | [reopened](https://github.com/link-foundation/link-cli/pull/41#issuecomment-6880485188) |
+| #49 | 2026-11-14T09:43:11Z | [comment](https://github.com/link-foundation/link-cli/pull/49#issuecomment-6875393759) | [reopened](https://github.com/link-foundation/link-cli/pull/49#issuecomment-6880486120) |
+| #57 | 2026-11-14T09:43:14Z | [comment](https://github.com/link-foundation/link-cli/pull/57#issuecomment-6875394501) | [reopened](https://github.com/link-foundation/link-cli/pull/57#issuecomment-6880487055) |
 
 ## Two failures after the demonstration (commit 273a33e4)
 
