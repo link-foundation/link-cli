@@ -460,7 +460,9 @@ describe('the life of a server', LIMITS, () => {
     try {
       const socket = await accepted;
       const closed = new Promise((resolve) => socket.once('close', resolve));
-      reset.write('GET /healthz HTTP/1.1\r\n');
+      // Node.js 20 and 22 end with FIN, not RST, when `resetAndDestroy` follows
+      // a write (experiments/issue-111/reset-and-destroy-events.mjs), so the
+      // peer resets before it writes.
       reset.socket.resetAndDestroy();
       assert.equal(await closed, true, 'closed by an error');
       assert.equal((await next.exchange('GET /healthz HTTP/1.1\r\n\r\n'))[1], '{"status":"ok"}');
