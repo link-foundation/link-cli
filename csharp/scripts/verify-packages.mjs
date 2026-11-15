@@ -50,6 +50,7 @@ function packExcluded() {
       } catch (error) {
         throw Error(
           `dotnet pack failed for ${project}: ${error.stdout?.toString()} ${error.stderr?.toString()}`,
+          { cause: error },
         );
       }
     }

@@ -244,7 +244,7 @@ export function decide({ hasChangesets, currentVersion, publishedVersions, githu
   const nugetPublished =
     Array.isArray(publishedVersions) && publishedVersions.includes(currentVersion);
 
-  if (hasChangesets) {
+  if (hasChangesets && nugetPublished) {
     return {
       shouldRelease: true,
       skipBump: false,

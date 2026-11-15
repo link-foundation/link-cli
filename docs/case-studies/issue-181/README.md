@@ -17,9 +17,10 @@ The existing release script checked only the CLI feed. It now checks both feeds
 in the workflow so a partial upload cannot be mistaken for a complete release.
 All future example/experiment project changes trigger the C# packaging checks.
 
-No version bump/changeset is added: the requested 5.1.0 already exists in both
-project files and is unpublished. Bumping first would skip the requested release.
-No production C# source or public API changes are needed.
+Both package versions stay at 5.1.0. The release gate recovers an unpublished
+current version before consuming new changesets, including the patch metadata
+for this packaging fix and coverage-collector update. Bumping first would skip
+the requested release. No production C# source or public API changes are needed.
 
 ## Reproduction and local checks
 
@@ -70,3 +71,15 @@ The latter mode runs the normal build/test/package gates, publishes the current
 version with duplicate-safe retries, waits for both NuGet feeds and creates the
 GitHub release. It performs no version commit. Existing optional API-key release
 support is preserved until trusted publishing can actually be verified.
+
+## Required CI repairs
+
+The initial Dependencies run [43773295255](https://github.com/link-foundation/link-cli/actions/runs/43773295255)
+failed on outdated declarations (downloaded log lines 210–232), including the
+closed cargo-audit holdback. A fresh upstream probe now confirms that released
+install-action v2.90.5 contains cargo-audit 0.23.0, so both action pins and the
+audit version are updated without an exception. Coverage collector, npm tools
+and both Rust lockfiles are refreshed for the same required latest-dependency
+check. These maintenance changes preserve existing features and are validated
+by the existing CI suites. The task-preparation `.gitkeep` is removed because
+the repository layout test forbids root placeholder files.

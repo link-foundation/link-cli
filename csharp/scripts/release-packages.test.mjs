@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { promisify } from 'node:util';
+import { decide } from './check-release-needed.mjs';
 import { repoRoot } from './verify-packages.mjs';
 
 for (const missing of ['clink', 'foundation.data.doublets.cli']) {
@@ -56,3 +57,15 @@ for (const missing of ['clink', 'foundation.data.doublets.cli']) {
     assert.match(result, /^current_version=5\.1\.0$/m);
   });
 }
+
+// Pending release metadata must not skip the explicitly requested 5.1.0.
+test('unpublished current version is recovered before consuming new changesets', () => {
+  const result = decide({
+    hasChangesets: true,
+    currentVersion: '5.1.0',
+    publishedVersions: ['4.0.6'],
+    githubReleaseExists: false,
+  });
+  assert.equal(result.shouldRelease, true);
+  assert.equal(result.skipBump, true);
+});
