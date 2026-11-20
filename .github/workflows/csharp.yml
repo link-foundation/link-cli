@@ -21,7 +21,8 @@ on:
       - 'docs/protocol/chunked-journal*'
       - 'docs/protocol/reclaiming-chunks*'
       - 'docs/protocol/causal-*'
-      - 'examples/*-csharp/**'
+      - 'examples/**'
+      - 'experiments/**'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -31,6 +32,7 @@ on:
         default: 'instant'
         options:
           - instant
+          - publish-current
           - changeset-pr
           - verify-trusted-publishing
       nuget_user:
@@ -454,7 +456,12 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Pack NuGet package
-        run: dotnet pack --no-build --configuration Release --output ./artifacts
+        run: |
+          dotnet pack --no-build --configuration Release --output ./artifacts
+          node scripts/verify-packages.mjs
+
+      - name: Verify examples and experiments cannot produce packages
+        run: node scripts/verify-packages.mjs --pack-excluded
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
@@ -467,7 +474,7 @@ jobs:
   release:
     name: Release
     needs: [release-preflight, lint, test, build]
-    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && ((github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.release_mode == 'publish-current')) && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
@@ -497,6 +504,7 @@ jobs:
           node-version: '26.x'
 
       - name: Check for changesets
+        if: inputs.release_mode != 'publish-current'
         id: check_changesets
         working-directory: .
         run: |
@@ -517,10 +525,10 @@ jobs:
           HAS_CHANGESETS: ${{ steps.check_changesets.outputs.has_changesets }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node csharp/scripts/check-release-needed.mjs
+        run: node csharp/scripts/check-release-needed.mjs --library-csproj csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj
 
       - name: Merge multiple changesets
-        if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_changesets.outputs.changeset_count > 1
+        if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_release.outputs.skip_bump != 'true' && steps.check_changesets.outputs.changeset_count > 1
         working-directory: .
         run: |
           echo "Multiple changesets detected, merging..."
@@ -529,7 +537,7 @@ jobs:
             --package-name Foundation.Data.Doublets.Cli
 
       - name: Version and commit
-        if: steps.check_changesets.outputs.has_changesets == 'true'
+        if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_release.outputs.skip_bump != 'true'
         id: version
         working-directory: .
         run: node csharp/scripts/version-and-commit.mjs --mode changeset
@@ -564,6 +572,7 @@ jobs:
           dotnet restore
           dotnet build --configuration Release
           dotnet pack --no-build --configuration Release --output ./artifacts
+          node scripts/verify-packages.mjs
 
       - name: Resolve NuGet package ids
         id: package
@@ -742,6 +751,7 @@ jobs:
           dotnet restore
           dotnet build --configuration Release
           dotnet pack --no-build --configuration Release --output ./artifacts
+          node scripts/verify-packages.mjs
 
       - name: Resolve NuGet package ids
         id: package

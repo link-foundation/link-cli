@@ -1,0 +1,9 @@
+{
+  "nuget": {
+    "username": "konard",
+    "package_owner": "Link.Foundation",
+    "package_ids": ["clink", "Foundation.Data.Doublets.Cli"],
+    "operations": ["package:pushversion"],
+    "sign_in_route": "work"
+  }
+}

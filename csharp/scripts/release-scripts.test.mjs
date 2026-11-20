@@ -548,16 +548,16 @@ test('version-and-commit fails fast without tagging when a repository rule decli
   assert.equal(existsSync(outputFile), false, 'no release outputs may be written');
 });
 
-test('check-release-needed decide(): changesets take the normal release path', () => {
+test('check-release-needed decide(): changesets bump an already published version', () => {
   const result = decide({
     hasChangesets: true,
     currentVersion: '2.4.0',
-    publishedVersions: ['2.2.2'],
+    publishedVersions: ['2.2.2', '2.4.0'],
     githubReleaseExists: false,
   });
   assert.equal(result.shouldRelease, true);
   assert.equal(result.skipBump, false);
-  assert.equal(result.nugetPublished, false);
+  assert.equal(result.nugetPublished, true);
   assert.match(result.reason, /changesets present/);
 });
 
