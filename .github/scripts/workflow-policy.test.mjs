@@ -659,7 +659,7 @@ test('a failed release preflight blocks publishing but never the code checks', (
       const job = jobs.find(({ name: job }) => job === releaseJob);
       assert.ok(job, `${name} has no ${releaseJob} job`);
       assert.match(job.body, /needs: \[release-preflight, /, `${name} ${releaseJob}`);
-      const condition = /^ {4}if: (.*)$/m.exec(job.body)?.[1];
+      const condition = readIf(job.body);
       if (condition) assert.match(condition, /needs\.release-preflight\.result == 'success'/);
     }
     const gate = jobs.find(({ name: job }) => job === 'pipeline-status');

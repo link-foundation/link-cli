@@ -244,7 +244,7 @@ export function decide({ hasChangesets, currentVersion, publishedVersions, githu
   const nugetPublished =
     Array.isArray(publishedVersions) && publishedVersions.includes(currentVersion);
 
-  if (hasChangesets) {
+  if (hasChangesets && nugetPublished) {
     return {
       shouldRelease: true,
       skipBump: false,
@@ -307,7 +307,20 @@ async function main() {
   console.log(`Repository:      ${repository || '(not set)'}`);
   console.log(`Has changesets:  ${process.env.HAS_CHANGESETS === 'true'}`);
 
-  const publishedVersions = await fetchNugetVersions(packageId);
+  let publishedVersions = await fetchNugetVersions(packageId);
+  // A CLI upload can succeed before the library upload fails. Resume either
+  // missing package instead of treating the CLI alone as a complete release.
+  const libraryPath = getArg('library-csproj');
+  if (libraryPath) {
+    const library = readCsprojInfo(libraryPath);
+    if (library.version !== currentVersion) throw new Error('CLI and library versions must match');
+    const libraryVersions = await fetchNugetVersions(library.packageId);
+    publishedVersions =
+      publishedVersions === null || libraryVersions === null
+        ? null
+        : publishedVersions.filter((version) => libraryVersions.includes(version));
+    console.log(`Checking both ${packageId} and ${library.packageId} for a complete release`);
+  }
   if (publishedVersions === null) {
     console.log(`NuGet: package "${packageId}" not registered yet`);
   } else {
