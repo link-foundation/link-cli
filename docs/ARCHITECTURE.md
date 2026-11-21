@@ -151,7 +151,7 @@ Main C# dependencies:
 - `Platform.Data`
 - `Platform.Data.Doublets`
 - `Platform.Data.Doublets.Sequences`
-- `Link.Foundation.Links.Notation`
+- `links-notation`
 - `System.CommandLine`
 
 ## Rust Implementation
