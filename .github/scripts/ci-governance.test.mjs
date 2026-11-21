@@ -70,6 +70,8 @@ test('a red Dependencies check on main opens or updates a tracking issue (issue 
   assert.match(job.body, /^ {6}- latest$/m);
   assert.match(job.body, /if: \$\{\{ !cancelled\(\) && github\.ref == 'refs\/heads\/main'/);
   assert.match(job.body, /^ {6}issues: write$/m);
+  assert.match(job.body, /^ {6}group: dependencies-tracking-\$\{\{ github\.ref \}\}$/m);
+  assert.match(job.body, /^ {6}cancel-in-progress: false$/m);
   assert.match(job.body, /run: node \.github\/scripts\/dependency-tracking-issue\.mjs/);
   assert.match(text, /^ {2}schedule:/m);
 });

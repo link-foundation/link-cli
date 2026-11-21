@@ -713,17 +713,41 @@ function readIf(body) {
   return match ? `${match[1]}${match[2]}` : '';
 }
 
+/** The success comparison must be a required operand of the job condition. */
+function requiresJavaScriptSuccess(condition) {
+  const expression = condition
+    .replace(/^[|>][-+]?\s*/, '')
+    .trim()
+    .replace(/^\$\{\{|\}\}$/g, '');
+  const success = /^needs\.javascript\.result\s*==\s*'success'$/;
+  let depth = 0;
+  let start = 0;
+  let guarded = false;
+  for (const { 0: token, index } of expression.matchAll(/'(?:''|[^'])*'|\|\||&&|[()]/g)) {
+    if (token === '(') depth++;
+    if (token === ')') depth--;
+    if (depth !== 0) continue;
+    if (token === '||') return false;
+    if (token === '&&') {
+      guarded ||= success.test(expression.slice(start, index).trim());
+      start = index + token.length;
+    }
+  }
+  return guarded || success.test(expression.slice(start).trim());
+}
+
 /** Lists the jobs of a workflow that could start Rust or C# without the gate. */
 export function gateViolations(text, readWorkflow = () => '') {
   const jobs = readJobs(text);
   const violations = [];
   const caller = jobs.find(({ name }) => name === 'javascript');
+  const callsStage = /^ {4}uses: (.*?)$/m.exec(caller?.body ?? '')?.[1]?.trim() === JS_STAGE;
   for (const job of jobs) {
-    if (job.name === 'javascript') continue;
+    if (job === caller && callsStage) continue;
     const called = /^ {4}uses: (\.\/\.github\/workflows\/[\w.-]+)/m.exec(job.body)?.[1];
     const body = withoutComments(called ? readWorkflow(called) : job.body);
     if (!nativeTooling.test(body)) continue;
-    if (!caller || !caller.body.includes(`uses: ${JS_STAGE}`)) {
+    if (!callsStage) {
       violations.push(`${job.name}: the workflow has no "javascript" job calling ${JS_STAGE}`);
       continue;
     }
@@ -733,7 +757,7 @@ export function gateViolations(text, readWorkflow = () => '') {
     const condition = readIf(job.body);
     if (
       /\b(?:always|cancelled|failure)\(\)/.test(condition) &&
-      !/needs\.javascript\.result == 'success'/.test(condition)
+      !requiresJavaScriptSuccess(condition)
     ) {
       violations.push(
         `${job.name}: its if: overrides the success check without needs.javascript.result == 'success'`,
@@ -754,6 +778,16 @@ test('the gate rule rejects workflows that bypass the JavaScript stage', () => {
   );
   assert.match(gateViolations(`jobs:\n${job('')}`).join(), /no "javascript" job/);
   assert.match(
+    gateViolations(`jobs:\n${job('').replace('  rust:', '  javascript:')}`).join(),
+    /no "javascript" job/,
+  );
+  assert.match(
+    gateViolations(
+      `jobs:\n${stage.replace('.yml', '-other.yml')}${job('    needs: [javascript]\n')}`,
+    ).join(),
+    /no "javascript" job/,
+  );
+  assert.match(
     gateViolations(`jobs:\n${stage}${job('    needs: lint\n')}`).join(),
     /does not list/,
   );
@@ -761,6 +795,8 @@ test('the gate rule rejects workflows that bypass the JavaScript stage', () => {
     'always()',
     '${{ !cancelled() }}',
     "|\n      !cancelled() && x == 'y'",
+    "needs.javascript.result == 'success' || always()",
+    "always() && (needs.javascript.result == 'success' || x == 'y')",
   ]) {
     assert.match(
       gateViolations(
@@ -770,7 +806,7 @@ test('the gate rule rejects workflows that bypass the JavaScript stage', () => {
     );
   }
   const gated =
-    "    needs: [javascript]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' }}\n";
+    "    needs: [javascript]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' && (x == 'y' || x == 'z') }}\n";
   assert.deepEqual(gateViolations(`jobs:\n${stage}${job(gated)}`), []);
   // Hyphenated names (`cargo-audit` in a needs list) and comments are not tooling.
   const gate = `  status:\n    needs: [cargo-audit]\n    steps:\n      # cargo test runs in the rust job\n      - run: echo ok\n`;
