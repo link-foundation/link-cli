@@ -28,6 +28,8 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
+# The `clink` executable of the JavaScript server package is source, not build output.
+!js/server/bin/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/

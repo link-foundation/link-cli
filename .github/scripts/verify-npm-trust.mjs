@@ -3,6 +3,13 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// The packages this repository publishes, each from its own workflow: the
+// trusted publisher policy on npmjs.com names that workflow file.
+export const NPM_WORKFLOWS = {
+  '@link-foundation/link-cli-client': 'js-client.yml',
+  '@link-foundation/link-cli-server': 'js-server.yml',
+};
+
 export async function verifyNpmTrust(
   packageName,
   { env = process.env, fetch = globalThis.fetch } = {},
@@ -29,7 +36,7 @@ export async function verifyNpmTrust(
   );
   if (!exchange.ok || !(await exchange.json()).token) {
     throw new Error(
-      `npm trusted publisher verification failed (HTTP ${exchange.status}). Configure this repository and js-client.yml in the package's trusted publisher settings on npmjs.com.`,
+      `npm trusted publisher verification failed (HTTP ${exchange.status}). Configure this repository and ${NPM_WORKFLOWS[packageName] ?? 'its release workflow'} in the trusted publisher settings of ${packageName} on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).`,
     );
   }
   // Discard the short-lived credential. Never write it to logs, disk or outputs.
@@ -37,7 +44,7 @@ export async function verifyNpmTrust(
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   try {
-    await verifyNpmTrust('@link-foundation/link-cli-client');
+    await verifyNpmTrust(process.env.NPM_PACKAGE || '@link-foundation/link-cli-client');
     console.log('npm trusted publisher authentication succeeded. No package was uploaded.');
   } catch (error) {
     console.error(error.message);

@@ -22,6 +22,7 @@ links database.
 | `rust/scripts/` | Rust release, changelog, crate publication, and repository validation helpers. |
 | `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
 | `js/` | React/Vite browser workbench and JavaScript package lockfile. |
+| `js/server/` | `@link-foundation/link-cli-server`: the Rust `clink` in pure JavaScript, as the `clink` executable, an embedded store and a server (protocol, IPC and GraphQL), with the Rust file formats. |
 | `js/client/` | `@link-foundation/link-cli-client`: the links contract in JavaScript and TypeScript over TCP, any IPC endpoint (`./ipc`), a `clink --serve` process or WebAssembly, plus the union, remap and external-id layers. |
 | `docs/protocol/` | The links protocol: binary links notation, links operations and subscriptions, with test vectors, and the IPC transports every implementation carries it over. |
 | `docs/case-studies/` | Research notes per issue, with evidence. |
@@ -276,6 +277,32 @@ Runtime flow:
 
 The committed lockfile currently pins `doublets-web` to `0.1.3`.
 
+## JavaScript Server and Embedded Store
+
+`js/server` is `@link-foundation/link-cli-server`, a module-for-module port of
+`rust/src` to JavaScript with no WebAssembly. See
+[js/server/README.md](../js/server/README.md).
+
+- `bin/clink.js`, `src/main*.js`, `src/cli.js`, `src/env-files.js`: the
+  command line of `rust/src/main.rs` and `rust/src/cli.rs`, `.lenv`/`.env`
+  included.
+- `src/link-storage*.js`, `src/storage-lock*.js`: the doublets store, its
+  file format and the `<database>.lock` sidecar lock (`flock` or
+  `LockFileEx` through the runtime's foreign function interface).
+- `src/named-types.js`, `src/named-type-links.js`, `src/types.js`,
+  `src/pinned-types.js`, `src/unicode-string-storage.js`: names, types and
+  strings.
+- `src/query-*.js`, `src/changes-simplifier.js`: the query processor.
+- `src/transactions*.js`, `src/version-control*.js`,
+  `src/persistent-transformations.js`, `src/permissions*.js`,
+  `src/triplets*.js`: the decorators.
+- `src/protocol-*.js`, `src/ipc*.js`, `src/graphql-*.js`: the protocol
+  server, client and relay over every IPC endpoint Node.js can reach, and
+  the GraphQL endpoint.
+
+`test/differential/` runs the same invocations through the Rust `clink` and
+`bin/clink.js` and compares their output and files.
+
 ## JavaScript Client
 
 `js/client` is `@link-foundation/link-cli-client`, one links contract over
@@ -381,8 +408,9 @@ extra runtime cost is paid.
 
 ## Embedding the Library
 
-Both packages are usable as libraries, not just as the backing code of a CLI
-(issue #98). The transactions layer is written against a storage abstraction
+The Rust and C# packages, and the JavaScript server package
+`@link-foundation/link-cli-server`, are usable as libraries, not just as the
+backing code of a CLI (issue #98). The transactions layer is written against a storage abstraction
 rather than against one concrete store, so an embedding application can supply
 its own.
 
@@ -413,6 +441,25 @@ C#:
 - `LinksFileLock` and `StorageRevision` provide the same locking and
   external-change primitives as the Rust `storage::lock` module.
 
+JavaScript (`js/server`, Node.js, Bun and Deno):
+
+- `DoubletsStorage` (`src/doublets-storage.js`) is the port of
+  `storage::DoubletsStorage` over a port of the file-mapped
+  `doublets::unit::Store` (`src/unit-store*.js`). It writes the same database
+  file byte for byte (golden fixtures and differential runs against
+  `rust/examples/unit_store_trace.rs` check it), changes links in place and
+  writes each change through to the file before it returns, so the file is
+  never renamed and other holders, Rust mappings included, keep a valid view.
+  `DoubletsStorage.open`, `openShared`, `openExclusive`, `tryOpenExclusive` and
+  `wrap` mirror the Rust constructors. A `u64` address is limited to
+  `Number.MAX_SAFE_INTEGER`; a larger one fails with `AddressOverflowError`.
+- `TransactionsDecorator` takes a `DoubletsStorage` as is (the role of
+  `GenericTransactionsDecorator`), or adapts a `LinkStorage` or a
+  `NamedTypesDecorator`; `FileTransitionLog` is the same `fsync`-per-append
+  log.
+- `FileLock`, `storageRevision` and `sameRevision` are the `<database>.lock`
+  sidecar lock and the change fingerprint of the Rust `storage::lock` module.
+
 The transition wire format writes addresses in decimal, so it is identical
 across address types: a log written by a `u32`/`uint` store reads back
 unchanged in a `u64`/`ulong` one, and an address too wide for the target type
@@ -424,6 +471,7 @@ is rejected rather than silently truncated.
 |-------|-------------------------------|------------------------------------|
 | In-memory (`LinkStorage` and the CLI decorators) | Nothing that was not saved — `flush()`/`save()` is required. | Same. |
 | File-mapped (`DoubletsStorage`) | Every write: the mapping is the page cache, and the kernel writes dirty pages back. | `flush()`, which `fsync`s the mapping. A clean drop also syncs. |
+| JavaScript `DoubletsStorage` | Every write: each change is written through to the file before it returns. | `flush()`, which `fsync`s the file. |
 | `FileTransitionLog` | Every append (`fsync` per append by default); at most the in-flight entry is lost. | Same. |
 
 Transitions are appended to the log before the write they describe is reported
@@ -433,11 +481,11 @@ transitions and roll back transitions that were never committed.
 ### Multi-Process Access
 
 A doublets store has no internal concurrency control, so concurrent writers to
-one file corrupt it. Both implementations therefore expose advisory locking of
+one file corrupt it. All implementations therefore expose advisory locking of
 a `<database>.lock` sidecar — shared for readers, exclusive for writers, with a
 blocking acquire and a non-blocking try-acquire — plus a cheap
 `StorageRevision` fingerprint (`has_external_changes()` in Rust,
-`StorageRevision.HasChanged` in C#) that answers "has anyone else written since
+`StorageRevision.HasChanged` in C#, `hasExternalChanges()` in JavaScript) that answers "has anyone else written since
 I last looked?" without reparsing the database. Rust uses `std::fs::File::lock`
 (hence the 1.89 minimum supported Rust version); C# expresses the same
 semantics through `FileShare`, which the runtime maps onto `flock` on Unix and
@@ -562,9 +610,11 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 
 | Workflow | Scope |
 |----------|-------|
-| `.github/workflows/csharp.yml` | .NET restore, build, tests, package, and release. |
-| `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
+| `.github/workflows/javascript.yml` | Stage 1, the entry for `.github/workflows/javascript-stage.yml`: `npm ci`, ESLint and Prettier, `npm run test:js`, the JavaScript golden fixture receipt and the parity checker (`parity/check-parity.mjs`), with no Rust or .NET. Reports the required `Pipeline Status (javascript)`. |
+| `.github/workflows/csharp.yml` | .NET restore, build, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (csharp)`. |
+| `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, the golden fixture receipt, package, and release; the release jobs push the version commit with the deploy key from the `release` environment. Reports the required `Pipeline Status (rust)`. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
+| `.github/workflows/js-server.yml` | `@link-foundation/link-cli-server` unit tests with complete coverage on Node.js, Bun and Deno; the unit tests on Linux, macOS and Windows with Node.js 20, 22 and 26; differential tests against the Rust `clink`; the client conformance scenarios against its `clink --serve`; and npm release with trusted publishing. |
 | `.github/workflows/js-client.yml` | `@link-foundation/link-cli-client` unit tests and type declarations, conformance against the Rust, C# and WebAssembly backends on Node.js, Bun and Deno, the composition example, and npm release with trusted publishing. |
 | `.github/workflows/ipc.yml` | Every IPC kind of Linux, macOS and Windows between the Rust and C# servers and relays and the Rust, C# and JavaScript clients, in both protocols (`examples/ipc/interop.mjs`). |
 | `.github/workflows/deep-client.yml` | The real `DeepClient` against the Rust and C# `clink --serve --graphql`. |
@@ -572,10 +622,17 @@ decorator, under `PermissionsDecorator` when a policy is given. See
 | `.github/workflows/links.yml` | Checks the links of every Markdown and HTML file with lychee, falling back to the Web Archive. |
 | `.github/workflows/security.yml` | CodeQL, dependency review, `cargo audit` of every committed `Cargo.lock`, and `npm audit`. |
 | `.github/workflows/workflows.yml` | actionlint, zizmor, and the workflow policy tests. |
-| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version declared in any tracked manifest is behind its latest release, unless a comment on its manifest line links an open issue that blocks the update. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
+| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version declared in any tracked manifest is behind its latest release, unless a comment on its manifest line links an open issue that blocks the update. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. On `main`, a failure opens or updates the tracking issue "Dependencies check is failing on main", and the next green run closes it. |
 
-Path filters keep most workflows focused on the parts of the repository they
-own.
+Since issue #111 the workflows run in two stages. Every workflow that builds
+or runs Rust or .NET calls `javascript-stage.yml` as its `javascript` job and
+lists it in `needs:`, so a failing JavaScript stage starts no Rust or C# job;
+`.github/scripts/workflow-policy.test.mjs` enforces this. `rust.yml`,
+`csharp.yml` and `javascript.yml` have no path filter, because their status
+checks are required on `main`; `.github/scripts/stack-paths.mjs` skips a
+stack's build jobs inside the run when a pull request does not touch it.
+See [ci-cd/troubleshooting.md](ci-cd/troubleshooting.md) and
+[PARITY.md](PARITY.md).
 
 ## External References
 

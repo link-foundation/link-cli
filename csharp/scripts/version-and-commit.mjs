@@ -414,8 +414,9 @@ function pushReleaseCommit(branch, maxAttempts = 3) {
       if (kind === 'repository-rules') {
         throw new Error(
           `The push to '${branch}' was declined by a repository rule (GH006/GH013). ` +
-            `Rebasing cannot change repository policy: allow the release bot to push to '${branch}' ` +
-            `or release through a pull request.\n${output}`,
+            `Rebasing cannot change repository policy. The rules on '${branch}' admit only the release ` +
+            `deploy key: give the 'release' environment a RELEASE_DEPLOY_KEY secret whose public key is a ` +
+            `deploy key with write access (docs/ci-cd/troubleshooting.md#a-release-push-was-declined).\n${output}`,
           { cause: error },
         );
       }

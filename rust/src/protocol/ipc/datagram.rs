@@ -261,7 +261,21 @@ impl Shared {
         let frame = frame(kind, seq, payload);
         let mut rto = self.settings.rto.max(Duration::from_millis(1));
         loop {
-            self.send(&frame)?;
+            match self.send(&frame) {
+                // The link found the peer gone while (re)sending the end: a System V
+                // peer that read the end and hung up removes both queues, its ACK and
+                // ABORT included. That is a hang-up, which ends the stream below.
+                Err(error) if kind == EOF && error.kind() == io::ErrorKind::ConnectionReset => {
+                    trace!(
+                        "{} link found the peer gone while sending the end",
+                        self.kind
+                    );
+                    self.hang_up();
+                }
+                result => {
+                    result?;
+                }
+            }
             let deadline = Instant::now() + rto;
             let mut state = self.lock();
             loop {

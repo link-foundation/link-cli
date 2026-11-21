@@ -1,0 +1,49 @@
+{
+  "name": "@link-foundation/link-cli-server",
+  "version": "0.1.0",
+  "description": "Pure JavaScript link-cli server and embedded store: the clink query language, named types and unicode strings, LiNo and binary import/export, persistent transformations, transactions, version control, triplets, permissions, the clink --serve protocol server and the GraphQL endpoint, with the same command line and on-disk formats as the Rust clink",
+  "type": "module",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/link-foundation/link-cli.git",
+    "directory": "js/server"
+  },
+  "homepage": "https://github.com/link-foundation/link-cli/tree/main/js/server#readme",
+  "bugs": "https://github.com/link-foundation/link-cli/issues",
+  "keywords": [
+    "links",
+    "doublets",
+    "lino",
+    "links-notation",
+    "link-cli",
+    "clink",
+    "server",
+    "embedded",
+    "graphql"
+  ],
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "clink": "./bin/clink.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node scripts/run-tests.mjs test --test-concurrency=1 --test-timeout=60000",
+    "test:coverage": "node --test --test-concurrency=1 --test-timeout=60000 --experimental-test-coverage --test-coverage-include=src/** --test-coverage-include=bin/** --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 test/*.test.mjs",
+    "test:differential": "node scripts/run-tests.mjs test/differential --test-concurrency=1 --test-timeout=120000"
+  },
+  "dependencies": {
+    "links-notation": "0.31.8"
+  }
+}

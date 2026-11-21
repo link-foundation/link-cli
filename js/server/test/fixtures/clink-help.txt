@@ -1,0 +1,142 @@
+LiNo CLI Tool for managing links data store
+
+Usage: clink [OPTIONS] [QUERY]
+
+Arguments:
+  [QUERY]  LiNo query for CRUD operation
+
+Options:
+  -d, --db <DB>, --data-source <DB>, --data <DB>
+          Path to the links database file [default: db.links]
+  -q, --query <QUERY>, --apply <QUERY>, --do <QUERY>
+          LiNo query for CRUD operation
+      --indexed-lookups
+          Use optional lookup-index decorators for local links and names (Rust only)
+  -t, --trace
+          Enable trace (verbose output), including each transport event of
+          --serve, --connect and --forward (as CLINK_IPC_TRACE=1 does)
+      --auto-create-missing-references
+          Create missing numeric and named references as self-referential point links
+  -s, --structure <STRUCTURE>
+          ID of the link to format its structure
+  -b, --before
+          Print the state of the database before applying changes
+  -c, --changes
+          Print the changes applied by the query
+  -a, --after, --links
+          Print the state of the database after applying changes
+      --in <IN>, --lino-input <IN>, --import <IN>
+          Read and import a LiNo file into the database
+      --out <OUT>, --lino-output <OUT>, --export <OUT>
+          Write the complete database as a LiNo file
+      --import-binary <PATH>, --binary-input <PATH>, --binary-in <PATH>
+          Read and import a store archive in binary links notation
+      --export-binary <PATH>, --binary-output <PATH>, --binary-out <PATH>
+          Write the complete database, names included, as a store archive in
+          binary links notation
+      --always
+          Store the query as an always-on persistent transformation trigger
+      --once
+          Store the query as a persistent transformation trigger that deletes
+          itself after it fires
+      --never
+          Remove stored persistent transformation triggers matching the query
+      --triggers
+          Enable persistent transformation triggers for this command
+      --triggers-file <FILE>
+          Path to the persistent transformation trigger links database
+          (default: <db>.triggers.links)
+      --embed-triggers
+          Store persistent transformation triggers directly in the main links
+          database
+      --transactions
+          Enable the transactions layer (default log path: <db>.transitions.links)
+      --transactions-file <FILE>
+          Path to the transitions log store (implies --transactions)
+      --commit-mode <MODE>
+          Choose 'sync' or 'async' commits (default: sync, implies --transactions)
+      --retention <SPEC>
+          Log retention policy: 'infinite', 'sized:<n>', or 'chunked:<n>:<dir>'
+          (implies --transactions)
+      --vc
+          Enable the version-control decorator (implies --transactions)
+      --vc-file <FILE>
+          Path to the version-control branches store
+          (default: <db>.versioncontrol.links)
+      --branch <NAME>
+          Switch to a branch (creating it if --branch-from is also passed).
+          Implies --vc.
+      --branch-from <SEQ>
+          When creating a branch with --branch, fork from this sequence point
+      --checkout <POINT>
+          Time-travel to a specific transition sequence or named tag.
+          Implies --vc.
+      --tag <NAME[=POINT]>
+          Create a tag at current head or at a sequence/existing tag.
+          Uses the first '=' whose complete suffix resolves.
+          Implies --vc.
+      --list-branches
+          List version-control branches and exit
+      --list-tags
+          List version-control tags and exit
+      --log
+          Print the transitions log and exit (implies --transactions)
+      --serve <ADDR>
+          Serve the database on an endpoint until stopped: a TCP address
+          (e.g. 127.0.0.1:7878) or KIND:ADDRESS for another transport, such as
+          unix:/tmp/links.sock, pipe:NAME, fifo:DIR, shm:DIR, mmap:DIR, file:DIR,
+          signal:DIR, mq:DIR, sysvmq:DIR, udp:HOST:PORT, stdio, mailslot:DIR,
+          copydata:DIR or alpc:DIR (see docs/protocol/ipc-transports-v1.md);
+          repeat it to serve one store on several endpoints at once. Each
+          message may use the text or the binary LiNo protocol
+      --forward <ADDR>
+          With --serve: relay every connection, byte for byte, to this
+          endpoint instead of serving a database (stacks transports)
+      --graphql
+          With --serve: speak Hasura's GraphQL over HTTP and WebSocket for Deep
+      --jwt-secret <SECRET>
+          Signs the tokens of --graphql (default: random for each run)
+      --graphql-admin-secret <SECRET>
+          The x-hasura-admin-secret that bypasses --permissions in --graphql
+      --deep-package <FILE>
+          Load a Deep package (JSON rows of links) before --graphql serves
+      --connect <ADDR>
+          Send the query to a clink server on a --serve endpoint (e.g.
+          127.0.0.1:7878 or shm:/tmp/links) instead of opening a database;
+          an empty query reads every link
+      --protocol <PROTOCOL>
+          'text' or 'binary' for --connect (default: text); 'text', 'binary'
+          or 'any' for --serve (default: any)
+      --external-references
+          Binary protocol: send numbers and characters as external references
+      --arity <RANGE>
+          Binary protocol: link lengths to use, 'n', 'min..max' or 'min..'
+          (default: 2, doublets only; e.g. 2..3 adds triplets, 1.. any length)
+      --packed-widths
+          Binary protocol: give each section of links the narrowest reference
+          width it needs instead of one width for the whole packet
+      --triplets
+          With --serve: read every request as triplets, (create: (type from to)),
+          (each: (index type from to)) and three-part substitutions, over this
+          store of doublets; without it, every request is about doublets
+      --permissions <RULES>
+          Check every read and write against permission rules stored as links:
+          'self' (rules in the data) or a links file of rules; without it,
+          nothing is checked
+      --subject <LINK>
+          The subject (a link index or name) queries run as with --permissions,
+          and the subject of --serve connections before (auth: token)
+          (default: 0, a guest)
+      --tokens <TOKENS>
+          The token table of (auth: token) for --serve, --grant-token and
+          --revoke-token: 'self' (tokens in the data) or a links file
+      --grant-token <TOKEN>
+          Let a token authenticate as --subject in the --tokens table, then exit
+      --revoke-token <TOKEN>
+          Forget a token of the --tokens table, then exit
+      --token <TOKEN>
+          With --connect: authenticate with (auth: token) before sending the query
+  -h, --help
+          Print help
+  -V, --version
+          Print version
