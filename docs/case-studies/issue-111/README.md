@@ -11,8 +11,9 @@ parity, `main` was unprotected, and the only active pull request and the default
 
 ## Data collected
 
-The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
-`gh`, and it contains no account data beyond public GitHub metadata.
+The evidence in [`data/`](data/) includes the initial audit on 2026-11-14 and
+the follow-up after #182 merged on 2026-11-20. It contains public run and
+repository metadata.
 
 | File                                                       | What it holds                                                                    |
 | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -23,6 +24,7 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | [`actions-bypass-422.json`](data/actions-bypass-422.json)  | GitHub's 422 when GitHub Actions is made a ruleset bypass actor. `experiments/issue-111/probe-actions-bypass.sh` reproduces it. |
 | [`open-prs-before.json`](data/open-prs-before.json)        | The open pull requests before triage: number, last update, linked issues, check results. |
 | [`ci-evidence.md`](data/ci-evidence.md)                    | The CI runs this pull request relied on, including the failures it fixed and the gate demonstration. |
+| [`rust-44689293297-excerpt.txt`](data/rust-44689293297-excerpt.txt) | The default-branch Rust release push rejection after #182 merged, with original log line numbers. |
 
 ## Timeline
 
@@ -53,6 +55,9 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
 | 2026-11-14 20:10 | `js-server.yml` for 24656c61 is green on every operating system and Node.js version. `DoubletsStorage`, a port of `rust/src/storage/doublets_storage.rs` and of the file-mapped doublets unit store, joins the package; `TransactionsDecorator` writes through it directly, and the JavaScript embedded-store example writes the same `db.links` as the Rust one. |
 | 2026-11-14 20:15 | C# CI for 24656c61 crashes its test host in `IpcTransportTests` (root cause 15). Rust, C# and the JS server now end a stream when the peer removes the link before acknowledging the end (5a7064a5). |
 | 2026-11-14 21:00 | The Deno unit tests of `js-server.yml` for 5a7064a5 fail: a flush did not publish a new revision (root cause 16). |
+| 2026-11-14 21:31 | All 14 workflows pass for 9285f447. GitHub marks both CodeQL alerts fixed. |
+| 2026-11-20       | #182 merges NuGet package-boundary checks, release recovery and newer dependencies. Both NuGet packages reach 5.1.0. Rust's automatic release on `main` still uses a token, and GitHub rejects its version commit under the required checks ruleset. |
+| 2026-11-21       | PR #180 merges `main` to resolve conflicts in the C#, Security and WebAssembly workflows. The merge keeps NuGet recovery, allows `publish-current` from `main`, and gates the release on successful JavaScript checks. New dependency releases require another lockfile and pin refresh. |
 
 ## Requirements and how each is met
 
@@ -167,6 +172,11 @@ The raw data is in [`data/`](data/). It was collected on 2026-11-14 with
     unit tests for 5a7064a5 failed on this. The flush now asks for the middle
     of a millisecond later than the current modification time
     ([`experiments/issue-111/futimes-millisecond-truncation.mjs`](../../../experiments/issue-111/futimes-millisecond-truncation.mjs)).
+    The bounded experiment reproduced the issue on Deno 2.9.7 and 2.9.8 on
+    Linux. Each version stored 496 of 1,000 Date arguments one millisecond
+    early and stored all 1,000 midpoint arguments in the requested
+    millisecond. The upstream report includes a fixed-timestamp example and
+    a proposed fix. [denoland/deno#37212](https://github.com/denoland/deno/issues/37212)
 
 ## Solutions considered
 
