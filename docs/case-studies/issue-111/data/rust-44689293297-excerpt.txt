@@ -1,0 +1,10 @@
+503  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6807357Z ##[error]The push to 'main' was declined by a repository rule (GH006/GH013). Rebasing cannot change repository policy: allow the release bot to push to 'main' or release through a pull request. git output: Command failed: remote: error: GH013: Repository rule violations found for refs/heads/main.
+504  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6813279Z remote: Review all repository rules at https://github.com/link-foundation/link-cli/rules?ref=refs%2Fheads%2Fmain
+505  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6813742Z remote:
+506  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6814012Z remote: - 3 of 3 required status checks are expected.
+507  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6814343Z remote:
+508  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6814605Z To https://github.com/link-foundation/link-cli
+509  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6815065Z  ! [remote rejected]   HEAD -> main (push declined due to repository rule violations)
+510  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6816101Z error: failed to push some refs to 'https://github.com/link-foundation/link-cli'
+511  Auto Release	UNKNOWN STEP	2026-11-20T07:24:03.6818095Z ##[error]Process completed with exit code 1.
+777  Pipeline Status (rust)	UNKNOWN STEP	2026-11-20T07:24:22.1477576Z ##[error]Process completed with exit code 1.

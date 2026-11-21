@@ -286,7 +286,17 @@ internal sealed class DatagramSession : ITransport, IDisposable
         var rto = _settings.Rto < TimeSpan.FromMilliseconds(1) ? TimeSpan.FromMilliseconds(1) : _settings.Rto;
         while (true)
         {
-            SendFrame(frame);
+            try
+            {
+                SendFrame(frame);
+            }
+            catch (IpcException error) when (kind == Eof && error.Kind == IpcErrorKind.ConnectionReset)
+            {
+                // The link found the peer gone while (re)sending the end: a System V peer that read the end and hung
+                // up removes both queues, its ACK and ABORT included. That is a hang-up, which ends the stream below.
+                IpcTransports.Trace($"{Kind} link found the peer gone while sending the end");
+                HangUp();
+            }
             var deadline = Deadline.After(rto);
             lock (_state)
             {

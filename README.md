@@ -45,6 +45,9 @@ package built from `doublets-rs`.
 - [docs/GRAPHQL.md](docs/GRAPHQL.md): the Hasura-compatible GraphQL server for Deep, `clink --serve --graphql`.
 - [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
 - [examples/](examples): runnable examples, one folder per feature.
+- [docs/PARITY.md](docs/PARITY.md): the cross-language parity manifest, its checker and the shared golden fixtures.
+- [docs/JS-WORKBENCH.md](docs/JS-WORKBENCH.md): what the JavaScript workbench and client implement and what they delegate to the Rust WebAssembly build.
+- [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/ci-cd/troubleshooting.md](docs/ci-cd/troubleshooting.md): the CI stages, the single-pusher rule, and how to read a failed check.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
@@ -52,6 +55,7 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-98/README.md](docs/case-studies/issue-98/README.md): evidence and analysis for making the libraries reusable as a doublets-backed transactional store.
 - [docs/case-studies/issue-105/README.md](docs/case-studies/issue-105/README.md): requirements, prior art and the wire formats of the LiNo text and binary protocols over TCP.
 - [docs/case-studies/issue-108/README.md](docs/case-studies/issue-108/README.md): the JS/TS client, the guarantees of each backend, what conformance found and the synthetic consumer benchmark.
+- [docs/case-studies/issue-111/README.md](docs/case-studies/issue-111/README.md): the JavaScript-first CI gate, cross-language parity, branch protection and repository governance.
 
 ### API references
 
@@ -65,6 +69,8 @@ Language package documentation:
 
 - [C# NuGet tool and library](csharp/README.md)
 - [Rust crate (CLI + library)](rust/README.md)
+- [JavaScript server and embedded store (CLI + library)](js/server/README.md)
+- [JavaScript client](js/client/README.md)
 
 Each language ships **both** a CLI binary and a public library, so external
 projects can either run the tool directly or pull in the parser, query
@@ -92,11 +98,24 @@ cargo install link-cli
 cargo add link-cli
 ```
 
-Both implementations expose the same command surface, so a scenario written
-against one runs unchanged against the other: the query engine, named
+### JavaScript (Node.js, Bun, Deno)
+
+```bash
+# CLI: the `clink` command, a pure JavaScript port of the Rust one.
+npm install --global @link-foundation/link-cli-server
+
+# Library: embed the store, the query processor and the decorators.
+npm install @link-foundation/link-cli-server
+```
+
+All three implementations expose the same command surface, so a scenario
+written against one runs unchanged against the others: the query engine, named
 references, LiNo import/export, structure formatting, persistent
-transformation triggers, transactions and version control. The Rust crate adds
-the WebAssembly workbench API on top.
+transformation triggers, transactions, version control, triplets,
+permissions, the protocol server and the GraphQL endpoint. The JavaScript
+`clink` writes the same files as the Rust one, and its differential tests
+compare the two on every change. The Rust crate adds the WebAssembly workbench
+API on top.
 
 This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 
@@ -568,8 +587,8 @@ separately so the primary links database remains numeric.
 
 ## Use as an embedded store
 
-Both libraries can be embedded as a transactional links store instead of being
-driven through the CLI. The transactions layer is written against a storage
+The Rust, C# and JavaScript server libraries can be embedded as a
+transactional links store instead of being driven through the CLI. The transactions layer is written against a storage
 abstraction rather than one concrete store, so an application can supply its
 own:
 
@@ -582,20 +601,23 @@ own:
 - **A real doublets store.** Rust's `storage::DoubletsStorage` wraps a
   file-mapped `doublets::unit::Store`, or adopts one the caller already owns.
   Its links are mutated **in place**, so the inode never changes and other
-  processes that mapped the same file keep observing the same data.
+  processes that mapped the same file keep observing the same data. The
+  JavaScript `DoubletsStorage` of `@link-foundation/link-cli-server` is its
+  port: it writes the same database file byte for byte, in place.
 - **Stated durability.** Writes to a file-mapped store survive a *process*
   crash with no explicit save; surviving a *machine* crash needs the `fsync`
   that `flush()` performs. Crash recovery replays committed-but-unapplied
   transitions and rolls back uncommitted ones when the store is reopened.
-- **Multi-process access.** Both implementations lock a `<database>.lock`
+- **Multi-process access.** All three implementations lock a `<database>.lock`
   sidecar — shared for readers, exclusive for writers — and expose a cheap
   fingerprint that answers "has anyone else written since I last looked?".
 
-Runnable demos for both languages live in
+Runnable demos for all three languages live in
 [`examples/embedded-store/`](examples/embedded-store).
 
 See [rust/README.md](rust/README.md#use-as-a-library),
-[csharp/README.md](csharp/README.md#use-as-a-library), and
+[csharp/README.md](csharp/README.md#use-as-a-library),
+[js/server/README.md](js/server/README.md#file-backed-doublets-storage), and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#embedding-the-library) for the
 details.
 
@@ -800,6 +822,13 @@ const link = await links.create(1n, 1n);
 await links.setName(link.index, 'a pair');
 await links.close();
 ```
+
+### Serve from JavaScript
+
+[`@link-foundation/link-cli-server`](js/server/README.md) runs the whole
+`clink` in a Node.js, Bun or Deno process: `clink --serve` from its
+executable, or `LinksServer` and `GraphqlServer` from its library over a store
+the process opened itself.
 
 ### Serve GraphQL for Deep
 

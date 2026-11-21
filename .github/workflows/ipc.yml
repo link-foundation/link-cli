@@ -30,8 +30,17 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # === STAGE GATE (issue #111) ===
+  # Jobs that install Rust or .NET wait for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves them skipped.
+  javascript:
+    name: javascript
+    uses: ./.github/workflows/javascript-stage.yml
+
   interop:
     name: IPC interop (${{ matrix.os }})
+    needs: [javascript]
     strategy:
       fail-fast: false
       matrix:
@@ -75,6 +84,7 @@ jobs:
   pipeline-status:
     name: Pipeline Status (ipc)
     needs:
+      - javascript
       - interop
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04

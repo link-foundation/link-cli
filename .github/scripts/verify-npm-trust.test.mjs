@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { verifyNpmTrust } from './verify-npm-trust.mjs';
+import { NPM_WORKFLOWS, verifyNpmTrust } from './verify-npm-trust.mjs';
 
 test('npm trust verification exchanges OIDC credentials without publishing or using a secret', async () => {
   const requests = [];
@@ -51,4 +51,23 @@ test('npm trust verification fails clearly when OIDC or the registry policy is m
       /npm.*trusted publisher/,
     );
   }
+});
+
+test('npm trust failures name the workflow each package is published from', async () => {
+  const env = {
+    ACTIONS_ID_TOKEN_REQUEST_URL: 'https://example.test/oidc',
+    ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'runner',
+  };
+  for (const [packageName, workflow] of Object.entries(NPM_WORKFLOWS)) {
+    let calls = 0;
+    await assert.rejects(
+      verifyNpmTrust(packageName, {
+        env,
+        fetch: async () =>
+          ++calls === 1 ? Response.json({ value: 'oidc' }) : new Response('', { status: 404 }),
+      }),
+      (error) => error.message.includes(workflow) && error.message.includes(packageName),
+    );
+  }
+  assert.deepEqual(Object.values(NPM_WORKFLOWS), ['js-client.yml', 'js-server.yml']);
 });

@@ -1,0 +1,102 @@
+Original issue #111 CI failures
+Line numbers refer to gh run view --log-failed.
+
+https://github.com/link-foundation/link-cli/actions/runs/37773104226
+  324 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6466438Z 3 dependencies are behind their latest release:
+  325 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6467259Z
+  326 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6467789Z | File | Dependency | Used | Latest |
+  327 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6468843Z |---|---|---|---|
+  328 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6470527Z | js/package-lock.json | lucide-react | 1.52.0 | 1.53.0 |
+  329 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6473586Z | js/package.json | lucide-react | 1.52.0 | 1.53.0 |
+  330 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6475872Z | rust/Cargo.toml | lino-arguments | 0.3.0 | 0.4.0 |
+  331 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-08T11:54:09.6643545Z ##[error]Process completed with exit code 1.
+
+https://github.com/link-foundation/link-cli/actions/runs/37925703841
+  328 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9313675Z 10 dependencies are behind their latest release:
+  329 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9313908Z
+  330 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9314059Z | File | Dependency | Used | Latest |
+  331 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9314316Z |---|---|---|---|
+  332 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9315076Z | csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | Link.Foundation.Links.Notation | 0.23.0 | 0.25.1 |
+  333 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9315932Z | docs/case-studies/issue-100/evidence/external-range/rust/Cargo.toml | doublets | 0.5.0 | 0.8.0 |
+  334 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9316718Z | examples/lino-structure-probe/LinoStructureProbe.csproj | Link.Foundation.Links.Notation | 0.23.0 | 0.25.1 |
+  335 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9317336Z | js/package-lock.json | lucide-react | 1.52.0 | 1.54.0 |
+  336 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9317730Z | js/package-lock.json | vite | 8.3.3 | 8.3.4 |
+  337 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9318096Z | js/package.json | lucide-react | 1.52.0 | 1.54.0 |
+  338 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9318405Z | js/package.json | vite | 8.3.3 | 8.3.4 |
+  339 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9318773Z | rust/Cargo.toml | doublets | 0.5.0 | 0.8.0 |
+  340 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9319138Z | rust/Cargo.toml | links-notation | 0.23.0 | 0.25.1 |
+  341 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9319530Z | rust/Cargo.toml | lino-arguments | 0.3.0 | 0.5.0 |
+  342 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T11:45:44.9547105Z ##[error]Process completed with exit code 1.
+
+https://github.com/link-foundation/link-cli/actions/runs/38047047102
+  328 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2740916Z 11 dependencies are behind their latest release:
+  329 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2741387Z
+  330 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2741702Z | File | Dependency | Used | Latest |
+  331 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2742326Z |---|---|---|---|
+  332 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2743777Z | csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | Link.Foundation.Links.Notation | 0.23.0 | 0.25.1 |
+  333 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2745330Z | csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj | xunit.runner.visualstudio | 4.0.0 | 4.0.1 |
+  334 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2746571Z | docs/case-studies/issue-100/evidence/external-range/rust/Cargo.toml | doublets | 0.5.0 | 0.8.0 |
+  335 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2748191Z | examples/lino-structure-probe/LinoStructureProbe.csproj | Link.Foundation.Links.Notation | 0.23.0 | 0.25.1 |
+  336 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2749094Z | js/package-lock.json | lucide-react | 1.52.0 | 1.55.0 |
+  337 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2749646Z | js/package-lock.json | vite | 8.3.3 | 8.3.4 |
+  338 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2750161Z | js/package.json | lucide-react | 1.52.0 | 1.55.0 |
+  339 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2750660Z | js/package.json | vite | 8.3.3 | 8.3.4 |
+  340 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2751120Z | rust/Cargo.toml | doublets | 0.5.0 | 0.8.0 |
+  341 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2751630Z | rust/Cargo.toml | links-notation | 0.23.0 | 0.25.1 |
+  342 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2752154Z | rust/Cargo.toml | lino-arguments | 0.3.0 | 0.5.0 |
+  343 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-10T11:03:33.2999740Z ##[error]Process completed with exit code 1.
+
+https://github.com/link-foundation/link-cli/actions/runs/37881037796
+  340 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1343000Z 8 dependencies are behind their latest release:
+  341 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1343440Z
+  342 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1343729Z | File | Dependency | Used | Latest |
+  343 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1344248Z |---|---|---|---|
+  344 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1345241Z | docs/case-studies/issue-100/evidence/external-range/rust/Cargo.toml | doublets | 0.5.0 | 0.8.0 |
+  345 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1346759Z | js/package-lock.json | lucide-react | 1.52.0 | 1.53.0 |
+  346 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1347853Z | js/package-lock.json | vite | 8.3.3 | 8.3.4 |
+  347 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1348696Z | js/package.json | lucide-react | 1.52.0 | 1.53.0 |
+  348 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1349287Z | js/package.json | vite | 8.3.3 | 8.3.4 |
+  349 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1349860Z | rust/Cargo.toml | doublets | 0.5.0 | 0.8.0 |
+  350 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1350501Z | rust/Cargo.toml | links-notation | 0.23.0 | 0.25.1 |
+  351 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1351707Z | rust/Cargo.toml | lino-arguments | 0.3.0 | 0.5.0 |
+  352 Dependencies are on their latest versions	UNKNOWN STEP	2026-10-09T03:49:49.1589486Z ##[error]Process completed with exit code 1.
+
+https://github.com/link-foundation/link-cli/actions/runs/37881037801
+  479 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5309732Z [xUnit.net 00:00:02.08]     Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.ReferencesAreQuotedOnlyWhenNeeded [FAIL]
+  480 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5311384Z [xUnit.net 00:00:02.08]       Assert.Equal() Failure: Strings differ
+  481 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5342714Z [xUnit.net 00:00:02.09]     Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.TextMessagesAreDotStuffed [FAIL]
+  482 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5344514Z [xUnit.net 00:00:02.08]                  ↓ (pos 0)
+  483 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5348164Z [xUnit.net 00:00:02.09]       Expected: "''"
+  484 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5389922Z [xUnit.net 00:00:02.09]       Actual:   "~1{}"
+  485 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5391826Z [xUnit.net 00:00:02.09]                  ↑ (pos 0)
+  486 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5402506Z [xUnit.net 00:00:02.09]       Stack Trace:
+  487 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5405322Z [xUnit.net 00:00:02.09]         /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/LinoProtocolCodecTests.cs(116,0): at Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.ReferencesAreQuotedOnlyWhenNeeded()
+  488 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5409387Z [xUnit.net 00:00:02.09]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+  489 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5411328Z [xUnit.net 00:00:02.09]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  490 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5412834Z [xUnit.net 00:00:02.09]       Assert.Equal() Failure: Strings differ
+  491 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5414066Z [xUnit.net 00:00:02.09]                         ↓ (pos 6)
+  492 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5415131Z [xUnit.net 00:00:02.09]       Expected: "..dot\n'first\n..second'\na b\n.\n"
+  493 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5416627Z [xUnit.net 00:00:02.09]       Actual:   "..dot\n~1{66697273740a2e7365636f6e64}\na b\n"···
+  494 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5418417Z [xUnit.net 00:00:02.09]                         ↑ (pos 6)
+  495 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5419561Z [xUnit.net 00:00:02.09]       Stack Trace:
+  496 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:47.5422385Z [xUnit.net 00:00:02.09]         /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Tests/Protocol/LinoProtocolCodecTests.cs(166,0): at Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.TextMessagesAreDotStuffed()
+ 1376 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:56.2751826Z ##[error]Checks failed on the simulated merge with origin/main even though they pass on the pull request head. This is a semantic merge conflict.
+ 1377 Simulate Fresh Merge	UNKNOWN STEP	2026-10-09T03:50:56.2802364Z ##[error]Process completed with exit code 1.
+ 1888 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3613873Z [xUnit.net 00:00:04.10]     Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.ReferencesAreQuotedOnlyWhenNeeded [FAIL]
+ 1889 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3615344Z [xUnit.net 00:00:04.10]       Assert.Equal() Failure: Strings differ
+ 1890 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3617293Z [xUnit.net 00:00:04.11]     Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.TextMessagesAreDotStuffed [FAIL]
+ 1891 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3618934Z [xUnit.net 00:00:04.10]                  ↓ (pos 0)
+ 1892 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3619757Z [xUnit.net 00:00:04.10]       Expected: "''"
+ 1893 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3620494Z [xUnit.net 00:00:04.10]       Actual:   "~1{}"
+ 1894 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3621386Z [xUnit.net 00:00:04.10]                  ↑ (pos 0)
+ 1895 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3622136Z [xUnit.net 00:00:04.10]       Stack Trace:
+ 1896 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3624583Z [xUnit.net 00:00:04.10]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\Protocol\LinoProtocolCodecTests.cs(116,0): at Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.ReferencesAreQuotedOnlyWhenNeeded()
+ 1897 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3628841Z [xUnit.net 00:00:04.10]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+ 1898 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3631170Z [xUnit.net 00:00:04.10]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+ 1899 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3632534Z [xUnit.net 00:00:04.11]       Assert.Equal() Failure: Strings differ
+ 1900 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3633568Z [xUnit.net 00:00:04.11]                         ↓ (pos 6)
+ 1901 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3634428Z [xUnit.net 00:00:04.11]       Expected: "..dot\n'first\n..second'\na b\n.\n"
+ 1902 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3635604Z [xUnit.net 00:00:04.11]       Actual:   "..dot\n~1{66697273740a2e7365636f6e64}\na b\n"···
+ 1903 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3636669Z [xUnit.net 00:00:04.11]                         ↑ (pos 6)
+ 1904 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3637388Z [xUnit.net 00:00:04.11]       Stack Trace:
+ 1905 Test (windows-latest)	UNKNOWN STEP	2026-10-09T03:50:52.3639551Z [xUnit.net 00:00:04.11]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\Protocol\LinoProtocolCodecTests.cs(166,0): at Foundation.Data.Doublets.Cli.Tests.Protocol.LinoProtocolCodecTests.TextMessagesAreDotStuffed()

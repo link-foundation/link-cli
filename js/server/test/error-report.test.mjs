@@ -1,0 +1,139 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { constants } from 'node:os';
+import { describe, it } from 'node:test';
+import {
+  errorChain,
+  errorText,
+  formatErrorReport,
+  ioErrorText,
+  isSystemError,
+  reportError,
+  withoutSyscall,
+} from '../src/error-report.js';
+import { ParseError } from '../src/errors.js';
+
+function systemError(call) {
+  try {
+    call();
+  } catch (error) {
+    return error;
+  }
+  throw new Error('expected a system error');
+}
+
+const missing = () => systemError(() => readFileSync('/nonexistent/clink/missing.lino'));
+
+describe('error reports', () => {
+  it('prints a Node.js system error as the Rust std::io::Error', () => {
+    const error = missing();
+    assert.equal(isSystemError(error), true);
+    assert.equal(
+      ioErrorText(error),
+      `No such file or directory (os error ${constants.errno.ENOENT})`,
+    );
+    assert.equal(errorText(error), ioErrorText(error));
+  });
+
+  it('keeps the Node.js text and errno of a code the table does not know', () => {
+    const error = Object.assign(new Error("EWEIRD: something odd happened, open 'x'"), {
+      code: 'EWEIRD',
+      errno: -4242,
+    });
+    assert.equal(ioErrorText(error, {}), 'something odd happened (os error 4242)');
+    assert.equal(
+      ioErrorText(Object.assign(new Error('EWEIRD: odd'), { code: 'EWEIRD', errno: -7 }), {
+        EWEIRD: 9,
+      }),
+      'odd (os error 9)',
+    );
+  });
+
+  it('reads the Rust text Deno gives a system error without an errno', () => {
+    const error = Object.assign(new Error('Bad file descriptor (os error 9)'), { code: 'EBADF' });
+    assert.equal(isSystemError(error), true);
+    assert.equal(errorText(error), `Bad file descriptor (os error ${constants.errno.EBADF})`);
+    const odd = Object.assign(new Error('Something odd (os error 4242)'), { code: 'EODD' });
+    assert.equal(ioErrorText(odd, {}), 'Something odd (os error 4242)');
+  });
+
+  it('is not fooled by errors that only look like system errors', () => {
+    assert.equal(isSystemError(Object.assign(new Error('x'), { code: 'ERR_X' })), false);
+    assert.equal(isSystemError({ code: 'ENOENT', errno: -2 }), false);
+    assert.equal(errorText('plain text'), 'plain text');
+  });
+
+  it('prints a lone error without a cause section', () => {
+    assert.equal(formatErrorReport(new Error('unknown option --bogus')), 'unknown option --bogus');
+  });
+
+  it('prints one cause indented by four spaces, as anyhow does', () => {
+    const error = new Error('Failed to read LiNo input: missing.lino', { cause: missing() });
+    assert.equal(
+      formatErrorReport(error),
+      'Failed to read LiNo input: missing.lino\n\nCaused by:\n' +
+        `    No such file or directory (os error ${constants.errno.ENOENT})`,
+    );
+  });
+
+  it('numbers several causes and aligns their continuation lines', () => {
+    const error = new Error('top', {
+      cause: new Error('middle\nsecond line', { cause: new Error('bottom') }),
+    });
+    assert.equal(
+      formatErrorReport(error),
+      'top\n\nCaused by:\n    0: middle\n       second line\n    1: bottom',
+    );
+    assert.equal(
+      formatErrorReport(new Error('top', { cause: new Error('a\nb') })),
+      'top\n\nCaused by:\n    a\n    b',
+    );
+  });
+
+  it('prints a multi-line message as it is', () => {
+    const error = new ParseError('Syntax error at line 1, column 7\n1 | (( 1 1\n  |       ^');
+    assert.equal(
+      formatErrorReport(error),
+      'Parse error: Syntax error at line 1, column 7\n1 | (( 1 1\n  |       ^',
+    );
+  });
+
+  it('stops at a cause cycle and reports non-error causes', () => {
+    const error = new Error('loop');
+    error.cause = error;
+    assert.deepEqual(errorChain(error), [error]);
+    assert.equal(
+      formatErrorReport(new Error('top', { cause: 'text cause' })),
+      'top\n\nCaused by:\n    text cause',
+    );
+  });
+
+  it('writes `Error: ` and the report to standard error', () => {
+    const written = [];
+    reportError(new Error('boom'), { write: (text) => written.push(text) });
+    assert.deepEqual(written, ['Error: boom\n']);
+  });
+
+  it('drops the syscall and path Node.js appends, in linear time', () => {
+    const cases = [
+      ["no such file or directory, open 'a, b'", 'no such file or directory'],
+      ['permission denied, mkdir', 'permission denied'],
+      ["busy, open ''", 'busy'],
+      // Not a syscall suffix: no letters, capitals, an unclosed or multi-line path.
+      ['a, , b', 'a, '],
+      ['a, 1', 'a, 1'],
+      ['a, Open', 'a, Open'],
+      ["a, open 'x", "a, open 'x"],
+      ["a, open '\n'", "a, open '\n'"],
+      ["a, open 'x' y", "a, open 'x' y"],
+      ['plain', 'plain'],
+    ];
+    for (const [text, expected] of cases) assert.equal(withoutSyscall(text), expected, text);
+    // CodeQL js/polynomial-redos: the regular expression this replaces took
+    // quadratic time on this input (experiments/issue-111/without-syscall-equivalence.mjs).
+    const started = performance.now();
+    // The whole input is one `, a '…'` suffix, as the regular expression read it.
+    assert.equal(withoutSyscall(", a '".repeat(50_000)), '');
+    assert.ok(performance.now() - started < 1000);
+  });
+});

@@ -656,6 +656,65 @@ public sealed class IpcTransportTests
         Assert.Equal(IpcErrorKind.BrokenPipe, error.Kind);
     });
 
+    /// <summary>
+    /// A link whose sends fail with "the peer hung up" once the peer is gone, as a System V queue the peer removed
+    /// fails <c>msgsnd</c> with <c>EIDRM</c>.
+    /// </summary>
+    private sealed class VanishingLink(MemoryLink inner, Func<bool> gone) : IDatagrams
+    {
+        public bool Send(ReadOnlySpan<byte> frame) => gone() ? throw IpcException.HungUp() : inner.Send(frame);
+
+        public byte[]? Receive(TimeSpan timeout) => inner.Receive(timeout);
+    }
+
+    /// <summary>
+    /// A System V peer that reads the end and hangs up removes both queues, so its ACK of the end and its ABORT
+    /// vanish and the resent end fails with "the peer hung up": the half-close still succeeds, as every DATA frame
+    /// was acknowledged, and only a later write is an error.
+    /// </summary>
+    [Fact]
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+        Justification = "The stream owns the session; the queues live as long as the test process.")]
+    public void APeerRemovingTheLinkBeforeTheEndIsAcknowledgedStillEndsTheStream() => Within(30, () =>
+    {
+        var (toA, toPeer) = (new BlockingCollection<byte[]>(), new BlockingCollection<byte[]>());
+        var gone = 0;
+        var link = new VanishingLink(new MemoryLink(toA, toPeer, 0), () => Volatile.Read(ref gone) != 0);
+        var settings = new DatagramSettings(64, TimeSpan.FromMilliseconds(5), null, null);
+        using var a = new IpcStream(new DatagramSession("test", link, settings));
+        var received = new MemoryStream();
+        var peer = new Thread(() =>
+        {
+            var accepted = 0u;
+            while (toPeer.TryTake(out var frame, TimeSpan.FromSeconds(5)))
+            {
+                Assert.True(DatagramSession.TryParse(frame, out var kind, out var seq, out var payload));
+                if (kind == DatagramSession.Data)
+                {
+                    if (seq == accepted + 1)
+                    {
+                        accepted = seq;
+                        received.Write(payload);
+                    }
+                    toA.Add(DatagramSession.Frame(DatagramSession.Ack, seq, []));
+                }
+                else if (kind == DatagramSession.Eof)
+                {
+                    // The end is read; the queues are removed with the ACK unread.
+                    Volatile.Write(ref gone, 1);
+                    return;
+                }
+            }
+        });
+        peer.Start();
+        a.Write("links"u8);
+        a.CloseWrite();
+        peer.Join();
+        Assert.Equal("links"u8.ToArray(), received.ToArray());
+        var error = Assert.Throws<IpcException>(() => a.Write("more"u8));
+        Assert.Equal(IpcErrorKind.BrokenPipe, error.Kind);
+    });
+
     [Fact]
     public void DatagramFramesRoundTrip()
     {

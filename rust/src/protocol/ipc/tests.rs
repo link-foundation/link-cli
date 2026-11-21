@@ -609,6 +609,85 @@ fn a_peer_hanging_up_instead_of_acknowledging_the_end_still_ends_the_stream() {
     });
 }
 
+/// A link whose sends fail with `hung_up` once the peer is gone, as a
+/// System V queue the peer removed fails `msgsnd` with `EIDRM`.
+#[derive(Debug)]
+struct VanishingLink {
+    inner: memory::MemoryLink,
+    gone: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl datagram::Datagrams for VanishingLink {
+    fn send(&self, frame: &[u8]) -> io::Result<bool> {
+        if self.gone.load(std::sync::atomic::Ordering::SeqCst) {
+            return Err(hung_up());
+        }
+        self.inner.send(frame)
+    }
+
+    fn recv(&self, buf: &mut Vec<u8>, timeout: Duration) -> io::Result<bool> {
+        self.inner.recv(buf, timeout)
+    }
+}
+
+/// A System V peer that reads the end and hangs up removes both queues, so
+/// its ACK of the end and its ABORT vanish and the resent end fails with
+/// `hung_up`: the half-close still succeeds, as every DATA frame was
+/// acknowledged, and only a later write is an error.
+#[test]
+fn a_peer_removing_the_link_before_the_end_is_acknowledged_still_ends_the_stream() {
+    within(30, || {
+        let (a, peer) = memory::pair(0);
+        let gone = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let link = VanishingLink {
+            inner: a,
+            gone: Arc::clone(&gone),
+        };
+        let settings = Settings {
+            chunk: 64,
+            rto: Duration::from_millis(5),
+            heartbeat: None,
+            dead: None,
+        };
+        let mut a =
+            IpcStream::new(Session::start("test", Arc::new(link), settings).expect("session"));
+        let peer = thread::spawn(move || {
+            let mut buffer = Vec::new();
+            let mut received = Vec::new();
+            let mut accepted = 0;
+            loop {
+                if !datagram::Datagrams::recv(&peer, &mut buffer, Duration::from_secs(5))
+                    .expect("receive")
+                {
+                    continue;
+                }
+                let (kind, seq, payload) = datagram::parse(&buffer).expect("a frame");
+                match kind {
+                    datagram::DATA => {
+                        if seq == accepted + 1 {
+                            accepted = seq;
+                            received.extend_from_slice(payload);
+                        }
+                        datagram::Datagrams::send(&peer, &datagram::frame(datagram::ACK, seq, &[]))
+                            .expect("ack");
+                    }
+                    datagram::EOF => {
+                        // The end is read; the queues are removed with the ACK unread.
+                        gone.store(true, std::sync::atomic::Ordering::SeqCst);
+                        return received;
+                    }
+                    _ => {}
+                }
+            }
+        });
+        a.write_all(b"links").expect("write");
+        a.close_write().expect("the end counts as delivered");
+        assert_eq!(peer.join().expect("peer"), b"links");
+        let error = a.write_all(b"more").expect_err("the peer no longer reads");
+        assert_eq!(error.kind(), io::ErrorKind::BrokenPipe);
+    });
+}
+
 #[test]
 fn datagram_frames_round_trip() {
     let frame = datagram::frame(datagram::DATA, 7, b"links");
