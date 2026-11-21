@@ -3,6 +3,38 @@
 Run IDs refer to https://github.com/link-foundation/link-cli/actions/runs/<id>.
 Each section was recorded when its runs completed.
 
+## Original dependency and NuGet failures
+
+The three scheduled runs on `main` all tested `ca2b84a2`. Each checker run
+found additional outdated declarations. On October 9 the findings included
+`Link.Foundation.Links.Notation` 0.23.0 in two C# project files, with
+0.25.1 available.
+
+| Date (UTC) | Result | Lines in `gh run view --log-failed` |
+| ---------- | ------ | ----------------------------------- |
+| 2026-10-08 | 3 outdated declarations. [Run 37773104226](https://github.com/link-foundation/link-cli/actions/runs/37773104226) | 324–331 |
+| 2026-10-09 | 10 outdated declarations. [Run 37925703841](https://github.com/link-foundation/link-cli/actions/runs/37925703841) | 328–342 |
+| 2026-10-10 | 11 outdated declarations. [Run 38047047102](https://github.com/link-foundation/link-cli/actions/runs/38047047102) | 328–343 |
+
+On October 9, the `Dependencies` and C# workflows for PR #109 both started
+at 03:49:35 UTC. That PR updated the C# notation library from 0.23.0 to
+0.25.1. The library emitted version 1 UTF-8 hex literals for empty and
+multiline references, while the existing C# tests expected quoted strings.
+`ReferencesAreQuotedOnlyWhenNeeded` expected `''` and got `~1{}`.
+`TextMessagesAreDotStuffed` expected `'first\n..second'` and got
+`~1{66697273740a2e7365636f6e64}`. The failures appeared on Ubuntu, macOS,
+Windows and in the simulated merge. The PR was later closed. See lines
+479–496, 1888–1905, 3649–3750 and 5233–5249 in the
+[C# failed-job log](https://github.com/link-foundation/link-cli/actions/runs/37881037801).
+The parallel [Dependencies run](https://github.com/link-foundation/link-cli/actions/runs/37881037796)
+found eight outdated declarations (lines 340–352).
+
+The later dependency refresh updated the C# expectations for lossless
+literals along with the dependency. The follow-up kept coverage for legacy
+quoted references and added a CRLF round-trip test.
+[Dependency refresh](https://github.com/link-foundation/link-cli/commit/ff7de8a2)
+· [Compatibility tests](https://github.com/link-foundation/link-cli/commit/238cb43a)
+
 ## First run of the gate (commit 4e540213)
 
 | Workflow     | Run         | Result  | Cause                                                                                                                         |

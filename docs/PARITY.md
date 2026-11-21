@@ -23,6 +23,9 @@ Each entry in `features[]` has an `id`, a `title`, and one cell per language.
 | `not-applicable` | The feature has no meaning in this language.              | `reason`                                                          |
 | `missing`        | The feature should exist here but does not yet.           | `issue` (a tracking issue URL)                                    |
 
+An implemented cell can also record platform or runtime limits in `scope`.
+Those cells participate in fingerprint and parity checks.
+
 Each language also lists `roots`: globs of its source files. A source file
 under a root must belong to a feature, or to a `shared` entry with a reason.
 This rule is what makes a new file count against the manifest instead of

@@ -693,6 +693,7 @@
       },
       "javascript": {
         "status": "implemented",
+        "scope": "DoubletsStorage represents addresses up to Number.MAX_SAFE_INTEGER. FileLock requires Deno, Bun or Node.js 26 or later.",
         "sources": [
           "js/server/src/link-storage.js",
           "js/server/src/link-storage-doublets.js",
@@ -812,6 +813,7 @@
       },
       "javascript": {
         "status": "implemented",
+        "scope": "The JavaScript server omits mq, sysvmq, mailslot, copydata and alpc. On supported platforms the JavaScript client can reach those endpoints through its native CLI bridge. See js/server/README.md for platform support.",
         "sources": [
           "js/client/src/ipc*.js",
           "js/server/src/ipc*.js"

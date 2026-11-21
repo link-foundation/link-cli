@@ -24,6 +24,7 @@ repository metadata.
 | [`actions-bypass-422.json`](data/actions-bypass-422.json)  | GitHub's 422 when GitHub Actions is made a ruleset bypass actor. `experiments/issue-111/probe-actions-bypass.sh` reproduces it. |
 | [`open-prs-before.json`](data/open-prs-before.json)        | The open pull requests before triage: number, last update, linked issues, check results. |
 | [`ci-evidence.md`](data/ci-evidence.md)                    | The CI runs this pull request relied on, including the failures it fixed and the gate demonstration. |
+| [`original-failures-excerpt.txt`](data/original-failures-excerpt.txt) | The October dependency and C# test failures, with the original log line numbers. |
 | [`rust-44689293297-excerpt.txt`](data/rust-44689293297-excerpt.txt) | The default-branch Rust release push rejection after #182 merged, with original log line numbers. |
 
 ## Timeline
@@ -32,7 +33,7 @@ repository metadata.
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | 2025-09-10       | PRs #36-#41 and #49 open. Each duplicates an open issue (#35-#30, #18). None ever gets a CI result.                        |
 | 2025-09-15       | PR #57 opens, duplicating issue #56. All eight stay open with no activity for 14 months.                                     |
-| 2026-10-08/09    | The scheduled `Dependencies` run fails on `main` two days running. Nothing reports it.                                       |
+| 2026-10-08–10    | Three scheduled `Dependencies` runs fail on `main`. The number of outdated declarations rises from 3 to 11. No tracking issue is opened. |
 | 2026-10-09 03:49 | On a Dependabot branch, `C# CI/CD Pipeline`, `Dependencies`, `Docs` and `Security` all start in the same second: no stage order. |
 | 2026-10-10       | Issue #111 is filed.                                                                                                         |
 | 2026-10-12       | PR #109 (the NuGet group) is closed without merging. Later Dependabot pull requests replace it.                             |
@@ -207,10 +208,12 @@ repository metadata.
 
 ## Upstream reports
 
-The one upstream defect found, actionlint's missing support for `$/`, is
-already reported as rhysd/actionlint#711 (opened 2026-07-30 and still open),
-so no new report was filed. The repository's workaround is recorded in
-`.github/zizmor.yml`.
+- actionlint rejects the `$/` syntax recommended by zizmor. The workaround
+  is recorded in `.github/zizmor.yml`. [rhysd/actionlint#711](https://github.com/rhysd/actionlint/issues/711)
+- Deno can write a file timestamp one millisecond earlier than requested.
+  The report includes a standalone reproduction, the midpoint workaround and
+  a suggestion to use integer millisecond arithmetic for `Date` arguments.
+  [denoland/deno#37212](https://github.com/denoland/deno/issues/37212)
 
 ## Debugging aids added
 

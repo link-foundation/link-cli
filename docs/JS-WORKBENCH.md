@@ -87,8 +87,8 @@ It implements, with tests under `js/server/test/`:
 - version control: branches, tags and checkout
 - triplets over doublets
 - permissions and tokens
-- the protocol server (`--serve`) over TCP and the IPC transports, the relay
-  (`--forward`) and the protocol client (`--connect`)
+- the protocol server (`--serve`), relay (`--forward`) and protocol client
+  (`--connect`) over TCP and the [IPC endpoints supported by the JavaScript server](../js/server/README.md#differences-from-the-rust-clink)
 - the GraphQL endpoint for Deep (`--serve ADDR --graphql`)
 
 So the store policies that the WASM build does not expose, and the GraphQL
