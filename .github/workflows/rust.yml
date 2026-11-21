@@ -427,7 +427,7 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal --no-self-update --component llvm-tools-preview
           rustup default stable
-          cargo install cargo-llvm-cov --version 0.9.1 --locked
+          cargo install cargo-llvm-cov --version 0.9.2 --locked
 
       - name: Measure Rust test coverage
         # Branch instrumentation is experimental. Limit the unstable compiler
