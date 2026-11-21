@@ -65,10 +65,20 @@ test('no workflow flags or closes pull requests for inactivity (issue #111)', ()
 
 test('a red Dependencies check on main opens or updates a tracking issue (issue #111)', () => {
   const { text } = workflows.find(({ name }) => name === 'dependencies.yml');
-  const job = readJobs(text).find(({ name }) => name === 'tracking-issue');
+  const jobs = readJobs(text);
+  const job = jobs.find(({ name }) => name === 'tracking-issue');
   assert.ok(job, 'dependencies.yml has no tracking-issue job');
   assert.match(job.body, /^ {6}- latest$/m);
-  assert.match(job.body, /if: \$\{\{ !cancelled\(\) && github\.ref == 'refs\/heads\/main'/);
+  assert.match(job.body, /\$\{\{ !cancelled\(\) && github\.ref == 'refs\/heads\/main'/);
+  assert.match(
+    job.body,
+    /\(github\.event_name == 'schedule' \|\| github\.event_name == 'workflow_dispatch' \|\|\s+needs\.latest\.result == 'failure' \|\| needs\.javascript\.result == 'failure'\)/,
+  );
+  assert.match(
+    jobs.find(({ name }) => name === 'latest').body,
+    /CHECK_DEPENDENCIES_MODE: \$\{\{ github\.event_name == 'push' && 'report' \|\| 'enforce' \}\}/,
+  );
+  assert.doesNotMatch(text, /^concurrency:/m);
   assert.match(job.body, /^ {6}issues: write$/m);
   assert.match(job.body, /^ {6}group: dependencies-tracking-\$\{\{ github\.ref \}\}$/m);
   assert.match(job.body, /^ {6}cancel-in-progress: false$/m);

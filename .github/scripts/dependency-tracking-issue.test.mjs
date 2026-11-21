@@ -38,6 +38,17 @@ test('the tracking issue is found by its marker, never by a pull request', async
   assert.equal((await findOpen(request)).number, 3);
 });
 
+test('an older open tracking issue is found beyond the first thousand items', async () => {
+  const unrelated = Array.from({ length: 100 }, () => ({ body: 'unrelated' }));
+  const existing = { number: 7, body: MARKER };
+  let page = 0;
+  const request = async (_method, path) => {
+    assert.ok(path.endsWith(`&page=${++page}`));
+    return page === 11 ? [existing] : unrelated;
+  };
+  assert.equal(await findOpen(request), existing);
+});
+
 test('a failure opens one issue, then comments on it; a pass closes it', async () => {
   const log = () => {};
   const runUrl = 'https://example.test/runs/1';

@@ -6,7 +6,7 @@
 // edited the cron line. This script runs after the check on main (schedule,
 // push and manual runs):
 //   - a failed run opens the tracking issue, or comments on the open one;
-//   - a passing run closes the open tracking issue with a link to the run.
+//   - a passing enforcement run closes the open issue with a link to the run.
 // The issue is found by a marker in its body, so renaming it is harmless.
 //
 // Env: NEEDS_JSON         toJSON(needs) of the calling job
@@ -45,7 +45,7 @@ export function failureText(failed, runUrl) {
     'A failed registry lookup, or a dependency whose blocking issue is closed now, fails',
     'the check on main; see the header of .github/scripts/check-latest-dependencies.mjs.',
     'Fix the cause on a branch, or hold the dependency back with a comment linking an open',
-    'issue. The next passing run on main closes this issue.',
+    'issue. The next passing scheduled or manually triggered audit on main closes this issue.',
   ].join('\n');
 }
 
@@ -70,12 +70,11 @@ export function client({ token, repository, debug = false, log = console.log }) 
 }
 
 export async function findOpen(request) {
-  for (let page = 1; page <= 10; page++) {
+  for (let page = 1; ; page++) {
     const issues = await request('GET', `/issues?state=open&per_page=100&page=${page}`);
     const found = issues.find((issue) => !issue.pull_request && issue.body?.includes(MARKER));
     if (found || issues.length < 100) return found;
   }
-  return undefined;
 }
 
 export async function track({ needs, runUrl, request, dryRun = false, log = console.log }) {

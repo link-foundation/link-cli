@@ -25,10 +25,6 @@ permissions:
   # alone gets issues: write.
   issues: read
 
-concurrency:
-  group: dependencies-${{ github.ref }}
-  cancel-in-progress: true
-
 # Provide Git config to actions/checkout itself; checkout runs git init before
 # any workflow step can configure Git, which otherwise prints the
 # default-branch hint into every log.
@@ -51,6 +47,9 @@ jobs:
     needs: [javascript]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-latest
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -69,20 +68,23 @@ jobs:
       - name: Compare every dependency with its registry
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          CHECK_DEPENDENCIES_MODE: ${{ github.event_name == 'pull_request' && 'enforce' || 'report' }}
+          CHECK_DEPENDENCIES_MODE: ${{ github.event_name == 'push' && 'report' || 'enforce' }}
         run: node .github/scripts/check-latest-dependencies.mjs
 
   # A red check on main used to stay silently red (issue #111): the daily
   # runs of 2026-10-08 and 2026-10-09 failed and nobody acted. A failure on
-  # main now opens or updates a tracking issue, and the next passing run on
-  # main closes it. TRACKING_ISSUE_DEBUG logs each API call when the run is
-  # re-run with debug logging.
+  # main now opens or updates a tracking issue. A passing enforcement audit
+  # on main closes it. A push runs in report mode, so a passing push audit
+  # alone cannot confirm that the issue is resolved.
   tracking-issue:
     name: Track a red check on main
     needs:
       - javascript
       - latest
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    if: >-
+      ${{ !cancelled() && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      needs.latest.result == 'failure' || needs.javascript.result == 'failure') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:

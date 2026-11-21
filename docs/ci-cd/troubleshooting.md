@@ -185,16 +185,17 @@ new file before you lint it. It warns from 900 lines and fails above 1000.
 
 ## Dependencies
 
-`dependencies.yml` fails when a dependency is behind its latest release. A
-pin that carries `# held back: <issue URL>` counts as held back while that
-issue is open. Once the issue closes, the pin fails the check again, so it
-cannot be forgotten. Example: cargo-audit 0.22.2 was held back by #176 until
+`dependencies.yml` enforces dependency freshness on pull requests and in
+scheduled and manual audits. The check on a push to `main` reports new
+versions and still fails on registry lookup errors. A pin that carries
+`# held back: <issue URL>` counts as held back while that issue is open.
+Issue #176 held back cargo-audit 0.22.2 until
 `taiki-e/install-action` v2.90.4 shipped its 0.23.0 manifest.
 
 When the check fails on `main`, the `tracking-issue` job opens an issue titled
 "Dependencies check is failing on main", or comments on the open one, and
-closes it after the next green run. To preview its decision without writing
-anything:
+closes it after the next passing scheduled or manual audit. To preview the
+decision without writing anything:
 
 ```bash
 NEEDS_JSON='{"latest":{"result":"failure"}}' TRACKING_ISSUE_DRY_RUN=1 \
