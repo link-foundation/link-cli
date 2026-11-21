@@ -19,11 +19,13 @@ repository metadata.
 | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | [`issue-111.json`](data/issue-111.json)                    | The issue body. It has no comments ([`issue-111-comments.json`](data/issue-111-comments.json) is `[]`). |
 | [`pr-180-comments.json`](data/pr-180-comments.json)        | Pull request conversation comments, including the owner's review of 2026-11-14 16:13. |
+| [`pr-180-reviews.json`](data/pr-180-reviews.json) | Pull request review records and inline CodeQL findings. |
 | [`branch-protection-before.json`](data/branch-protection-before.json) | `GET /branches/main/protection` before the change: 404 "Branch not protected". |
 | [`branch-protection-after.json`](data/branch-protection-after.json) | After the change: the 200 from `GET /branches/main/protection`, the ruleset, the rules in effect on `main`, the `release` environment and the deploy key's metadata. |
 | [`actions-bypass-422.json`](data/actions-bypass-422.json)  | GitHub's 422 when GitHub Actions is made a ruleset bypass actor. `experiments/issue-111/probe-actions-bypass.sh` reproduces it. |
 | [`open-prs-before.json`](data/open-prs-before.json)        | The open pull requests before triage: number, last update, linked issues, check results. |
 | [`ci-evidence.md`](data/ci-evidence.md)                    | The CI runs this pull request relied on, including the failures it fixed and the gate demonstration. |
+| [`failed-ci-logs.tar.gz`](data/failed-ci-logs.tar.gz) | Failed-job logs from 27 public runs, including the original audit, the gate demonstration, and the Rust release rejection on `main`. Unpack with `tar -xzf failed-ci-logs.tar.gz`. |
 | [`original-failures-excerpt.txt`](data/original-failures-excerpt.txt) | The October dependency and C# test failures, with the original log line numbers. |
 | [`rust-44689293297-excerpt.txt`](data/rust-44689293297-excerpt.txt) | The default-branch Rust release push rejection after #182 merged, with original log line numbers. |
 
