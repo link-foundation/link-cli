@@ -1,0 +1,403 @@
+name: JS server CI
+
+# @link-foundation/link-cli-server (js/server, issue #111): the pure
+# JavaScript server and embedded store. Unit tests with complete coverage on
+# Node.js, the same tests on Bun and Deno, differential runs against the Rust
+# `clink` (byte-identical output and database files), the client conformance
+# runner against `clink --serve` of this package, and the npm release.
+on:
+  # Only main on push: PR branches are covered by the pull_request trigger
+  # (issue #96).
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/js-server.yml'
+      - '.github/scripts/**'
+      - 'js/server/**'
+      - 'js/client/**'
+      - 'rust/**'
+      - 'docs/protocol/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/js-server.yml'
+      - '.github/scripts/**'
+      - 'js/server/**'
+      - 'js/client/**'
+      - 'rust/**'
+      - 'docs/protocol/**'
+  workflow_dispatch:
+    inputs:
+      verify_trusted_publishing:
+        description: 'Verify npm OIDC authentication without publishing'
+        type: boolean
+        default: false
+
+# Concurrency is set per job (issue #134): superseded read-only checks are
+# cancelled on every branch, main included (issue #172), while writer jobs
+# share a never-cancelled group.
+
+# Least privilege by default; the release job opts into more below.
+permissions:
+  contents: read
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  # === STAGE GATE (issue #111) ===
+  # The job that builds the Rust oracle waits for the JavaScript stage (lint,
+  # `npm run test:js`, parity check) of the same commit; a failed, cancelled
+  # or skipped stage leaves it skipped.
+  javascript:
+    name: javascript
+    if: inputs.verify_trusted_publishing != true
+    uses: ./.github/workflows/javascript-stage.yml
+
+  release-preflight:
+    name: Release authentication preflight
+    if: inputs.verify_trusted_publishing != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Prove authentication before version writes or publishing
+        working-directory: .
+        env:
+          NPM_PACKAGE: '@link-foundation/link-cli-server'
+        run: node .github/scripts/release-preflight.mjs npm
+
+  verify-trusted-publishing:
+    name: Verify npm trusted publishing
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      - name: Verify npm OIDC exchange
+        env:
+          NPM_PACKAGE: '@link-foundation/link-cli-server'
+        run: node .github/scripts/verify-npm-trust.mjs
+
+  unit:
+    if: inputs.verify_trusted_publishing != true
+    name: Unit tests on Node.js, Bun and Deno
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-unit
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js/server
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+          cache: npm
+          cache-dependency-path: js/server/package-lock.json
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Unit tests and complete production coverage
+        run: npm run test:coverage
+
+      - name: Unit tests on Bun
+        run: bun test --timeout 60000 test/
+
+      # The package is plain JavaScript without type declarations; without
+      # --no-check Deno's TypeScript host stops before any test runs because
+      # it cannot resolve npm:@types/node, which the package does not use.
+      - name: Unit tests on Deno
+        run: deno test --allow-all --no-check test/
+
+      # The embedded-store example (the twin of rust/examples/embedded_store.rs)
+      # on every runtime: each run asserts recovery, the lock and the in-place
+      # writes, and all three must leave the same database file.
+      - name: Embedded store example on Node.js, Bun and Deno
+        run: |
+          example=../../examples/embedded-store/embedded-store.mjs
+          node "$example" "$RUNNER_TEMP/embedded-node"
+          bun "$example" "$RUNNER_TEMP/embedded-bun"
+          deno run --allow-all --node-modules-dir=manual "$example" "$RUNNER_TEMP/embedded-deno"
+          cmp "$RUNNER_TEMP/embedded-node/db.links" "$RUNNER_TEMP/embedded-bun/db.links"
+          cmp "$RUNNER_TEMP/embedded-node/db.links" "$RUNNER_TEMP/embedded-deno/db.links"
+
+  # The package supports Node.js 20 and later on every desktop and server
+  # operating system (`engines` in package.json), so the unit tests also run
+  # on the oldest supported Node.js and on macOS and Windows. Tests of
+  # primitives a platform lacks (FIFOs, Unix sockets on old Windows, ...)
+  # skip with the reason the port reports there.
+  portability:
+    if: inputs.verify_trusted_publishing != true
+    name: Unit tests on ${{ matrix.os }} with Node.js ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-portability-${{ matrix.os }}-${{ matrix.node }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        node: ['20.x', '22.x', '26.x']
+        exclude:
+          # Node.js 26 on Ubuntu is the coverage run of the unit job.
+          - os: ubuntu-24.04
+            node: '26.x'
+    defaults:
+      run:
+        shell: bash
+        working-directory: js/server
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: js/server/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+  differential:
+    needs: [javascript, unit]
+    if: inputs.verify_trusted_publishing != true
+    name: Differential runs against the Rust clink and client conformance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-differential
+      cancel-in-progress: true
+    env:
+      CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+      # The Rust `DoubletsStorage` driver test/differential/doublets-storage
+      # replays the unit-store scenarios through (rust/examples/unit_store_trace.rs).
+      CLINK_RUST_UNIT_STORE: ${{ github.workspace }}/rust/target/release/examples/unit_store_trace
+      CLINK_JS: ${{ github.workspace }}/js/server/bin/clink.js
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+          cache: npm
+          cache-dependency-path: js/server/package-lock.json
+
+      - name: Install npm dependencies
+        working-directory: js/server
+        run: npm ci
+
+      - name: Restore cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-js-server-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-js-server-cargo-
+
+      - name: Build the Rust clink and the unit-store driver
+        run: >-
+          cargo build --release --manifest-path rust/Cargo.toml
+          --bin clink --example unit_store_trace
+
+      # The same invocations through both executables: stdout, stderr, exit
+      # status and every file they write must be identical.
+      - name: Differential runs against the Rust clink
+        working-directory: js/server
+        run: npm run test:differential
+
+      # The js/client conformance scenarios, served by `clink --serve` of
+      # this package instead of the Rust or C# executable.
+      - name: Client conformance against the JavaScript server
+        working-directory: js/client
+        env:
+          CLINK_RUST: ''
+        run: node test/conformance/run.mjs
+
+      # Pull request caches are scoped to their merge ref, so only main
+      # saves; every branch restores main's cache (issue #172).
+      - name: Save cargo cache
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+
+  release:
+    name: Release to npm
+    needs: [release-preflight, unit, portability, differential]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Writer group: never cancel a publish that may already be under way.
+    concurrency:
+      group: main-writer-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      # Trusted publishing and npm provenance use a GitHub OIDC token.
+      id-token: write
+    defaults:
+      run:
+        working-directory: js/server
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check whether this version is published
+        id: check
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          # Only E404 means "not published". Any other failure (an unreachable
+          # registry, a 5xx after npm's own retries) must not count as "not on
+          # npm yet", or main would try to publish an existing version.
+          if output=$(npm view "$name@$version" version 2>&1); then
+            echo "$name@$version is already on npm."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          elif grep -q 'code E404' <<< "$output"; then
+            echo "$name@$version is not on npm yet."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$output"
+            echo "::error title=npm lookup failed::Could not ask npm whether $name@$version is published. How to fix: re-run the job."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # Pull requests check what would be published, without a token.
+      - name: Dry-run the release
+        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+        env:
+          PUBLISHED: ${{ steps.check.outputs.published }}
+        run: |
+          # npm publish --dry-run still rejects an existing registry version.
+          # Validate the tarball on those PRs without trying to republish it.
+          if [ "$PUBLISHED" == 'true' ]; then
+            npm pack --dry-run
+          else
+            npm publish --dry-run --access public
+          fi
+
+      # The package's OIDC policy is verified through the authentication-only
+      # dispatch above (issue #136). No long-lived publishing token is used.
+      - name: Publish to npm
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outputs.published == 'false'
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
+          # Trusted publishing needs npm 11.5.1+. Pinned to an exact release
+          # of the 11 line (Node.js ^20.17.0 || >=22.9.0, so 26.x included),
+          # so the npm that publishes does not change with the runner's Node.js.
+          npm install --global npm@11.21.1
+          if npm publish --access public --provenance --loglevel verbose; then
+            exit 0
+          fi
+          echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-server $VERSION could not be published. Add this repository and js-server.yml as a trusted publisher of @link-foundation/link-cli-server on npmjs.com (a maintainer publishes the first version by hand if the package does not exist yet), run the authentication-only verification dispatch, then retry."
+          exit 1
+
+  pipeline-status:
+    name: Pipeline Status (js-server)
+    needs:
+      - javascript
+      - release-preflight
+      - verify-trusted-publishing
+      - unit
+      - portability
+      - differential
+      - release
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

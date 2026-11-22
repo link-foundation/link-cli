@@ -12,6 +12,8 @@
 //   CLINK_CSHARP  path of the C# `clink` executable (or of `clink.dll`)
 //   CLINK_WASM    directory of the `wasm-pack build --target web` package of
 //                 rust/wasm (e.g. js/pkg)
+//   CLINK_JS      path of `bin/clink.js` of @link-foundation/link-cli-server
+//                 (js/server), the pure JavaScript server; run with `node`
 //
 // The runner is its own minimal harness (node:test is not in every runtime):
 // it prints one `ok` / `not ok` / `skip` line per scenario and exits non-zero
@@ -90,7 +92,11 @@ async function twoConnectionConversation(file) {
 
 /** A server process backend: a fresh database in a directory with spaces. */
 function processBackend(name, path, capabilities) {
-  const [command, args] = path.endsWith('.dll') ? ['dotnet', [path]] : [path, []];
+  const [command, args] = path.endsWith('.dll')
+    ? ['dotnet', [path]]
+    : /\.[cm]?js$/.test(path)
+      ? ['node', [path]]
+      : [path, []];
   return {
     name,
     process: true,
@@ -135,12 +141,14 @@ async function wasmBackend(dir) {
 
 async function backendsFromEnvironment() {
   const backends = [];
-  const { CLINK_RUST, CLINK_CSHARP, CLINK_WASM } = process.env;
+  const { CLINK_RUST, CLINK_CSHARP, CLINK_WASM, CLINK_JS } = process.env;
   // Stated, not discovered: the protocol does not say which server answers.
   if (CLINK_RUST) backends.push(processBackend('rust', CLINK_RUST, { duplicateLinks: true }));
   if (CLINK_CSHARP)
     backends.push(processBackend('csharp', CLINK_CSHARP, { duplicateLinks: false }));
   if (CLINK_WASM) backends.push(await wasmBackend(CLINK_WASM));
+  // The JavaScript server ports the Rust store, duplicate links included.
+  if (CLINK_JS) backends.push(processBackend('js', CLINK_JS, { duplicateLinks: true }));
   for (const backend of backends) {
     if (
       backend.name !== 'wasm' &&
@@ -796,7 +804,9 @@ function withTimeout(promise, ms, label) {
 async function main() {
   const backends = await backendsFromEnvironment();
   if (backends.length === 0) {
-    console.error('set CLINK_RUST, CLINK_CSHARP and/or CLINK_WASM; see the top of this file');
+    console.error(
+      'set CLINK_RUST, CLINK_CSHARP, CLINK_WASM and/or CLINK_JS; see the top of this file',
+    );
     process.exit(2);
   }
   console.log(

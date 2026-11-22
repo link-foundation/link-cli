@@ -4,7 +4,7 @@ Runnable demonstrations of using the libraries **as an embedded
 transactional store** instead of through the `clink` CLI, added for issue
 [#98](https://github.com/link-foundation/link-cli/issues/98).
 
-Every other folder under `examples/` drives the CLI binary. These two
+Every other folder under `examples/` drives the CLI binary. These three
 programs never start `clink`: they link against the library and open a
 store directly, the way a consuming application would.
 
@@ -15,6 +15,7 @@ store directly, the way a consuming application would.
 | `run-rust.sh`  | Embeds `link_cli` — a `usize`-addressed, file-mapped `doublets::unit::Store` behind the transactions layer |
 | `run-csharp.sh` | Embeds `Foundation.Data.Doublets.Cli.Library` — a `ulong`-addressed store behind the transactions layer |
 | `csharp/` | Source of the C# program (`dotnet run --project examples/embedded-store/csharp`) |
+| `embedded-store.mjs` | Embeds `@link-foundation/link-cli-server` — the JavaScript `DoubletsStorage` behind the transactions layer, on Node.js, Bun or Deno (`npm ci` in `js/server`, then `node examples/embedded-store/embedded-store.mjs [directory]`; Deno needs `deno run --allow-all --node-modules-dir=manual`) |
 | `README.md` | This file |
 
 The Rust program lives in the library crate itself, as
@@ -28,7 +29,8 @@ cargo run --manifest-path rust/Cargo.toml --example embedded_store
 
 ## What the demos do
 
-Both walk the same four steps, one per property that issue #98 asked for:
+All three walk the same four steps, one per property that issue #98 asked
+for:
 
 1. **Commit one write, abandon another.** A transaction is opened and the
    handle is dropped without committing — which is what a crash looks
@@ -39,8 +41,9 @@ Both walk the same four steps, one per property that issue #98 asked for:
    one to survive.
 3. **Lock out a second writer.** While the first holder is open, an
    attempt to take the exclusive lock fails rather than corrupting the
-   database. The Rust program additionally asserts that the database
-   file's **inode is unchanged**, proving it was mutated in place and
+   database. The Rust and JavaScript programs additionally assert that the
+   database file's **inode is unchanged** (the JavaScript one skips the check
+   on Windows, which has no inodes), proving it was mutated in place and
    that another process's mapping of the same file is still valid.
 4. **Notice somebody else's write.** A `StorageRevision` fingerprint
    taken before an external commit reports the change afterwards,
@@ -63,9 +66,16 @@ The C# program prints the same story with .NET spelling (`True`/`False`)
 and without the inode line, since `LinksFileLock` guards the sidecar
 rather than the mapping.
 
+The JavaScript program prints the same lines as the Rust one (on Windows,
+`file identity unchanged` instead of the inode line), and leaves a
+`db.links` that is byte for byte the one the Rust program writes; only the
+transaction identifiers and timestamps of the transitions log differ, since
+they come from the clock.
+
 ## Related documentation
 
 - [`rust/README.md` § Use as a library](../../rust/README.md#use-as-a-library)
 - [`csharp/README.md` § Use as a library](../../csharp/README.md#use-as-a-library)
+- [`js/server/README.md` § File-backed doublets storage](../../js/server/README.md#file-backed-doublets-storage)
 - [`docs/ARCHITECTURE.md` § Embedding the Library](../../docs/ARCHITECTURE.md#embedding-the-library)
 - [`docs/case-studies/issue-98/README.md`](../../docs/case-studies/issue-98/README.md)

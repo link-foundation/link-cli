@@ -1,0 +1,8 @@
+# Requests a review from the maintainers on every pull request (issue #111).
+# Branch protection on main requires the JavaScript, Rust and C# stage
+# checks; see CONTRIBUTING.md.
+*                   @konard
+
+# CI/CD and the parity gate decide what may merge.
+/.github/           @konard
+/parity/            @konard
