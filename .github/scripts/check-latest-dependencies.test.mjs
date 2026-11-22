@@ -32,6 +32,14 @@ test('pinned Python tooling participates in freshness checks instead of disappea
   assert.throws(() => parseRequirements('ruff>=0.17'), /Unsupported/);
 });
 
+test('requirements with wheel hashes still participate in freshness checks', () => {
+  const hash = `--hash=sha256:${'a'.repeat(64)}`;
+  assert.deepEqual(parseRequirements(`zizmor==1.33.1 ${hash}\n`), [
+    { name: 'zizmor', version: '1.33.1' },
+  ]);
+  assert.throws(() => parseRequirements('zizmor==1.33.1 --hash=sha256:bad'), /Unsupported/);
+});
+
 test('versions compare numerically, not as text', () => {
   assert.deepEqual(versionParts('v24.21.0'), [24, 21, 0]);
   assert.deepEqual(versionParts('10.0.x'), [10, 0]);
