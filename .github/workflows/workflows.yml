@@ -86,18 +86,19 @@ jobs:
       # Only .github is audited: dev/log keeps verbatim copies of the template
       # workflows as evidence, and they are not run here.
       #
-      # Annotations instead of SARIF, so findings fail the job loudly without
-      # depending on code scanning. `version` is named because the action's
-      # default is its own frozen table, not the latest zizmor. To reproduce:
-      #   pipx run zizmor==1.33.1 --config .github/zizmor.yml .github
+      # The action's wheel lock can lag behind PyPI releases. Verify the
+      # wheel against our own lock and share the install between both audits.
+      - name: Install the locked zizmor wheel
+        run: |
+          python3 -m pip install --require-hashes --only-binary=:all: --no-deps \
+            --target "$RUNNER_TEMP/zizmor" -r .github/scripts/requirements-workflow-audit.txt
+
+      # Emit annotations so findings fail the job without code scanning.
       - name: Audit workflow files
-        uses: zizmorcore/zizmor-action@v0.9.0
-        with:
-          inputs: .github
-          advanced-security: false
-          annotations: true
-          config: .github/zizmor.yml
-          version: 1.33.1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --format github --config .github/zizmor.yml .github
 
       # The audits that cover container image references (`unpinned-images`
       # among them) are pedantic-only, so the hash-pin policy is not enforced
@@ -107,7 +108,7 @@ jobs:
       - name: Audit for pedantic-only high-severity findings
         timeout-minutes: 5
         run: |
-          pipx run zizmor==1.33.1 --config .github/zizmor.yml \
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --config .github/zizmor.yml \
             --persona pedantic --min-severity high --min-confidence high \
             .github
 

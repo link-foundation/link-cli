@@ -1,0 +1,1 @@
+zizmor==1.33.1 --hash=sha256:49eb92a95347e7da58c3123e4d5b297dbb6fe8ecc328e9db68df14c08e25e151

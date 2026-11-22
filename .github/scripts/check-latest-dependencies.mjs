@@ -393,7 +393,7 @@ export function parseRequirements(text) {
   return text.split(/\r?\n/).flatMap((line) => {
     const value = line.split('#')[0].trim();
     if (!value) return [];
-    const match = /^([\w.-]+)==(\d+(?:\.\d+)+)$/.exec(value);
+    const match = /^([\w.-]+)==(\d+(?:\.\d+)+)(?:\s+--hash=sha256:[\da-fA-F]{64})*$/.exec(value);
     if (!match) throw Error(`Unsupported pinned Python requirement: ${value}`);
     return [
       {
