@@ -13,6 +13,8 @@ required sub-issues at the time of investigation. [Scheduled run](https://github
 | Nov 22, 13:12 | The scheduled enforcement audit for the same commit reported six outdated entries and exited 1. The tracking job opened issue #191. The downloaded run log records the versions on lines 1054–1059. [Run](https://github.com/link-foundation/link-cli/actions/runs/45026148237) |
 | Nov 22, 17:52 and 22:36 | The zizmor action and the standalone scanner released new versions. A fresh local audit detected both updates alongside the six scheduled findings. [Action v0.9.0](https://github.com/zizmorcore/zizmor-action/releases/tag/v0.9.0) · [Scanner v1.33.1](https://github.com/zizmorcore/zizmor/releases/tag/v1.33.1) |
 | Nov 22, 22:47 | The zizmor v0.9.0 action rejected scanner 1.33.1 on PR #190. The downloaded job log records `Unknown version 1.33.1` on line 195. The action's release contains a lock for 1.33.0. [Failed job](https://github.com/link-foundation/link-cli/actions/runs/45079504717/job/137384237703) · [Action locks](https://github.com/zizmorcore/zizmor-action/tree/v0.9.0/support/locks) |
+| Nov 22, 23:54 | The branch for #191 passed the hosted enforcement audit for 184 declared versions and the Cargo lockfiles. [Audit job](https://github.com/link-foundation/link-cli/actions/runs/45084556111/job/137402070984) |
+| Nov 23, 01:13 | PR #190 merged the same dependency pins, hash-verified zizmor installation, and parser regression test into `main`. PR #192 incorporated that commit and carries the Rust patch fragment and this case study. [PR #190](https://github.com/link-foundation/link-cli/pull/190) · [PR #192](https://github.com/link-foundation/link-cli/pull/192) |
 
 ## Fix and verification
 
