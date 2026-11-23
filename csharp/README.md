@@ -197,7 +197,7 @@ In the library, `LinksServer` serves any `INamedTypesLinks<uint>`, and
 The binary links notation codec itself (`LinksPacket`, `LinoMapping`,
 `LinoFormat`, `ArityRange`, `DecodeLimits`, `PacketReader`) comes from the
 `Link.Foundation.Links.Notation.Binary` namespace of the
-`Link.Foundation.Links.Notation` package; `ProtocolLimits` bounds messages of
+`links-notation` package; `ProtocolLimits` bounds messages of
 both protocols.
 
 ### Use as a library
