@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.1.2] - 2026-11-23
+
+Update the locked `hashbrown` and `walkdir` versions for the Rust CLI and WASM packages.
+
 ## [3.1.1] - 2026-11-21
 
 Rust CI jobs now start only after the JavaScript stage (lint, `npm run test:js`, parity check) passes for the same commit. The Rust suite loads the shared golden fixtures in `parity/golden-fixtures.json` and CI checks its receipt (issue #111).
