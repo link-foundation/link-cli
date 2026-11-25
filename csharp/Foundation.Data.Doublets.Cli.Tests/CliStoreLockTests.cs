@@ -71,8 +71,16 @@ public sealed class CliStoreLockTests : IDisposable
         var blocked = await Clink.RunAsync("--db", Db, "--lock-timeout", "0", "() ((1 2))");
         Assert.Equal(1, blocked.ExitCode);
         Assert.Contains($"{Db}.lock is held by shared readers;", blocked.Stderr, StringComparison.Ordinal);
-        // Readers share it.
         var after = await Clink.RunAsync("--db", Db, "--lock-timeout", "0", "--after");
+        if (OperatingSystem.IsWindows())
+        {
+            // Windows gives the store, mapped for writing, to one process, so
+            // readers there take the lock alone too.
+            Assert.Equal(1, after.ExitCode);
+            Assert.Contains($"{Db}.lock is held by shared readers;", after.Stderr, StringComparison.Ordinal);
+            return;
+        }
+        // Elsewhere readers share it.
         Clink.AssertSucceeded(after);
         Assert.Equal("(1: 1 1)\n", after.Stdout);
     }

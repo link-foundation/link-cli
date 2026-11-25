@@ -886,7 +886,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "b98ae2fc897eb483"
+        "fingerprint": "4fe076f75e1c3fd5"
       },
       "rust": {
         "status": "implemented",

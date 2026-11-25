@@ -462,8 +462,10 @@ rootCommand.SetAction(
       }
 
       // Opening a store that does not exist yet creates it, so a first run
-      // takes the lock alone even when it only reads.
-      var readOnly = File.Exists(db) && string.IsNullOrEmpty(queryOptionValue) && string.IsNullOrEmpty(queryArgumentValue)
+      // takes the lock alone even when it only reads. Windows also refuses a
+      // second process the store, which every run maps for writing, so there
+      // readers take the lock alone too.
+      var readOnly = !OperatingSystem.IsWindows() && File.Exists(db) && string.IsNullOrEmpty(queryOptionValue) && string.IsNullOrEmpty(queryArgumentValue)
         && inputPath is null && binaryInputPath is null && triggerCommandCount == 0 && serveEndpoints.Length == 0
         && grantToken is null && revokeToken is null && !transactionsRequested;
       var lockStores = CliStoreLocks.LockedStores(db, transactionsPathRaw, vcFile, triggersFile, tokensSource, permissionsSource);

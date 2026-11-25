@@ -514,7 +514,9 @@ them before opening any. It holds the locks until the stores are saved and
 closed: exclusively when it writes, shared when it only reads. A run on a
 database that does not exist yet locks exclusively even when it only reads,
 since opening the store creates its files (C# initializes them in place, and
-readers doing that at once crashed each other).
+readers doing that at once crashed each other). The C# `clink` maps its stores
+for writing even to read, and Windows refuses such a file to a second process,
+so on Windows its readers lock exclusively too.
 
 - **`flock`** (default) locks `<store>.lock` with `FileLock` /
   `LinksFileLock` (`LockFileEx` on Windows). The exclusive holder writes its

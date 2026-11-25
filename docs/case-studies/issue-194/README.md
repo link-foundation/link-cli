@@ -151,6 +151,12 @@ because nothing serializes the read-modify-write.
   store, which a store with `--lock flock` needs anyway.
 - **C# on Unix** maps `FileShare` onto `flock`, so
   `DOTNET_SYSTEM_IO_DISABLEFILELOCKING=1` turns its `flock` lock off.
+- **C# readers on Windows do not share.** The C# store maps its file for
+  writing with `FileShare.Read`, even to read, and Windows refuses a second
+  such handle (`The process cannot access the file ... because it is being
+  used by another process`, seen in CI with 8 concurrent `--after` runs). The
+  C# `clink` on Windows therefore locks exclusively for reads too, so its
+  readers wait for each other instead of crashing.
 - **A store reached through a symbolic link to the file itself** is locked as
   `<link>.lock`, next to the link, not next to its target: only the directory
   part of a path is resolved. Processes that name the store by the link and by
