@@ -580,10 +580,62 @@ the CLI uses these files:
 | `db.links` | Primary link triples. |
 | `db.names.links` | Named-reference sidecar used by `NamedTypesDecorator`. |
 | `db.triggers.links` | Persistent transformation trigger sidecar when trigger support is enabled. |
+| `db.links.lock` | The file `--lock flock` locks; see [Concurrent invocations](#concurrent-invocations). |
+| `db.links.lock.owner` | Who holds the exclusive `flock`, while one is held. |
+| `db.links.lock.d/` | The `--lock pid` lock directory, while one is held. |
 
 Use `--triggers-file` to point trigger storage somewhere else, or
 `--embed-triggers` to store trigger links in the main database. Names are stored
 separately so the primary links database remains numeric.
+
+## Concurrent invocations
+
+Any number of `clink` processes may work on one store at once, and no run
+exits 0 without its write ([issue #194](https://github.com/link-foundation/link-cli/issues/194)).
+Each run locks the database and every side store it opens (the transitions
+log, the version-control store, the triggers store, and the token and
+permission stores) for its whole read-modify-write. A run that writes locks
+them exclusively. A run that only reads, such as `--out` or a bare
+`--after`, shares the lock with other readers. `--serve` holds its lock until
+the server stops.
+
+| Option | Lock |
+|--------|------|
+| `--lock flock` (default) | An OS lock (`flock`, `LockFileEx` on Windows) on `<db>.lock`. The OS releases it when the holder exits, even after a crash. The exclusive holder records itself in `<db>.lock.owner`. |
+| `--lock pid` | The directory `<db>.lock.d`, published atomically with an `owner` record (pid, host, PID namespace, process start time). A waiter breaks it once the owner is on the same host and in the same PID namespace and its process is gone, or its PID now belongs to a newer process. For file systems where `flock` is unreliable, such as some network file systems and bind mounts shared by containers. Always exclusive. |
+| `--lock none`, `--no-lock` | No lock, for callers that serialize access themselves. Concurrent writers then lose each other's updates. |
+
+`--lock-timeout <ms>` bounds the wait (default 30000, `0` fails at once).
+When it runs out, `clink` exits 1 and names the holder:
+
+```
+$ clink --db s.links --lock-timeout 100 '() ((2 2))'
+Error: Lock error: store is locked: s.links.lock is held by an exclusive writer: pid=166023 host=build-7 pid_namespace=pid:[4026532882] start_time=209221885 program=clink (rust) 3.1.2 acquired_at_ms=1795637584711 (running); gave up waiting for the exclusive flock lock after 100 ms (--lock-timeout)
+```
+
+`--lock-status` prints the state of every lock of the store and exits
+without taking or creating any. `--trace` reports each wait and acquisition:
+
+```
+$ clink --db s.links --lock-status
+flock s.links.lock: locked by an exclusive writer: pid=166023 host=build-7 ... (running)
+pid s.links.lock.d: unlocked
+```
+
+The Rust, C# and JavaScript `clink` take the same locks and write the same
+owner records, so they exclude each other when they share a store. Every
+process that shares a store must use the same `--lock` kind: a `flock` and a
+`pid` lock do not see each other. The JavaScript `clink` takes a `flock` on
+Deno, Bun and Node.js 26 or later. On an older Node.js it takes the `pid` lock
+by default, and an explicit `--lock flock` fails. Rust and JavaScript also
+save a store through a temporary file of their own,
+`<db>.<pid>.<random>.saving`, created exclusively, so two writers never share
+it even with `--no-lock`. C# stores are memory-mapped and written in place.
+
+[`examples/concurrent-writers`](examples/concurrent-writers) runs 12 writers
+at once against any `clink`, and
+[the case study](docs/case-studies/issue-194/README.md) has the root cause and
+the trade-offs.
 
 ## Use as an embedded store
 
