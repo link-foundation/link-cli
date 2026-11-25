@@ -16,3 +16,5 @@ callers that serialize access themselves. `--lock-status` prints who holds the
 locks of a store. The Rust and JavaScript `clink` take the same locks, so mixed
 runs exclude each other too. The library gains `StoreLock`,
 `StoreLockOptions`, `StoreLockOwner`, `StoreFileLock` and `StorePidLock`.
+
+Update `links-notation` to 0.32.0.

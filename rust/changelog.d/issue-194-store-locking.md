@@ -14,3 +14,5 @@ are for callers that serialize access themselves. `--lock-status` prints who
 holds the locks of a store. Saves now write a temporary file unique to the
 process and created exclusively (`<db>.<pid>.<random>.saving`) instead of the
 shared `<db>.saving`.
+
+Update `links-notation` to 0.32.0 for the Rust CLI and WASM packages.
