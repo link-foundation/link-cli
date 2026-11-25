@@ -44,6 +44,6 @@
     "test:differential": "node scripts/run-tests.mjs test/differential --test-concurrency=1 --test-timeout=120000"
   },
   "dependencies": {
-    "links-notation": "0.31.8"
+    "links-notation": "0.32.0"
   }
 }

@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Foundation.Data.Doublets.Cli.Tests;
 
@@ -44,7 +45,14 @@ public sealed class CliCommandContractTests : IDisposable
     {
         var result = Run(arguments);
         Clink.AssertSucceeded(result);
-        Assert.Equal("", result.Stderr);
+        // --trace also reports the store lock on standard error (#194); every
+        // other line there is a failure.
+        var lockTrace = new Regex(@"^\[TRACE\] Acquired (exclusive|shared) flock lock .*\.lock\n", RegexOptions.Multiline);
+        if (arguments.Contains("--trace"))
+        {
+            Assert.Matches(lockTrace, result.Stderr);
+        }
+        Assert.Equal("", lockTrace.Replace(result.Stderr, ""));
         return result.Stdout;
     }
 

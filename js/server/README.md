@@ -41,7 +41,13 @@ clink --db family.links --serve 127.0.0.1:7878            # the clink protocol o
 clink --serve unix:/tmp/links.sock --forward 127.0.0.1:7878 # a relay
 clink --connect 127.0.0.1:7878 '() ((1 1))'                 # a protocol client
 clink --db family.links --serve 127.0.0.1:8080 --graphql    # GraphQL for Deep
+clink --db family.links --lock pid --lock-timeout 5000 --in batch.lino # store locking
+clink --db family.links --lock-status                       # who holds the store
 ```
+
+Like the Rust `clink`, each run locks its store for the whole
+read-modify-write (`src/store-lock.js`), so concurrent runs keep every write;
+see [Concurrent invocations](../../README.md#concurrent-invocations).
 
 Like the Rust `clink`, it reads `.lenv` and then `.env` from the current
 directory before it parses the command line, and never overwrites a variable
@@ -198,7 +204,9 @@ The endpoints are those of the Rust `clink --serve` (see
 - `FileLock` needs a runtime with a foreign function interface: Deno, Bun,
   or Node.js 26 and later (`node:ffi`). On an older Node.js, taking a lock
   fails with a `LockError` that says so, and never pretends to hold it.
-  The command line itself does not lock, as in Rust.
+  There `clink` takes the `--lock pid` lock by default (`--trace` says so)
+  and an explicit `--lock flock` fails, so every other process on the store
+  must use `--lock pid` too.
 - I/O error texts use the POSIX wording of the Rust standard library on
   every platform.
 - A JavaScript number is exact only up to 2^53 - 1, so a `u64` address of

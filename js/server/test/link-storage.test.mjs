@@ -534,9 +534,13 @@ describe('LinkStorage errors', () => {
     const missing = join(directory, 'missing', 'db.links');
     const storage = new LinkStorage(missing);
     storage.create(1, 1);
-    assert.equal(
+    // The temporary file is `<db>.<pid>.<random>.saving` (#194).
+    assert.match(
       report(() => storage.save()),
-      `Failed to create database: ${missing}.saving\n\nCaused by:\n    No such file or directory (os error 2)`,
+      new RegExp(
+        `^Failed to create database: ${literally(missing)}\\.${process.pid}\\.[0-9a-f]{16}\\.saving\n\n` +
+          'Caused by:\n    No such file or directory \\(os error 2\\)$',
+      ),
     );
     const path = join(directory, 'db.links');
     const replaced = new LinkStorage(path);
@@ -547,6 +551,19 @@ describe('LinkStorage errors', () => {
       new RegExp(`^Failed to replace database: ${literally(path)}\n\nCaused by:\n    `),
     );
     assert.equal(existsSync(join(path, 'kept')), true);
+    // The failed save removed its temporary file.
+    assert.deepEqual(readdirSync(directory), ['db.links']);
+  });
+
+  it('saves through a temporary file of its own (#194)', () => {
+    const path = join(scratchDirectory(), 'db.links');
+    const first = new LinkStorage(path);
+    first.create(1, 1);
+    // The fixed `<db>.saving` of before, left by another process, is not touched.
+    writeFileSync(`${path}.saving`, 'another process');
+    first.save();
+    assert.equal(readFileSync(`${path}.saving`, 'utf8'), 'another process');
+    assert.equal(new LinkStorage(path).get(1).source, 1);
   });
 });
 

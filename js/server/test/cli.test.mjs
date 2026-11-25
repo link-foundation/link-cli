@@ -160,6 +160,8 @@ describe('Cli.parse', () => {
     }
     assert.equal(cli.revokeToken, null);
     assert.equal(cli.token, null);
+    assert.equal(cli.lock, null);
+    assert.equal(cli.lockTimeout, null);
     for (const field of [
       'trace',
       'indexedLookups',
@@ -181,6 +183,7 @@ describe('Cli.parse', () => {
       'externalReferences',
       'packedWidths',
       'triplets',
+      'lockStatus',
     ]) {
       assert.equal(cli[field], false, field);
     }
@@ -222,6 +225,8 @@ describe('Cli.parse', () => {
       grantToken: ['--grant-token'],
       revokeToken: ['--revoke-token'],
       token: ['--token'],
+      lock: ['--lock'],
+      lockTimeout: ['--lock-timeout'],
     };
     for (const [field, names] of Object.entries(spellings)) {
       for (const option of names) {
@@ -233,6 +238,14 @@ describe('Cli.parse', () => {
       }
     }
     assert.equal(run('--db', 'a', '-d', 'b').db, 'b', 'the last value wins');
+  });
+
+  it('takes --no-lock as --lock none, the last of them winning (#194)', () => {
+    assert.equal(run('--no-lock').lock, 'none');
+    assert.equal(run('--no-lock', '--lock', 'pid').lock, 'pid');
+    assert.equal(run('--lock', 'pid', '--no-lock').lock, 'none');
+    // A word after it is the query, not a value.
+    assert.equal(run('--no-lock', 'true').queryArg, 'true');
   });
 
   it('takes every boolean flag, with an optional literal after it or inline', () => {
@@ -257,6 +270,7 @@ describe('Cli.parse', () => {
       externalReferences: ['--external-references'],
       packedWidths: ['--packed-widths'],
       triplets: ['--triplets'],
+      lockStatus: ['--lock-status'],
     };
     for (const [field, names] of Object.entries(spellings)) {
       for (const option of names) {

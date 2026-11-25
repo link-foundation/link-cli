@@ -8,6 +8,8 @@
 // in-process; bin/clink.js exits with it. A failure prints `Error: ` and its
 // cause chain on standard error with status 1, as the Rust `main` returning
 // an `anyhow::Error` does.
+import { existsSync } from 'node:fs';
+
 import { Cli } from './cli.js';
 import { loadEnvironmentFiles } from './env-files.js';
 import { reportError } from './error-report.js';
@@ -34,10 +36,15 @@ import { PermissionPolicy } from './permissions.js';
 import { exportStoreFile, importStoreFile } from './protocol-store-file.js';
 import { QueryProcessor } from './query-processor.js';
 import { rustTrim } from './query-parser.js';
+import { LockMode } from './storage-lock.js';
+import { lockOrder, lockStatus, parseStoreLockOptions, StoreLock } from './store-lock.js';
 
 /** `NamedTypesDecorator::new`, with the lookup indexes of `--indexed-lookups` or `--graphql`. */
 export function openNamedStorage(path, cli, io = {}) {
-  const storage = NamedTypesDecorator.open(path, { trace: cli.trace, stderr: io.stderr });
+  const storage = NamedTypesDecorator.open(path, {
+    trace: cli.trace,
+    stderr: io.stderr,
+  });
   return cli.indexedLookups || cli.graphql ? storage.withIndexedLookups() : storage;
 }
 
@@ -147,6 +154,42 @@ export function runBare(cli, io = {}) {
   return finish(cli, openNamedStorage(cli.db, cli, io), io);
 }
 
+/**
+ * The store files this run may save: the database (whose lock covers its
+ * default `<db>.*.links` side stores) and every side store named explicitly.
+ */
+export function lockedStores(cli) {
+  const stores = [cli.db];
+  for (const side of [cli.transactionsFile, cli.vcFile, cli.triggersFile]) {
+    if (side != null) stores.push(side);
+  }
+  for (const source of [cli.tokens, cli.permissions]) {
+    const path = source == null ? '' : rustTrim(source);
+    if (path !== '' && path !== 'self') stores.push(path);
+  }
+  return stores;
+}
+
+/**
+ * Read-only runs share the lock; anything that may write takes it alone, and
+ * so does a first run on a store that does not exist yet, since opening it
+ * creates its files.
+ */
+export function lockMode(cli) {
+  const query = cli.query ?? cli.queryArg;
+  const readOnly =
+    existsSync(cli.db) &&
+    (query == null || query === '') &&
+    cli.linoInput == null &&
+    cli.binaryInput == null &&
+    triggerCommandCount(cli) === 0 &&
+    cli.serve.length === 0 &&
+    cli.grantToken == null &&
+    cli.revokeToken == null &&
+    !cli.transactionsRequested();
+  return readOnly ? LockMode.Shared : LockMode.Exclusive;
+}
+
 /** Runs `clink` with `args` (without the program name) and resolves its exit status. */
 export async function main(args, io = {}) {
   const out = io.stdout ?? process.stdout;
@@ -184,19 +227,40 @@ export async function main(args, io = {}) {
     }
     const commitMode = parseCommitMode(cli.commitMode);
     const retention = parseRetention(cli.retention);
-    const context = {
-      finish: (finishCli, storage) => finish(finishCli, storage, io),
-      openNamedStorage: (path, openCli) => openNamedStorage(path, openCli, io),
-      out,
-      err,
-    };
-    if (cli.vcRequested()) await runWithVc(cli, commitMode, retention, context);
-    else if (cli.transactionsRequested())
-      await runWithTransactions(cli, commitMode, retention, context);
-    else await runBare(cli, io);
+    const lockOptions = parseStoreLockOptions(cli.lock, cli.lockTimeout);
+    const stores = lockOrder(lockedStores(cli));
+    if (cli.lockStatus) {
+      out.write(lockStatus(stores));
+      return 0;
+    }
+    // Held until the stores are saved: the whole read-modify-write (#194).
+    const lock = await StoreLock.acquire(stores, lockMode(cli), {
+      ...lockOptions,
+      trace: cli.trace,
+      stderr: err,
+    });
+    try {
+      await runLocked(cli, commitMode, retention, io);
+    } finally {
+      lock.release();
+    }
     return 0;
   } catch (error) {
     reportError(error, err);
     return 1;
   }
+}
+
+/** Opens the store -- bare, in transactions or under version control -- and runs the invocation. */
+async function runLocked(cli, commitMode, retention, io) {
+  const context = {
+    finish: (finishCli, storage) => finish(finishCli, storage, io),
+    openNamedStorage: (path, openCli) => openNamedStorage(path, openCli, io),
+    out: io.stdout ?? process.stdout,
+    err: io.stderr ?? process.stderr,
+  };
+  if (cli.vcRequested()) await runWithVc(cli, commitMode, retention, context);
+  else if (cli.transactionsRequested())
+    await runWithTransactions(cli, commitMode, retention, context);
+  else await runBare(cli, io);
 }

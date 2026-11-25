@@ -24,6 +24,7 @@
 // Rust releases the lock when the guard is dropped; here `release()` (or
 // `using`, through `Symbol.dispose`) does. The operating system still drops
 // it when the process exits, so a crashed holder never leaves it locked.
+import { randomBytes } from 'node:crypto';
 import { closeSync, constants as fsConstants, existsSync, mkdirSync } from 'node:fs';
 import { constants as osConstants } from 'node:os';
 import { dirname } from 'node:path';
@@ -75,6 +76,14 @@ export function lockFilePath(databaseFilename, platform = process.platform) {
   const parent = trimTrailing(trimmed.slice(0, cut + 1), separator);
   if (separator.test(parent[parent.length - 1])) return `${parent}${name}`;
   return `${parent}${windows ? '\\' : '/'}${name}`;
+}
+
+/**
+ * `<pid>.<random>`: a token no other process, nor another call in this one,
+ * is likely to share. Names temporary files and lock owners.
+ */
+export function uniqueToken() {
+  return `${process.pid}.${randomBytes(8).toString('hex')}`;
 }
 
 // The C library errors `flock(2)` reports, beyond those error-report.js knows.
