@@ -689,7 +689,7 @@
           "rust/tests/storage_*_tests.rs",
           "rust/examples/unit_store_trace.rs"
         ],
-        "fingerprint": "05a3defdc2e14529"
+        "fingerprint": "7062b92689481619"
       },
       "javascript": {
         "status": "implemented",
@@ -712,8 +712,18 @@
           "js/server/test/unit-store*.test.mjs",
           "js/server/test/differential/doublets-storage.test.mjs"
         ],
-        "fingerprint": "021118b5f4e5b84c"
-      }
+        "fingerprint": "ef7d189ca60c4045"
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "rust": "7062b92689481619",
+            "javascript": "ef7d189ca60c4045"
+          },
+          "reason": "Rust and JavaScript save a store through a temp file and rename; it is now unique per process (<db>.<pid>.<random>.saving, created exclusively). C# stores are memory-mapped and written in place, so there is no temp file to make unique; C# takes the same store lock (feature cli-store-locking).",
+          "ref": "https://github.com/link-foundation/link-cli/issues/194"
+        }
+      ]
     },
     {
       "id": "protocol",
@@ -876,7 +886,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "6c0a67d3c8f7c5c8"
+        "fingerprint": "1a4fc1f4f1d46c4d"
       },
       "rust": {
         "status": "implemented",
@@ -891,7 +901,7 @@
           "rust/tests/cli_*_tests.rs",
           "rust/tests/diagnostic_*.rs"
         ],
-        "fingerprint": "d5efa640432aa019"
+        "fingerprint": "0f33c38b2c0e12c3"
       },
       "javascript": {
         "status": "implemented",
@@ -912,7 +922,48 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "93b0ec97c080b766"
+        "fingerprint": "b63609127391feea"
+      }
+    },
+    {
+      "id": "cli-store-locking",
+      "title": "Store locking for concurrent clink invocations: --lock flock|pid|none, --no-lock, --lock-timeout, --lock-status (issue #194)",
+      "csharp": {
+        "status": "implemented",
+        "scope": "C# stores are memory-mapped and saved in place, so there is no <db>.saving temp file to make unique.",
+        "sources": [
+          "csharp/Foundation.Data.Doublets.Cli.Library/StoreLock*.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/StoreFileLock.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/StorePidLock.cs",
+          "csharp/Foundation.Data.Doublets.Cli/CliStoreLocks.cs"
+        ],
+        "tests": [
+          "csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs"
+        ],
+        "fingerprint": "c812003e553ba382"
+      },
+      "rust": {
+        "status": "implemented",
+        "sources": [
+          "rust/src/store_lock/**"
+        ],
+        "tests": [
+          "rust/tests/cli_store_lock_tests.rs"
+        ],
+        "fingerprint": "d041702ee5bb5c5b"
+      },
+      "javascript": {
+        "status": "implemented",
+        "scope": "flock needs Deno, Bun or Node.js 26 or later (node:ffi). On older Node.js the default lock is the pid lock, and an explicit --lock flock fails.",
+        "sources": [
+          "js/server/src/store-lock.js"
+        ],
+        "tests": [
+          "js/server/test/store-lock.test.mjs",
+          "js/server/test/main-store-lock.test.mjs"
+        ],
+        "fingerprint": "5c71b9504a660529"
       }
     },
     {
