@@ -136,6 +136,18 @@ Options:
           Forget a token of the --tokens table, then exit
       --token <TOKEN>
           With --connect: authenticate with (auth: token) before sending the query
+      --lock <MODE>
+          How concurrent invocations on one store are serialized: 'flock'
+          (default; an OS lock on <db>.lock, released when the holder exits),
+          'pid' (the directory <db>.lock.d, broken once its owner process is
+          gone) or 'none'. Writers lock exclusively, read-only runs share it
+      --no-lock
+          Same as --lock none, for callers that serialize access themselves
+      --lock-timeout <MS>
+          How long to wait for a locked store before failing with the name of
+          its owner (default: 30000; 0 fails at once)
+      --lock-status
+          Print who holds the locks of the store, then exit
   -h, --help
           Print help
   -V, --version

@@ -22,7 +22,8 @@ const MAX_MIN_ARITY = U64_MAX >> 4n;
 
 // How an option takes its value: `value` a string, `bool` an optional
 // boolean literal, `link` a u32 link id, `seq` an i64 sequence point,
-// `arity` an `ArityRange`, `append` one more string of a list.
+// `arity` an `ArityRange`, `append` one more string of a list, `constant`
+// no value: the option sets `value`.
 const OPTIONS = [
   { field: 'db', kind: 'value', names: ['-d', '--db', '--data-source', '--data'] },
   { field: 'query', kind: 'value', names: ['-q', '--query', '--apply', '--do'] },
@@ -87,6 +88,11 @@ const OPTIONS = [
   { field: 'grantToken', kind: 'value', names: ['--grant-token'] },
   { field: 'revokeToken', kind: 'value', names: ['--revoke-token'] },
   { field: 'token', kind: 'value', names: ['--token'] },
+  { field: 'lock', kind: 'value', names: ['--lock'] },
+  // `--no-lock` is `--lock none`; Rust has no `--no-lock=VALUE` form.
+  { field: 'lock', kind: 'constant', value: 'none', names: ['--no-lock'], inline: false },
+  { field: 'lockTimeout', kind: 'value', names: ['--lock-timeout'] },
+  { field: 'lockStatus', kind: 'bool', names: ['--lock-status'] },
 ];
 
 /** Every spelling of an option, short ones included. */
@@ -238,6 +244,18 @@ const HELP_TEXT = [
   '          Forget a token of the --tokens table, then exit\n',
   '      --token <TOKEN>\n',
   '          With --connect: authenticate with (auth: token) before sending the query\n',
+  '      --lock <MODE>\n',
+  "          How concurrent invocations on one store are serialized: 'flock'\n",
+  '          (default; an OS lock on <db>.lock, released when the holder exits),\n',
+  "          'pid' (the directory <db>.lock.d, broken once its owner process is\n",
+  "          gone) or 'none'. Writers lock exclusively, read-only runs share it\n",
+  '      --no-lock\n',
+  '          Same as --lock none, for callers that serialize access themselves\n',
+  '      --lock-timeout <MS>\n',
+  '          How long to wait for a locked store before failing with the name of\n',
+  '          its owner (default: 30000; 0 fails at once)\n',
+  '      --lock-status\n',
+  '          Print who holds the locks of the store, then exit\n',
   '  -h, --help\n',
   '          Print help\n',
   '  -V, --version\n',
@@ -358,6 +376,10 @@ export class Cli {
     this.grantToken = null;
     this.revokeToken = null;
     this.token = null;
+    /** `--lock` (`--no-lock` is `none`), `--lock-timeout` and `--lock-status`; see store-lock.js. */
+    this.lock = null;
+    this.lockTimeout = null;
+    this.lockStatus = false;
   }
 
   /** Parses the arguments after the program name. */
@@ -387,6 +409,7 @@ export class Cli {
       const option = BY_NAME.get(arg);
       if (option !== undefined) {
         if (option.kind === 'bool') cli[option.field] = nextBool();
+        else if (option.kind === 'constant') cli[option.field] = option.value;
         else cli.#set(option, arg, nextValue(arg));
         continue;
       }

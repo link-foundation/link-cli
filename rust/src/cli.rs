@@ -75,6 +75,11 @@ pub struct Cli {
     pub revoke_token: Option<String>,
     /// `--token`: authenticates a `--connect` client.
     pub token: Option<String>,
+    /// `--lock` (`--no-lock` is `none`), `--lock-timeout` and `--lock-status`;
+    /// see [`crate::store_lock`].
+    pub lock: Option<String>,
+    pub lock_timeout: Option<String>,
+    pub lock_status: bool,
 }
 
 impl Default for Cli {
@@ -132,6 +137,9 @@ impl Default for Cli {
             grant_token: None,
             revoke_token: None,
             token: None,
+            lock: None,
+            lock_timeout: None,
+            lock_status: false,
         }
     }
 }
@@ -420,6 +428,18 @@ impl Cli {
                 cli.revoke_token = Some(value.to_string());
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--lock"]) {
+                cli.lock = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--lock-timeout"]) {
+                cli.lock_timeout = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--lock-status"]) {
+                cli.lock_status = parse_bool("--lock-status", value)?;
+                continue;
+            }
             if let Some(value) = inline_value(&arg, &["--token"]) {
                 cli.token = Some(value.to_string());
                 continue;
@@ -581,6 +601,10 @@ impl Cli {
                 "--token" => {
                     cli.token = Some(next_value(&mut args, &arg)?);
                 }
+                "--lock" => cli.lock = Some(next_value(&mut args, &arg)?),
+                "--no-lock" => cli.lock = Some("none".into()),
+                "--lock-timeout" => cli.lock_timeout = Some(next_value(&mut args, &arg)?),
+                "--lock-status" => cli.lock_status = next_bool_value(&mut args, true)?,
                 "--" => {
                     for value in args.by_ref() {
                         set_positional_query(&mut cli, value)?;
@@ -740,6 +764,18 @@ impl Cli {
             "          Forget a token of the --tokens table, then exit\n",
             "      --token <TOKEN>\n",
             "          With --connect: authenticate with (auth: token) before sending the query\n",
+            "      --lock <MODE>\n",
+            "          How concurrent invocations on one store are serialized: 'flock'\n",
+            "          (default; an OS lock on <db>.lock, released when the holder exits),\n",
+            "          'pid' (the directory <db>.lock.d, broken once its owner process is\n",
+            "          gone) or 'none'. Writers lock exclusively, read-only runs share it\n",
+            "      --no-lock\n",
+            "          Same as --lock none, for callers that serialize access themselves\n",
+            "      --lock-timeout <MS>\n",
+            "          How long to wait for a locked store before failing with the name of\n",
+            "          its owner (default: 30000; 0 fails at once)\n",
+            "      --lock-status\n",
+            "          Print who holds the locks of the store, then exit\n",
             "  -h, --help\n",
             "          Print help\n",
             "  -V, --version\n",

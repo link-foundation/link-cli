@@ -18,6 +18,7 @@ on:
       - 'js/client/**'
       - 'rust/**'
       - 'docs/protocol/**'
+      - 'examples/concurrent-writers/**'
   pull_request:
     branches:
       - main
@@ -28,6 +29,7 @@ on:
       - 'js/client/**'
       - 'rust/**'
       - 'docs/protocol/**'
+      - 'examples/concurrent-writers/**'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -278,6 +280,15 @@ jobs:
       - name: Differential runs against the Rust clink
         working-directory: js/server
         run: npm run test:differential
+
+      # examples/concurrent-writers (issue #194): 12 writers at once on one
+      # store, with each lock kind, must all keep their links.
+      - name: Concurrent writers example with the Rust and JavaScript clink
+        run: |
+          for lock in flock pid; do
+            CLINK="node $CLINK_JS" examples/concurrent-writers/run.sh --lock "$lock"
+            CLINK="$CLINK_RUST" examples/concurrent-writers/run.sh --lock "$lock"
+          done
 
       # The js/client conformance scenarios, served by `clink --serve` of
       # this package instead of the Rust or C# executable.

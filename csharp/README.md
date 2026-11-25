@@ -129,6 +129,21 @@ with newlines or both quote kinds export as the notation library's lossless
 `~1{UTF-8 hex}` reference literals. See the
 [import syntax and examples](../README.md#import-database-from-lino).
 
+### Concurrent invocations
+
+Each run locks its store for the whole read-modify-write: exclusively when
+it writes, shared when it only reads. C# takes the same locks as the Rust and JavaScript `clink`. Concurrent `clink` processes on one
+store therefore keep every write, and a run that waits longer than
+`--lock-timeout` exits 1 naming the holder:
+
+```bash
+clink --db data.links --lock pid --lock-timeout 5000 --in batch.lino   # flock (default), pid or none
+clink --db data.links --lock-status                                     # who holds the store
+```
+
+`--no-lock` is `--lock none`. The lock kinds, the owner records and the
+limits are in the [main README](../README.md#concurrent-invocations).
+
 ### Optional Transactions and Version Control
 
 Pass `--transactions` (or any flag in the family — `--transactions-file`,

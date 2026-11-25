@@ -39,12 +39,11 @@ fn observe(
     doublets::data::Flow::Continue
 }
 
-/// The file a save writes before it replaces `db_path`: `db.links` is saved
-/// as `db.links.saving` in the same directory, so the rename never crosses
-/// file systems.
+/// The file a save writes before replacing `db_path`: `db.links.<pid>.<random>.saving`
+/// beside it, so the rename stays on one file system and no saves share it (#194).
 fn saving_path(db_path: &Path) -> PathBuf {
     let mut name = db_path.file_name().unwrap_or_default().to_os_string();
-    name.push(".saving");
+    name.push(format!(".{}.saving", crate::storage::lock::unique_token()));
     db_path.with_file_name(name)
 }
 
@@ -375,21 +374,38 @@ impl LinkStorage {
         // leaves the previous complete file, not a truncated one (issue #108).
         // Nothing is synced to disk, so this does not survive a power loss.
         let saving = saving_path(&self.db_path);
-        let file = File::create(&saving)
+        let file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&saving)
             .with_context(|| format!("Failed to create database: {}", saving.display()))?;
+        self.write_to(file)
+            .and_then(|()| {
+                std::fs::rename(&saving, &self.db_path).with_context(|| {
+                    format!("Failed to replace database: {}", self.db_path.display())
+                })
+            })
+            .inspect_err(|_| drop(std::fs::remove_file(&saving)))?;
+        if self.trace {
+            crate::diagnostics::stderr!(
+                "[TRACE] Saved {} links to {}",
+                self.links.len(),
+                self.db_path.display()
+            );
+        }
 
+        Ok(())
+    }
+
+    /// Writes the database text of [`save`](Self::save) to `file`.
+    fn write_to(&self, file: File) -> Result<()> {
         let mut writer = BufWriter::new(file);
 
         // The freed addresses first: which of them the next link gets is not
         // implied by the links that follow, and reloading has to resume the
         // allocator exactly where it stopped.
         if !self.unused.is_empty() {
-            let recorded: Vec<String> = self
-                .unused
-                .iter()
-                .rev()
-                .map(|address| address.to_string())
-                .collect();
+            let recorded: Vec<String> = self.unused.iter().rev().map(u32::to_string).collect();
             writeln!(writer, "{UNUSED_HEADER} {}", recorded.join(" "))?;
         }
 
@@ -426,18 +442,6 @@ impl LinkStorage {
         }
 
         writer.flush()?;
-        drop(writer);
-        std::fs::rename(&saving, &self.db_path)
-            .with_context(|| format!("Failed to replace database: {}", self.db_path.display()))?;
-
-        if self.trace {
-            crate::diagnostics::stderr!(
-                "[TRACE] Saved {} links to {}",
-                self.links.len(),
-                self.db_path.display()
-            );
-        }
-
         Ok(())
     }
 

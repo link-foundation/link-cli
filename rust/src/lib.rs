@@ -77,6 +77,8 @@ pub mod query_types;
 pub mod remap_links;
 pub mod sequences;
 pub mod storage;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod store_lock;
 mod structure_format;
 mod text_storage_format;
 pub mod transactions;

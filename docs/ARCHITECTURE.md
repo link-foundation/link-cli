@@ -146,6 +146,10 @@ Storage and names:
   the `--forward` relay and the endpoint of `--graphql`.
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
+- `StoreLock.cs`, `StoreLockOwner.cs`, `StoreFileLock.cs`, `StorePidLock.cs`
+  and `Foundation.Data.Doublets.Cli/CliStoreLocks.cs`: the store lock every
+  `clink` run holds (`--lock`, `--no-lock`, `--lock-timeout`,
+  `--lock-status`; see [Store Locking](#store-locking)).
 
 Main C# dependencies:
 
@@ -211,6 +215,9 @@ Key files:
   `PersistentFileMapped` backing memory, the advisory-locking helpers, and
   `NamedLinksStorage`, which makes any `NamedTypeLinks` layer (a permissions
   view, a union, a remap) a `LinksStorage` so transactions stack over it.
+- `rust/src/store_lock/`: the store lock every `clink` run holds: the `flock`
+  and `pid` kinds, owner records and `--lock-status` (see
+  [Store Locking](#store-locking)).
 - `rust/src/transactions/`: optional transactions decorator and the
   transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
@@ -289,6 +296,8 @@ The committed lockfile currently pins `doublets-web` to `0.1.3`.
 - `src/link-storage*.js`, `src/storage-lock*.js`: the doublets store, its
   file format and the `<database>.lock` sidecar lock (`flock` or
   `LockFileEx` through the runtime's foreign function interface).
+- `src/store-lock.js`: the store lock every `clink` run holds, the port of
+  `rust/src/store_lock/`.
 - `src/named-types.js`, `src/named-type-links.js`, `src/types.js`,
   `src/pinned-types.js`, `src/unicode-string-storage.js`: names, types and
   strings.
@@ -350,7 +359,10 @@ the primary filename.
 | `<name>.transitions.log` | C#, Rust and JS | Optional append-only transitions journal (created when `--transactions` is requested; retention bounds it). |
 | `<name>.transitions.links` | C#, Rust and JS | Links-backed transitions journal of older versions; imported into `<name>.transitions.log` on first open and then removed. |
 | `<name>.versioncontrol.links` | C# and Rust | Optional version-control branches/tags store (created when `--vc` is requested). |
-| `<name>.links.lock` | C# and Rust | Advisory lock sidecar, created only when a caller opts into locking through the library. |
+| `<name>.links.lock` | C#, Rust and JavaScript | Advisory lock sidecar. Every `clink` run locks it under `--lock flock` (the default), and library callers may lock it too. |
+| `<name>.links.lock.owner` | C#, Rust and JavaScript | Owner record of the exclusive `flock` holder, while one is held. |
+| `<name>.links.lock.d/` | C#, Rust and JavaScript | The `--lock pid` lock directory with its `owner` record, while one is held. |
+| `<name>.links.<pid>.<random>.saving` | Rust and JavaScript | The temporary file a save writes before renaming it onto the database. |
 
 For `graph.links`, the default names file is `graph.names.links`, and the
 default triggers file is `graph.triggers.links`.
@@ -491,6 +503,48 @@ I last looked?" without reparsing the database. Rust uses `std::fs::File::lock`
 (hence the 1.89 minimum supported Rust version); C# expresses the same
 semantics through `FileShare`, which the runtime maps onto `flock` on Unix and
 share modes on Windows.
+
+### Store Locking
+
+The `clink` command line takes these locks for every run (issue #194), so
+concurrent invocations on one store never lose a write. A run computes the
+stores it opens (the database and each side store: transitions log,
+version-control store, triggers store, token and permission stores), sorts
+them by path so that every process locks them in the same order, and locks
+them before opening any. It holds the locks until the stores are saved and
+closed: exclusively when it writes, shared when it only reads. A run on a
+database that does not exist yet locks exclusively even when it only reads,
+since opening the store creates its files (C# initializes them in place, and
+readers doing that at once crashed each other). The C# `clink` maps its stores
+for writing even to read, and Windows refuses such a file to a second process,
+so on Windows its readers lock exclusively too.
+
+- **`flock`** (default) locks `<store>.lock` with `FileLock` /
+  `LinksFileLock` (`LockFileEx` on Windows). The exclusive holder writes its
+  owner record to `<store>.lock.owner` (staged under a unique name and
+  renamed into place) and removes it on release; on Windows the lock keeps
+  other processes from reading `<store>.lock` itself. A shared acquirer
+  removes a record left by a crashed writer.
+- **`pid`** builds a directory under a unique name with its `owner` record
+  inside and renames it to `<store>.lock.d`. A rename onto an existing
+  directory fails, so exactly one process publishes the lock, and a published
+  lock always has its record. A waiter breaks the lock when the record names
+  a process on this host and in this PID namespace that is gone, or whose PID
+  now has another start time: it renames the directory to a tombstone, checks
+  the token it read, and removes it.
+- **`none`** takes nothing.
+
+The owner record is the same in all three implementations: `key=value` lines
+`pid`, `host`, `pid_namespace`, `start_time`, `acquired_at_ms`, `token` and
+`program`. Waiting backs off from 1 ms to 50 ms until `--lock-timeout`
+(30000 ms by default) runs out; then the run fails with `Lock error: store is
+locked: <path> is held by <holder>; gave up waiting ...` and exit status 1.
+`--lock-status` reads the locks without taking or creating any.
+
+Rust and JavaScript save a store by writing `<db>.<pid>.<random>.saving`,
+created exclusively, and renaming it onto the database; before issue #194
+every writer used the same `<db>.saving`. C# stores are memory-mapped and
+written in place. See [case-studies/issue-194](case-studies/issue-194/README.md).
 
 ## Optional Version-Control Layer
 

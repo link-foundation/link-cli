@@ -40,6 +40,21 @@ GitHub Pages alongside the C# DocFX site by `.github/workflows/docs.yml`.
 clink '() ((1 1))' --changes --after
 ```
 
+### Concurrent invocations
+
+Each run locks its store for the whole read-modify-write: exclusively when
+it writes, shared when it only reads. Concurrent `clink` processes on one
+store therefore keep every write, and a run that waits longer than
+`--lock-timeout` exits 1 naming the holder:
+
+```bash
+clink --db data.links --lock pid --lock-timeout 5000 --in batch.lino   # flock (default), pid or none
+clink --db data.links --lock-status                                     # who holds the store
+```
+
+`--no-lock` is `--lock none`. The lock kinds, the owner records and the
+limits are in the [main README](../README.md#concurrent-invocations).
+
 ### Optional lookup indexes for named imports
 
 LiNo input is fully parsed and validated before any links or names change,

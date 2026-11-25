@@ -5,8 +5,11 @@
 // allocator hands out freed addresses again exactly as the C# store does,
 // because the address a query reports for a created link depends on it.
 //
-// A save writes `<db>.saving` and renames it over the database, so a process
-// stopped in the middle leaves the previous complete file (issue #108).
+// A save writes `<db>.<pid>.<random>.saving` and renames it over the
+// database, so a process stopped in the middle leaves the previous complete
+// file (issue #108). The temporary name is unique to the process and created
+// exclusively, so concurrent saves never write or rename each other's file
+// (issue #194); the store lock of store-lock.js orders whole runs.
 //
 // Several processes share a database through the advisory `<db>.lock` sidecar
 // lock of storage-lock.js, with the open and lock helpers of
@@ -19,6 +22,7 @@ import {
   openSync,
   readFileSync,
   renameSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
@@ -28,7 +32,7 @@ import { IndexedLinks } from './indexed-links.js';
 import { link, parseU32 } from './link.js';
 import { resolvedDelete, resolvedUpdate } from './link-storage-doublets.js';
 import { NamedTypeLinks } from './named-type-links.js';
-import { FileLock, LockMode, lockFilePath } from './storage-lock.js';
+import { FileLock, LockMode, lockFilePath, uniqueToken } from './storage-lock.js';
 import {
   NAME_HEADER,
   nameMetadata,
@@ -41,6 +45,9 @@ import {
 
 /** Prefix of the database line that records the freed addresses. */
 const UNUSED_HEADER = '# unused:';
+
+/** `<db>.<pid>.<random>.saving`, the temporary file of one save. */
+const savingPath = (dbPath) => `${dbPath}.${uniqueToken()}.saving`;
 
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
@@ -386,22 +393,28 @@ export class LinkStorage extends NamedTypeLinks {
 
   save() {
     if (this.isInMemory()) return;
-    const saving = `${this.dbPath}.saving`;
+    const saving = savingPath(this.dbPath);
     let fd;
     try {
-      fd = openSync(saving, 'w');
+      // Created exclusively: no other process writes this file (#194).
+      fd = openSync(saving, 'wx');
     } catch (error) {
       throw new Error(`Failed to create database: ${saving}`, { cause: error });
     }
     try {
-      writeFileSync(fd, this.databaseText());
-    } finally {
-      closeSync(fd);
-    }
-    try {
-      renameSync(saving, this.dbPath);
+      try {
+        writeFileSync(fd, this.databaseText());
+      } finally {
+        closeSync(fd);
+      }
+      try {
+        renameSync(saving, this.dbPath);
+      } catch (error) {
+        throw new Error(`Failed to replace database: ${this.dbPath}`, { cause: error });
+      }
     } catch (error) {
-      throw new Error(`Failed to replace database: ${this.dbPath}`, { cause: error });
+      rmSync(saving, { force: true });
+      throw error;
     }
     this.traceLine(`Saved ${this.links.size} links to ${this.dbPath}`);
   }
