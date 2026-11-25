@@ -17,7 +17,7 @@ import {
   readFileSync,
   readSync,
   renameSync,
-  rmSync,
+  unlinkSync,
   writeFileSync,
   writeSync,
 } from 'node:fs';
@@ -102,6 +102,19 @@ function decodeUtf8(bytes) {
   }
 }
 
+/**
+ * Removes the file at `path` unless it is missing, as `std::fs::remove_file`
+ * with `NotFound` ignored. `unlinkSync` rather than `rmSync({ force: true })`:
+ * Bun reports a parent that is a file as `EFAULT` there instead of `ENOTDIR`.
+ */
+export function removeFile(path) {
+  try {
+    unlinkSync(path);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+
 /** A transitions log in one text file, one entry per line. */
 export class FileTransitionLog {
   constructor(path, fd) {
@@ -119,7 +132,7 @@ export class FileTransitionLog {
       if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
       // A compaction interrupted before its rename leaves only a stale copy;
       // the log itself still holds the complete previous journal.
-      rmSync(compactionPath(path), { force: true });
+      removeFile(compactionPath(path));
       repairFile(path, existsSync(path) ? 'r+' : 'w+', false);
       const fd = openFileSync(path, 'a+');
       try {
@@ -225,7 +238,7 @@ export class FileTransitionLog {
         closeSync(writer);
         renameSync(temporary, this.filePath);
       } catch (error) {
-        rmSync(temporary, { force: true });
+        removeFile(temporary);
         throw error;
       }
       syncParentDirectory(this.filePath);

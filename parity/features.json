@@ -435,7 +435,7 @@
           "js/server/test/undoable-links.test.mjs",
           "js/server/test/differential/transactions.test.mjs"
         ],
-        "fingerprint": "860e63f25f587154"
+        "fingerprint": "9d203d90a6559efa"
       }
     },
     {
@@ -942,7 +942,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "26fe8bb7bc230c2d"
+        "fingerprint": "07f27cfe0303542f"
       }
     },
     {

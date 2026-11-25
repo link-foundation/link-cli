@@ -13,19 +13,11 @@
 // files are removed, so a crash leaves either the legacy store or a complete
 // journal. An explicit `--transactions-file` that still holds a links store
 // is converted in place the same way.
-import {
-  closeSync,
-  existsSync,
-  fsyncSync,
-  readSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { closeSync, existsSync, fsyncSync, readSync, renameSync, writeFileSync } from 'node:fs';
 
 import { makeNamesDatabaseFilename, NamedTypesDecorator } from './named-types.js';
 import { openFileSync } from './open-file.js';
-import { FileTransitionLog } from './transactions-log.js';
+import { FileTransitionLog, removeFile } from './transactions-log.js';
 import { io, NamedTransitionLog } from './transactions-storage.js';
 import { makeLegacyTransitionsFilename, makeTransitionsLogFilename } from './transactions-types.js';
 
@@ -51,7 +43,7 @@ export function isLinksJournal(path) {
 }
 
 /** Removes `path` when it exists. */
-const removeIfExists = (path) => io(() => rmSync(path, { force: true }));
+const removeIfExists = (path) => io(() => removeFile(path));
 
 /**
  * Copies every entry of the links-backed journal at `legacy` into the text

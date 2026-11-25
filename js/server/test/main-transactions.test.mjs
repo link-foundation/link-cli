@@ -170,6 +170,23 @@ describe('runWithTransactions', () => {
     };
     await assert.rejects(txRun(context), { message: 'pipeline failed' });
   });
+
+  it('closes the journal after every run, as Rust drops it (issue #195)', async () => {
+    const context = world();
+    let closed = 0;
+    const openJournal = context.openJournal;
+    context.openJournal = (database, explicit) =>
+      Object.assign(openJournal(database, explicit), { close: () => closed++ });
+    await txRun(context);
+    await txRun(context, { showLog: true });
+    await vcRun(context, { listTags: true });
+    context.query = () => {
+      throw new Error('pipeline failed');
+    };
+    await assert.rejects(txRun(context), { message: 'pipeline failed' });
+    await assert.rejects(vcRun(context), { message: 'pipeline failed' });
+    assert.equal(closed, 5);
+  });
 });
 
 describe('runWithVc', () => {
