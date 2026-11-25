@@ -2,9 +2,8 @@
 //! exits 0 keeps its write, and a run that cannot get the store in time fails
 //! with "store is locked" and the name of the owner.
 
-use link_cli::store_lock::{lock_dir_path, LockOwner};
+use link_cli::store_lock::{lock_dir_path, owner_file_path, LockOwner};
 use link_cli::{lock_file_path, FileLock, LockMode};
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::tempdir;
@@ -77,11 +76,13 @@ fn concurrent_imports_that_succeed_are_all_durable() {
                 "{lock} lost w{i}: {exported}"
             );
         }
-        // No temporary save or pid lock is left behind.
+        // No temporary save, owner record or pid lock is left behind.
         assert!(
             entries(dir.path())
                 .iter()
-                .all(|name| !name.ends_with(".saving") && !name.contains(".lock.d")),
+                .all(|name| !name.ends_with(".saving")
+                    && !name.ends_with(".owner")
+                    && !name.contains(".lock.d")),
             "{:?}",
             entries(dir.path())
         );
@@ -90,9 +91,11 @@ fn concurrent_imports_that_succeed_are_all_durable() {
 
 fn hold_exclusive(db: &Path) -> FileLock {
     let lock = FileLock::acquire(lock_file_path(db), LockMode::Exclusive).unwrap();
-    let mut file = lock.file();
-    file.write_all(LockOwner::current("held-by-test").to_record().as_bytes())
-        .unwrap();
+    std::fs::write(
+        owner_file_path(db),
+        LockOwner::current("held-by-test").to_record(),
+    )
+    .unwrap();
     lock
 }
 
@@ -129,6 +132,8 @@ fn a_held_flock_times_out_naming_its_owner_and_no_lock_bypasses_it() {
         success(clink(&db, &["--lock-timeout", "0", "--after"])),
         "(1: 1 1)\n(2: 1 2)\n(3: 2 1)\n"
     );
+    // The reader cleared the record the crashed-looking holder left.
+    assert!(!owner_file_path(&db).exists());
     let status = success(clink(&db, &["--lock-status"]));
     assert!(
         status.starts_with("flock ") && status.contains(": unlocked\npid "),

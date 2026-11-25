@@ -9,7 +9,7 @@
 //! not, such as on some network file systems.
 
 use std::fs;
-use std::io::{ErrorKind, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
@@ -98,7 +98,7 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
                 if trace {
                     diagnostics::stderr!("[TRACE] Breaking stale lock {}: {reason}", dir.display());
                 }
-                break_stale(dir, holder.as_ref())?;
+                break_stale(dir, holder.as_ref());
             }
             None => return Ok(Attempt::Held(holder)),
         }
@@ -110,16 +110,16 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
 }
 
 /// Moves a stale lock aside and removes it. Should a live owner have
-/// published a new lock in between, its directory is moved back.
-fn break_stale(dir: &Path, expected: Option<&LockOwner>) -> std::io::Result<()> {
+/// published a new lock in between, its directory is moved back. A lock
+/// that cannot be moved (another waiter moved it first, or the directory is
+/// not writable) is left alone: the next attempt sees what became of it.
+fn break_stale(dir: &Path, expected: Option<&LockOwner>) {
     let tombstone = sibling(
         dir,
         &format!(".{}.{}.stale", std::process::id(), unique_token()),
     );
-    match fs::rename(dir, &tombstone) {
-        Ok(()) => {}
-        Err(error) if error.kind() == ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(error),
+    if fs::rename(dir, &tombstone).is_err() {
+        return;
     }
     let moved = read_owner(&tombstone);
     if moved.as_ref().map(|owner| &owner.token) == expected.map(|owner| &owner.token) {
@@ -128,7 +128,6 @@ fn break_stale(dir: &Path, expected: Option<&LockOwner>) -> std::io::Result<()> 
         // A third process published meanwhile; the moved owner has lost its
         // lock. Keep its directory for inspection.
     }
-    Ok(())
 }
 
 fn write_owner(dir: &Path, owner: &LockOwner) -> std::io::Result<()> {

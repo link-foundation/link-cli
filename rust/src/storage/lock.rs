@@ -110,12 +110,6 @@ impl FileLock {
         self.mode
     }
 
-    /// The open lock file. An exclusive holder may keep notes in it, such as
-    /// who holds the lock; on Windows only the holder's handle may access it.
-    pub fn file(&self) -> &File {
-        &self.file
-    }
-
     fn open<P: AsRef<Path>>(lock_path: P) -> Result<(File, PathBuf), LinkError> {
         let path = lock_path.as_ref().to_path_buf();
         if let Some(parent) = path.parent() {

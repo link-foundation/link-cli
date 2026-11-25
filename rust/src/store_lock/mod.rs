@@ -13,14 +13,15 @@
 //! | `pid`    | the directory `<db>.lock.d`  | the holder; a waiter breaks it when the owner process is gone |
 //! | `none`   | nothing                      | -                                     |
 //!
-//! An exclusive `flock` holder writes its owner record into `<db>.lock`, so
-//! that waiters and `--lock-status` can name it.
+//! An exclusive `flock` holder writes its owner record to `<db>.lock.owner`
+//! and removes it on release, so that waiters and `--lock-status` can name
+//! it. The record is a file of its own because on Windows the lock keeps
+//! every other process from reading `<db>.lock` itself.
 
 mod owner;
 mod pid_lock;
 
-use std::fs::File;
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -141,7 +142,8 @@ impl StoreLock {
         mode: LockMode,
         options: &StoreLockOptions,
     ) -> Result<Self, LinkError> {
-        let deadline = Instant::now() + options.timeout;
+        // `None`: a timeout too long to reach, so wait for good.
+        let deadline = Instant::now().checked_add(options.timeout);
         let mut guards = Vec::new();
         for store in stores {
             guards.push(match options.kind {
@@ -170,11 +172,11 @@ impl StoreLock {
 /// Waits from 1 ms, doubling up to 50 ms, until `deadline`.
 struct Backoff {
     delay: Duration,
-    deadline: Instant,
+    deadline: Option<Instant>,
 }
 
 impl Backoff {
-    fn new(deadline: Instant) -> Self {
+    fn new(deadline: Option<Instant>) -> Self {
         Self {
             delay: Duration::from_millis(1),
             deadline,
@@ -183,11 +185,14 @@ impl Backoff {
 
     /// Sleeps before the next attempt; false once the deadline has passed.
     fn wait(&mut self) -> bool {
-        let now = Instant::now();
-        if now >= self.deadline {
-            return false;
-        }
-        std::thread::sleep(self.delay.min(self.deadline - now));
+        let left = match self.deadline {
+            Some(deadline) => match deadline.checked_duration_since(Instant::now()) {
+                Some(left) if !left.is_zero() => left,
+                _ => return false,
+            },
+            None => self.delay,
+        };
+        std::thread::sleep(self.delay.min(left));
         self.delay = (self.delay * 2).min(Duration::from_millis(50));
         true
     }
@@ -201,17 +206,40 @@ fn locked_error(path: &Path, kind: &str, holder: &str, options: &StoreLockOption
     ))
 }
 
+/// `<db>.lock.owner`: the record of the exclusive `flock` holder.
+pub fn owner_file_path(store: &Path) -> PathBuf {
+    let mut name = lock_file_path(store).into_os_string();
+    name.push(".owner");
+    PathBuf::from(name)
+}
+
+/// Replaces the record at `path` at once, so that no reader sees half of it.
+/// Best effort: the record only serves diagnostics.
+fn write_record(path: &Path, record: &str) {
+    let mut staging = path.as_os_str().to_owned();
+    staging.push(format!(".{}.tmp", unique_token()));
+    let staging = PathBuf::from(staging);
+    if fs::write(&staging, record)
+        .and_then(|()| fs::rename(&staging, path))
+        .is_err()
+    {
+        let _ = fs::remove_file(&staging);
+    }
+}
+
 /// An exclusive or shared `flock` on `<db>.lock`. An exclusive holder keeps
-/// its owner record in the file and clears it on release.
+/// its owner record in `<db>.lock.owner` and removes it on release.
 #[derive(Debug)]
 struct FlockGuard {
     lock: FileLock,
+    owner: PathBuf,
 }
 
 impl Drop for FlockGuard {
     fn drop(&mut self) {
+        // Before the lock itself is released, with the fields.
         if self.lock.mode() == LockMode::Exclusive {
-            let _ = self.lock.file().set_len(0);
+            let _ = fs::remove_file(&self.owner);
         }
     }
 }
@@ -219,7 +247,7 @@ impl Drop for FlockGuard {
 fn acquire_flock(
     store: &Path,
     mode: LockMode,
-    deadline: Instant,
+    deadline: Option<Instant>,
     options: &StoreLockOptions,
 ) -> Result<FlockGuard, LinkError> {
     let path = lock_file_path(store);
@@ -231,22 +259,17 @@ fn acquire_flock(
     let mut reported = false;
     loop {
         if let Some(lock) = FileLock::try_acquire(&path, mode)? {
-            let guard = FlockGuard { lock };
-            let mut file = guard.lock.file();
+            let owner = owner_file_path(store);
             match mode {
-                // Best effort: the record only serves diagnostics.
                 LockMode::Exclusive => {
-                    let record = LockOwner::current(&unique_token()).to_record();
-                    let _ = file
-                        .set_len(0)
-                        .and_then(|()| file.seek(SeekFrom::Start(0)).map(drop))
-                        .and_then(|()| file.write_all(record.as_bytes()));
+                    write_record(&owner, &LockOwner::current(&unique_token()).to_record())
                 }
                 // No exclusive holder exists, so a record is a crashed one's.
                 LockMode::Shared => {
-                    let _ = file.set_len(0);
+                    let _ = fs::remove_file(&owner);
                 }
             }
+            let guard = FlockGuard { lock, owner };
             if options.trace {
                 diagnostics::stderr!("[TRACE] Acquired {kind} lock {}", path.display());
             }
@@ -257,22 +280,22 @@ fn acquire_flock(
             diagnostics::stderr!(
                 "[TRACE] Waiting for {kind} lock {}: held by {}",
                 path.display(),
-                flock_holder(&path)
+                flock_holder(store)
             );
         }
         if !backoff.wait() {
-            return Err(locked_error(&path, kind, &flock_holder(&path), options));
+            return Err(locked_error(&path, kind, &flock_holder(store), options));
         }
     }
 }
 
-/// Who holds `<db>.lock`: shared readers, or the writer its record names.
-fn flock_holder(path: &Path) -> String {
-    if let Ok(Some(_probe)) = FileLock::try_acquire(path, LockMode::Shared) {
+/// Who holds the `<db>.lock` of `store`: shared readers, or the writer its
+/// record names.
+fn flock_holder(store: &Path) -> String {
+    if let Ok(Some(_probe)) = FileLock::try_acquire(lock_file_path(store), LockMode::Shared) {
         return "shared readers".into();
     }
-    let mut text = String::new();
-    let _ = File::open(path).and_then(|mut file| file.read_to_string(&mut text));
+    let text = fs::read_to_string(owner_file_path(store)).unwrap_or_default();
     match LockOwner::parse(&text) {
         Some(owner) => format!("an exclusive writer: {}", owner.describe()),
         None => "an exclusive writer that left no owner record".into(),
@@ -281,7 +304,7 @@ fn flock_holder(path: &Path) -> String {
 
 fn acquire_pid(
     store: &Path,
-    deadline: Instant,
+    deadline: Option<Instant>,
     options: &StoreLockOptions,
 ) -> Result<PidLock, LinkError> {
     let dir = lock_dir_path(store);
@@ -331,13 +354,13 @@ pub fn lock_status(stores: &[PathBuf]) -> String {
         } else {
             match FileLock::try_acquire(&path, LockMode::Exclusive) {
                 Ok(Some(_probe)) => "unlocked".to_string(),
-                Ok(None) => format!("locked by {}", flock_holder(&path)),
+                Ok(None) => format!("locked by {}", flock_holder(store)),
                 Err(error) => format!("unknown ({error})"),
             }
         };
         report.push_str(&format!("flock {}: {state}\n", path.display()));
         let dir = lock_dir_path(store);
-        let state = if std::fs::symlink_metadata(&dir).is_err() {
+        let state = if fs::symlink_metadata(&dir).is_err() {
             "unlocked".to_string()
         } else {
             let owner = pid_lock::read_owner(&dir);
