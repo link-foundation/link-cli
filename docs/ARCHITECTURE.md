@@ -347,7 +347,8 @@ the primary filename.
 | `<name>.links` | C# and Rust | Primary numeric links database. |
 | `<name>.names.links` | C# and Rust | Mapping between string names and numeric link references. |
 | `<name>.triggers.links` | C# | Persistent trigger definitions when triggers are not embedded. |
-| `<name>.transitions.links` | C# and Rust | Optional transitions log (created when `--transactions` is requested). |
+| `<name>.transitions.log` | C#, Rust and JS | Optional append-only transitions journal (created when `--transactions` is requested; retention bounds it). |
+| `<name>.transitions.links` | C#, Rust and JS | Links-backed transitions journal of older versions; imported into `<name>.transitions.log` on first open and then removed. |
 | `<name>.versioncontrol.links` | C# and Rust | Optional version-control branches/tags store (created when `--vc` is requested). |
 | `<name>.links.lock` | C# and Rust | Advisory lock sidecar, created only when a caller opts into locking through the library. |
 
