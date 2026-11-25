@@ -98,12 +98,22 @@ describe('store lock across the Rust and JavaScript clink', { skip }, () => {
         const db = join(scratchDirectory(), 's.links');
         const server = await serve(holder, ['--db', db, '--lock', kind]);
         try {
-          const blocked = await run(waiter, ['--db', db, '--lock', kind, '--lock-timeout', '50', '() ((1 1))']);
+          const blocked = await run(waiter, [
+            '--db',
+            db,
+            '--lock',
+            kind,
+            '--lock-timeout',
+            '50',
+            '() ((1 1))',
+          ]);
           assert.equal(blocked.status, 1);
           assert.match(blocked.stderr, /^Error: Lock error: store is locked: /);
           assert.ok(blocked.stderr.includes(PROGRAM[holder]), blocked.stderr);
           assert.ok(
-            blocked.stderr.includes(`gave up waiting for the ${kind === 'pid' ? 'pid' : 'exclusive flock'} lock after 50 ms`),
+            blocked.stderr.includes(
+              `gave up waiting for the ${kind === 'pid' ? 'pid' : 'exclusive flock'} lock after 50 ms`,
+            ),
             blocked.stderr,
           );
           const status = await run(waiter, ['--db', db, '--lock-status']);
@@ -112,7 +122,15 @@ describe('store lock across the Rust and JavaScript clink', { skip }, () => {
         } finally {
           await server.stop();
         }
-        const after = await run(waiter, ['--db', db, '--lock', kind, '--lock-timeout', '0', '() ((1 1))']);
+        const after = await run(waiter, [
+          '--db',
+          db,
+          '--lock',
+          kind,
+          '--lock-timeout',
+          '0',
+          '() ((1 1))',
+        ]);
         assert.equal(after.status, 0, after.stderr);
       });
     }
