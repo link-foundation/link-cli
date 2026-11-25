@@ -50,7 +50,7 @@ Options:
           Store persistent transformation triggers directly in the main links
           database
       --transactions
-          Enable the transactions layer (default log path: <db>.transitions.links)
+          Enable the transactions layer (default log path: <db>.transitions.log)
       --transactions-file <FILE>
           Path to the transitions log store (implies --transactions)
       --commit-mode <MODE>

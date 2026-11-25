@@ -3,6 +3,7 @@ use super::{
     decode_version_name, encode_version_name, GenericVersionControlDecorator, NamedTypeLinks,
     Result, VersionControlTransactionState,
 };
+use crate::transactions::TransitionLogStore;
 use anyhow::bail;
 
 pub(super) const PUBLICATION_PREFIX: &str = "__vc:pending:";
@@ -59,7 +60,7 @@ impl PublicationIntent {
     }
 }
 
-impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
+impl<B: NamedTypeLinks, L: TransitionLogStore> GenericVersionControlDecorator<B, L> {
     pub(super) fn prepare_publication(&mut self) -> Result<VersionControlTransactionState> {
         let state = self
             .active_transaction

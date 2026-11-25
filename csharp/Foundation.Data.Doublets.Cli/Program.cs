@@ -124,13 +124,13 @@ var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output
 
 var transactionsOption = new Option<bool>("--transactions")
 {
-    Description = "Enable the transactions layer (default log path: <db>.transitions.links)",
+    Description = "Enable the transactions layer (default log path: <db>.transitions.log)",
     DefaultValueFactory = _ => false
 };
 
 var transactionsFileOption = new Option<string?>("--transactions-file")
 {
-    Description = "Path to the transitions log store (default: <db>.transitions.links). Implies --transactions."
+    Description = "Path to the transitions log store (default: <db>.transitions.log). Implies --transactions."
 };
 
 var commitModeOption = new Option<string?>("--commit-mode")

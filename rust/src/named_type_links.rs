@@ -452,7 +452,9 @@ impl NamedTypeLinks for NamedTypesDecorator {
     }
 }
 
-impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
+impl<L: crate::transactions::TransitionLogStore> NamedTypeLinks
+    for crate::transactions::GenericTransactionsDecorator<u32, NamedTypesDecorator, L>
+{
     fn reserve_query_allocations(
         &mut self,
         processor: &crate::QueryProcessor,
@@ -465,31 +467,27 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
-        Ok(crate::transactions::TransactionsDecorator::get_or_create(
-            self, source, target,
-        )?)
+        Ok(crate::transactions::GenericTransactionsDecorator::get_or_create(self, source, target)?)
     }
 
     fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
-        Ok(crate::transactions::TransactionsDecorator::create(
+        Ok(crate::transactions::GenericTransactionsDecorator::create(
             self, source, target,
         )?)
     }
 
     fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
         validate_ensure_address(id)?;
-        Ok(crate::transactions::TransactionsDecorator::ensure_created(
-            self, id,
-        )?)
+        Ok(crate::transactions::GenericTransactionsDecorator::ensure_created(self, id)?)
     }
 
     fn create(&mut self, source: u32, target: u32) -> u32 {
-        crate::transactions::TransactionsDecorator::create(self, source, target)
+        crate::transactions::GenericTransactionsDecorator::create(self, source, target)
             .expect("TransactionsDecorator::create failed in NamedTypeLinks bridge")
     }
 
     fn ensure_created(&mut self, id: u32) -> u32 {
-        crate::transactions::TransactionsDecorator::ensure_created(self, id)
+        crate::transactions::GenericTransactionsDecorator::ensure_created(self, id)
             .expect("TransactionsDecorator::ensure_created failed in NamedTypeLinks bridge")
     }
 
@@ -498,7 +496,7 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn exists(&mut self, id: u32) -> bool {
-        crate::transactions::TransactionsDecorator::exists(self, id)
+        crate::transactions::GenericTransactionsDecorator::exists(self, id)
     }
 
     fn update_observed(
@@ -508,15 +506,15 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
         target: u32,
         observer: ChangeObserver<'_>,
     ) -> Result<Link> {
-        Ok(crate::transactions::TransactionsDecorator::update_observed(
-            self, id, source, target, observer,
-        )?)
+        Ok(
+            crate::transactions::GenericTransactionsDecorator::update_observed(
+                self, id, source, target, observer,
+            )?,
+        )
     }
 
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
-        Ok(crate::transactions::TransactionsDecorator::delete_observed(
-            self, id, observer,
-        )?)
+        Ok(crate::transactions::GenericTransactionsDecorator::delete_observed(self, id, observer)?)
     }
 
     fn all_links(&mut self) -> Vec<Link> {
@@ -524,11 +522,11 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
-        crate::transactions::TransactionsDecorator::search(self, source, target)
+        crate::transactions::GenericTransactionsDecorator::search(self, source, target)
     }
 
     fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
-        crate::transactions::TransactionsDecorator::get_or_create(self, source, target)
+        crate::transactions::GenericTransactionsDecorator::get_or_create(self, source, target)
             .expect("TransactionsDecorator::get_or_create failed in NamedTypeLinks bridge")
     }
 
@@ -537,7 +535,7 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
-        Ok(crate::transactions::TransactionsDecorator::set_name(
+        Ok(crate::transactions::GenericTransactionsDecorator::set_name(
             self, id, name,
         )?)
     }
@@ -547,18 +545,18 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn remove_name(&mut self, id: u32) -> Result<()> {
-        Ok(crate::transactions::TransactionsDecorator::remove_name(
-            self, id,
-        )?)
+        Ok(crate::transactions::GenericTransactionsDecorator::remove_name(self, id)?)
     }
 
     fn save(&mut self) -> Result<()> {
-        Ok(crate::transactions::TransactionsDecorator::save(self)?)
+        Ok(crate::transactions::GenericTransactionsDecorator::save(
+            self,
+        )?)
     }
 }
 
-impl<B: NamedTypeLinks> NamedTypeLinks
-    for crate::version_control::GenericVersionControlDecorator<B>
+impl<B: NamedTypeLinks, L: crate::transactions::TransitionLogStore> NamedTypeLinks
+    for crate::version_control::GenericVersionControlDecorator<B, L>
 {
     fn reserve_query_allocations(
         &mut self,

@@ -4,8 +4,10 @@
 //
 // `runWithTransactions` and `runWithVc` take the pipeline from main.js in
 // `context`: `finish(cli, storage)` runs the query pipeline over a store,
-// `openNamedStorage(path, cli)` opens a `NamedTypesDecorator`, and `out` and
-// `err` are the standard streams.
+// `openNamedStorage(path, cli)` opens a `NamedTypesDecorator`,
+// `openJournal(database, explicit)` opens the transitions journal (main.js
+// passes `openTransitionsJournal` of transactions-journal-file.js), and `out`
+// and `err` are the standard streams.
 import { trim } from './text-storage-format.js';
 import { TransactionsDecorator } from './transactions.js';
 import {
@@ -13,7 +15,6 @@ import {
   hex32,
   INFINITE_RETENTION,
   KIND_NAMES,
-  makeTransitionsDatabaseFilename,
   parseI64,
   parseRetentionPolicy,
 } from './transactions-types.js';
@@ -61,14 +62,14 @@ function printLog(transactions, out) {
   }
 }
 
-/** Opens the data store and its transitions log under a `TransactionsDecorator`. */
-function openTransactions(cli, commitMode, retention, { openNamedStorage, err }) {
+/**
+ * Opens the data store and its append-only journal (`<db>.transitions.log`
+ * or `--transactions-file`) under a `TransactionsDecorator`.
+ */
+function openTransactions(cli, commitMode, retention, { openNamedStorage, openJournal, err }) {
   const dataLinks = openNamedStorage(cli.db, cli);
-  const logLinks = openNamedStorage(
-    cli.transactionsFile ?? makeTransitionsDatabaseFilename(cli.db),
-    cli,
-  );
-  return new TransactionsDecorator(dataLinks, logLinks, retention, commitMode, cli.trace, {
+  const journal = openJournal(cli.db, cli.transactionsFile);
+  return new TransactionsDecorator(dataLinks, journal, retention, commitMode, cli.trace, {
     stderr: err,
   });
 }

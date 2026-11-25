@@ -43,6 +43,24 @@ pub trait TransitionLogStore {
     fn supports_durable_flush(&self) -> bool {
         false
     }
+
+    /// Whether [`compact_log_entries`](Self::compact_log_entries) can rewrite
+    /// the durable journal. Retention uses it to bound the journal on disk;
+    /// logs without it keep every entry, as before.
+    fn supports_compaction(&self) -> bool {
+        false
+    }
+
+    /// Atomically and durably replaces every entry with `entries`, the
+    /// retained journal. After a crash the log holds either the old or the
+    /// new journal, never a mixture. Called only between transactions and
+    /// only when [`supports_compaction`](Self::supports_compaction) is true.
+    fn compact_log_entries(&mut self, entries: &[String]) -> Result<(), LinkError> {
+        let _ = entries;
+        Err(LinkError::StorageError(
+            "this transitions log does not support compaction".into(),
+        ))
+    }
 }
 
 /// Optional replacement of a complete ordered journal under the same exclusive
@@ -93,6 +111,12 @@ impl TransitionLogStore for NamedTypesDecorator {
 
 /// Append-only, line-oriented transitions log backed by a single file.
 ///
+/// Appending costs one write and one `fsync` regardless of how many
+/// entries the log already holds. Retention policies compact it through
+/// [`compact_log_entries`](TransitionLogStore::compact_log_entries), which
+/// writes the retained entries to `<path>.compact`, syncs it and renames it
+/// over the log, so the journal on disk stays bounded (issue #195).
+///
 /// # Durability
 ///
 /// With `sync_on_append` enabled (the default) every
@@ -131,6 +155,12 @@ impl FileTransitionLog {
                 std::fs::create_dir_all(parent)?;
             }
         }
+        // A compaction interrupted before its rename leaves only a stale
+        // copy; the log itself still holds the complete previous journal.
+        match std::fs::remove_file(compaction_path(&path)) {
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => return Err(error.into()),
+            _ => {}
+        }
         // The torn tail is trimmed through a dedicated read/write handle:
         // Windows grants an append-only handle `FILE_APPEND_DATA` without
         // `FILE_WRITE_DATA`, so `set_len` on it fails with `ERROR_ACCESS_DENIED`.
@@ -143,13 +173,7 @@ impl FileTransitionLog {
         truncate_torn_tail(&repair)?;
         drop(repair);
         let file = OpenOptions::new().read(true).append(true).open(&path)?;
-        #[cfg(unix)]
-        File::open(
-            path.parent()
-                .filter(|p| !p.as_os_str().is_empty())
-                .unwrap_or(Path::new(".")),
-        )?
-        .sync_all()?;
+        sync_parent_directory(&path)?;
         Ok(Self {
             path,
             file,
@@ -178,6 +202,11 @@ impl FileTransitionLog {
             truncate_torn_tail(&repair)?;
             // A previous failed repair may already have changed the length.
             repair.sync_all()?;
+            // A failed compaction may have left the writer on a replaced file.
+            self.file = OpenOptions::new()
+                .read(true)
+                .append(true)
+                .open(&self.path)?;
             self.tail_may_be_torn = false;
         }
         Ok(())
@@ -203,6 +232,56 @@ impl TransitionLogStore for FileTransitionLog {
     fn supports_durable_flush(&self) -> bool {
         true
     }
+    fn supports_compaction(&self) -> bool {
+        true
+    }
+    fn compact_log_entries(&mut self, entries: &[String]) -> Result<(), LinkError> {
+        if entries
+            .iter()
+            .any(|entry| entry.is_empty() || entry.contains(['\n', '\r', '\0']))
+        {
+            return Err(LinkError::InvalidFormat(
+                "transition log entries must be non-empty single lines without NUL".to_string(),
+            ));
+        }
+        self.repair_if_needed()?;
+        let temporary = compaction_path(&self.path);
+        let mut contents = String::with_capacity(entries.iter().map(|e| e.len() + 1).sum());
+        for entry in entries {
+            contents.push_str(entry);
+            contents.push('\n');
+        }
+        let written = (|| -> Result<File, LinkError> {
+            let mut file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(&temporary)?;
+            file.write_all(contents.as_bytes())?;
+            file.sync_all()?;
+            Ok(file)
+        })();
+        let file = match written {
+            Ok(file) => file,
+            Err(error) => {
+                let _ = std::fs::remove_file(&temporary);
+                return Err(error);
+            }
+        };
+        // Release the old handle first: Windows refuses to replace a file
+        // that is still open. The rename publishes either the whole new
+        // journal or nothing; both leave a complete journal behind.
+        // Until the append handle is reopened, repair reopens it first.
+        self.file = file;
+        self.tail_may_be_torn = true;
+        if let Err(error) = std::fs::rename(&temporary, &self.path) {
+            let _ = std::fs::remove_file(&temporary);
+            return Err(error.into());
+        }
+        sync_parent_directory(&self.path)?;
+        self.repair_if_needed()
+    }
+
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
         if entry.contains(['\n', '\r', '\0']) {
             return Err(LinkError::InvalidFormat(
@@ -242,6 +321,38 @@ impl TransitionLogStore for FileTransitionLog {
         self.tail_may_be_torn = false;
         Ok(())
     }
+}
+
+impl ReplaceableTransitionLogStore for FileTransitionLog {
+    fn replace_log_entries(&mut self, entries: &[String]) -> Result<bool, LinkError> {
+        if self.read_log_entries()? == entries {
+            return Ok(false);
+        }
+        self.compact_log_entries(entries)?;
+        Ok(true)
+    }
+}
+
+/// Temporary file a compaction writes before renaming it over the log.
+fn compaction_path(path: &Path) -> PathBuf {
+    let mut name = path.as_os_str().to_os_string();
+    name.push(".compact");
+    PathBuf::from(name)
+}
+
+/// Makes a created or renamed directory entry durable (no-op off Unix,
+/// where directories cannot be opened for syncing).
+fn sync_parent_directory(path: &Path) -> Result<(), LinkError> {
+    #[cfg(unix)]
+    File::open(
+        path.parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or(Path::new(".")),
+    )?
+    .sync_all()?;
+    #[cfg(not(unix))]
+    let _ = path;
+    Ok(())
 }
 
 /// Shrinks `file` to its last complete (newline-terminated) line that holds no

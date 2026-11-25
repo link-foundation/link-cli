@@ -69,6 +69,8 @@
 mod log;
 // Replay, recovery and retention live in a submodule; see transactions/recovery.rs.
 mod commit;
+mod compaction;
+mod journal_file;
 mod journal_validation;
 mod names;
 mod record;
@@ -91,6 +93,10 @@ use crate::link::GenericLink;
 use crate::named_types::NamedTypesDecorator;
 use crate::storage::{LinksStorage, LinksStorageRef};
 
+pub use journal_file::{
+    import_links_journal, is_links_journal, make_legacy_transitions_filename,
+    make_transitions_log_filename, open_transitions_journal,
+};
 pub use log::{FileTransitionLog, ReplaceableTransitionLogStore, TransitionLogStore};
 pub use record::{JournalRecord, NameChange};
 pub use types::{
@@ -183,11 +189,20 @@ where
     reload_pending: bool,
     trace: bool,
     row_undo: RowUndoPolicy,
+    /// Entries in the durable journal, and its newest commit/rollback marker.
+    journal_entries: usize,
+    last_decision: Option<String>,
 }
 
-/// The `u32` + [`NamedTypesDecorator`] specialisation used by `clink`.
+/// The `u32` + [`NamedTypesDecorator`] specialisation with the original
+/// links-backed sidecar log.
 pub type TransactionsDecorator =
     GenericTransactionsDecorator<u32, NamedTypesDecorator, NamedTypesDecorator>;
+
+/// The specialisation `clink` uses: an append-only [`FileTransitionLog`]
+/// journal, whose cost per write does not grow with history (issue #195).
+pub type FileTransactionsDecorator =
+    GenericTransactionsDecorator<u32, NamedTypesDecorator, FileTransitionLog>;
 
 impl<T, S, L> GenericTransactionsDecorator<T, S, L>
 where
@@ -222,12 +237,16 @@ where
             reload_pending: false,
             trace,
             row_undo: RowUndoPolicy::Observed,
+            journal_entries: 0,
+            last_decision: None,
         };
         decorator.recover()?;
         Ok(decorator)
     }
 
-    /// Conventional sidecar filename for the transitions log.
+    /// Conventional filename of the links-backed transitions log
+    /// (`<stem>.transitions.links`). `clink` now keeps its journal in
+    /// [`make_transitions_log_filename`] and imports this store once.
     pub fn make_transitions_database_filename<P: AsRef<Path>>(database_filename: P) -> PathBuf {
         let path = database_filename.as_ref();
         let stem = path
@@ -669,7 +688,10 @@ where
     }
 
     fn write_marker(&mut self, name: &str) -> Result<(), LinkError> {
-        self.log_store.append_log_entry(name)
+        if name.starts_with(COMMIT_MARKER_PREFIX) || name.starts_with(ROLLBACK_MARKER_PREFIX) {
+            self.last_decision = Some(name.to_string());
+        }
+        self.append_journal_entry(name)
     }
 
     // ----- Transaction handle --------------------------------------------

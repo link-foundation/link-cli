@@ -282,3 +282,7 @@ pub const COMMIT_MARKER_PREFIX: &str = "__transactions:commit:";
 pub const ROLLBACK_MARKER_PREFIX: &str = "__transactions:rollback:";
 pub const APPLIED_MARKER_PREFIX: &str = "__transactions:applied:";
 pub const TRANSITION_NAME_PREFIX: &str = "__transactions:transition:";
+/// Highest sequence ever allocated, kept by compaction once the records and
+/// markers that reserved it are dropped (issue #195). Readers that predate
+/// it ignore it like any unrelated name.
+pub const SEQUENCE_MARKER_PREFIX: &str = "__transactions:sequence:";

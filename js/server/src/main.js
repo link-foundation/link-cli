@@ -30,6 +30,7 @@ import {
   runWithVc,
 } from './main-transactions.js';
 import { NamedTypesDecorator } from './named-types.js';
+import { openTransitionsJournal } from './transactions-journal-file.js';
 import { PermissionPolicy } from './permissions.js';
 import { exportStoreFile, importStoreFile } from './protocol-store-file.js';
 import { QueryProcessor } from './query-processor.js';
@@ -187,6 +188,8 @@ export async function main(args, io = {}) {
     const context = {
       finish: (finishCli, storage) => finish(finishCli, storage, io),
       openNamedStorage: (path, openCli) => openNamedStorage(path, openCli, io),
+      openJournal: (database, explicit) =>
+        openTransitionsJournal(database, explicit, { trace: cli.trace, stderr: err }),
       out,
       err,
     };

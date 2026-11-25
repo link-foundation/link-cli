@@ -34,9 +34,7 @@ fn run_query(db: &Path, query: &str, extra: &[&str]) -> Result<Output> {
 
 fn transitions_sidecar_for(db: &Path) -> PathBuf {
     let stem = db.file_stem().unwrap().to_string_lossy().into_owned();
-    db.parent()
-        .unwrap()
-        .join(format!("{stem}.transitions.links"))
+    db.parent().unwrap().join(format!("{stem}.transitions.log"))
 }
 
 fn vc_sidecar_for(db: &Path) -> PathBuf {

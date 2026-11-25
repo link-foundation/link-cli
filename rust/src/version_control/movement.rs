@@ -2,6 +2,7 @@
 use super::{
     decode_version_name, encode_version_name, GenericVersionControlDecorator, NamedTypeLinks,
 };
+use crate::transactions::TransitionLogStore;
 use crate::transactions::{JournalRecord, TransitionKind};
 use anyhow::{bail, Result};
 use std::collections::HashMap;
@@ -117,7 +118,7 @@ impl MovementIntent {
     }
 }
 
-impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
+impl<B: NamedTypeLinks, L: TransitionLogStore> GenericVersionControlDecorator<B, L> {
     pub(super) fn start_movement(&mut self, target_path: Vec<i64>, new_branch: &str) -> Result<()> {
         let to = target_path.last().copied().unwrap_or(0);
         if new_branch == self.current_branch && to == self.current_applied {

@@ -132,7 +132,9 @@ pub use storage::{
     ResolvedFileMappedUnitStore, StorageRevision,
 };
 pub use transactions::{
-    CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
+    import_links_journal, is_links_journal, make_legacy_transitions_filename,
+    make_transitions_log_filename, open_transitions_journal, CommitMode, DoubletLink,
+    FileTransactionsDecorator, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
     GenericTransition, LogRetentionPolicy, ReplaceableTransitionLogStore, RowUndoPolicy,
     TransactionHandle, TransactionsDecorator, Transition, TransitionKind, TransitionLogStore,
 };
@@ -146,5 +148,6 @@ pub use undoable_links::{LinkChange, LinksUndoLog, UndoableLinksDecorator};
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use union_links::{UnionLinks, UnionMember};
 pub use version_control::{
-    BranchInfo, GenericVersionControlDecorator, VersionControlDecorator, DEFAULT_BRANCH_NAME,
+    BranchInfo, FileVersionControlDecorator, GenericVersionControlDecorator,
+    VersionControlDecorator, DEFAULT_BRANCH_NAME,
 };

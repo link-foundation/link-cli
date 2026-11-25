@@ -12,10 +12,11 @@ use link_cli::protocol::{
     LinksClient, LinksServer, LinksSessions, LinoProtocol, ServerOptions, TextLinoProtocol,
 };
 use link_cli::{
-    make_triggers_database_filename, CommitMode, LinkError, LinksTokenTable, LogRetentionPolicy,
-    NamedTypeLinks, NamedTypesDecorator, PermissionPolicy, PermissionsDecorator,
-    PersistentTransformationDecorator, PersistentTransformationKind, QueryProcessor,
-    TransactionsDecorator, TriggerStore, UndoableLinksDecorator, VersionControlDecorator,
+    make_triggers_database_filename, open_transitions_journal, CommitMode,
+    FileTransactionsDecorator, FileTransitionLog, FileVersionControlDecorator, LinkError,
+    LinksTokenTable, LogRetentionPolicy, NamedTypeLinks, NamedTypesDecorator, PermissionPolicy,
+    PermissionsDecorator, PersistentTransformationDecorator, PersistentTransformationKind,
+    QueryProcessor, TriggerStore, UndoableLinksDecorator,
 };
 use std::path::PathBuf;
 
@@ -91,6 +92,18 @@ fn open_named_storage(path: impl AsRef<std::path::Path>, cli: &Cli) -> Result<Na
     } else {
         storage
     })
+}
+
+/// The append-only transitions journal: `--transactions-file` when given,
+/// `<db>.transitions.log` otherwise. A legacy links-backed journal is
+/// imported once (issue #195).
+fn open_journal(cli: &Cli) -> Result<FileTransitionLog> {
+    let explicit = cli.transactions_file.as_deref().map(std::path::Path::new);
+    Ok(open_transitions_journal(
+        std::path::Path::new(&cli.db),
+        explicit,
+        cli.trace,
+    )?)
 }
 
 fn run_bare(cli: &Cli) -> Result<()> {
@@ -340,13 +353,8 @@ fn run_with_transactions(
     retention_policy: LogRetentionPolicy,
 ) -> Result<()> {
     let data_links = open_named_storage(&cli.db, cli)?;
-    let log_path = cli
-        .transactions_file
-        .clone()
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| TransactionsDecorator::make_transitions_database_filename(&cli.db));
-    let log_links = open_named_storage(&log_path, cli)?;
-    let mut tx = TransactionsDecorator::new(
+    let log_links = open_journal(cli)?;
+    let mut tx = FileTransactionsDecorator::new(
         data_links,
         log_links,
         retention_policy,
@@ -383,13 +391,8 @@ fn run_with_vc(
     retention_policy: LogRetentionPolicy,
 ) -> Result<()> {
     let data_links = open_named_storage(&cli.db, cli)?;
-    let log_path = cli
-        .transactions_file
-        .clone()
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| TransactionsDecorator::make_transitions_database_filename(&cli.db));
-    let log_links = open_named_storage(&log_path, cli)?;
-    let tx = TransactionsDecorator::new(
+    let log_links = open_journal(cli)?;
+    let tx = FileTransactionsDecorator::new(
         data_links,
         log_links,
         retention_policy,
@@ -401,10 +404,10 @@ fn run_with_vc(
         .clone()
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
-            VersionControlDecorator::make_version_control_database_filename(&cli.db)
+            FileVersionControlDecorator::make_version_control_database_filename(&cli.db)
         });
     let vc_links = open_named_storage(&vc_path, cli)?;
-    let mut vc = VersionControlDecorator::new(tx, vc_links, cli.trace)?;
+    let mut vc = FileVersionControlDecorator::new(tx, vc_links, cli.trace)?;
 
     // 1) --checkout (resolves seq or tag).
     if let Some(checkout_point) = cli.checkout.as_deref() {
@@ -499,7 +502,7 @@ fn run_with_vc(
     finish(cli, vc)
 }
 
-fn resolve_sequence(vc: &VersionControlDecorator, point: &str) -> Option<i64> {
+fn resolve_sequence(vc: &FileVersionControlDecorator, point: &str) -> Option<i64> {
     let trimmed = point.trim();
     if trimmed.is_empty() {
         return None;

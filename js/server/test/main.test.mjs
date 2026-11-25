@@ -130,7 +130,8 @@ test('--transactions runs the query pipeline over the transitions log', async ()
       err: '',
     },
   );
-  assert.ok(existsSync(db.replace(/\.links$/, '.transitions.links')));
+  assert.ok(existsSync(db.replace(/\.links$/, '.transitions.log')));
+  assert.ok(!existsSync(db.replace(/\.links$/, '.transitions.links')));
   const log = await clink(['--db', db, '--log']);
   assert.equal(log.status, 0);
   const transitions = log.out
