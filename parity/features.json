@@ -409,7 +409,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/LinksFileLockTests.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/ChunkArchiveOwnershipTests.cs"
         ],
-        "fingerprint": "b5ae7768dc4107a4"
+        "fingerprint": "3718cddb0e07652e"
       },
       "rust": {
         "status": "implemented",
