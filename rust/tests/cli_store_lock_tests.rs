@@ -234,6 +234,45 @@ fn pid_locks_wait_for_live_owners_and_break_those_of_gone_ones() {
     assert_eq!(success(clink(&db, &["--after"])), "(1: 1 1)\n(2: 1 2)\n");
 }
 
+/// A process id that now belongs to another process than the one that took
+/// the lock: its start time differs, so the lock is stale (Linux, where the
+/// start time is known).
+#[cfg(target_os = "linux")]
+#[test]
+fn pid_locks_of_a_reused_process_id_are_broken() {
+    let dir = tempdir().unwrap();
+    let db = dir.path().join("s.links");
+    let lock_dir = lock_dir_path(&db);
+    std::fs::create_dir(&lock_dir).unwrap();
+    let owner = LockOwner {
+        pid: std::process::id(),
+        start_time: "1".into(),
+        ..LockOwner::current("planted-by-test")
+    };
+    std::fs::write(lock_dir.join("owner"), owner.to_record()).unwrap();
+
+    let traced = clink(
+        &db,
+        &[
+            "--lock",
+            "pid",
+            "--lock-timeout",
+            "0",
+            "--trace",
+            "() ((1 1))",
+        ],
+    );
+    let stderr = String::from_utf8_lossy(&traced.stderr).into_owned();
+    assert!(traced.status.success(), "{stderr}");
+    assert!(stderr.contains("Breaking stale lock"), "{stderr}");
+    assert!(
+        stderr.contains("its id now belongs to another process"),
+        "{stderr}"
+    );
+    assert!(!lock_dir.exists());
+    assert_eq!(success(clink(&db, &["--after"])), "(1: 1 1)\n");
+}
+
 #[test]
 fn lock_options_are_validated_before_any_store_is_created() {
     let dir = tempdir().unwrap();
