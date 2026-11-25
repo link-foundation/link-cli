@@ -32,7 +32,21 @@ public sealed class TransactionsJournalCompactionTests : IDisposable
         }
     }
 
-    private static string[] Lines(string path) => File.ReadAllLines(path);
+    // The log keeps its append handle open; File.ReadAllText asks for FileShare.Read,
+    // which Windows refuses while that write handle is open, so read with its sharing.
+    private static string Text(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
+    // Every entry ends with '\n', so the text after the last one is empty.
+    private static string[] Lines(string path)
+    {
+        var lines = Text(path).Split('\n');
+        return lines[..^1];
+    }
 
     [Theory]
     [InlineData(false)]
@@ -162,7 +176,7 @@ public sealed class TransactionsJournalCompactionTests : IDisposable
         log.CompactLogEntries(["b"]);
         Assert.False(File.Exists(FileTransitionLog.CompactionPath(Journal)));
         log.AppendLogEntry("d");
-        Assert.Equal("b\nd\n", File.ReadAllText(Journal));
+        Assert.Equal("b\nd\n", Text(Journal));
         Assert.Equal(["b", "d"], log.ReadLogEntries());
         foreach (var bad in new[] { "", "a\nb", "a\rb", "a\0b" })
         {
@@ -170,7 +184,7 @@ public sealed class TransactionsJournalCompactionTests : IDisposable
         }
         Assert.Equal(["b", "d"], log.ReadLogEntries());
         log.CompactLogEntries([]);
-        Assert.Equal("", File.ReadAllText(Journal));
+        Assert.Equal("", Text(Journal));
         log.FlushLog();
     }
 
@@ -205,7 +219,7 @@ public sealed class TransactionsJournalCompactionTests : IDisposable
     {
         File.WriteAllText(Journal, contents);
         FileTransitionLog.Open(Journal).Dispose();
-        Assert.Equal(kept, File.ReadAllText(Journal));
+        Assert.Equal(kept, Text(Journal));
     }
 
     [Fact]
