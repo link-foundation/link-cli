@@ -457,9 +457,10 @@ describe('TransactionStorage', () => {
         () => storage.flush(),
         (error) =>
           error instanceof StorageError &&
-          error.message ===
-            `Storage error: Failed to create database: ${join(directory, 'db.links')}.saving: ` +
-              'Permission denied (os error 13)',
+          error.message.startsWith(
+            `Storage error: Failed to create database: ${join(directory, 'db.links')}.${process.pid}.`,
+          ) &&
+          error.message.endsWith('.saving: Permission denied (os error 13)'),
       );
     } finally {
       chmodSync(directory, 0o700);
