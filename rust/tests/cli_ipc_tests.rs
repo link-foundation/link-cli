@@ -187,7 +187,12 @@ fn misused_forward_and_graphql_are_refused() {
     let directory = tempfile::tempdir().unwrap();
     let shm = endpoint("shm", &directory, "shm");
     let refused = |args: &[&str], message: &str| {
-        let output = Command::new(CLINK).args(args).output().unwrap();
+        // The default store, `db.links`, and its lock stay in the sandbox.
+        let output = Command::new(CLINK)
+            .current_dir(directory.path())
+            .args(args)
+            .output()
+            .unwrap();
         assert!(!output.status.success(), "{args:?}");
         let error = String::from_utf8_lossy(&output.stderr);
         assert!(error.contains(message), "{args:?}: {error}");

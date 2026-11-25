@@ -37,6 +37,22 @@ pub fn lock_file_path<P: AsRef<Path>>(database_filename: P) -> PathBuf {
     }
 }
 
+/// `<pid>.<random>`: a token no other process, nor another call in this
+/// one, is likely to share. Names temporary files and lock owners.
+pub fn unique_token() -> String {
+    use std::hash::{BuildHasher, Hasher};
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    #[cfg(not(target_arch = "wasm32"))]
+    let pid = std::process::id();
+    #[cfg(target_arch = "wasm32")]
+    let pid = 0u32;
+    // Each `RandomState` has fresh keys, seeded from the operating system.
+    let mut random = std::collections::hash_map::RandomState::new().build_hasher();
+    random.write_u64(NEXT.fetch_add(1, Ordering::Relaxed));
+    format!("{pid}.{:016x}", random.finish())
+}
+
 /// RAII guard around an advisory lock on a sidecar lock file.
 ///
 /// The lock is released when the guard is dropped (and, as a backstop,
@@ -92,6 +108,12 @@ impl FileLock {
     /// The sharing mode this guard was acquired with.
     pub fn mode(&self) -> LockMode {
         self.mode
+    }
+
+    /// The open lock file. An exclusive holder may keep notes in it, such as
+    /// who holds the lock; on Windows only the holder's handle may access it.
+    pub fn file(&self) -> &File {
+        &self.file
     }
 
     fn open<P: AsRef<Path>>(lock_path: P) -> Result<(File, PathBuf), LinkError> {

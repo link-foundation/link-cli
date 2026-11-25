@@ -44,6 +44,8 @@ fn string_option_aliases_preserve_complete_inline_and_separate_values() {
         ["--serve"] => serve,
         ["--connect"] => connect,
         ["--protocol"] => protocol,
+        ["--lock"] => lock,
+        ["--lock-timeout"] => lock_timeout,
     }
     for alias in ["-d", "--db", "--data-source", "--data"] {
         let expected = Cli {
@@ -55,6 +57,17 @@ fn string_option_aliases_preserve_complete_inline_and_separate_values() {
             assert_eq!(run(&["clink", &format!("{alias}={VALUE}")]), expected);
         }
     }
+    // `--no-lock` is `--lock none`; the later of the two wins.
+    let no_lock = Cli {
+        lock: Some("none".into()),
+        ..Cli::default()
+    };
+    assert_eq!(run(&["clink", "--no-lock"]), no_lock);
+    assert_eq!(run(&["clink", "--lock", "pid", "--no-lock"]), no_lock);
+    assert_eq!(
+        run(&["clink", "--no-lock", "--lock=pid"]).lock.as_deref(),
+        Some("pid")
+    );
     assert_eq!(
         run(&["clink", "-q", VALUE]),
         Cli {
@@ -116,6 +129,7 @@ fn boolean_options_have_consistent_literals_and_leave_query_tokens_intact() {
         ["--log"] => show_log,
         ["--external-references"] => external_references,
         ["--packed-widths"] => packed_widths,
+        ["--lock-status"] => lock_status,
     }
 }
 
@@ -158,6 +172,8 @@ fn required_values_report_the_actual_option_and_a_later_parse_is_independent() {
         "--connect",
         "--protocol",
         "--arity",
+        "--lock",
+        "--lock-timeout",
     ] {
         let error = Cli::parse_from(["clink", option]).unwrap_err();
         assert_eq!(

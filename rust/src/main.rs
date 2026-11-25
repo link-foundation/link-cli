@@ -11,11 +11,13 @@ use link_cli::protocol::{
     export_store_file, import_store_file, AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol,
     LinksClient, LinksServer, LinksSessions, LinoProtocol, ServerOptions, TextLinoProtocol,
 };
+use link_cli::store_lock::{self, StoreLock, StoreLockOptions};
 use link_cli::{
-    make_triggers_database_filename, CommitMode, LinkError, LinksTokenTable, LogRetentionPolicy,
-    NamedTypeLinks, NamedTypesDecorator, PermissionPolicy, PermissionsDecorator,
-    PersistentTransformationDecorator, PersistentTransformationKind, QueryProcessor,
-    TransactionsDecorator, TriggerStore, UndoableLinksDecorator, VersionControlDecorator,
+    make_triggers_database_filename, CommitMode, LinkError, LinksTokenTable, LockMode,
+    LogRetentionPolicy, NamedTypeLinks, NamedTypesDecorator, PermissionPolicy,
+    PermissionsDecorator, PersistentTransformationDecorator, PersistentTransformationKind,
+    QueryProcessor, TransactionsDecorator, TriggerStore, UndoableLinksDecorator,
+    VersionControlDecorator,
 };
 use std::path::PathBuf;
 
@@ -57,6 +59,17 @@ fn main() -> Result<()> {
 
     let commit_mode = parse_commit_mode(cli.commit_mode.as_deref())?;
     let retention_policy = parse_retention(cli.retention.as_deref())?;
+    let lock_options = StoreLockOptions {
+        trace: cli.trace,
+        ..StoreLockOptions::parse(cli.lock.as_deref(), cli.lock_timeout.as_deref())?
+    };
+    let stores = store_lock::lock_order(locked_stores(&cli));
+    if cli.lock_status {
+        print!("{}", store_lock::lock_status(&stores));
+        return Ok(());
+    }
+    // Held until the stores are saved: the whole read-modify-write (#194).
+    let _lock = StoreLock::acquire(&stores, lock_mode(&cli), &lock_options)?;
 
     if vc_requested {
         run_with_vc(&cli, commit_mode, retention_policy)
@@ -64,6 +77,42 @@ fn main() -> Result<()> {
         run_with_transactions(&cli, commit_mode, retention_policy)
     } else {
         run_bare(&cli)
+    }
+}
+
+/// The store files this run may save: the database (whose lock covers its
+/// default `<db>.*.links` side stores) and every side store named explicitly.
+fn locked_stores(cli: &Cli) -> Vec<PathBuf> {
+    let mut stores = vec![PathBuf::from(&cli.db)];
+    let side = [&cli.transactions_file, &cli.vc_file, &cli.triggers_file];
+    stores.extend(side.into_iter().flatten().map(PathBuf::from));
+    let sources = [&cli.tokens, &cli.permissions];
+    stores.extend(
+        sources
+            .into_iter()
+            .flatten()
+            .map(|source| source.trim())
+            .filter(|source| !source.is_empty() && *source != "self")
+            .map(PathBuf::from),
+    );
+    stores
+}
+
+/// Read-only runs share the lock; anything that may write takes it alone.
+fn lock_mode(cli: &Cli) -> LockMode {
+    let query = cli.query.as_deref().or(cli.query_arg.as_deref());
+    let read_only = query.is_none_or(str::is_empty)
+        && cli.lino_input.is_none()
+        && cli.binary_input.is_none()
+        && cli.trigger_command_count() == 0
+        && cli.serve.is_none()
+        && cli.grant_token.is_none()
+        && cli.revoke_token.is_none()
+        && !cli.transactions_requested();
+    if read_only {
+        LockMode::Shared
+    } else {
+        LockMode::Exclusive
     }
 }
 
