@@ -13,7 +13,7 @@ repository = "https://github.com/link-foundation/link-cli"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-anyhow = "1.0.104"
+anyhow = "1.0.105"
 link-cli = { path = ".." }
 wasm-bindgen = "0.2.130"
 js-sys = "0.3.107"
