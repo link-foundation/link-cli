@@ -119,11 +119,16 @@ test('fails naming the owner of a held pid lock, and --no-lock passes it by', as
   const lock = lockDirPath(db);
   mkdirSync(lock);
   writeFileSync(join(lock, 'owner'), LockOwner.current('held-by-test').toRecord());
-  const held = await clink(['--db', db, '--lock', 'pid', '--lock-timeout', '20', '() ((1 1))'], dir);
+  const held = await clink(
+    ['--db', db, '--lock', 'pid', '--lock-timeout', '20', '() ((1 1))'],
+    dir,
+  );
   assert.equal(held.status, 1);
   assert.match(
     held.err,
-    new RegExp(`^Error: Lock error: store is locked: .*s\\.links\\.lock\\.d is held by pid=${process.pid} `),
+    new RegExp(
+      `^Error: Lock error: store is locked: .*s\\.links\\.lock\\.d is held by pid=${process.pid} `,
+    ),
   );
   assert.equal((await clink(['--db', db, '--no-lock', '() ((1 1))'], dir)).status, 0);
   const after = await clink(['--db', db, '--lock', 'none', '--after'], dir);
@@ -167,10 +172,14 @@ for (const [name, lockArgs, unavailable] of KINDS) {
       assert.equal((await clink(['--db', db, '--out', out], dir)).status, 0);
       const exported = readFileSync(out, 'utf8');
       for (let index = 1; index <= results.length; index++) {
-        assert.ok(exported.includes(`(w${index}: w${index} w${index})`), `lost w${index}: ${exported}`);
+        assert.ok(
+          exported.includes(`(w${index}: w${index} w${index})`),
+          `lost w${index}: ${exported}`,
+        );
       }
       const leftovers = readdirSync(dir).filter(
-        (entry) => entry.endsWith('.saving') || entry.endsWith('.owner') || entry.includes('.lock.d'),
+        (entry) =>
+          entry.endsWith('.saving') || entry.endsWith('.owner') || entry.includes('.lock.d'),
       );
       assert.deepEqual(leftovers, []);
     },

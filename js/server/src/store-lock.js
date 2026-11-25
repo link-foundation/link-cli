@@ -178,7 +178,12 @@ export function processStartTime(pid, platform = process.platform, read = readFi
   // start with the state (field 3), so `starttime` (field 22) is the 20th.
   const close = stat.lastIndexOf(')');
   if (close < 0) return null;
-  return stat.slice(close + 1).trim().split(/\s+/)[19] ?? null;
+  return (
+    stat
+      .slice(close + 1)
+      .trim()
+      .split(/\s+/)[19] ?? null
+  );
 }
 
 /** Whether process `pid` exists; `null` when the system cannot tell. */
@@ -580,15 +585,20 @@ async function acquireFlock(store, mode, deadline, options) {
     const lock = FileLock.tryAcquire(path, mode);
     if (lock !== null) {
       const owner = ownerFilePath(store);
-      if (mode === LockMode.Exclusive) writeRecord(owner, LockOwner.current(uniqueToken()).toRecord());
-      // No exclusive holder exists, so a record is a crashed one's.
-      else removeFile(owner);
+      if (mode === LockMode.Exclusive) {
+        writeRecord(owner, LockOwner.current(uniqueToken()).toRecord());
+      } else {
+        // No exclusive holder exists, so a record is a crashed one's.
+        removeFile(owner);
+      }
       if (options.trace) options.stderr.write(`[TRACE] Acquired ${kind} lock ${path}\n`);
       return new FlockGuard(lock, owner);
     }
     if (options.trace && !reported) {
       reported = true;
-      options.stderr.write(`[TRACE] Waiting for ${kind} lock ${path}: held by ${flockHolder(store)}\n`);
+      options.stderr.write(
+        `[TRACE] Waiting for ${kind} lock ${path}: held by ${flockHolder(store)}\n`,
+      );
     }
     if (!(await backoff.wait())) throw lockedError(path, kind, flockHolder(store), options);
   }

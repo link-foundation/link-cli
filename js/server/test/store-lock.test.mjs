@@ -388,9 +388,12 @@ describe('--lock pid', () => {
     const denied = () => {
       throw Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' });
     };
-    assert.throws(() => tryAcquirePid(lockDirPath(join(root, 'a.links')), false, capture(), denied), {
-      message: 'EACCES: permission denied',
-    });
+    assert.throws(
+      () => tryAcquirePid(lockDirPath(join(root, 'a.links')), false, capture(), denied),
+      {
+        message: 'EACCES: permission denied',
+      },
+    );
     const gone = new LockOwner({ ...LockOwner.current('crashed'), pid: GONE_PID });
     const dir = plantPidLock(lockDirPath(join(root, 'b.links')), gone);
     const stuck = (from, to) => {
@@ -410,14 +413,22 @@ describe('StoreLock with --lock flock', () => {
     const db = join(scratchDirectory(), 's.links');
     const path = lockFilePath(db);
     const stderr = capture();
-    const writer = await StoreLock.acquire([db], LockMode.Exclusive, options(null, '0', { trace: true, stderr }));
+    const writer = await StoreLock.acquire(
+      [db],
+      LockMode.Exclusive,
+      options(null, '0', { trace: true, stderr }),
+    );
     assert.deepEqual(writer.paths(), [path]);
     assert.equal(stderr.text, `[TRACE] Acquired exclusive flock lock ${path}\n`);
     assert.equal(LockOwner.parse(readFileSync(ownerFilePath(db), 'utf8')).pid, process.pid);
 
     const waiting = capture();
     await assert.rejects(
-      StoreLock.acquire([db], LockMode.Shared, options(null, '0', { trace: true, stderr: waiting })),
+      StoreLock.acquire(
+        [db],
+        LockMode.Shared,
+        options(null, '0', { trace: true, stderr: waiting }),
+      ),
       (error) => {
         assert.ok(error instanceof LockError);
         assert.match(
@@ -429,8 +440,14 @@ describe('StoreLock with --lock flock', () => {
         return true;
       },
     );
-    assert.match(waiting.text, /^\[TRACE\] Waiting for shared flock lock .*: held by an exclusive writer: pid=/);
-    assert.match(lockStatus([db]), /^flock .*: locked by an exclusive writer: pid=\d+ .*\npid .*\.lock\.d: unlocked\n$/);
+    assert.match(
+      waiting.text,
+      /^\[TRACE\] Waiting for shared flock lock .*: held by an exclusive writer: pid=/,
+    );
+    assert.match(
+      lockStatus([db]),
+      /^flock .*: locked by an exclusive writer: pid=\d+ .*\npid .*\.lock\.d: unlocked\n$/,
+    );
 
     rmSync(ownerFilePath(db));
     await assert.rejects(StoreLock.acquire([db], LockMode.Exclusive, options(null, '0')), {
@@ -451,7 +468,8 @@ describe('StoreLock with --lock flock', () => {
     assert.equal(existsSync(ownerFilePath(db)), false);
     const second = await StoreLock.acquire([db], LockMode.Shared, options(null, '0'));
     await assert.rejects(StoreLock.acquire([db], LockMode.Exclusive, options(null, '20')), {
-      message: /is held by shared readers; gave up waiting for the exclusive flock lock after 20 ms/,
+      message:
+        /is held by shared readers; gave up waiting for the exclusive flock lock after 20 ms/,
     });
     assert.match(lockStatus([db]), /: locked by shared readers\n/);
     first.release();
@@ -496,7 +514,10 @@ describe('StoreLock with --lock flock', () => {
   it('reports stores that were never locked without creating anything', () => {
     const root = scratchDirectory();
     const db = join(root, 's.links');
-    assert.equal(lockStatus([db]), `flock ${lockFilePath(db)}: unlocked\npid ${db}.lock.d: unlocked\n`);
+    assert.equal(
+      lockStatus([db]),
+      `flock ${lockFilePath(db)}: unlocked\npid ${db}.lock.d: unlocked\n`,
+    );
     assert.deepEqual(readdirSync(root), []);
   });
 
@@ -518,7 +539,11 @@ describe('StoreLock with --lock pid and none', () => {
     setLockBackend({ unavailable: 'no flock here' });
     const db = join(scratchDirectory(), 's.links');
     const stderr = capture();
-    const traced = await StoreLock.acquire([db], LockMode.Shared, options(null, null, { trace: true, stderr }));
+    const traced = await StoreLock.acquire(
+      [db],
+      LockMode.Shared,
+      options(null, null, { trace: true, stderr }),
+    );
     assert.deepEqual(traced.paths(), [lockDirPath(db)]);
     assert.equal(
       stderr.text,
@@ -528,7 +553,10 @@ describe('StoreLock with --lock pid and none', () => {
     const quiet = await StoreLock.acquire([db], LockMode.Shared, options(null, null));
     assert.deepEqual(quiet.paths(), [lockDirPath(db)]);
     quiet.release();
-    assert.deepEqual((await StoreLock.acquire([], LockMode.Shared, options(null, null))).paths(), []);
+    assert.deepEqual(
+      (await StoreLock.acquire([], LockMode.Shared, options(null, null))).paths(),
+      [],
+    );
     await assert.rejects(StoreLock.acquire([db], LockMode.Shared, options('flock', null)), {
       message: /no flock here/,
     });
@@ -538,11 +566,14 @@ describe('StoreLock with --lock pid and none', () => {
     const db = join(scratchDirectory(), 's.links');
     const dir = plantPidLock(lockDirPath(db), LockOwner.current('alive'));
     const stderr = capture();
-    await assert.rejects(StoreLock.acquire([db], LockMode.Shared, options('pid', '10', { trace: true, stderr })), {
-      message: new RegExp(
-        `^Lock error: store is locked: ${literally(dir)} is held by pid=${process.pid} .*\\(running\\); gave up waiting for the pid lock after 10 ms`,
-      ),
-    });
+    await assert.rejects(
+      StoreLock.acquire([db], LockMode.Shared, options('pid', '10', { trace: true, stderr })),
+      {
+        message: new RegExp(
+          `^Lock error: store is locked: ${literally(dir)} is held by pid=${process.pid} .*\\(running\\); gave up waiting for the pid lock after 10 ms`,
+        ),
+      },
+    );
     assert.match(stderr.text, /^\[TRACE\] Waiting for pid lock .*: held by pid=/);
     assert.match(lockStatus([db]), /\npid .*: locked by pid=\d+ .*\(running\)\n$/);
 
@@ -551,7 +582,10 @@ describe('StoreLock with --lock pid and none', () => {
       message: /held by a directory without an owner record \(removed once .* is 10 s old\);/,
     });
     rmSync(join(dir, 'note'));
-    writeFileSync(join(dir, 'owner'), new LockOwner({ ...LockOwner.current('x'), pid: GONE_PID }).toRecord());
+    writeFileSync(
+      join(dir, 'owner'),
+      new LockOwner({ ...LockOwner.current('x'), pid: GONE_PID }).toRecord(),
+    );
     assert.match(
       lockStatus([db]),
       new RegExp(`; stale, the next writer breaks it: owner process ${GONE_PID} is gone\\n$`),
@@ -561,11 +595,14 @@ describe('StoreLock with --lock pid and none', () => {
   it('reports what keeps it from making the lock directory', async () => {
     const file = join(scratchDirectory(), 'file');
     writeFileSync(file, '');
-    await assert.rejects(StoreLock.acquire([join(file, 's.links')], LockMode.Shared, options('pid', '0')), (error) => {
-      assert.ok(error instanceof LinkError);
-      assert.match(error.message, /^I\/O error: /);
-      return true;
-    });
+    await assert.rejects(
+      StoreLock.acquire([join(file, 's.links')], LockMode.Shared, options('pid', '0')),
+      (error) => {
+        assert.ok(error instanceof LinkError);
+        assert.match(error.message, /^I\/O error: /);
+        return true;
+      },
+    );
   });
 });
 
@@ -579,7 +616,13 @@ describe('quietFfiWarning', () => {
       },
     };
     quietFfiWarning(target);
-    assert.equal(target.emitWarning('FFI is an experimental feature and might change at any time', 'ExperimentalWarning'), undefined);
+    assert.equal(
+      target.emitWarning(
+        'FFI is an experimental feature and might change at any time',
+        'ExperimentalWarning',
+      ),
+      undefined,
+    );
     assert.equal(target.emitWarning(new Error('FFI is an experimental feature')), undefined);
     assert.equal(target.emitWarning('Something else', 'Warning'), 'emitted');
     assert.equal(target.emitWarning(undefined), 'emitted');
