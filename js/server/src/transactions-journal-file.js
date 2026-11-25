@@ -13,16 +13,21 @@
 // files are removed, so a crash leaves either the legacy store or a complete
 // journal. An explicit `--transactions-file` that still holds a links store
 // is converted in place the same way.
-import { closeSync, existsSync, fsyncSync, readSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  readSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 
 import { makeNamesDatabaseFilename, NamedTypesDecorator } from './named-types.js';
 import { openFileSync } from './open-file.js';
 import { FileTransitionLog } from './transactions-log.js';
 import { io, NamedTransitionLog } from './transactions-storage.js';
-import {
-  makeLegacyTransitionsFilename,
-  makeTransitionsLogFilename,
-} from './transactions-types.js';
+import { makeLegacyTransitionsFilename, makeTransitionsLogFilename } from './transactions-types.js';
 
 /** Every journal entry starts with this, so a journal file does too. */
 const ENTRY_PREFIX = Buffer.from('__transactions:');
@@ -56,7 +61,11 @@ const removeIfExists = (path) => io(() => rmSync(path, { force: true }));
  * When `target` already exists (a crash after publishing it), the legacy
  * store is removed only if each of its entries is already in `target`.
  */
-export function importLinksJournal(legacy, target, { trace = false, stderr = process.stderr } = {}) {
+export function importLinksJournal(
+  legacy,
+  target,
+  { trace = false, stderr = process.stderr } = {},
+) {
   const names = makeNamesDatabaseFilename(legacy);
   const store = NamedTypesDecorator.open(legacy, { namesDatabasePath: names });
   const entries = new NamedTransitionLog(store.withIndexedLookups()).readLogEntries();

@@ -83,28 +83,32 @@ describe('FileTransitionLog compaction', () => {
     assert.equal(readFileSync(path, 'utf8'), 'complete\n');
   });
 
-  it('keeps the old journal when the copy cannot be written', { skip: NO_POSIX_PERMISSIONS }, () => {
-    const directory = join(scratchDirectory(), 'locked');
-    const path = join(directory, 'journal.log');
-    const log = FileTransitionLog.open(path);
-    try {
-      log.appendLogEntry('kept');
-      chmodSync(directory, 0o500);
+  it(
+    'keeps the old journal when the copy cannot be written',
+    { skip: NO_POSIX_PERMISSIONS },
+    () => {
+      const directory = join(scratchDirectory(), 'locked');
+      const path = join(directory, 'journal.log');
+      const log = FileTransitionLog.open(path);
       try {
-        assert.throws(
-          () => log.compactLogEntries(['new']),
-          (error) => error.message === 'I/O error: Permission denied (os error 13)',
-        );
+        log.appendLogEntry('kept');
+        chmodSync(directory, 0o500);
+        try {
+          assert.throws(
+            () => log.compactLogEntries(['new']),
+            (error) => error.message === 'I/O error: Permission denied (os error 13)',
+          );
+        } finally {
+          chmodSync(directory, 0o700);
+        }
+        assert.equal(log.tailMayBeTorn, false);
+        log.appendLogEntry('appended');
+        assert.deepEqual(log.readLogEntries(), ['kept', 'appended']);
       } finally {
-        chmodSync(directory, 0o700);
+        log.close();
       }
-      assert.equal(log.tailMayBeTorn, false);
-      log.appendLogEntry('appended');
-      assert.deepEqual(log.readLogEntries(), ['kept', 'appended']);
-    } finally {
-      log.close();
-    }
-  });
+    },
+  );
 
   it(
     'reopens its writer after a compaction whose directory sync failed',
@@ -158,7 +162,8 @@ describe('journal compaction', () => {
     for (const bad of ['0', '-3', 'x', '']) {
       assert.throws(
         () => parseJournal([`__transactions:sequence:${bad}`]),
-        (error) => error instanceof InvalidFormatError && /invalid sequence marker$/.test(error.message),
+        (error) =>
+          error instanceof InvalidFormatError && /invalid sequence marker$/.test(error.message),
       );
     }
   });
@@ -181,7 +186,10 @@ describe('journal compaction', () => {
     assert.equal(entries[0], '__transactions:sequence:6');
     // The highest applied record (4) left the window, so its marker stays.
     assert.equal(entries[1], '__transactions:applied:4');
-    assert.equal(entries.filter((entry) => entry.startsWith('__transactions:transition:')).length, 2);
+    assert.equal(
+      entries.filter((entry) => entry.startsWith('__transactions:transition:')).length,
+      2,
+    );
     assert.equal(entries.at(-1), tx.lastDecision);
     assert.ok(!entries.some((entry) => entry.startsWith('__transactions:commit:')));
     // Reopening the compacted journal restores the same state.
