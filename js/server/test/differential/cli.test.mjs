@@ -3,7 +3,7 @@
 // the Rust executable (`cargo build --release --bin clink`); the tests are
 // skipped without it. CLINK_DIFFERENTIAL_DEBUG=1 prints every run.
 import { describe, it } from 'node:test';
-import { CLOCK_FILES, differential, maskClock, skip } from './harness.mjs';
+import { CLOCK_FILES, differential, JOURNAL_FILES, maskClock, skip } from './harness.mjs';
 
 const run = (...args) => ({ args });
 const make = (query) => run('--auto-create-missing-references', query);
@@ -215,7 +215,7 @@ for (const [group, cases] of Object.entries(groups)) {
 }
 
 describe('differential: transactions and version control', () => {
-  const options = { mask: maskClock, opaqueFiles: CLOCK_FILES };
+  const options = { mask: maskClock, opaqueFiles: CLOCK_FILES, journalFiles: JOURNAL_FILES };
   it('transactions and the log', { skip }, () =>
     differential(
       [
