@@ -25,7 +25,10 @@ const NOT_NODE =
 /** A stream that keeps what is written to it. */
 function sink() {
   const chunks = [];
-  return { write: (text) => chunks.push(String(text)), text: () => chunks.join('') };
+  return {
+    write: (text) => chunks.push(String(text)),
+    text: () => chunks.join(''),
+  };
 }
 
 /** Runs `main(args)` in-process: `{ status, out, err }`. */
@@ -63,9 +66,13 @@ test('locks the database and every side store it was given, once', () => {
   assert.deepEqual(lockedStores(parsed('--tokens', ' self ', '--permissions', ' ')), ['db.links']);
 });
 
-test('shares the lock among read-only runs only', () => {
+test('shares the lock among read-only runs of an existing store only', () => {
+  const db = join(scratchDirectory(), 's.links');
+  // Opening a store that does not exist yet creates it.
+  assert.equal(lockMode(parsed('--db', db, '--after')), LockMode.Exclusive);
+  writeFileSync(db, '');
   for (const args of [[], ['--out', 'x.lino'], ['--after'], ['--structure', '1'], ['']]) {
-    assert.equal(lockMode(parsed(...args)), LockMode.Shared, args.join(' '));
+    assert.equal(lockMode(parsed('--db', db, ...args)), LockMode.Shared, args.join(' '));
   }
   for (const args of [
     ['() ((1 1))'],
@@ -79,7 +86,7 @@ test('shares the lock among read-only runs only', () => {
     ['--transactions'],
     ['--log'],
   ]) {
-    assert.equal(lockMode(parsed(...args)), LockMode.Exclusive, args.join(' '));
+    assert.equal(lockMode(parsed('--db', db, ...args)), LockMode.Exclusive, args.join(' '));
   }
 });
 
@@ -138,7 +145,9 @@ test('fails naming the owner of a held pid lock, and --no-lock passes it by', as
 /** Runs `bin/clink.js` with `args`; resolves its exit status and standard error. */
 function spawnClink(args) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [BIN, ...args], { stdio: ['ignore', 'ignore', 'pipe'] });
+    const child = spawn(process.execPath, [BIN, ...args], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+    });
     let stderr = '';
     child.stderr.on('data', (chunk) => {
       stderr += chunk;

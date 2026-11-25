@@ -163,6 +163,22 @@ fn readers_share_the_store_and_writers_wait_for_them() {
     success(clink(&db, &["--lock-timeout", "0", "() ((1 2))"]));
 }
 
+#[test]
+fn a_read_of_a_store_not_created_yet_takes_the_lock_alone() {
+    // Opening a store that does not exist yet creates its files.
+    let dir = tempdir().unwrap();
+    let db = dir.path().join("s.links");
+    let reader = FileLock::acquire(lock_file_path(&db), LockMode::Shared).unwrap();
+    failure(
+        clink(&db, &["--lock-timeout", "0", "--after"]),
+        "shared readers",
+    );
+    assert!(!db.exists());
+    drop(reader);
+    assert_eq!(success(clink(&db, &["--lock-timeout", "0", "--after"])), "");
+    assert!(db.exists());
+}
+
 fn write_pid_lock(db: &Path, pid: u32) -> PathBuf {
     let dir = lock_dir_path(db);
     std::fs::create_dir(&dir).unwrap();

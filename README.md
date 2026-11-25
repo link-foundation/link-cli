@@ -596,8 +596,9 @@ Each run locks the database and every side store it opens (the transitions
 log, the version-control store, the triggers store, and the token and
 permission stores) for its whole read-modify-write. A run that writes locks
 them exclusively. A run that only reads, such as `--out` or a bare
-`--after`, shares the lock with other readers. `--serve` holds its lock until
-the server stops.
+`--after`, shares the lock with other readers once the database exists. The
+first run on a new store creates it, so it locks alone even when it only reads.
+`--serve` holds its lock until the server stops.
 
 | Option | Lock |
 |--------|------|

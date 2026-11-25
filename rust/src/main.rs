@@ -98,10 +98,13 @@ fn locked_stores(cli: &Cli) -> Vec<PathBuf> {
     stores
 }
 
-/// Read-only runs share the lock; anything that may write takes it alone.
+/// Read-only runs share the lock; anything that may write takes it alone,
+/// and so does a first run on a store that does not exist yet, since opening
+/// it creates its files.
 fn lock_mode(cli: &Cli) -> LockMode {
     let query = cli.query.as_deref().or(cli.query_arg.as_deref());
-    let read_only = query.is_none_or(str::is_empty)
+    let read_only = std::path::Path::new(&cli.db).exists()
+        && query.is_none_or(str::is_empty)
         && cli.lino_input.is_none()
         && cli.binary_input.is_none()
         && cli.trigger_command_count() == 0

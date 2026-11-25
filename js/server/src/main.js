@@ -8,6 +8,8 @@
 // in-process; bin/clink.js exits with it. A failure prints `Error: ` and its
 // cause chain on standard error with status 1, as the Rust `main` returning
 // an `anyhow::Error` does.
+import { existsSync } from 'node:fs';
+
 import { Cli } from './cli.js';
 import { loadEnvironmentFiles } from './env-files.js';
 import { reportError } from './error-report.js';
@@ -39,7 +41,10 @@ import { lockOrder, lockStatus, parseStoreLockOptions, StoreLock } from './store
 
 /** `NamedTypesDecorator::new`, with the lookup indexes of `--indexed-lookups` or `--graphql`. */
 export function openNamedStorage(path, cli, io = {}) {
-  const storage = NamedTypesDecorator.open(path, { trace: cli.trace, stderr: io.stderr });
+  const storage = NamedTypesDecorator.open(path, {
+    trace: cli.trace,
+    stderr: io.stderr,
+  });
   return cli.indexedLookups || cli.graphql ? storage.withIndexedLookups() : storage;
 }
 
@@ -165,10 +170,15 @@ export function lockedStores(cli) {
   return stores;
 }
 
-/** Read-only runs share the lock; anything that may write takes it alone. */
+/**
+ * Read-only runs share the lock; anything that may write takes it alone, and
+ * so does a first run on a store that does not exist yet, since opening it
+ * creates its files.
+ */
 export function lockMode(cli) {
   const query = cli.query ?? cli.queryArg;
   const readOnly =
+    existsSync(cli.db) &&
     (query == null || query === '') &&
     cli.linoInput == null &&
     cli.binaryInput == null &&

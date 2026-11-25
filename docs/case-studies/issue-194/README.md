@@ -61,7 +61,10 @@ Each defect is fixed in all three implementations, which share one design (see
 - **The whole run holds a store lock.** Before it opens anything, a run locks
   the database and each side store it will open, in path order. It holds the
   locks until the stores are saved and closed: exclusively when it writes,
-  shared when it only reads (`--out`, a bare `--after`). `--serve` holds the
+  shared when it only reads (`--out`, a bare `--after`) a store that exists.
+  Opening a new store creates its files, so the first run locks it
+  exclusively even to read: C# readers that created one store at once crashed
+  each other with `AccessViolationException`. `--serve` holds the
   lock until the server stops.
 - **Lock kinds**, as the issue suggested:
   - `--lock flock` (default): an OS lock on `<db>.lock`, released by the OS
@@ -93,7 +96,7 @@ other.
 
 | Requirement (issue #194) | Implementation | Verified by |
 |---|---|---|
-| Lock `<db>.lock` for the whole read-modify-write, exclusive for writes, shared for `--out` and reads | `rust/src/store_lock/`, `rust/src/main.rs`; `js/server/src/store-lock.js`, `src/main.js`; C# `StoreLock*.cs`, `CliStoreLocks.cs`, `Program.cs` | `rust/tests/cli_store_lock_tests.rs`, `js/server/test/main-store-lock.test.mjs`, `CliStoreLockTests.AWriterWaitsForAReaderToFinish` |
+| Lock `<db>.lock` for the whole read-modify-write, exclusive for writes, shared for `--out` and reads | `rust/src/store_lock/`, `rust/src/main.rs`; `js/server/src/store-lock.js`, `src/main.js`; C# `StoreLock*.cs`, `CliStoreLocks.cs`, `Program.cs` | `rust/tests/cli_store_lock_tests.rs`, `js/server/test/main-store-lock.test.mjs`, `CliStoreLockTests.AWriterWaitsForAReaderToFinish`, `ReadersOfAStoreNotCreatedYetTakeTheLockAlone` |
 | `--lock-timeout <ms>`, `--no-lock` | the CLI parsers of all three | tests of the options in the same files |
 | A temporary file unique per process, created exclusively | `rust/src/link_storage.rs`, `js/server/src/link-storage.js` | `js/server/test/link-storage.test.mjs` and the Rust storage tests |
 | N concurrent `--in` imports, every successful exit present in `--out` | regression tests | 8 to 12 writers under each lock kind in all three suites, Rust and JavaScript writers mixed in `js/server/test/differential/store-lock.test.mjs`, and `examples/concurrent-writers` in the JS server workflow |

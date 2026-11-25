@@ -886,7 +886,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "1a4fc1f4f1d46c4d"
+        "fingerprint": "b98ae2fc897eb483"
       },
       "rust": {
         "status": "implemented",
@@ -901,7 +901,7 @@
           "rust/tests/cli_*_tests.rs",
           "rust/tests/diagnostic_*.rs"
         ],
-        "fingerprint": "0f33c38b2c0e12c3"
+        "fingerprint": "d55a092e462d9dad"
       },
       "javascript": {
         "status": "implemented",
@@ -922,7 +922,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "b63609127391feea"
+        "fingerprint": "69e80a8205291557"
       }
     },
     {

@@ -511,7 +511,10 @@ stores it opens (the database and each side store: transitions log,
 version-control store, triggers store, token and permission stores), sorts
 them by path so that every process locks them in the same order, and locks
 them before opening any. It holds the locks until the stores are saved and
-closed: exclusively when it writes, shared when it only reads.
+closed: exclusively when it writes, shared when it only reads. A run on a
+database that does not exist yet locks exclusively even when it only reads,
+since opening the store creates its files (C# initializes them in place, and
+readers doing that at once crashed each other).
 
 - **`flock`** (default) locks `<store>.lock` with `FileLock` /
   `LinksFileLock` (`LockFileEx` on Windows). The exclusive holder writes its

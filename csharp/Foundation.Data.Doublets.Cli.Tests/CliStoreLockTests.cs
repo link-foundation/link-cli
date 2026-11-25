@@ -66,12 +66,29 @@ public sealed class CliStoreLockTests : IDisposable
     [Fact]
     public async Task AWriterWaitsForAReaderToFinish()
     {
+        Clink.AssertSucceeded(await Clink.RunAsync("--db", Db, "() ((1 1))"));
         using var reader = StoreLock.Acquire([Db], LockMode.Shared, new StoreLockOptions { TimeoutMs = 0 });
-        var blocked = await Clink.RunAsync("--db", Db, "--lock-timeout", "0", "() ((1 1))");
+        var blocked = await Clink.RunAsync("--db", Db, "--lock-timeout", "0", "() ((1 2))");
         Assert.Equal(1, blocked.ExitCode);
         Assert.Contains($"{Db}.lock is held by shared readers;", blocked.Stderr, StringComparison.Ordinal);
         // Readers share it.
-        Clink.AssertSucceeded(await Clink.RunAsync("--db", Db, "--lock-timeout", "0", "--after"));
+        var after = await Clink.RunAsync("--db", Db, "--lock-timeout", "0", "--after");
+        Clink.AssertSucceeded(after);
+        Assert.Equal("(1: 1 1)\n", after.Stdout);
+    }
+
+    [Fact]
+    public async Task ReadersOfAStoreNotCreatedYetTakeTheLockAlone()
+    {
+        // Opening a new store creates and initializes its memory-mapped files;
+        // readers doing that at once crashed each other.
+        var readers = Enumerable.Range(0, 8).Select(_ => Clink.RunAsync("--db", Db, "--after"));
+        foreach (var result in await Task.WhenAll(readers)) Clink.AssertSucceeded(result);
+
+        using var reader = StoreLock.Acquire([Path.Combine(_directory, "new.links")], LockMode.Shared, new StoreLockOptions { TimeoutMs = 0 });
+        var first = await Clink.RunAsync("--db", Path.Combine(_directory, "new.links"), "--lock-timeout", "0", "--after");
+        Assert.Equal(1, first.ExitCode);
+        Assert.Contains("new.links.lock is held by shared readers;", first.Stderr, StringComparison.Ordinal);
     }
 
     [Fact]
