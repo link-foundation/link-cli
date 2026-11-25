@@ -236,6 +236,7 @@ var packedWidthsOption = new Option<bool>("--packed-widths")
 };
 
 var graphql = new GraphqlCommand();
+var storeLocks = new CliStoreLocks();
 
 var tripletsOption = new Option<bool>("--triplets")
 {
@@ -314,6 +315,7 @@ rootCommand.Options.Add(externalReferencesOption);
 rootCommand.Options.Add(arityOption);
 rootCommand.Options.Add(packedWidthsOption);
 graphql.AddTo(rootCommand);
+storeLocks.AddTo(rootCommand);
 rootCommand.Options.Add(tripletsOption);
 rootCommand.Options.Add(permissionsOption);
 rootCommand.Options.Add(subjectOption);
@@ -458,6 +460,14 @@ rootCommand.SetAction(
               return 1;
           }
       }
+
+      var readOnly = string.IsNullOrEmpty(queryOptionValue) && string.IsNullOrEmpty(queryArgumentValue)
+        && inputPath is null && binaryInputPath is null && triggerCommandCount == 0 && serveEndpoints.Length == 0
+        && grantToken is null && revokeToken is null && !transactionsRequested;
+      var lockStores = CliStoreLocks.LockedStores(db, transactionsPathRaw, vcFile, triggersFile, tokensSource, permissionsSource);
+      // Held until the stores are disposed: the whole read-modify-write (#194).
+      using var storeLock = storeLocks.Acquire(parseResult, lockStores, readOnly, trace, out var lockExit);
+      if (lockExit is { } exitCode) return exitCode;
 
       // Each layer borrows its stores. Dispose wrappers before their stores,
       // including when construction of a later layer fails.
