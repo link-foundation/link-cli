@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="links-notation" Version="0.31.8" />
+    <PackageReference Include="links-notation" Version="0.32.0" />
   </ItemGroup>
 
 </Project>
