@@ -187,6 +187,20 @@ describe('runWithTransactions', () => {
     await assert.rejects(vcRun(context), { message: 'pipeline failed' });
     assert.equal(closed, 5);
   });
+
+  it('closes the journal when the transactions cannot open', async () => {
+    const context = world();
+    let closed = 0;
+    context.openJournal = () => ({
+      ...memoryLog(),
+      readLogEntries() {
+        throw new Error('journal unreadable');
+      },
+      close: () => closed++,
+    });
+    await assert.rejects(txRun(context), { message: 'journal unreadable' });
+    assert.equal(closed, 1);
+  });
 });
 
 describe('runWithVc', () => {
