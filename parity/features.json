@@ -172,7 +172,7 @@
           "rust/tests/named_type_links_bridge_tests.rs",
           "rust/tests/inline_name_persistence_tests.rs"
         ],
-        "fingerprint": "83bf273973b092ed"
+        "fingerprint": "58146e7c790f229f"
       },
       "javascript": {
         "status": "implemented",
@@ -185,7 +185,16 @@
           "js/server/test/named-type-links.test.mjs"
         ],
         "fingerprint": "eaca02aa7898412f"
-      }
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "rust": "58146e7c790f229f"
+          },
+          "reason": "Rust-only generic plumbing: the NamedTypeLinks bridge is now generic over the transitions log type L so clink can use FileTransitionLog; C# (ITransitionLogStore) and JS choose the journal at runtime and need no change",
+          "ref": "https://github.com/link-foundation/link-cli/issues/195"
+        }
+      ]
     },
     {
       "id": "pinned-types",
@@ -389,7 +398,10 @@
           "csharp/Foundation.Data.Doublets.Cli.Library/IDurableLinks.cs",
           "csharp/Foundation.Data.Doublets.Cli.Library/DurableMappedMemory.cs",
           "csharp/Foundation.Data.Doublets.Cli.Library/LinksFileLock.cs",
-          "csharp/Foundation.Data.Doublets.Cli.Library/ChunkArchive.cs"
+          "csharp/Foundation.Data.Doublets.Cli.Library/ChunkArchive.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/FileTransitionLog.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/TransitionLogStore.cs",
+          "csharp/Foundation.Data.Doublets.Cli.Library/TransitionsJournal.cs"
         ],
         "tests": [
           "csharp/Foundation.Data.Doublets.Cli.Tests/Transaction*.cs",
@@ -397,7 +409,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/LinksFileLockTests.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/ChunkArchiveOwnershipTests.cs"
         ],
-        "fingerprint": "abbea9659191d571"
+        "fingerprint": "b5ae7768dc4107a4"
       },
       "rust": {
         "status": "implemented",
@@ -410,7 +422,7 @@
           "rust/tests/transaction_*_tests.rs",
           "rust/tests/undoable_links_edges_tests.rs"
         ],
-        "fingerprint": "8b2b9b5ff1cf6f7e"
+        "fingerprint": "05690435976525f0"
       },
       "javascript": {
         "status": "implemented",
@@ -423,7 +435,7 @@
           "js/server/test/undoable-links.test.mjs",
           "js/server/test/differential/transactions.test.mjs"
         ],
-        "fingerprint": "5dcc1b1f8b4ca7db"
+        "fingerprint": "860e63f25f587154"
       }
     },
     {
@@ -447,7 +459,7 @@
         "tests": [
           "rust/tests/version_*_tests.rs"
         ],
-        "fingerprint": "62cc1dcbbf33536f"
+        "fingerprint": "871a9d5bc6e11812"
       },
       "javascript": {
         "status": "implemented",
@@ -458,7 +470,16 @@
           "js/server/test/version-control*.test.mjs"
         ],
         "fingerprint": "5390ffafeb26f4fb"
-      }
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "rust": "871a9d5bc6e11812"
+          },
+          "reason": "Rust-only generic plumbing: GenericVersionControlDecorator gains a log type parameter L (FileVersionControlDecorator alias) so clink can use FileTransitionLog; C# and JS version control already take any transactions decorator regardless of its journal",
+          "ref": "https://github.com/link-foundation/link-cli/issues/195"
+        }
+      ]
     },
     {
       "id": "triplets",
@@ -671,7 +692,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Decorator*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/MappedGrowthTests.cs"
         ],
-        "fingerprint": "467e34ce152f28c0"
+        "fingerprint": "ce46653a46572e53"
       },
       "rust": {
         "status": "implemented",
@@ -713,7 +734,16 @@
           "js/server/test/differential/doublets-storage.test.mjs"
         ],
         "fingerprint": "021118b5f4e5b84c"
-      }
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "csharp": "ce46653a46572e53"
+          },
+          "reason": "C#-only: the reflection-based LinksFacadeDisposer now also releases a transitions journal field (FileTransitionLog); Rust drops it and JavaScript closes it explicitly, so they need no change",
+          "ref": "https://github.com/link-foundation/link-cli/issues/195"
+        }
+      ]
     },
     {
       "id": "protocol",
@@ -876,7 +906,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "6c0a67d3c8f7c5c8"
+        "fingerprint": "87180c20a4ea689d"
       },
       "rust": {
         "status": "implemented",
@@ -891,7 +921,7 @@
           "rust/tests/cli_*_tests.rs",
           "rust/tests/diagnostic_*.rs"
         ],
-        "fingerprint": "d5efa640432aa019"
+        "fingerprint": "066e3be904b07456"
       },
       "javascript": {
         "status": "implemented",
@@ -912,7 +942,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "93b0ec97c080b766"
+        "fingerprint": "26fe8bb7bc230c2d"
       }
     },
     {

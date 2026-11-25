@@ -139,7 +139,7 @@ as a reversible transition in a sidecar doublets store. Pass `--vc`
 recorded transitions log:
 
 ```bash
-# Record reversible transitions into data.transitions.links
+# Record reversible transitions into data.transitions.log
 clink --db data.links --transactions --auto-create-missing-references '() ((1 1))'
 clink --db data.links --log
 
@@ -214,7 +214,10 @@ using Platform.Data.Doublets;
 // A `ulong`-addressed store; the CLI's own `uint` store is the
 // non-generic `TransactionsDecorator`.
 using var data = new NamedTypesDecorator<ulong>("db.links");
-using var log = new NamedTypesDecorator<ulong>("db.transitions.links");
+// The journal: an append-only text file that `sized` and `chunked`
+// retention keep bounded. A links store (`NamedTypesDecorator<ulong>`)
+// also works as a journal, but then every entry is kept.
+using var log = FileTransitionLog.Open("db.transitions.log");
 using var transactions = new TransactionsDecorator<ulong>(data, log);
 
 using (var transaction = transactions.BeginTransaction())

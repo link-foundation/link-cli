@@ -463,9 +463,10 @@ rootCommand.SetAction(
       // including when construction of a later layer fails.
       using var baseLinks = new NamedTypesDecorator<uint>(db, trace);
       INamedTypesLinks<uint> decoratedLinks = baseLinks;
+      // The journal is an append-only text file whose size retention bounds;
+      // a links-backed journal older versions wrote is imported once (#195).
       using var transitionsStore = transactionsRequested
-        ? new NamedTypesDecorator<uint>(!string.IsNullOrWhiteSpace(transactionsPathRaw)
-            ? transactionsPathRaw : TransactionsDecorator.MakeTransitionsDatabaseFilename(db), trace)
+        ? TransitionsJournal.Open(db, transactionsPathRaw, trace)
         : null;
       using var transactionsLinks = transitionsStore is not null
         ? new TransactionsDecorator(baseLinks, transitionsStore, retentionPolicy, commitMode, trace)

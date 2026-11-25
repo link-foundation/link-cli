@@ -7,7 +7,7 @@ using Platform.Data.Doublets;
 namespace Foundation.Data.Doublets.Cli
 {
     /// <summary>
-    /// Releases every <see cref="IDisposable"/> links facade reachable from a decorator chain.
+    /// Releases every <see cref="IDisposable"/> links facade (or transitions journal) reachable from a decorator chain.
     /// </summary>
     /// <remarks>
     /// Links decorators wrap each other and ultimately own memory-mapped file handles. On POSIX a
@@ -77,6 +77,11 @@ namespace Foundation.Data.Doublets.Cli
 
         private static bool IsLinksFacade(Type type)
         {
+            // A transactions journal wraps its own links store or file (issue #195).
+            if (typeof(ITransitionLogStore).IsAssignableFrom(type))
+            {
+                return true;
+            }
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ILinks<>))
             {
                 return true;

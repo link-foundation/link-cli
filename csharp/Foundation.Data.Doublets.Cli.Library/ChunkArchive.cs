@@ -10,5 +10,11 @@ internal static class ChunkArchive
         using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
         using var writer = new StreamWriter(stream);
         foreach (var record in records) writer.WriteLine(record);
+        // Journal compaction may drop the archived records next; the archive
+        // must be durable before they leave the journal (issue #195).
+        writer.Flush();
+        stream.Flush(flushToDisk: true);
+        if (!OperatingSystem.IsWindows())
+            Engine.FilePageDevice.SyncDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
     }
 }

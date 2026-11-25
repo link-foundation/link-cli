@@ -13,7 +13,9 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         HashSet<long> Applied,
         long Sequence,
         long AppliedSequence,
-        List<TransactionUndoImage<TLinkAddress>> Images);
+        List<TransactionUndoImage<TLinkAddress>> Images,
+        string? LastDecision,
+        long EntryCount);
 
     // Build temporary indexes before touching live history, rows or markers.
     // Compare parsed values so idempotent retries keep legacy lexical forms.
@@ -26,10 +28,10 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         var images = new List<TransactionUndoImage<TLinkAddress>>();
         Dictionary<Guid, TransactionUndoImage<TLinkAddress>>? imageOwners = null;
         long sequence = 0, appliedSequence = 0;
-        var any = _logStore.Constants.Any;
-        foreach (var raw in _logStore.All(new Link<TLinkAddress>(any, any, any)))
+        string? lastDecision = null;
+        var entries = _logStore.ReadLogEntries();
+        foreach (var name in entries)
         {
-            var name = _logStore.GetName(new Link<TLinkAddress>(raw).Index);
             if (string.IsNullOrEmpty(name)) continue;
             if (name.StartsWith(TransitionNamePrefix, StringComparison.Ordinal))
             {
@@ -67,6 +69,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                 if (rolledBack.Contains(owner))
                     throw new InvalidDataException($"Transaction {owner:N} has both commit and rollback decisions.");
                 committed.Add(owner);
+                lastDecision = name;
             }
             else if (name.StartsWith(RollbackMarkerPrefix, StringComparison.Ordinal))
             {
@@ -75,6 +78,14 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                 if (committed.Contains(owner))
                     throw new InvalidDataException($"Transaction {owner:N} has both commit and rollback decisions.");
                 rolledBack.Add(owner);
+                lastDecision = name;
+            }
+            else if (name.StartsWith(SequenceMarkerPrefix, StringComparison.Ordinal))
+            {
+                // A compacted journal reserves the sequences its dropped records used.
+                if (!long.TryParse(name.Substring(SequenceMarkerPrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq) || seq <= 0)
+                    throw new InvalidDataException("Malformed sequence marker in journal.");
+                sequence = Math.Max(sequence, seq);
             }
             else if (name.StartsWith(AppliedMarkerPrefix, StringComparison.Ordinal))
             {
@@ -100,6 +111,6 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                 throw new InvalidDataException("Ambiguous pending undo images at the same base.");
         }
         return new RecoveryJournal(transitions.Values.OrderBy(t => t.Sequence).ToList(),
-            committed, rolledBack, applied, sequence, appliedSequence, images);
+            committed, rolledBack, applied, sequence, appliedSequence, images, lastDecision, entries.Count);
     }
 }
