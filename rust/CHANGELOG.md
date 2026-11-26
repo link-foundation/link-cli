@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.2.0] - 2026-11-26
+
+Concurrent `clink` runs on one store no longer lose updates (#194). A run now
+locks the store for its whole read-modify-write: writers exclusively, read-only
+runs of an existing store shared. A run that cannot get the lock within `--lock-timeout <ms>`
+(default 30000) exits with a "store is locked" error that names the owner.
+`--lock flock` is the default. It takes an OS lock on `<db>.lock`, which the
+system releases when the holder exits. `--lock pid` uses a `<db>.lock.d`
+directory with an owner record (pid, host, PID namespace, start time), which a
+waiter breaks once that owner process is gone. `--lock none` and `--no-lock`
+are for callers that serialize access themselves. `--lock-status` prints who
+holds the locks of a store. Saves now write a temporary file unique to the
+process and created exclusively (`<db>.<pid>.<random>.saving`) instead of the
+shared `<db>.saving`.
+
+Update `links-notation` to 0.32.0 for the Rust CLI and WASM packages.
+
 ## [3.1.3] - 2026-11-25
 
 Update `anyhow` to 1.0.105, `lru` to 0.19.2 and `sha2` to 0.11.2, and refresh the locked `clap`, `clap_builder`, `cookie`, `crc32fast`, `litrs` and `zlib-rs` versions for the Rust CLI and WASM packages.
