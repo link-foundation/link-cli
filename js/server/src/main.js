@@ -52,7 +52,9 @@ export function openNamedStorage(path, cli, io = {}) {
 /** Imports the store archive of `--import-binary`, then the LiNo file of `--in`. */
 export function importInputs(cli, storage) {
   if (cli.binaryInput != null) importStoreFile(storage, cli.binaryInput);
-  if (cli.linoInput != null) importLinoFile(storage, cli.linoInput);
+  if (cli.linoInput != null) {
+    importLinoFile(storage, cli.linoInput, { maxDepth: cli.linoInputMaxDepth });
+  }
 }
 
 /** Writes the whole store to the LiNo file of `--out` and the store archive of `--export-binary`. */

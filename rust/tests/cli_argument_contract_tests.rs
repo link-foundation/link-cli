@@ -150,6 +150,7 @@ fn required_values_report_the_actual_option_and_a_later_parse_is_independent() {
         "--in",
         "--lino-input",
         "--import",
+        "--in-max-depth",
         "--out",
         "--lino-output",
         "--export",

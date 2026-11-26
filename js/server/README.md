@@ -45,6 +45,10 @@ clink --db family.links --lock pid --lock-timeout 5000 --in batch.lino # store l
 clink --db family.links --lock-status                       # who holds the store
 ```
 
+LiNo text imports have a default nesting limit of 64 levels. Set a limit from
+1 to 128 with `--in-max-depth <N>` or pass `{ maxDepth }` to the library's
+`importLinoText` and `importLinoFile` functions.
+
 Like the Rust `clink`, each run locks its store for the whole
 read-modify-write (`src/store-lock.js`), so concurrent runs keep every write;
 see [Concurrent invocations](../../README.md#concurrent-invocations).

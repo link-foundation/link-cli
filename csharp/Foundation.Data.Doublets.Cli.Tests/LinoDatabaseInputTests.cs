@@ -6,6 +6,39 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class LinoDatabaseInputTests
 {
+    [Fact]
+    public void ImportText_ResolvesNamedAndAnonymousNestedPairs()
+    {
+        WithNamedLinks(links =>
+        {
+            LinoDatabaseInput.ImportText(links, "(child: (nested: a b) ((b a) 'value(with parentheses)'))", 3);
+
+            var child = new Link<uint>(links.GetLink(links.GetByName("child")));
+            Assert.Equal(links.GetByName("nested"), child.Source);
+            var target = new Link<uint>(links.GetLink(child.Target));
+            Assert.Equal("value(with parentheses)", links.GetName(target.Target));
+            var anonymous = new Link<uint>(links.GetLink(target.Source));
+            Assert.Equal(links.GetByName("b"), anonymous.Source);
+            Assert.Equal(links.GetByName("a"), anonymous.Target);
+        });
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(129)]
+    public void ImportText_RejectsInvalidDepthLimitsBeforeWriting(int maxDepth)
+    {
+        WithNamedLinks(links =>
+        {
+            Assert.Throws<ArgumentOutOfRangeException>("maxDepth", () =>
+                LinoDatabaseInput.ImportText(links, "(new: a b)", maxDepth));
+            Assert.Empty(LinoDatabaseOutput.FormatDatabase(links));
+
+            LinoDatabaseInput.ImportText(links, "(new: a b)", maxDepth: 1);
+            Assert.Contains("(new: a b)", LinoDatabaseOutput.FormatDatabase(links));
+        });
+    }
+
     [Theory]
     [InlineData("(c: c")]
     [InlineData("(c: c)")]

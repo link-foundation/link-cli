@@ -318,7 +318,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/CliExportIntegrationTests.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/CliImportAtomicityTests.cs"
         ],
-        "fingerprint": "f1679499f1d83a77"
+        "fingerprint": "5675723b7b95b0c8"
       },
       "rust": {
         "status": "implemented",
@@ -333,7 +333,7 @@
           "rust/tests/cli_export_tests.rs",
           "rust/tests/cli_import_tests.rs"
         ],
-        "fingerprint": "0455ab419322eab4"
+        "fingerprint": "3704515d793ca26a"
       },
       "javascript": {
         "status": "implemented",
@@ -347,7 +347,7 @@
           "js/server/test/text-storage-format.test.mjs",
           "js/server/test/structure-format.test.mjs"
         ],
-        "fingerprint": "c6a8309be0beda64"
+        "fingerprint": "9abd2d8093fc813f"
       }
     },
     {
@@ -914,7 +914,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "59625bb4812cf71b"
+        "fingerprint": "579e794f4caa19c3"
       },
       "rust": {
         "status": "implemented",
@@ -929,7 +929,7 @@
           "rust/tests/cli_*_tests.rs",
           "rust/tests/diagnostic_*.rs"
         ],
-        "fingerprint": "e56a527fe737bcea"
+        "fingerprint": "5df09a468fb9643f"
       },
       "javascript": {
         "status": "implemented",
@@ -950,7 +950,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "c1d8fc971f4872f5"
+        "fingerprint": "13eb8e612a81fe8b"
       }
     },
     {

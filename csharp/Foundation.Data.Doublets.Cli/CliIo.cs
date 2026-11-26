@@ -129,7 +129,7 @@ internal static class CliIo
         }
     }
 
-    internal static bool TryReadLinoInput(INamedTypesLinks<uint> links, string? inputPath)
+    internal static bool TryReadLinoInput(INamedTypesLinks<uint> links, string? inputPath, int maxDepth)
     {
         if (string.IsNullOrWhiteSpace(inputPath))
         {
@@ -138,7 +138,7 @@ internal static class CliIo
 
         try
         {
-            LinoDatabaseInput.ReadFromFile(links, inputPath);
+            LinoDatabaseInput.ReadFromFile(links, inputPath, maxDepth);
             return true;
         }
         catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is FormatException)

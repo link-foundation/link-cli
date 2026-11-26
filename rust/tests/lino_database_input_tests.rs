@@ -1,10 +1,49 @@
 use anyhow::Result;
-use link_cli::{import_lino_text, NamedTypeLinks};
+use link_cli::{import_lino_text, import_lino_text_with_max_depth, NamedTypeLinks};
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "common/storage.rs"]
 mod test_store;
 #[cfg(target_arch = "wasm32")]
 use crate::test_store;
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn library_import_rejects_invalid_limits_without_writing() -> Result<()> {
+    let (_file, mut storage) = test_store::links()?;
+    for depth in [0, 129] {
+        let error = import_lino_text_with_max_depth(&mut storage, "(new: a b)", depth).unwrap_err();
+        assert!(error.to_string().contains("integer from 1 to 128"));
+        assert!(storage.lino_lines().is_empty());
+    }
+    import_lino_text_with_max_depth(&mut storage, "(new: a b)", 1)?;
+    assert!(storage.get_by_name("new").is_some());
+    Ok(())
+}
+
+fn import_at_max_depth() -> Result<()> {
+    let (_file, mut storage) = test_store::links()?;
+    let input = format!("(root: end {}end{}", "(item ".repeat(127), ")".repeat(128));
+    import_lino_text_with_max_depth(&mut storage, &input, 128)?;
+    assert!(storage.get_by_name("root").is_some());
+    assert_eq!(storage.lino_lines().len(), 130);
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn depth_override_works_with_a_one_mib_caller_stack() -> Result<()> {
+    std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(import_at_max_depth)?
+        .join()
+        .unwrap()
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen_test::wasm_bindgen_test]
+fn depth_override_works_in_webassembly() -> Result<()> {
+    import_at_max_depth()
+}
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]

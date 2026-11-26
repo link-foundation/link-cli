@@ -6,7 +6,7 @@
 // through bin/clink.js and the Rust `clink` and compare them.
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -99,6 +99,34 @@ test('--structure prints the structure of a link and skips the query', async () 
   assert.deepEqual(result, { status: 0, out: '(2: (1: 1 1) 2)\n', err: '' });
   // The query was not run: the store still has two links.
   assert.equal((await clink(['--db', db, '--after'])).out, '(1: 1 1)\n(2: 1 2)\n');
+});
+
+test('LiNo import depth defaults to 64 and a bounded override applies to all aliases', async () => {
+  const db = newDb();
+  const input = `${db}.lino`;
+  const run = (...args) => clink(['--db', db, ...args]);
+  const document = (depth) => `(root: end ${'(item '.repeat(depth - 1)}end${')'.repeat(depth)}`;
+
+  writeFileSync(input, document(64));
+  assert.equal((await run('--in', input)).status, 0);
+  const before = await run('--after');
+  for (const [depth, limit, args] of [
+    [65, 64, ['--import']],
+    [129, 128, ['--in-max-depth=128', '--lino-input']],
+    [2, 1, ['--in-max-depth', '1', '--in']],
+  ]) {
+    writeFileSync(input, `(unwritten: fresh another)\n${document(depth)}`);
+    const failure = await run(...args, input);
+    assert.equal(failure.status, 1, failure.err);
+    assert.match(failure.err, new RegExp(`nesting depth exceeds the maximum of ${limit}`));
+    assert.deepEqual(await run('--after'), before);
+  }
+
+  writeFileSync(input, document(128));
+  const imported = await run('--in-max-depth', '128', '--lino-input', input, '--after');
+  assert.equal(imported.status, 0, imported.err);
+  assert.match(imported.out, /^\(root: end /m);
+  assert.equal(imported.out.trimEnd().split('\n').length, 130);
 });
 
 test('--structure of a missing link fails as in the Rust clink', async () => {

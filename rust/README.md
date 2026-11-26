@@ -60,6 +60,9 @@ limits are in the [main README](../README.md#concurrent-invocations).
 LiNo input is fully parsed and validated before any links or names change,
 including nested definitions. Invalid input leaves the store unchanged through
 both the CLI aliases and `import_lino_text`/`import_lino_file` library APIs.
+The default nesting limit is 64 levels. Use `--in-max-depth <N>` on the CLI
+or the library's `import_lino_text_with_max_depth` and
+`import_lino_file_with_max_depth` variants to set a limit from 1 to 128.
 
 For thousands of named links, enable the Rust lookup-index decorator:
 
