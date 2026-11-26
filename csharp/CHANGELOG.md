@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.1] - 2026-11-26
+
+`clink --transactions` writes no longer slow down as history grows (issue #195). The CLI journal is now an append-only `<db>.transitions.log` file (`FileTransitionLog`): a write appends its transitions and markers instead of rewriting the whole transitions store. A bounded `--retention` policy also compacts the journal on disk, so the file stays bounded. An existing `<db>.transitions.links` journal is imported once. CI runs a benchmark that fails when write N+100 is much slower than write N on a constant-size store.
+
+Also updates `links-notation` to 0.32.0.
+
 ## [5.3.0] - 2026-11-25
 
 Concurrent `clink` runs on one store no longer interleave their changes (#194).
