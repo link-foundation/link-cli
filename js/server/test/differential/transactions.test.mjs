@@ -3,11 +3,18 @@
 // the option edge cases of rust/src/main.rs (`parse_commit_mode`,
 // `parse_retention`, `run_with_transactions`, `run_with_vc`), compared byte
 // for byte. Log timestamps and transaction ids come from the clock, so they
-// are masked and the names sidecars that hold them are compared by name.
+// are masked, in the output and in the journals.
 // Skipped without CLINK_RUST or without bin/clink.js.
 import { existsSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { CLOCK_FILES, differential, JS, maskClock, skip as noRust } from './harness.mjs';
+import {
+  CLOCK_FILES,
+  differential,
+  JOURNAL_FILES,
+  JS,
+  maskClock,
+  skip as noRust,
+} from './harness.mjs';
 
 const skip = noRust || (existsSync(JS) ? false : `${JS} is missing`);
 
@@ -113,9 +120,9 @@ const groups = {
   ],
 };
 
-// CLOCK_FILES and the names sidecar of the `--transactions-file custom-log.links` log.
-const CLOCKED = new RegExp(`${CLOCK_FILES.source}|(^|/)custom-log\\.names\\.links$`);
-const options = { mask: maskClock, opaqueFiles: CLOCKED };
+// JOURNAL_FILES and the `--transactions-file custom-log.links` journal.
+const JOURNALS = new RegExp(`${JOURNAL_FILES.source}|(^|/)custom-log\\.links$`);
+const options = { mask: maskClock, opaqueFiles: CLOCK_FILES, journalFiles: JOURNALS };
 for (const [group, cases] of Object.entries(groups)) {
   describe(`differential: transactions, ${group}`, () => {
     for (const [name, steps] of cases) {

@@ -196,14 +196,24 @@ The trigger schema is link-backed, using named points such as `Always`, `Once`,
 Pass `--transactions` (or any flag in the family — `--transactions-file`,
 `--commit-mode`, `--retention`, `--log`) to wrap the storage in a
 `TransactionsDecorator`. Every Create / Update / Delete then writes a
-*reversible* transition into a sidecar links store — the log is itself a
-links database, so the same storage and tooling apply. The default
-sidecar is named like the database:
+*reversible* transition into a sidecar journal: an append-only text file
+with one entry per line, so a write costs one append no matter how long
+the history is. The default sidecar is named like the database:
 
 ```text
-data.links          # primary store
-data.transitions.links   # transitions log (sidecar)
+data.links              # primary store
+data.transitions.log    # transitions journal (sidecar)
 ```
+
+With `--retention sized:<n>` or `chunked:<n>:<dir>` the journal on disk is
+bounded too: once it holds about twice the entries the retained history
+needs, it is rewritten to those entries (written to
+`data.transitions.log.compact`, synced and renamed into place). Older
+versions kept the journal in a links store, `data.transitions.links`
+(plus `data.transitions.names.links`); it is imported into the text
+journal the first time `--transactions` opens the database, and an
+explicit `--transactions-file` that still holds a links store is converted
+in place (issue #195).
 
 Inspect the log with `--log`:
 

@@ -225,7 +225,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     internal const string TransitionNamePrefix = "__transactions:transition:";
 
     private readonly INamedTypesLinks<TLinkAddress> _inner;
-    private readonly INamedTypesLinks<TLinkAddress> _logStore;
+    private readonly ITransitionLogStore _logStore;
     private readonly bool _trace;
     private readonly object _lock = new();
     private readonly object _shutdownLock = new();
@@ -275,21 +275,49 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
       bool trace = false,
       Action? flushData = null,
       Action? flushLog = null)
+      : this(inner, new NamedTypesTransitionLog<TLinkAddress>(
+          logStore ?? throw new ArgumentNullException(nameof(logStore)), flushLog),
+          rowUndoPolicy, retentionPolicy, commitMode, trace, flushData)
+    {
+    }
+
+    /// <summary>
+    /// Journals into <paramref name="log"/>, such as a <see cref="FileTransitionLog"/>
+    /// whose size the retention policy bounds (issue #195).
+    /// </summary>
+    public TransactionsDecorator(
+      INamedTypesLinks<TLinkAddress> inner,
+      ITransitionLogStore log,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null)
+      : this(inner, log, RowUndoPolicy.Observed, retentionPolicy, commitMode, trace, flushData) { }
+
+    /// <summary>Journals into <paramref name="log"/> with the given row undo policy.</summary>
+    public TransactionsDecorator(
+      INamedTypesLinks<TLinkAddress> inner,
+      ITransitionLogStore log,
+      RowUndoPolicy rowUndoPolicy,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null)
       : base(inner)
     {
+        ArgumentNullException.ThrowIfNull(log);
         if (!Enum.IsDefined(rowUndoPolicy)) throw new ArgumentOutOfRangeException(nameof(rowUndoPolicy));
         RowUndoPolicy = rowUndoPolicy;
         _inner = inner;
-        _logStore = logStore;
+        _logStore = log;
         _retentionPolicy = retentionPolicy ?? LogRetentionPolicy.Default;
         _commitMode = commitMode;
         _trace = trace;
         var durableData = inner as IDurableLinks;
-        var durableLog = logStore as IDurableLinks;
         SupportsDurableCommit = (flushData is not null || durableData?.SupportsDurableFlush == true)
-            && (flushLog is not null || durableLog?.SupportsDurableFlush == true);
+            && log.SupportsDurableFlush;
         _flushData = flushData ?? (durableData?.SupportsDurableFlush == true ? durableData.Flush : static () => { });
-        _flushLog = flushLog ?? (durableLog?.SupportsDurableFlush == true ? durableLog.Flush : static () => { });
+        _flushLog = log.FlushLog;
         Recover();
         _backgroundWorker = RunBackgroundWorkerAsync();
     }
@@ -582,17 +610,17 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         }
     }
 
-    internal void WriteTransitionToLog(JournalRecord<TLinkAddress> transition)
-    {
-        var link = _logStore.CreateAndUpdate(_logStore.Constants.Null, _logStore.Constants.Null);
-        var name = TransitionNamePrefix + transition.Serialize();
-        _logStore.SetName(link, name);
-    }
+    internal void WriteTransitionToLog(JournalRecord<TLinkAddress> transition) =>
+        AppendJournalEntry(TransitionNamePrefix + transition.Serialize());
 
     internal void WriteMarker(string name)
     {
-        var link = _logStore.CreateAndUpdate(_logStore.Constants.Null, _logStore.Constants.Null);
-        _logStore.SetName(link, name);
+        if (name.StartsWith(CommitMarkerPrefix, StringComparison.Ordinal)
+            || name.StartsWith(RollbackMarkerPrefix, StringComparison.Ordinal))
+        {
+            _lastDecision = name;
+        }
+        AppendJournalEntry(name);
     }
 
     private void EnforceRetentionLocked()
@@ -608,6 +636,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
                 EnforceChunkedLocked(chunked);
                 break;
         }
+        CompactJournalIfNeededLocked();
     }
 
     private void EnforceSizedLocked(long maxTransitions)
@@ -830,4 +859,17 @@ public class TransactionsDecorator : TransactionsDecorator<uint>
       Action? flushData = null,
       Action? flushLog = null)
       : base(inner, logStore, rowUndoPolicy, retentionPolicy, commitMode, trace, flushData, flushLog) { }
+
+    /// <summary>
+    /// Journals into <paramref name="log"/>, such as the
+    /// <see cref="FileTransitionLog"/> <c>clink</c> keeps next to its database.
+    /// </summary>
+    public TransactionsDecorator(
+      INamedTypesLinks<uint> inner,
+      ITransitionLogStore log,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null)
+      : base(inner, log, retentionPolicy, commitMode, trace, flushData) { }
 }

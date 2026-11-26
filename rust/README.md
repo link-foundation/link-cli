@@ -103,7 +103,7 @@ as a reversible transition in a sidecar links store. Pass `--vc`
 recorded transitions log:
 
 ```bash
-# Record reversible transitions into data.transitions.links
+# Record reversible transitions into data.transitions.log
 clink --db data.links --transactions --auto-create-missing-references '() ((1 1))'
 clink --db data.links --log
 

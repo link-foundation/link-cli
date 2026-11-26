@@ -2,6 +2,8 @@
 // (`FileTransitionLog` and `truncate_torn_tail`): one entry per line,
 // `fdatasync`ed on every append by default, an incomplete or zeroed tail
 // discarded on open and before a writer is reused after an I/O error.
+// Retention compacts the log by writing the retained entries to
+// `<log>.compact`, syncing it and renaming it over the log (issue #195).
 // `openExclusive` holds the `<log>.lock` sidecar lock of storage-lock.js until
 // `close`, as the Rust log holds it until drop.
 import {
@@ -14,6 +16,9 @@ import {
   mkdirSync,
   readFileSync,
   readSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
   writeSync,
 } from 'node:fs';
 import { dirname } from 'node:path';
@@ -85,12 +90,28 @@ function repairFile(path, flags, sync) {
   }
 }
 
+/** `compaction_path`: the temporary file a compaction renames over the log. */
+export const compactionPath = (path) => `${path}.compact`;
+
 /** The text of `bytes`, or the I/O error `read_to_string` reports. */
 function decodeUtf8(bytes) {
   try {
     return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
   } catch {
     throw new LinkError('I/O error: stream did not contain valid UTF-8');
+  }
+}
+
+/**
+ * Removes the file at `path` unless it is missing, as `std::fs::remove_file`
+ * with `NotFound` ignored. `unlinkSync` rather than `rmSync({ force: true })`:
+ * Bun reports a parent that is a file as `EFAULT` there instead of `ENOTDIR`.
+ */
+export function removeFile(path) {
+  try {
+    unlinkSync(path);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
   }
 }
 
@@ -109,6 +130,9 @@ export class FileTransitionLog {
     return io(() => {
       const parent = dirname(path);
       if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
+      // A compaction interrupted before its rename leaves only a stale copy;
+      // the log itself still holds the complete previous journal.
+      removeFile(compactionPath(path));
       repairFile(path, existsSync(path) ? 'r+' : 'w+', false);
       const fd = openFileSync(path, 'a+');
       try {
@@ -157,7 +181,7 @@ export class FileTransitionLog {
   /** Releases the file descriptor and the lock (the Rust log does on drop). */
   close() {
     try {
-      closeSync(this.fd);
+      if (this.fd !== null) closeSync(this.fd);
     } finally {
       this.lock?.release();
       this.lock = null;
@@ -172,9 +196,64 @@ export class FileTransitionLog {
   // truncation and its durable flush succeed, so repeated I/O faults retry.
   repairIfNeeded() {
     if (this.tailMayBeTorn) {
-      io(() => repairFile(this.filePath, 'r+', true));
+      io(() => {
+        repairFile(this.filePath, 'r+', true);
+        // A failed compaction may have released the writer.
+        if (this.fd === null) this.fd = openFileSync(this.filePath, 'a+');
+      });
       this.tailMayBeTorn = false;
     }
+  }
+
+  supportsCompaction() {
+    return true;
+  }
+
+  /**
+   * Atomically and durably replaces every entry with `entries`: after a
+   * crash the log holds either the old or the new journal.
+   */
+  compactLogEntries(entries) {
+    if (entries.some((entry) => entry === '' || /[\n\r\0]/.test(entry))) {
+      throw new InvalidFormatError(
+        'transition log entries must be non-empty single lines without NUL',
+      );
+    }
+    this.repairIfNeeded();
+    const temporary = compactionPath(this.filePath);
+    io(() => {
+      try {
+        const fd = openFileSync(temporary, 'w');
+        try {
+          writeFileSync(fd, entries.map((entry) => `${entry}\n`).join(''));
+          fsyncSync(fd);
+        } finally {
+          closeSync(fd);
+        }
+        // Release the writer first: Windows refuses to replace an open file.
+        // Until it is reopened, repair reopens it first.
+        this.tailMayBeTorn = true;
+        const writer = this.fd;
+        this.fd = null;
+        closeSync(writer);
+        renameSync(temporary, this.filePath);
+      } catch (error) {
+        removeFile(temporary);
+        throw error;
+      }
+      syncParentDirectory(this.filePath);
+    });
+    this.repairIfNeeded();
+  }
+
+  /** `ReplaceableTransitionLogStore`: compacts to `entries` unless already equal. */
+  replaceLogEntries(entries) {
+    const current = this.readLogEntries();
+    if (current.length === entries.length && current.every((entry, i) => entry === entries[i])) {
+      return false;
+    }
+    this.compactLogEntries(entries);
+    return true;
   }
 
   appendLogEntry(entry) {

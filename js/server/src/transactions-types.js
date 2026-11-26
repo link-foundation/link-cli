@@ -25,6 +25,8 @@ export const COMMIT_MARKER_PREFIX = '__transactions:commit:';
 export const ROLLBACK_MARKER_PREFIX = '__transactions:rollback:';
 export const APPLIED_MARKER_PREFIX = '__transactions:applied:';
 export const TRANSITION_NAME_PREFIX = '__transactions:transition:';
+/** The sequence watermark a compacted journal starts with (issue #195). */
+export const SEQUENCE_MARKER_PREFIX = '__transactions:sequence:';
 
 /**
  * `str::parse` of a Rust integer type, or `from_str_radix(text, 16)`: an
@@ -387,6 +389,16 @@ export function sidecarPath(databasePath, suffix) {
   return parent.endsWith('/') ? `${parent}${name}` : `${parent}/${name}`;
 }
 
-/** `make_transitions_database_filename`: `<stem>.transitions.links`. */
+/**
+ * `make_transitions_database_filename`: `<stem>.transitions.links`, the
+ * links-backed journal older versions kept (`make_legacy_transitions_filename`).
+ */
 export const makeTransitionsDatabaseFilename = (databasePath) =>
   sidecarPath(databasePath, '.transitions.links');
+
+/** `make_legacy_transitions_filename`: the same `<stem>.transitions.links`. */
+export const makeLegacyTransitionsFilename = makeTransitionsDatabaseFilename;
+
+/** `make_transitions_log_filename`: the append-only journal `<stem>.transitions.log`. */
+export const makeTransitionsLogFilename = (databasePath) =>
+  sidecarPath(databasePath, '.transitions.log');

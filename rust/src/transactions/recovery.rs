@@ -284,6 +284,8 @@ where
         self.applied = journal.applied;
         self.sequence_counter = journal.sequence;
         self.applied_sequence = journal.applied_sequence;
+        self.journal_entries = journal.entry_count;
+        self.last_decision = journal.last_decision;
 
         // An older failed checkpoint can precede a later applied commit. Redo
         // the whole committed suffix in order, including already-applied rows.
@@ -403,7 +405,8 @@ where
                 chunk_size,
                 archive_directory,
             } => self.enforce_chunked(chunk_size, &archive_directory),
-        }
+        }?;
+        self.compact_journal_if_needed()
     }
 
     fn enforce_sized(&mut self, max_transitions: u64) -> Result<(), LinkError> {
@@ -512,6 +515,11 @@ where
             writeln!(file, "{}", transition.serialize())?;
         }
         file.flush()?;
+        // Compaction may drop the archived records from the journal next;
+        // the archive must be durable before they leave it.
+        file.sync_all()?;
+        #[cfg(unix)]
+        std::fs::File::open(archive_directory)?.sync_all()?;
         if self.trace {
             crate::diagnostics::stderr!(
                 "[Transactions] Archived {} transitions to {}.",

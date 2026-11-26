@@ -12,8 +12,12 @@ import {
   runWithTransactions,
   runWithVc,
 } from '../src/main-transactions.js';
-import { CommitMode, INFINITE_RETENTION } from '../src/transactions-types.js';
-import { openVc, namedMemory } from './helpers/transactions.mjs';
+import {
+  CommitMode,
+  INFINITE_RETENTION,
+  makeTransitionsLogFilename,
+} from '../src/transactions-types.js';
+import { memoryLog, openVc, namedMemory } from './helpers/transactions.mjs';
 
 /** A writable stream that keeps what it is given. */
 const sink = () => ({
@@ -35,6 +39,12 @@ function world() {
     openNamedStorage(path, _cli) {
       context.opened.push(path);
       if (!stores.has(path)) stores.set(path, namedMemory());
+      return stores.get(path);
+    },
+    openJournal(database, explicit) {
+      const path = explicit ?? makeTransitionsLogFilename(database);
+      context.opened.push(path);
+      if (!stores.has(path)) stores.set(path, memoryLog());
       return stores.get(path);
     },
     async finish(cli, storage) {
@@ -140,7 +150,7 @@ describe('runWithTransactions', () => {
   it('opens the data store and the default log, and runs the pipeline', async () => {
     const context = world();
     await txRun(context);
-    assert.deepEqual(context.opened, ['db.links', 'db.transitions.links']);
+    assert.deepEqual(context.opened, ['db.links', 'db.transitions.log']);
     assert.equal(context.finished.length, 1);
     await txRun(context, { showLog: true });
     assert.equal(context.finished.length, 1);
@@ -149,8 +159,8 @@ describe('runWithTransactions', () => {
 
   it('honors --transactions-file', async () => {
     const context = world();
-    await txRun(context, { transactionsFile: 'custom.links' });
-    assert.deepEqual(context.opened, ['db.links', 'custom.links']);
+    await txRun(context, { transactionsFile: 'custom.log' });
+    assert.deepEqual(context.opened, ['db.links', 'custom.log']);
   });
 
   it('awaits the pipeline and rejects with its error', async () => {
@@ -160,17 +170,44 @@ describe('runWithTransactions', () => {
     };
     await assert.rejects(txRun(context), { message: 'pipeline failed' });
   });
+
+  it('closes the journal after every run, as Rust drops it (issue #195)', async () => {
+    const context = world();
+    let closed = 0;
+    const openJournal = context.openJournal;
+    context.openJournal = (database, explicit) =>
+      Object.assign(openJournal(database, explicit), { close: () => closed++ });
+    await txRun(context);
+    await txRun(context, { showLog: true });
+    await vcRun(context, { listTags: true });
+    context.query = () => {
+      throw new Error('pipeline failed');
+    };
+    await assert.rejects(txRun(context), { message: 'pipeline failed' });
+    await assert.rejects(vcRun(context), { message: 'pipeline failed' });
+    assert.equal(closed, 5);
+  });
+
+  it('closes the journal when the transactions cannot open', async () => {
+    const context = world();
+    let closed = 0;
+    context.openJournal = () => ({
+      ...memoryLog(),
+      readLogEntries() {
+        throw new Error('journal unreadable');
+      },
+      close: () => closed++,
+    });
+    await assert.rejects(txRun(context), { message: 'journal unreadable' });
+    assert.equal(closed, 1);
+  });
 });
 
 describe('runWithVc', () => {
   it('opens the version-control store next to the database or at --vc-file', async () => {
     const context = world();
     await vcRun(context);
-    assert.deepEqual(context.opened, [
-      'db.links',
-      'db.transitions.links',
-      'db.versioncontrol.links',
-    ]);
+    assert.deepEqual(context.opened, ['db.links', 'db.transitions.log', 'db.versioncontrol.links']);
     await vcRun(context, { vcFile: 'branches.links', listTags: true });
     assert.equal(context.opened.at(-1), 'branches.links');
     assert.equal(context.finished.length, 1);

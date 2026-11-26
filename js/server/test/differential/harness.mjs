@@ -71,24 +71,40 @@ export function maskClock(text) {
 }
 
 /**
- * The names sidecars of the transition log and of version control: they name
- * links by transaction id and time, so two Rust runs already write different
- * bytes. They are compared by name only; `--log`, `--list-tags` and
- * `--list-branches` check what they hold. `log.links` is the transition log
- * of `--transactions-file log.links`.
+ * The names sidecar of version control: it names links by transaction id and
+ * time, so two Rust runs already write different bytes. It is compared by
+ * name only; `--list-tags` and `--list-branches` check what it holds.
  */
-export const CLOCK_FILES = /(^|\/)(log|[^/]*\.transitions|[^/]*\.versioncontrol)\.names\.links$/;
+export const CLOCK_FILES = /(^|\/)[^/]*\.versioncontrol\.names\.links$/;
+
+/**
+ * The transitions journals: `<db>.transitions.log` and `log.links`, the
+ * journal of `--transactions-file log.links` (issue #195).
+ */
+export const JOURNAL_FILES = /(^|\/)([^/]*\.transitions\.log|log\.links)$/;
+
+/**
+ * A journal with the clock masked: every transaction id and the timestamp of
+ * every transition. The rest of each entry, and the order of the entries,
+ * must match.
+ */
+export function maskJournal(text) {
+  return text
+    .replace(/[0-9a-f]{32}/g, '<transaction>')
+    .replace(/^(__transactions:transition:v1\|<transaction>\|\d+\|)\d+\|/gm, '$1<time>|');
+}
 
 /**
  * Runs `steps` -- `{ args, input?, files? }`, where `files` are written into
  * the sandbox first -- through both executables and asserts that every step
  * and the final sandbox are identical. `mask` rewrites both outputs before
- * they are compared and `opaqueFiles` names files compared by name only.
- * Returns the Rust results.
+ * they are compared, `opaqueFiles` names files compared by name only and
+ * `journalFiles` names files compared after `maskJournal`. Returns the Rust
+ * results.
  */
 export function differential(
   steps,
-  { compareFiles = true, mask = (text) => text, opaqueFiles = null } = {},
+  { compareFiles = true, mask = (text) => text, opaqueFiles = null, journalFiles = null } = {},
 ) {
   const sandboxes = {
     rust: mkdtempSync(join(tmpdir(), 'clink-rust-')),
@@ -124,6 +140,14 @@ export function differential(
         );
         for (const [name, bytes] of Object.entries(rustFiles)) {
           if (opaqueFiles?.test(name)) continue;
+          if (journalFiles?.test(name)) {
+            assert.equal(
+              maskJournal(jsFiles[name].toString('utf8')),
+              maskJournal(bytes.toString('utf8')),
+              `${where}: the entries of ${name}`,
+            );
+            continue;
+          }
           assert.ok(jsFiles[name].equals(bytes), `${where}: the bytes of ${name}`);
         }
       }

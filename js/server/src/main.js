@@ -32,6 +32,7 @@ import {
   runWithVc,
 } from './main-transactions.js';
 import { NamedTypesDecorator } from './named-types.js';
+import { openTransitionsJournal } from './transactions-journal-file.js';
 import { PermissionPolicy } from './permissions.js';
 import { exportStoreFile, importStoreFile } from './protocol-store-file.js';
 import { QueryProcessor } from './query-processor.js';
@@ -156,7 +157,8 @@ export function runBare(cli, io = {}) {
 
 /**
  * The store files this run may save: the database (whose lock covers its
- * default `<db>.*.links` side stores) and every side store named explicitly.
+ * default side stores, `<db>.*.links` and the `<db>.transitions.log` journal)
+ * and every side store named explicitly.
  */
 export function lockedStores(cli) {
   const stores = [cli.db];
@@ -253,11 +255,14 @@ export async function main(args, io = {}) {
 
 /** Opens the store -- bare, in transactions or under version control -- and runs the invocation. */
 async function runLocked(cli, commitMode, retention, io) {
+  const err = io.stderr ?? process.stderr;
   const context = {
     finish: (finishCli, storage) => finish(finishCli, storage, io),
     openNamedStorage: (path, openCli) => openNamedStorage(path, openCli, io),
+    openJournal: (database, explicit) =>
+      openTransitionsJournal(database, explicit, { trace: cli.trace, stderr: err }),
     out: io.stdout ?? process.stdout,
-    err: io.stderr ?? process.stderr,
+    err,
   };
   if (cli.vcRequested()) await runWithVc(cli, commitMode, retention, context);
   else if (cli.transactionsRequested())

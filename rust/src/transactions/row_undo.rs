@@ -146,8 +146,7 @@ where
         // Validate before any append, including adapters returning duplicate rows.
         UndoImage::<T>::parse(&payload)?;
         self.current.as_mut().expect("open transaction").image = Some(image);
-        self.log_store
-            .append_log_entry(&format!("{TRANSITION_NAME_PREFIX}{payload}"))?;
+        self.append_journal_entry(&format!("{TRANSITION_NAME_PREFIX}{payload}"))?;
         self.log_store.flush_log()?;
         if self.trace {
             crate::diagnostics::stderr!("[Transactions] Prepared row undo image tx={owner:032x}.");

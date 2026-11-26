@@ -4,7 +4,8 @@ use std::collections::{HashMap, HashSet};
 use doublets::data::LinkReference;
 
 use super::types::{
-    APPLIED_MARKER_PREFIX, COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX,
+    APPLIED_MARKER_PREFIX, COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, SEQUENCE_MARKER_PREFIX,
+    TRANSITION_NAME_PREFIX,
 };
 use super::undo_image::UndoImage;
 use super::JournalRecord;
@@ -18,6 +19,10 @@ pub(super) struct RecoveryJournal<T> {
     pub(super) sequence: i64,
     pub(super) applied_sequence: i64,
     pub(super) images: Vec<UndoImage<T>>,
+    /// The newest commit or rollback decision, kept by compaction.
+    pub(super) last_decision: Option<String>,
+    /// Number of entries read, which compaction uses to measure growth.
+    pub(super) entry_count: usize,
 }
 
 impl<T: LinkReference> RecoveryJournal<T> {
@@ -30,6 +35,8 @@ impl<T: LinkReference> RecoveryJournal<T> {
         let mut applied_sequence = 0;
         let mut images: Vec<UndoImage<T>> = Vec::new();
         let mut image_owners = HashMap::<u128, usize>::new();
+        let mut last_decision = None;
+        let entry_count = entries.len();
         for entry in entries {
             if let Some(payload) = entry.strip_prefix(TRANSITION_NAME_PREFIX) {
                 if payload.starts_with("v3|") {
@@ -73,12 +80,21 @@ impl<T: LinkReference> RecoveryJournal<T> {
                     return Err(contradiction(owner));
                 }
                 committed.insert(owner);
+                last_decision = Some(entry);
             } else if let Some(owner) = entry.strip_prefix(ROLLBACK_MARKER_PREFIX) {
                 let owner = parse_owner(owner, "rollback")?;
                 if committed.contains(&owner) {
                     return Err(contradiction(owner));
                 }
                 rolled_back.insert(owner);
+                last_decision = Some(entry);
+            } else if let Some(value) = entry.strip_prefix(SEQUENCE_MARKER_PREFIX) {
+                let seq = value
+                    .parse::<i64>()
+                    .ok()
+                    .filter(|seq| *seq > 0)
+                    .ok_or_else(|| LinkError::InvalidFormat("invalid sequence marker".into()))?;
+                sequence = sequence.max(seq);
             } else if let Some(value) = entry.strip_prefix(APPLIED_MARKER_PREFIX) {
                 let seq = value
                     .parse::<i64>()
@@ -131,6 +147,8 @@ impl<T: LinkReference> RecoveryJournal<T> {
             sequence,
             applied_sequence,
             images,
+            last_decision,
+            entry_count,
         })
     }
 }

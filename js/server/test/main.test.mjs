@@ -6,7 +6,7 @@
 // through bin/clink.js and the Rust `clink` and compare them.
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -111,6 +111,26 @@ test('--structure of a missing link fails as in the Rust clink', async () => {
   });
 });
 
+test('clink keeps its journal in a bounded text file (issue #195)', async () => {
+  const db = newDb();
+  for (let i = 1; i <= 3; i++) {
+    const result = await clink([
+      '--db',
+      db,
+      '--transactions',
+      '--retention',
+      'sized:1',
+      `() ((${i}: ${i} ${i}))`,
+    ]);
+    assert.equal(result.status, 0, result.err);
+  }
+  const journal = db.replace(/\.links$/, '.transitions.log');
+  assert.ok(!existsSync(db.replace(/\.links$/, '.transitions.links')));
+  const entries = readFileSync(journal, 'utf8').split('\n').slice(0, -1);
+  assert.ok(entries.length > 0);
+  assert.ok(entries.every((entry) => entry.startsWith('__transactions:')));
+});
+
 test('--transactions runs the query pipeline over the transitions log', async () => {
   const db = newDb();
   // Every expected text is what the Rust clink prints for the same invocation.
@@ -130,7 +150,8 @@ test('--transactions runs the query pipeline over the transitions log', async ()
       err: '',
     },
   );
-  assert.ok(existsSync(db.replace(/\.links$/, '.transitions.links')));
+  assert.ok(existsSync(db.replace(/\.links$/, '.transitions.log')));
+  assert.ok(!existsSync(db.replace(/\.links$/, '.transitions.links')));
   const log = await clink(['--db', db, '--log']);
   assert.equal(log.status, 0);
   const transitions = log.out

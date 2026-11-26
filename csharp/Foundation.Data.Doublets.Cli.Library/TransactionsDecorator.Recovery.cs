@@ -47,6 +47,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         _applied.UnionWith(journal.Applied);
         _sequenceCounter = journal.Sequence;
         _appliedSequence = journal.AppliedSequence;
+        _journalEntries = journal.EntryCount;
+        _lastDecision = journal.LastDecision;
 
         // An older async checkpoint can fail before a later commit has
         // already been applied. Redo the whole suffix in sequence so the

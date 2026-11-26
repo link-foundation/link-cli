@@ -105,7 +105,7 @@ fn explicit_commit_modes_preserve_commits_across_reopening() {
             run(&db, &["--transactions", "--after"]).success(),
             "(1: 1 1)\n"
         );
-        assert!(dir.path().join("data.transitions.links").exists());
+        assert!(dir.path().join("data.transitions.log").exists());
     }
 }
 

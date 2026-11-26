@@ -23,7 +23,9 @@ script works for either binary — pick the one you have installed:
 
 1. Creates two links inside an explicit `--transactions` session — the
    writes go to `data.links` and a side-car transitions log is written
-   to `data.transitions.links`.
+   to `data.transitions.log` (an append-only text journal; a
+   `data.transitions.links` store written by older versions is imported
+   once).
 2. Prints the resulting transitions log with `--log`, so you can see
    the `Create / Update / Delete` records, their sequence numbers, the
    transaction ids that grouped them, and the (index, source, target)

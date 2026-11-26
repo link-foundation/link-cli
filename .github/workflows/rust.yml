@@ -552,6 +552,11 @@ jobs:
       - name: Build release
         run: cargo build --manifest-path rust/Cargo.toml --release --verbose
 
+      # Write N+100 of `clink --transactions` must not be much slower than
+      # write N on a constant-size store (issue #195).
+      - name: Benchmark transactional writes
+        run: node .github/scripts/transactions-benchmark.mjs -- rust/target/release/clink
+
       - name: Check package
         run: cargo package --manifest-path rust/Cargo.toml --list --allow-dirty
 

@@ -178,7 +178,7 @@ export class TransactionsRecording extends TransactionsReplay {
   }
 
   writeTransitionToLog(transition) {
-    this.transitionLog.appendLogEntry(`${TRANSITION_NAME_PREFIX}${serializeRecord(transition)}`);
+    this.appendJournalEntry(`${TRANSITION_NAME_PREFIX}${serializeRecord(transition)}`);
   }
 
   // ----- Names (names.rs) -----------------------------------------------
@@ -326,7 +326,7 @@ export class TransactionsRecording extends TransactionsReplay {
     // Validate before any append, including adapters returning duplicate rows.
     parseImage(payload);
     this.current.image = image;
-    this.transitionLog.appendLogEntry(`${TRANSITION_NAME_PREFIX}${payload}`);
+    this.appendJournalEntry(`${TRANSITION_NAME_PREFIX}${payload}`);
     this.transitionLog.flushLog();
     this.traceLine(`Prepared row undo image tx=${hex32(owner)}.`);
   }

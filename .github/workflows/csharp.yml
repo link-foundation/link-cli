@@ -474,6 +474,11 @@ jobs:
       - name: Build Release
         run: dotnet build --no-restore --configuration Release
 
+      # Write N+100 of `clink --transactions` must not be much slower than
+      # write N on a constant-size store (issue #195).
+      - name: Benchmark transactional writes
+        run: node ../.github/scripts/transactions-benchmark.mjs -- dotnet Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+
       - name: Pack NuGet package
         run: |
           dotnet pack --no-build --configuration Release --output ./artifacts

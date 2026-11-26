@@ -1,6 +1,6 @@
 //! A shallow recursive oracle checks compatibility independently of traversal.
 use super::*;
-use crate::LinkStorage;
+use crate::{LinkStorage, TransactionsDecorator};
 
 fn reference(vc: &VersionControlDecorator, name: &str, visited: &mut HashSet<String>) -> Vec<i64> {
     let Some(info) = vc.branches.get(name) else {

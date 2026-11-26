@@ -263,7 +263,7 @@ where
         &mut self,
         transition: &JournalRecord<T>,
     ) -> Result<(), LinkError> {
-        self.log_store.append_log_entry(&format!(
+        self.append_journal_entry(&format!(
             "{TRANSITION_NAME_PREFIX}{}",
             transition.serialize()
         ))

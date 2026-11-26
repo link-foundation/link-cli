@@ -102,9 +102,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
     {
         // Only uncertain retries scan; ordinary commits and known-checkpoint
         // retries keep their existing cost and never append another decision.
-        var any = _logStore.Constants.Any;
-        foreach (var row in _logStore.All(new Link<TLinkAddress>(any, any, any)))
-            if (row is not null && string.Equals(_logStore.GetName(row[0]), marker, StringComparison.Ordinal)) return true;
+        foreach (var entry in _logStore.ReadLogEntries())
+            if (string.Equals(entry, marker, StringComparison.Ordinal)) return true;
         return false;
     }
 }

@@ -21,7 +21,9 @@ import {
   INFINITE_RETENTION,
   journalRecord,
   KIND_NAMES,
+  makeLegacyTransitionsFilename,
   makeTransitionsDatabaseFilename,
+  makeTransitionsLogFilename,
   parseI64,
   parseImage,
   parseRecord,
@@ -363,6 +365,9 @@ describe('sidecar file names', () => {
     ];
     for (const [path, expected] of cases) {
       assert.equal(makeTransitionsDatabaseFilename(path), expected, path);
+      assert.equal(makeLegacyTransitionsFilename(path), expected, path);
+      const journal = expected.replace(/\.transitions\.links$/, '.transitions.log');
+      assert.equal(makeTransitionsLogFilename(path), journal, path);
     }
     assert.equal(sidecarPath('/x/y.links', '.z'), '/x/y.z');
   });

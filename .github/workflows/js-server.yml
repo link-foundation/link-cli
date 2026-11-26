@@ -151,6 +151,11 @@ jobs:
       - name: Unit tests and complete production coverage
         run: npm run test:coverage
 
+      # Write N+100 of `clink --transactions` must not be much slower than
+      # write N on a constant-size store (issue #195).
+      - name: Benchmark transactional writes
+        run: node ../../.github/scripts/transactions-benchmark.mjs -- node bin/clink.js
+
       - name: Unit tests on Bun
         run: bun test --timeout 60000 test/
 

@@ -98,10 +98,17 @@ export class TransactionsDecorator extends TransactionsRecording {
     this.trace = trace;
     this.stderr = stderr;
     this.rowUndo = RowUndoPolicy.Observed;
+    // Entries in the durable journal, and its newest commit/rollback marker.
+    this.journalEntries = 0;
+    this.lastDecision = null;
     this.recover();
   }
 
-  /** Conventional sidecar filename for the transitions log. */
+  /**
+   * Conventional filename of the links-backed transitions log
+   * (`<stem>.transitions.links`). `clink` now keeps its journal in
+   * `makeTransitionsLogFilename` and imports this store once.
+   */
   static makeTransitionsDatabaseFilename(databasePath) {
     return makeTransitionsDatabaseFilename(databasePath);
   }

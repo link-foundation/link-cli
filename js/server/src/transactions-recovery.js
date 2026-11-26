@@ -6,7 +6,7 @@
 // `TransactionsReplay` is the base of `TransactionsDecorator`
 // (transactions.js); its methods work on the decorator's state, as the Rust
 // `impl` blocks of those files do.
-import { closeSync, mkdirSync, openSync, writeSync } from 'node:fs';
+import { closeSync, fsyncSync, mkdirSync, openSync, writeSync } from 'node:fs';
 
 import { ioErrorText } from './error-report.js';
 import { InvalidFormatError, StorageError, TransactionError } from './errors.js';
@@ -22,13 +22,15 @@ import {
   parseU128Hex,
   ROLLBACK_MARKER_PREFIX,
   sameRecord,
+  SEQUENCE_MARKER_PREFIX,
   serializeImage,
   serializeRecord,
   TRANSITION_NAME_PREFIX,
   TransitionKind,
   validateRecord,
 } from './transactions-types.js';
-import { io } from './transactions-storage.js';
+import { compactJournalIfNeeded } from './transactions-compaction.js';
+import { io, syncParentDirectory } from './transactions-storage.js';
 
 let transactionCounter = 0n;
 const U64_MASK = (1n << 64n) - 1n;
@@ -65,6 +67,8 @@ export function parseJournal(entries) {
   let appliedSequence = 0n;
   const images = [];
   const imageOwners = new Map();
+  // The newest commit or rollback decision, which compaction keeps.
+  let lastDecision = null;
   for (const entry of entries) {
     if (entry.startsWith(TRANSITION_NAME_PREFIX)) {
       const payload = entry.slice(TRANSITION_NAME_PREFIX.length);
@@ -102,10 +106,16 @@ export function parseJournal(entries) {
       const owner = parseOwner(entry.slice(COMMIT_MARKER_PREFIX.length), 'commit');
       if (rolledBack.has(owner)) throw contradiction(owner);
       committed.add(owner);
+      lastDecision = entry;
     } else if (entry.startsWith(ROLLBACK_MARKER_PREFIX)) {
       const owner = parseOwner(entry.slice(ROLLBACK_MARKER_PREFIX.length), 'rollback');
       if (committed.has(owner)) throw contradiction(owner);
       rolledBack.add(owner);
+      lastDecision = entry;
+    } else if (entry.startsWith(SEQUENCE_MARKER_PREFIX)) {
+      const seq = parseI64(entry.slice(SEQUENCE_MARKER_PREFIX.length));
+      if (seq === null || seq <= 0n) throw new InvalidFormatError('invalid sequence marker');
+      if (seq > sequence) sequence = seq;
     } else if (entry.startsWith(APPLIED_MARKER_PREFIX)) {
       const seq = parseI64(entry.slice(APPLIED_MARKER_PREFIX.length));
       if (seq === null) throw new InvalidFormatError('invalid applied marker');
@@ -140,7 +150,17 @@ export function parseJournal(entries) {
       pendingBases.add(image.base);
     }
   }
-  return { log, committed, rolledBack, applied, sequence, appliedSequence, images };
+  return {
+    log,
+    committed,
+    rolledBack,
+    applied,
+    sequence,
+    appliedSequence,
+    images,
+    lastDecision,
+    entryCount: entries.length,
+  };
 }
 
 /**
@@ -166,7 +186,22 @@ export class TransactionsReplay extends NamedTypeLinks {
   }
 
   writeMarker(name) {
-    this.transitionLog.appendLogEntry(name);
+    if (name.startsWith(COMMIT_MARKER_PREFIX) || name.startsWith(ROLLBACK_MARKER_PREFIX)) {
+      this.lastDecision = name;
+    }
+    this.appendJournalEntry(name);
+  }
+
+  /** Appends one journal entry, counting it towards the compaction budget. */
+  appendJournalEntry(entry) {
+    // Count even a failed append: it may have reached the file.
+    this.journalEntries += 1;
+    this.transitionLog.appendLogEntry(entry);
+  }
+
+  /** Number of entries the durable journal currently holds. */
+  journalEntryCount() {
+    return this.journalEntries;
   }
 
   /** Applies a single transition without writing a new log entry. */
@@ -328,6 +363,8 @@ export class TransactionsReplay extends NamedTypeLinks {
     this.applied = journal.applied;
     this.sequenceCounter = journal.sequence;
     this.appliedSeq = journal.appliedSequence;
+    this.journalEntries = journal.entryCount;
+    this.lastDecision = journal.lastDecision;
 
     // An older failed checkpoint can precede a later applied commit. Redo the
     // whole committed suffix in order, including already-applied rows.
@@ -408,6 +445,7 @@ export class TransactionsReplay extends NamedTypeLinks {
     else if (policy.kind === 'chunked') {
       this.enforceChunked(policy.chunkSize, policy.archiveDirectory);
     }
+    compactJournalIfNeeded(this);
   }
 
   enforceSized(maxTransitions) {
@@ -475,9 +513,13 @@ export class TransactionsReplay extends NamedTypeLinks {
       for (const transition of archived) {
         io(() => writeSync(fd, `${serializeRecord(transition)}\n`));
       }
+      // Compaction may drop the archived records from the journal next;
+      // the archive must be durable before they leave it.
+      io(() => fsyncSync(fd));
     } finally {
       closeSync(fd);
     }
+    syncParentDirectory(path);
     this.traceLine(`Archived ${archived.length} transitions to ${path}.`);
     this.records.splice(0, chunk.length);
   }

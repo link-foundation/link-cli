@@ -78,9 +78,12 @@ share a store exclude each other.
 
 ### Transactions
 
-`TransactionsDecorator` logs every write to `<db>.transitions.links` and runs
+`TransactionsDecorator` logs every write to a transitions journal and runs
 crash recovery when it opens: a transaction that never committed is rolled
-back.
+back. The journal can be a links store, as below, or an append-only
+`FileTransitionLog`, which `clink --transactions` keeps in
+`<db>.transitions.log` and which `sized`/`chunked` retention compacts so
+it stays bounded on disk.
 
 ```js
 import { NamedTypesDecorator, TransactionsDecorator } from '@link-foundation/link-cli-server';

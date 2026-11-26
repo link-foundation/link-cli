@@ -4,8 +4,10 @@
 //
 // `runWithTransactions` and `runWithVc` take the pipeline from main.js in
 // `context`: `finish(cli, storage)` runs the query pipeline over a store,
-// `openNamedStorage(path, cli)` opens a `NamedTypesDecorator`, and `out` and
-// `err` are the standard streams.
+// `openNamedStorage(path, cli)` opens a `NamedTypesDecorator`,
+// `openJournal(database, explicit)` opens the transitions journal (main.js
+// passes `openTransitionsJournal` of transactions-journal-file.js), and `out`
+// and `err` are the standard streams.
 import { trim } from './text-storage-format.js';
 import { TransactionsDecorator } from './transactions.js';
 import {
@@ -13,7 +15,6 @@ import {
   hex32,
   INFINITE_RETENTION,
   KIND_NAMES,
-  makeTransitionsDatabaseFilename,
   parseI64,
   parseRetentionPolicy,
 } from './transactions-types.js';
@@ -61,27 +62,53 @@ function printLog(transactions, out) {
   }
 }
 
-/** Opens the data store and its transitions log under a `TransactionsDecorator`. */
-function openTransactions(cli, commitMode, retention, { openNamedStorage, err }) {
+/**
+ * Opens the data store and its append-only journal (`<db>.transitions.log`
+ * or `--transactions-file`) under a `TransactionsDecorator`.
+ */
+function openTransactions(cli, commitMode, retention, { openNamedStorage, openJournal, err }) {
   const dataLinks = openNamedStorage(cli.db, cli);
-  const logLinks = openNamedStorage(
-    cli.transactionsFile ?? makeTransitionsDatabaseFilename(cli.db),
-    cli,
-  );
-  return new TransactionsDecorator(dataLinks, logLinks, retention, commitMode, cli.trace, {
-    stderr: err,
-  });
+  const journal = openJournal(cli.db, cli.transactionsFile);
+  try {
+    const tx = new TransactionsDecorator(dataLinks, journal, retention, commitMode, cli.trace, {
+      stderr: err,
+    });
+    return { tx, journal };
+  } catch (error) {
+    closeJournal(journal);
+    throw error;
+  }
+}
+
+/**
+ * Closes the journal a run opened, as the Rust `clink` drops it when the run
+ * returns: `main` also runs in-process, where an open descriptor would keep
+ * the file (and its lock) busy, and Windows could not delete it.
+ */
+function closeJournal(journal) {
+  journal?.close?.();
+}
+
+/** Runs `body(tx)` over the opened transactions and closes their journal after. */
+async function withTransactions(cli, commitMode, retention, context, body) {
+  const { tx, journal } = openTransactions(cli, commitMode, retention, context);
+  try {
+    return await body(tx);
+  } finally {
+    closeJournal(journal);
+  }
 }
 
 /** `--transactions`, `--log` and the other transactions options without version control. */
 export async function runWithTransactions(cli, commitMode, retention, context) {
-  const tx = openTransactions(cli, commitMode, retention, context);
-  if (cli.showLog) {
-    printLog(tx, context.out);
-    tx.save();
-    return;
-  }
-  await context.finish(cli, tx);
+  await withTransactions(cli, commitMode, retention, context, async (tx) => {
+    if (cli.showLog) {
+      printLog(tx, context.out);
+      tx.save();
+      return;
+    }
+    await context.finish(cli, tx);
+  });
 }
 
 /** The `(name, sequence)` of a `--tag` spec: `NAME` or `NAME=POINT`. */
@@ -99,13 +126,19 @@ function resolveTag(vc, spec) {
 
 /** `--vc` and the checkout, branch, tag and listing options. */
 export async function runWithVc(cli, commitMode, retention, context) {
+  await withTransactions(cli, commitMode, retention, context, (tx) => runVc(cli, tx, context));
+}
+
+/** The `--vc` steps of `runWithVc` over the opened transactions. */
+async function runVc(cli, tx, context) {
   const { out, err } = context;
-  const tx = openTransactions(cli, commitMode, retention, context);
   const vcLinks = context.openNamedStorage(
     cli.vcFile ?? makeVersionControlDatabaseFilename(cli.db),
     cli,
   );
-  const vc = new VersionControlDecorator(tx, vcLinks, cli.trace, { stderr: err });
+  const vc = new VersionControlDecorator(tx, vcLinks, cli.trace, {
+    stderr: err,
+  });
 
   // 1) --checkout (resolves seq or tag).
   if (cli.checkout != null) {

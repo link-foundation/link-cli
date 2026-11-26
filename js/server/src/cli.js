@@ -158,7 +158,7 @@ const HELP_TEXT = [
   '          Store persistent transformation triggers directly in the main links\n',
   '          database\n',
   '      --transactions\n',
-  '          Enable the transactions layer (default log path: <db>.transitions.links)\n',
+  '          Enable the transactions layer (default log path: <db>.transitions.log)\n',
   '      --transactions-file <FILE>\n',
   '          Path to the transitions log store (implies --transactions)\n',
   '      --commit-mode <MODE>\n',

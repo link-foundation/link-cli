@@ -25,7 +25,7 @@ mod movement;
 #[cfg(test)]
 mod path_contract_tests;
 mod publication;
-use crate::transactions::{TransactionHandle, TransactionsDecorator};
+use crate::transactions::{GenericTransactionsDecorator, TransactionHandle, TransitionLogStore};
 use movement::{MovementIntent, MovementState, MOVEMENT_PREFIX};
 use publication::{PublicationIntent, PUBLICATION_PREFIX};
 
@@ -62,10 +62,20 @@ impl BranchInfo {
 /// transitions log produced by a [`TransactionsDecorator`].
 pub type VersionControlDecorator = GenericVersionControlDecorator<NamedTypesDecorator>;
 
+/// Version control over the append-only journal `clink` uses (issue #195).
+pub type FileVersionControlDecorator =
+    GenericVersionControlDecorator<NamedTypesDecorator, crate::FileTransitionLog>;
+
 /// Version control over a replaceable metadata store using the common links API.
 /// The default alias keeps the existing mapped metadata store and public API.
-pub struct GenericVersionControlDecorator<B: NamedTypeLinks> {
-    transactions: TransactionsDecorator,
+///
+/// `L` is the transitions log of the wrapped transactions layer; `clink`
+/// uses the append-only [`FileTransitionLog`](crate::FileTransitionLog).
+pub struct GenericVersionControlDecorator<
+    B: NamedTypeLinks,
+    L: TransitionLogStore = NamedTypesDecorator,
+> {
+    transactions: GenericTransactionsDecorator<u32, NamedTypesDecorator, L>,
     branches_store: B,
     branches: HashMap<String, BranchInfo>,
     tags: BTreeMap<String, i64>,
@@ -90,9 +100,9 @@ struct VersionControlTransactionState {
     intent_link: u32,
 }
 
-impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
+impl<B: NamedTypeLinks, L: TransitionLogStore> GenericVersionControlDecorator<B, L> {
     pub fn new(
-        transactions: TransactionsDecorator,
+        transactions: GenericTransactionsDecorator<u32, NamedTypesDecorator, L>,
         branches_store: B,
         trace: bool,
     ) -> Result<Self> {
@@ -163,11 +173,13 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
         Ok(())
     }
 
-    pub fn transactions(&self) -> &TransactionsDecorator {
+    pub fn transactions(&self) -> &GenericTransactionsDecorator<u32, NamedTypesDecorator, L> {
         &self.transactions
     }
 
-    pub fn transactions_mut(&mut self) -> &mut TransactionsDecorator {
+    pub fn transactions_mut(
+        &mut self,
+    ) -> &mut GenericTransactionsDecorator<u32, NamedTypesDecorator, L> {
         &mut self.transactions
     }
 
@@ -319,7 +331,9 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
 
     fn run_version_write<T>(
         &mut self,
-        write: impl FnOnce(&mut TransactionsDecorator) -> std::result::Result<T, crate::LinkError>,
+        write: impl FnOnce(
+            &mut GenericTransactionsDecorator<u32, NamedTypesDecorator, L>,
+        ) -> std::result::Result<T, crate::LinkError>,
     ) -> Result<T> {
         self.ensure_write_allowed()?;
         let automatic = self.active_transaction.is_none();

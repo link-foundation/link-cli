@@ -124,13 +124,13 @@ var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output
 
 var transactionsOption = new Option<bool>("--transactions")
 {
-    Description = "Enable the transactions layer (default log path: <db>.transitions.links)",
+    Description = "Enable the transactions layer (default log path: <db>.transitions.log)",
     DefaultValueFactory = _ => false
 };
 
 var transactionsFileOption = new Option<string?>("--transactions-file")
 {
-    Description = "Path to the transitions log store (default: <db>.transitions.links). Implies --transactions."
+    Description = "Path to the transitions log store (default: <db>.transitions.log). Implies --transactions."
 };
 
 var commitModeOption = new Option<string?>("--commit-mode")
@@ -477,9 +477,10 @@ rootCommand.SetAction(
       // including when construction of a later layer fails.
       using var baseLinks = new NamedTypesDecorator<uint>(db, trace);
       INamedTypesLinks<uint> decoratedLinks = baseLinks;
+      // The journal is an append-only text file whose size retention bounds;
+      // a links-backed journal older versions wrote is imported once (#195).
       using var transitionsStore = transactionsRequested
-        ? new NamedTypesDecorator<uint>(!string.IsNullOrWhiteSpace(transactionsPathRaw)
-            ? transactionsPathRaw : TransactionsDecorator.MakeTransitionsDatabaseFilename(db), trace)
+        ? TransitionsJournal.Open(db, transactionsPathRaw, trace)
         : null;
       using var transactionsLinks = transitionsStore is not null
         ? new TransactionsDecorator(baseLinks, transitionsStore, retentionPolicy, commitMode, trace)
