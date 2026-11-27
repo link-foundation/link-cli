@@ -12,14 +12,28 @@ TEMPLATES = ("rust", "js", "csharp", "python", "java", "cpp")
 
 def ci_input(path: str) -> bool:
     """Include workflow-owned files, CI helpers, hooks, and root CI policies."""
+    filename = Path(path).name
     return (
-        path.startswith((".github/", "scripts/", "parity/"))
+        path.startswith(
+            (
+                ".github/",
+                ".githooks/",
+                ".husky/",
+                ".ci/",
+                ".config/",
+                "ci/",
+                "scripts/",
+                "parity/",
+            )
+        )
         or re.match(r"^(csharp|js|rust)/scripts/", path) is not None
         or re.search(
-            r"^\.(pre-commit|lychee|secretlint|actionlint|zizmor|codecov|package-registry-manager)",
-            path,
+            r"^\.(pre-commit|lychee|secretlint|actionlint|zizmor|codecov|package-registry-manager"
+            r"|prettier|editorconfig|clang-format|shellcheck)",
+            filename,
         )
         is not None
+        or filename.startswith(("eslint.config.", "rustfmt."))
     )
 
 

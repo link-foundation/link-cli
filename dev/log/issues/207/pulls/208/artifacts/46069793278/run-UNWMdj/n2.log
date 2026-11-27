@@ -1,0 +1,5 @@
+{"level":"warn","ts":"2026-11-27T21:38:42.097657Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_BIN=/home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd"}
+{"level":"warn","ts":"2026-11-27T21:38:42.097775Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_TEST_VERBOSE=0"}
+{"level":"warn","ts":"2026-11-27T21:38:42.099607Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T21:38:42.099740Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T21:38:42.117541Z","caller":"auth/store.go:1137","msg":"simple token is not cryptographically signed"}

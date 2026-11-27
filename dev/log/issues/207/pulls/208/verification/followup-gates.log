@@ -1,0 +1,14 @@
+JavaScript quality: 582 files, 0 formatting/lint findings, 0 near the line limit
+ℹ tests 422
+ℹ suites 0
+ℹ pass 422
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11698.390074
+
+Actionlint and ShellCheck completed successfully.
+No findings to report. Good job! (3 ignored, 33 suppressed)
+No findings to report. Good job! (28 ignored, 8 suppressed)
+Secrets scan: 5010 tracked files checked, including 526 file(s) inside tarballs

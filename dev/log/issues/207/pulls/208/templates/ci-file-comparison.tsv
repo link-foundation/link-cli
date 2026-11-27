@@ -77,6 +77,7 @@ link-cli	.lycheeignore	e372dbfaee03b69c73f3bc75097bf4b7c010a981	documentation an
 link-cli	.package-registry-manager.json	f8cff3971775066502c0c738af3186b1617fe378	registry and release	-
 link-cli	.pre-commit-config.yaml	1fc3ef23bf4be19a19df2ff13653fe05c95dc5c3	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
 link-cli	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	rust/.secretlintrc.json (identical), js/.secretlintrc.json (identical), python/.secretlintrc.json (identical), cpp/.secretlintrc.json (identical)
+link-cli	csharp/.editorconfig	3a87ac2d1b4d7f2dca69e9efcfbdcf84ee64eea4	repository or language-specific infrastructure	csharp/.editorconfig (same stem), cpp/.editorconfig (same stem)
 link-cli	csharp/scripts/bump-version.mjs	4457a57f26a8dc2ec02e14459aa87232e9f7799d	registry and release	rust/scripts/bump-version.rs (same stem), csharp/scripts/bump-version.mjs (same stem), python/scripts/bump_version.py (same stem), java/scripts/bump-version.mjs (same stem), cpp/scripts/bump_version.py (same stem)
 link-cli	csharp/scripts/change-detection.test.mjs	7a21e97075772990c05b050362dd67d2eb82fa46	change detection and stage gate	-
 link-cli	csharp/scripts/check-file-size.mjs	122da5fa36cb28eedff86680cc5987a56aed6a36	source and test quality	rust/scripts/check-file-size.rs (same stem), csharp/scripts/check-file-size.mjs (same stem), python/scripts/check_file_size.py (same stem), java/scripts/check-file-size.mjs (same stem), cpp/scripts/check_file_size.py (same stem)
@@ -92,6 +93,12 @@ link-cli	csharp/scripts/verify-packages.mjs	875e8ee8618b37897f13e302bd944337ddac
 link-cli	csharp/scripts/verify-packages.test.mjs	c537ed7c2859b802b089bc16bb6fad5fbec5bc8d	registry and release	-
 link-cli	csharp/scripts/version-and-commit.mjs	60df37c88913aa4409b16dd7466e9f2696899179	registry and release	rust/scripts/version-and-commit.rs (same stem), js/scripts/version-and-commit.mjs (same stem), csharp/scripts/version-and-commit.mjs (same stem), python/scripts/version_and_commit.py (same stem), java/scripts/version-and-commit.mjs (same stem), cpp/scripts/version_and_commit.py (same stem)
 link-cli	csharp/scripts/wait-for-nuget.mjs	2b4534bfa8aec166c38651f4c761cc48ca036d34	registry and release	csharp/scripts/wait-for-nuget.mjs (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore	60ea9289307607e01a5cbc3bf187a429546aaff6	documentation and links	rust/.lycheeignore (same stem), js/.lycheeignore (same stem), csharp/.lycheeignore (identical), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml	6a627f4dc5d7dd7702b36348e19348112af13287	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/js/.lycheeignore	6285ad244b6c8469a0f988d71d3cb2545d35b552	documentation and links	rust/.lycheeignore (same stem), js/.lycheeignore (identical), csharp/.lycheeignore (same stem), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/rust/.lycheeignore	c465921e629701ad5e6b3b3dac7d3b4811ad92a9	documentation and links	rust/.lycheeignore (identical), js/.lycheeignore (same stem), csharp/.lycheeignore (same stem), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml	ce4da867928025dcef4769c2d9f480a58c4e5aed	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
+link-cli	js/eslint.config.mjs	72bbce89a9f752106879ad72d24f4ebb2067a131	source and test quality	js/eslint.config.js (same stem), csharp/eslint.config.mjs (same stem)
 link-cli	parity/check-parity.mjs	a61cceb1f086b6ee4dc436310a077c67893b69d5	change detection and stage gate	-
 link-cli	parity/check-parity.test.mjs	b5b1f581c12abe2f27996de92f5ce0a1bcee2543	change detection and stage gate	-
 link-cli	parity/features.json	fe8c74218cd0ffe6e813dded13a9c34287418aab	change detection and stage gate	-
@@ -140,8 +147,8 @@ rust	.github/workflows/rerun-infrastructure-failures.yml	f9c2f9fed6166826575e240
 rust	.github/workflows/security.yml	ede61474b42578a8cf5d3c26344ea73237495de6	workflow validation and status	.github/workflows/security.yml (same stem)
 rust	.github/workflows/workflows.yml	aad2b405d6b10fc6d57b7458a113600628732e7f	workflow validation and status	.github/workflows/workflows.yml (same stem)
 rust	.github/zizmor.yml	017190e235f0f2a107660de56f9664caa60ce011	workflow validation and status	.github/zizmor.yml (same stem)
-rust	.lycheeignore	c465921e629701ad5e6b3b3dac7d3b4811ad92a9	documentation and links	.lycheeignore (same stem)
-rust	.pre-commit-config.yaml	746519d0db57c42a81e50e7a205b75375f63da1d	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+rust	.lycheeignore	c465921e629701ad5e6b3b3dac7d3b4811ad92a9	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (identical)
+rust	.pre-commit-config.yaml	746519d0db57c42a81e50e7a205b75375f63da1d	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
 rust	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
 rust	scripts/bump-version.rs	852d57f14ff3068b4b0ada107407c62b23574c82	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
 rust	scripts/changelog-files.rs	a67e58c1fccd8a206218a97eabcfef653d95e04a	registry and release	-
@@ -223,8 +230,12 @@ js	.github/workflows/rerun-unacquired.yml	b2510949059acf3444f52968e11816d766b36b
 js	.github/workflows/security.yml	92a5870f663b7f6de24c980834934e736998d305	workflow validation and status	.github/workflows/security.yml (same stem)
 js	.github/workflows/workflows.yml	559b880d9032f89ad80d1cf35fb1f93bf32d3e76	workflow validation and status	.github/workflows/workflows.yml (same stem)
 js	.github/zizmor.yml	a1c9c8aea4a4907c92cdb4f2cc8009c66c8d2f50	workflow validation and status	.github/zizmor.yml (same stem)
-js	.lycheeignore	6285ad244b6c8469a0f988d71d3cb2545d35b552	documentation and links	.lycheeignore (same stem)
+js	.husky/pre-commit	6a28abfe71fd879017849969d7399b63eeb825f2	repository or language-specific infrastructure	-
+js	.lycheeignore	6285ad244b6c8469a0f988d71d3cb2545d35b552	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (identical), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+js	.prettierignore	7fff56c1e5f58049b17f630aaca8dc09e5e985de	repository or language-specific infrastructure	-
+js	.prettierrc	3171de5af7f79900ca857d7462c20b108430a958	repository or language-specific infrastructure	-
 js	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
+js	eslint.config.js	195debf0fa2358aab6e862416956a75f97762b76	source and test quality	js/eslint.config.mjs (same stem)
 js	scripts/artifact-files.mjs	a28fa87fe9fed6ba77c39132a48b79eef1f03ef1	runner and artifact handling	-
 js	scripts/artifact-transport.mjs	e4d14c3d2b9f037cadf33e4b9835f71df5766d21	runner and artifact handling	-
 js	scripts/bootstrap-dependencies.mjs	790bcacdab36c0b1edcbd4f78572fb2673010b6f	security and dependencies	-
@@ -304,6 +315,8 @@ js	scripts/validate-changeset.mjs	1f235f3e20e2c35bf083f50860b98ebfcef188c8	regis
 js	scripts/version-and-commit.mjs	25d8e7369bc5886d8440cdab95ebde2111aa8770	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
 js	scripts/version-lock.mjs	7d0eac3a875960e1e5722a5f4c2fa7ed8520169f	registry and release	-
 js	scripts/wait-for-npm.mjs	b25a587581fd11ab4f7be6cf5007df07d5c793be	registry and release	-
+csharp	.config/dotnet-tools.json	1490bfb3a1257e711b63db46114887d3ec26b792	repository or language-specific infrastructure	-
+csharp	.editorconfig	003e409ef2bc5c502b0977cc98ce80793341d5d0	repository or language-specific infrastructure	csharp/.editorconfig (same stem)
 csharp	.github/actionlint.yaml	852dc66c0e6170197077305499e0b821297c2a5b	workflow validation and status	-
 csharp	.github/actions/csharp-layout/action.yml	15eb69614ae3006210a3fc280e3a913234d4204b	repository or language-specific infrastructure	-
 csharp	.github/dependabot.yml	0a3b00db90caee695fa6cc6a2a985b7b5a405ea9	security and dependencies	.github/dependabot.yml (same stem)
@@ -314,8 +327,10 @@ csharp	.github/workflows/rerun-infrastructure-failures.yml	0a418433e6491359f6037
 csharp	.github/workflows/security.yml	968430063dcbda2ddd990c1922292edf06aa6d6e	workflow validation and status	.github/workflows/security.yml (same stem)
 csharp	.github/workflows/workflows.yml	147545234d071ba9eefb6f7771612bb4112246a5	workflow validation and status	.github/workflows/workflows.yml (same stem)
 csharp	.github/zizmor.yml	2fcbb540127902de45792333d04e81621c91865c	workflow validation and status	.github/zizmor.yml (same stem)
-csharp	.lycheeignore	60ea9289307607e01a5cbc3bf187a429546aaff6	documentation and links	.lycheeignore (same stem)
-csharp	.pre-commit-config.yaml	a451090b2dbb41d911f183d5430cd1ab42e67896	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+csharp	.lycheeignore	60ea9289307607e01a5cbc3bf187a429546aaff6	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (identical), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+csharp	.pre-commit-config.yaml	a451090b2dbb41d911f183d5430cd1ab42e67896	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
+csharp	.prettierrc.json	2bfa238eb5c4b08412ffa03d98cf9d4a7c9c51fe	repository or language-specific infrastructure	-
+csharp	eslint.config.mjs	1a1d338163804ad2dd9db26721c782524d112853	source and test quality	js/eslint.config.mjs (same stem)
 csharp	scripts/action-pins.mjs	998d2bd10b9add5a9de40b3e2a15406b057fc1c2	repository or language-specific infrastructure	-
 csharp	scripts/action-pins.test.mjs	552a92ec6fb4b0b6b8916eca77e2c608197dca4a	source and test quality	-
 csharp	scripts/anonymous-package.mjs	ba7d0f41de9934b676e5568e02e7555752f28a56	registry and release	-
@@ -420,8 +435,8 @@ python	.github/workflows/release.yml	994197baa688200397a6d50f6b87bc3b58aa3285	re
 python	.github/workflows/security.yml	89078a05219ed97e3b58978d4f00dcbadce2c87e	workflow validation and status	.github/workflows/security.yml (same stem)
 python	.github/workflows/workflows.yml	d198919971f9d6413202b38342886873718c8026	workflow validation and status	.github/workflows/workflows.yml (same stem)
 python	.github/zizmor.yml	2c65dd94fe8ab4b493898aace619262f25d74442	workflow validation and status	.github/zizmor.yml (same stem)
-python	.lycheeignore	5ca7e16e0acb50854522f68070ccf0a287ec1135	documentation and links	.lycheeignore (same stem)
-python	.pre-commit-config.yaml	7d3e9e899e95828ef19179ea43fa32b515edc83c	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+python	.lycheeignore	5ca7e16e0acb50854522f68070ccf0a287ec1135	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+python	.pre-commit-config.yaml	7d3e9e899e95828ef19179ea43fa32b515edc83c	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
 python	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
 python	scripts/audit-npm-locks.sh	dd8411a6e2a3498fce183e330796c89547a228fd	registry and release	-
 python	scripts/audit_dependencies.py	5b45eeeba20964aa790573d374d6998170578120	security and dependencies	-
@@ -461,7 +476,7 @@ java	.github/workflows/release.yml	15fbed88c68753227e4d12abbbc3eb3ad23b7bff	regi
 java	.github/workflows/rerun-unacquired.yml	76ceb5b422734d19869d8627eb84cc222bb88a58	workflow validation and status	-
 java	.github/workflows/security.yml	f289df5c9eb8128adeaa547aeca207c118e850cb	workflow validation and status	.github/workflows/security.yml (same stem)
 java	.github/workflows/workflows.yml	9b51c4242b0181f2a5f4106cda7cb7569fe933b6	workflow validation and status	.github/workflows/workflows.yml (same stem)
-java	.pre-commit-config.yaml	608c520da6c678d972686a8071d5555c618faa13	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+java	.pre-commit-config.yaml	608c520da6c678d972686a8071d5555c618faa13	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
 java	scripts/audit-maven-plugins.mjs	06479d81de82e3d4b08e83e5487462238cbd2d5d	registry and release	-
 java	scripts/bump-version.mjs	47d77384626514438bb5c0af712a948b6682780d	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
 java	scripts/check-ci-dependencies.mjs	de67060089705c49ddc202fa4e82dffeb53ad810	security and dependencies	-
@@ -478,6 +493,8 @@ java	scripts/rerun-unacquired.mjs	7369df0f548c569d883c34033a8d879bf177e29f	runne
 java	scripts/validate-changeset.mjs	e0c08a25eef6f47dbd845a4dd8cb9d7cd862d49d	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
 java	scripts/version-and-commit.mjs	0f6812d46591f3f6615f52d834f8c42f965662fc	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
 java	scripts/workflow-policy.test.mjs	41e2343f34f9ce0eec5fd09c4677d2ca36a7fc51	workflow validation and status	.github/scripts/workflow-policy.test.mjs (same stem)
+cpp	.clang-format	d126d57d21d2083e2daa6ff16c5215d3620da020	source and test quality	-
+cpp	.editorconfig	12cb2276ca5a6018f8d971e10558fef866c5bbdf	repository or language-specific infrastructure	csharp/.editorconfig (same stem)
 cpp	.github/actionlint.yaml	46265867d10cc19ba4fd7d74411e4b4121d1138f	workflow validation and status	-
 cpp	.github/dependabot.yml	7fe1951100bfa86eff318f934f12b4f286eedbfd	security and dependencies	.github/dependabot.yml (same stem)
 cpp	.github/workflows/dependabot-health.yml	6a5d67b47495fa144e53aab5316c879eb5488541	workflow validation and status	-
@@ -488,8 +505,8 @@ cpp	.github/workflows/rerun-infrastructure-failures.yml	7cc65bcce555862d7c5ceb54
 cpp	.github/workflows/security.yml	5e48628c9fb614df9a43c0527700e2e8fd011c0f	workflow validation and status	.github/workflows/security.yml (same stem)
 cpp	.github/workflows/workflows.yml	71de472e24f555f017216a0c00004f109962e892	workflow validation and status	.github/workflows/workflows.yml (same stem)
 cpp	.github/zizmor.yml	4062c62f26bae0765552f578572df690a290b843	workflow validation and status	.github/zizmor.yml (same stem)
-cpp	.lycheeignore	c6ddfd12671ad8a10f2f818d52a6460f57a646b6	documentation and links	.lycheeignore (same stem)
-cpp	.pre-commit-config.yaml	7f48ed75932f269274297145b72dbf7bee92bc3e	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+cpp	.lycheeignore	c6ddfd12671ad8a10f2f818d52a6460f57a646b6	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+cpp	.pre-commit-config.yaml	7f48ed75932f269274297145b72dbf7bee92bc3e	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
 cpp	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
 cpp	scripts/audit_native_dependencies.py	b54c9b47cf53f2bf71d4a734efc5301e9a9c9c5e	security and dependencies	-
 cpp	scripts/build_codeql.py	eaf4108d594e6465f4bb6833ffcf51bf9145b678	security and dependencies	-

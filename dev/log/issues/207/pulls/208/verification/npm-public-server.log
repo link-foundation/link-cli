@@ -1,0 +1,9 @@
+npm error code E404
+npm error 404 Not Found - GET https://registry.npmjs.org/@link-foundation%2flink-cli-server - Not found
+npm error 404
+npm error 404  The requested resource '@link-foundation/link-cli-server@0.1.1' could not be found or you do not have permission to access it.
+npm error 404
+npm error 404 Note that you can also install from a
+npm error 404 tarball, folder, http url, or git url.
+npm error A complete log of this run can be found in: /tmp/tmp.hyZn360dk7/cache/_logs/2026-11-27T21_47_26_767Z-debug-0.log
+Could not download @link-foundation/link-cli-server@0.1.1 anonymously from npm. Check public visibility and retry verification.
