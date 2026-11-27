@@ -7,6 +7,8 @@ import { describe, it } from 'node:test';
 import { ArityRange } from 'links-notation';
 import { Cli } from '../src/cli.js';
 
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+
 const run = (...args) => {
   const parsed = Cli.parse(args);
   assert.equal(parsed.kind, 'run');
@@ -377,7 +379,7 @@ describe('Cli texts', () => {
   });
 
   it('prints the package version', () => {
-    assert.equal(Cli.versionText(), 'clink 0.1.0');
+    assert.equal(Cli.versionText(), `clink ${pkg.version}`);
   });
 });
 

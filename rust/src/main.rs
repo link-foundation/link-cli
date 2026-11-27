@@ -3,6 +3,8 @@
 //! This is the Rust implementation of the link-cli tool, providing
 //! similar functionality to the C# version.
 
+mod cli_transaction;
+
 use anyhow::{anyhow, bail, Result};
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::import_lino_file_with_max_depth;
@@ -159,8 +161,8 @@ fn open_journal(cli: &Cli) -> Result<FileTransitionLog> {
 }
 
 fn run_bare(cli: &Cli) -> Result<()> {
-    let storage = open_named_storage(&cli.db, cli)?;
-    finish(cli, storage)
+    let mut storage = open_named_storage(&cli.db, cli)?;
+    finish(cli, &mut storage)
 }
 
 /// Resolved path of the trigger sidecar store: `--triggers-file` when given,
@@ -187,13 +189,12 @@ fn persistent_transformations_enabled(cli: &Cli) -> bool {
 /// decorator always sits *outermost* — above the transactions and
 /// version-control layers — exactly like in the C# tool, where every replayed
 /// substitution is journalled like any other write.
-fn finish<S>(cli: &Cli, storage: S) -> Result<()>
+fn finish<S>(cli: &Cli, storage: &mut S) -> Result<()>
 where
     S: NamedTypeLinks,
 {
     if !persistent_transformations_enabled(cli) {
-        let mut storage = storage;
-        return run(cli, &mut storage, |_, _, _| Ok(false));
+        return run(cli, storage, |_, _, _| Ok(false));
     }
 
     let trigger_store = if cli.embed_triggers {
@@ -434,7 +435,7 @@ fn run_with_transactions(
         return Ok(());
     }
 
-    finish(cli, tx)
+    cli_transaction::finish(cli, &mut tx)
 }
 
 fn run_with_vc(
@@ -551,7 +552,7 @@ fn run_with_vc(
         return Ok(());
     }
 
-    finish(cli, vc)
+    cli_transaction::finish(cli, &mut vc)
 }
 
 fn resolve_sequence(vc: &FileVersionControlDecorator, point: &str) -> Option<i64> {

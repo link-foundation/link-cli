@@ -201,13 +201,24 @@ Pass `--transactions` (or any flag in the family — `--transactions-file`,
 `--commit-mode`, `--retention`, `--log`) to wrap the storage in a
 `TransactionsDecorator`. Every Create / Update / Delete then writes a
 *reversible* transition into a sidecar journal: an append-only text file
-with one entry per line, so a write costs one append no matter how long
-the history is. The default sidecar is named like the database:
+with one entry per line. The default sidecar is named like the database:
 
 ```text
 data.links              # primary store
 data.transitions.log    # transitions journal (sidecar)
 ```
+
+Local `clink` imports and queries share one transaction when journaling is
+enabled, including through `--vc`. If an invocation imports a LiNo document
+and runs a mutating query, both changes commit together. An error rolls
+back the store changes, and an unchanged import creates no commit.
+
+The CLI syncs the transaction decision once before checkpointing the
+data and name stores. After the checkpoint it syncs the applied markers
+together. C# also syncs one undo image before changing its memory-mapped
+store. These syncs are per transaction. Journal retention and recovery on
+open can do additional work. Output files and separate trigger databases
+have their own persistence.
 
 With `--retention sized:<n>` or `chunked:<n>:<dir>` the journal on disk is
 bounded too: once it holds about twice the entries the retained history
@@ -266,20 +277,20 @@ CLI changed.
 Two storage backends ship in Rust:
 
 - `LinkStorage` and the decorators above it keep links in memory and rewrite
-  the whole database file on `flush()`. **`flush()` is required for
-  durability** — nothing reaches the disk before it. The rewrite truncates the
-  existing file in place instead of renaming a temporary over it, so the inode
-  is preserved.
+  the whole database file on `flush()`. The rewrite writes a temporary
+  sibling and renames it into place. This protects against a process
+  stopping partway through a rewrite. The file save has no power-loss
+  durability guarantee.
 - `storage::DoubletsStorage` is a real memory-mapped `doublets::unit::Store`.
   Writes go straight into the mapping, which *is* the page cache, so a
   **process** crash cannot lose them; surviving a **machine** crash needs the
   `fsync` that `flush()` performs, and a clean drop syncs too.
 
-Two transitions logs ship in Rust: the links-backed sidecar the CLI uses, and
-`transactions::FileTransitionLog`, a plain append-only text file that `fsync`s
-every append. Because appends are line-oriented and durable one at a time, a
-crash can only ever truncate the final line; reopening the log discards that
-torn tail, so at most the single in-flight transition is lost.
+Rust supports a links-backed transitions log and
+`transactions::FileTransitionLog`, the append-only text journal used by the
+CLI. The file journal syncs each append by default. The local CLI's import
+and query pipeline syncs at transaction boundaries as described above.
+Reopening the journal discards an incomplete final line before recovery.
 
 Since a doublets store has no internal concurrency control, sharing one
 database between processes needs external serialisation. Both implementations

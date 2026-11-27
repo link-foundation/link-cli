@@ -63,12 +63,12 @@ where
             };
             self.record_records(std::iter::once(record), owns)?;
         }
-        // A name's undo record must survive before a name sidecar can change.
-        // Keep an explicit owner rollback-only when this pre-effect flush fails.
+        // A name's undo record must survive before a durable name sidecar can
+        // change. CLI batches keep the name sidecar in memory until commit.
         // An identical assignment can still invoke adapter side effects. The
         // selected image is already durable, but there is no name delta to flush.
         let result = (|| {
-            if changed {
+            if changed && !self.defer_checkpoint {
                 self.log_store.flush_log()?;
             }
             self.inner.set_link_name(index, name)

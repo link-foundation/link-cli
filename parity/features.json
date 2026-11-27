@@ -409,7 +409,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/LinksFileLockTests.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/ChunkArchiveOwnershipTests.cs"
         ],
-        "fingerprint": "3718cddb0e07652e"
+        "fingerprint": "139b15089d50d089"
       },
       "rust": {
         "status": "implemented",
@@ -422,7 +422,7 @@
           "rust/tests/transaction_*_tests.rs",
           "rust/tests/undoable_links_edges_tests.rs"
         ],
-        "fingerprint": "05690435976525f0"
+        "fingerprint": "ef37a5e868f1f4dd"
       },
       "javascript": {
         "status": "implemented",
@@ -435,7 +435,7 @@
           "js/server/test/undoable-links.test.mjs",
           "js/server/test/differential/transactions.test.mjs"
         ],
-        "fingerprint": "9d203d90a6559efa"
+        "fingerprint": "73bf66999f669e5a"
       }
     },
     {
@@ -914,12 +914,13 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "579e794f4caa19c3"
+        "fingerprint": "66de5f03b415ffd9"
       },
       "rust": {
         "status": "implemented",
         "sources": [
           "rust/src/cli.rs",
+          "rust/src/cli_transaction.rs",
           "rust/src/main.rs",
           "rust/src/diagnostics.rs",
           "rust/src/error.rs",
@@ -929,7 +930,7 @@
           "rust/tests/cli_*_tests.rs",
           "rust/tests/diagnostic_*.rs"
         ],
-        "fingerprint": "5df09a468fb9643f"
+        "fingerprint": "0f8bf6bd9617298a"
       },
       "javascript": {
         "status": "implemented",
@@ -950,7 +951,7 @@
           "js/server/test/env-files.test.mjs",
           "js/server/test/differential/cli.test.mjs"
         ],
-        "fingerprint": "13eb8e612a81fe8b"
+        "fingerprint": "cfdcd5b102bf7cb9"
       }
     },
     {

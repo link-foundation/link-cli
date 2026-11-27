@@ -97,6 +97,7 @@ export class TransactionsDecorator extends TransactionsRecording {
     this.reloadPending = false;
     this.trace = trace;
     this.stderr = stderr;
+    this.deferCheckpoint = false;
     this.rowUndo = RowUndoPolicy.Observed;
     // Entries in the durable journal, and its newest commit/rollback marker.
     this.journalEntries = 0;
@@ -179,12 +180,19 @@ export class TransactionsDecorator extends TransactionsRecording {
     if (this.recoveryPending) return this.recover();
     this.ensureNoVersionReplay();
     if (this.current?.commitAttempted) return this.commitCurrent();
+    if (this.deferCheckpoint && this.current !== null) return;
     this.storage.flush();
     this.transitionLog.flushLog();
   }
 
   save() {
     this.flush();
+  }
+
+  /** Defers the CLI's in-memory store checkpoint and journal syncs to commit. */
+  deferBatchCheckpoint() {
+    this.deferCheckpoint = true;
+    this.rawLogStore.setSyncOnAppend?.(false);
   }
 
   /** Whether another process has written to the wrapped store since it was read. */
@@ -432,6 +440,10 @@ export class TransactionsDecorator extends TransactionsRecording {
     if (this.current?.commitAttempted) return this.commitCurrent();
     const pending = this.current;
     if (pending === null) return;
+    if (this.deferCheckpoint && pending.transitions.length === 0 && pending.image === null) {
+      this.current = null;
+      return;
+    }
     // Once undo begins, an error can leave the data partially restored. Keep
     // the abort decision until every rollback step succeeds.
     pending.rollbackOnly = true;

@@ -13,6 +13,19 @@ namespace Foundation.Data.Doublets.Cli;
 /// </summary>
 internal static class CliIo
 {
+    internal static int RunTransactionBatch(FileTransitionLog journal, TransactionsDecorator transactions,
+        VersionControlDecorator? versionControl, Func<int> run)
+    {
+        // The mapped store may persist a change before the write callback runs.
+        // The durable undo image protects it until the batched decision is synced.
+        journal.SyncOnAppend = false;
+        var before = transactions.LastLoggedSequence;
+        using var transaction = versionControl?.BeginTransaction() ?? transactions.BeginTransaction();
+        var exitCode = run();
+        if (exitCode == 0 && transactions.LastLoggedSequence != before) transaction.Commit();
+        return exitCode;
+    }
+
     // `--connect`: sends the query to a server and prints the reply.
     // Any binary option implies `--protocol binary`.
     internal static int RunClient(string address, string? protocolName, BinaryLinoOptions binaryOptions, string query, string? token)

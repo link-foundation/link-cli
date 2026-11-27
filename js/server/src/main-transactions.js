@@ -99,6 +99,27 @@ async function withTransactions(cli, commitMode, retention, context, body) {
   }
 }
 
+/** Keeps a local import and query in the same transaction. A server owns its request boundaries. */
+async function finishLocal(cli, tx, storage, context) {
+  const mayWrite =
+    cli.linoInput != null || cli.binaryInput != null || Boolean(cli.query ?? cli.queryArg);
+  if (!mayWrite || cli.serve.length > 0 || cli.grantToken != null || cli.revokeToken != null) {
+    return context.finish(cli, storage);
+  }
+
+  const before = tx.lastLoggedSequence();
+  tx.deferBatchCheckpoint();
+  storage.beginTransaction();
+  try {
+    await context.finish(cli, storage);
+  } catch (error) {
+    storage.rollback();
+    throw error;
+  }
+  if (tx.lastLoggedSequence() === before) storage.rollback();
+  else storage.commit();
+}
+
 /** `--transactions`, `--log` and the other transactions options without version control. */
 export async function runWithTransactions(cli, commitMode, retention, context) {
   await withTransactions(cli, commitMode, retention, context, async (tx) => {
@@ -107,7 +128,7 @@ export async function runWithTransactions(cli, commitMode, retention, context) {
       tx.save();
       return;
     }
-    await context.finish(cli, tx);
+    await finishLocal(cli, tx, tx, context);
   });
 }
 
@@ -190,5 +211,5 @@ async function runVc(cli, tx, context) {
     vc.save();
     return;
   }
-  await context.finish(cli, vc);
+  await finishLocal(cli, tx, vc, context);
 }

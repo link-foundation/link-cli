@@ -5,11 +5,14 @@
 // `--connect` commands over real TCP sockets on port 0. The differential tests run the same invocations
 // through bin/clink.js and the Rust `clink` and compare them.
 import assert from 'node:assert/strict';
-import { EventEmitter } from 'node:events';
+import { spawn, spawnSync } from 'node:child_process';
+import { EventEmitter, once } from 'node:events';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createInterface } from 'node:readline';
 import { after, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { Cli } from '../src/cli.js';
 import { setTrace } from '../src/ipc.js';
 import { finish, main, openNamedStorage, run, runQueryPipelineWith } from '../src/main.js';
@@ -199,6 +202,88 @@ test('--transactions runs the query pipeline over the transitions log', async ()
     assert.match(transaction, /^[0-9a-f]{32}$/);
   }
 });
+
+test('a transactional import and query each commit once and an unchanged import commits nothing', async () => {
+  const db = newDb();
+  const input = `${db}.lino`;
+  const journal = db.replace(/\.links$/, '.transitions.log');
+  const document = Array.from({ length: 10 }, (_, i) => `(k${i}: a${i} b${i})`);
+  writeFileSync(input, document.join('\n'));
+  const args = ['--db', db, '--transactions', '--trace', '--in', input];
+
+  const imported = await clink(args);
+  assert.equal(imported.status, 0, imported.err);
+  assert.equal([...imported.err.matchAll(/Committed tx /g)].length, 1);
+  assert.equal([...imported.err.matchAll(/\] Saved /g)].length, 4);
+  const before = readFileSync(journal);
+  assert.equal((await clink(args)).status, 0);
+  assert.deepEqual(readFileSync(journal), before);
+
+  document[0] = '(k0: b0 a0)';
+  writeFileSync(input, document.join('\n'));
+  const query = await clink([...args, '() ((31 31) (32 32))', '--after']);
+  assert.equal(query.status, 0, query.err);
+  assert.equal([...query.err.matchAll(/Committed tx /g)].length, 1);
+  for (const line of [...document, '(31: 31 31)', '(32: 32 32)']) {
+    assert.ok(query.out.split('\n').includes(line), `missing ${line} in ${query.out}`);
+  }
+});
+
+test('a failed query rolls back the import and leaves version history unchanged', async () => {
+  const db = newDb();
+  const input = `${db}.lino`;
+  const args = ['--db', db, '--vc', '--in', input];
+  writeFileSync(input, '(base: base base)\n');
+  assert.equal((await clink(args)).status, 0);
+  const branches = await clink(['--db', db, '--list-branches']);
+
+  writeFileSync(input, '(base: fresh base)\n(new: base fresh)\n');
+  const failed = await clink([...args, '(((']);
+  assert.equal(failed.status, 1);
+  assert.match(failed.err, /Parse error/);
+  assert.equal((await clink(['--db', db, '--vc', '--after'])).out, '(base: base base)\n');
+  assert.equal((await clink(['--db', db, '--list-branches'])).out, branches.out);
+});
+
+test(
+  'killing an import before commit leaves the original store',
+  { skip: process.platform === 'win32' },
+  async () => {
+    const db = newDb();
+    const input = `${db}.lino`;
+    const fifo = `${db}.fifo`;
+    const args = ['--db', db, '--transactions', '--in', input];
+    assert.equal(spawnSync('mkfifo', [fifo]).status, 0);
+    writeFileSync(input, '(base: base base)\n');
+    assert.equal((await clink(args)).status, 0);
+    writeFileSync(input, '(base: added base)\n(new: base added)\n');
+
+    const bin = fileURLToPath(new URL('../bin/clink.js', import.meta.url));
+    const child = spawn(process.execPath, [bin, ...args, '--after', '--out', fifo]);
+    const closed = once(child, 'close');
+    const lines = createInterface({ input: child.stdout });
+    // The export blocks until the test opens the FIFO, after printing the pending changes.
+    const kill = setTimeout(() => child.kill('SIGKILL'), 15_000);
+    let sawImport = false;
+    try {
+      for await (const line of lines) {
+        if (line === '(new: base added)') {
+          sawImport = true;
+          break;
+        }
+      }
+    } finally {
+      clearTimeout(kill);
+      child.kill('SIGKILL');
+      await closed;
+    }
+    assert.ok(sawImport, 'the child did not reach the export FIFO');
+    assert.equal(
+      (await clink(['--db', db, '--transactions', '--after'])).out,
+      '(base: base base)\n',
+    );
+  },
+);
 
 test('--vc runs the query pipeline under version control', async () => {
   const db = newDb();

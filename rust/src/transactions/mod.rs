@@ -188,6 +188,7 @@ where
     recovery_pending: bool,
     reload_pending: bool,
     trace: bool,
+    defer_checkpoint: bool,
     row_undo: RowUndoPolicy,
     /// Entries in the durable journal, and its newest commit/rollback marker.
     journal_entries: usize,
@@ -236,6 +237,7 @@ where
             recovery_pending: false,
             reload_pending: false,
             trace,
+            defer_checkpoint: false,
             row_undo: RowUndoPolicy::Observed,
             journal_entries: 0,
             last_decision: None,
@@ -348,6 +350,9 @@ where
             .is_some_and(|pending| pending.commit_attempted)
         {
             return self.commit_current();
+        }
+        if self.defer_checkpoint && self.current.is_some() {
+            return Ok(());
         }
         self.inner.flush()?;
         self.log_store.flush_log()?;
@@ -773,6 +778,10 @@ where
             Some(p) => p,
             None => return Ok(()),
         };
+        if self.defer_checkpoint && pending.transitions.is_empty() && pending.image.is_none() {
+            self.current = None;
+            return Ok(());
+        }
         let result = if let Some(image) = &pending.image {
             self.restore_image(image)
         } else {
@@ -797,6 +806,16 @@ where
         }
         self.enforce_retention()?;
         Ok(())
+    }
+}
+
+impl FileTransactionsDecorator {
+    /// Defer file writes requested within a CLI batch to its final checkpoint.
+    /// The named store keeps edits in memory and the commit still syncs the
+    /// journal before saving data and again after writing the applied markers.
+    pub fn defer_batch_checkpoint(&mut self) {
+        self.defer_checkpoint = true;
+        self.log_store.set_sync_on_append(false);
     }
 }
 

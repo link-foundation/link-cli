@@ -33,8 +33,9 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             if (names.Length != 0)
             {
                 RecordRecords(transaction, [new(new(transaction.Id, 0, default, TransitionKind.Update, default, default), true, names)]);
-                // Persist undo before a memory-mapped name sidecar can change.
-                _flushLog();
+                // Persist undo before the memory-mapped name sidecar changes.
+                // A write-ahead image already protects every existing name.
+                if (!BatchCheckpoints || transaction.Image is null) _flushLog();
             }
             // An identical assignment still invokes the adapter. Its selected
             // image is durable even though there is no predicted name delta.

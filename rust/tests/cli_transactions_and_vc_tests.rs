@@ -84,6 +84,119 @@ fn transactions_log_flag_prints_recorded_transitions() -> Result<()> {
 }
 
 #[test]
+fn cli_import_and_query_share_one_commit() -> Result<()> {
+    let dir = tempdir()?;
+    let db = dir.path().join("data.links");
+    let input = dir.path().join("input.lino");
+    let document: String = (1..=10).map(|i| format!("(k{i}: a{i} b{i})\n")).collect();
+    std::fs::write(&input, &document)?;
+    let flags = ["--transactions", "--trace", "--in", input.to_str().unwrap()];
+
+    let first = run_query(&db, "", &flags)?;
+    ensure_success(&first)?;
+    let trace = String::from_utf8_lossy(&first.stderr);
+    assert_eq!(trace.matches("Committed tx ").count(), 1, "{trace}");
+    // The two files are saved in recovery on open and once more at commit.
+    assert_eq!(trace.matches("] Saved ").count(), 4, "{trace}");
+
+    let log_path = transitions_sidecar_for(&db);
+    let before = std::fs::read(&log_path)?;
+    let unchanged = run_query(&db, "", &flags)?;
+    ensure_success(&unchanged)?;
+    assert_eq!(std::fs::read(&log_path)?, before);
+
+    let document = document.replacen("(k1: a1 b1)", "(k1: b1 a1)", 1);
+    std::fs::write(&input, &document)?;
+    let query = run_query(&db, "() ((31 31) (32 32))", &flags)?;
+    ensure_success(&query)?;
+    assert_eq!(
+        String::from_utf8_lossy(&query.stderr)
+            .matches("Committed tx ")
+            .count(),
+        1
+    );
+    let printed = run_query(&db, "", &["--transactions", "--after"])?;
+    ensure_success(&printed)?;
+    let text = String::from_utf8(printed.stdout)?;
+    for line in document.lines().chain(["(31: 31 31)", "(32: 32 32)"]) {
+        assert!(
+            text.lines().any(|row| row == line),
+            "missing {line} in {text}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn a_query_error_rolls_back_the_import_in_the_same_invocation() -> Result<()> {
+    let dir = tempdir()?;
+    let db = dir.path().join("data.links");
+    let input = dir.path().join("input.lino");
+    std::fs::write(&input, "(base: base base)\n")?;
+    let flags = ["--vc", "--in", input.to_str().unwrap()];
+    ensure_success(&run_query(&db, "", &flags)?)?;
+
+    std::fs::write(&input, "(base: fresh base)\n(new: base fresh)\n")?;
+    let failed = run_query(&db, "(((", &flags)?;
+    assert!(!failed.status.success());
+    assert!(String::from_utf8_lossy(&failed.stderr).contains("Parse error"));
+    let printed = run_query(&db, "", &["--vc", "--after"])?;
+    ensure_success(&printed)?;
+    assert_eq!(printed.stdout, b"(base: base base)\n");
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn killing_an_import_before_its_commit_recovers_the_original_store() -> Result<()> {
+    use std::io::{BufRead, BufReader};
+    use std::process::Stdio;
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    let dir = tempdir()?;
+    let db = dir.path().join("data.links");
+    let input = dir.path().join("input.lino");
+    let fifo = dir.path().join("export.fifo");
+    ensure_success(&Command::new("mkfifo").arg(&fifo).output()?)?;
+    let flags = ["--transactions", "--in", input.to_str().unwrap()];
+    std::fs::write(&input, "(base: base base)\n")?;
+    ensure_success(&run_query(&db, "", &flags)?)?;
+    std::fs::write(&input, "(base: added base)\n(new: base added)\n")?;
+
+    // --after confirms the writes ran. Opening the export FIFO then blocks
+    // before the CLI can make its commit decision, with no timing race.
+    let mut child = clink()
+        .arg("--db")
+        .arg(&db)
+        .args(flags)
+        .arg("--after")
+        .arg("--out")
+        .arg(fifo)
+        .stdout(Stdio::piped())
+        .spawn()?;
+    let stdout = child.stdout.take().unwrap();
+    let (send, receive) = mpsc::sync_channel(1);
+    let reader = std::thread::spawn(move || {
+        let result = BufReader::new(stdout)
+            .lines()
+            .any(|line| line.is_ok_and(|line| line == "(new: base added)"));
+        let _ = send.send(result);
+    });
+    let saw_import = receive.recv_timeout(Duration::from_secs(15));
+    let killed = child.kill();
+    child.wait()?;
+    reader.join().unwrap();
+    killed?;
+    assert!(saw_import?, "the child did not reach the export barrier");
+
+    let printed = run_query(&db, "", &["--transactions", "--after"])?;
+    ensure_success(&printed)?;
+    assert_eq!(printed.stdout, b"(base: base base)\n");
+    Ok(())
+}
+
+#[test]
 fn explicit_transactions_file_is_honored() -> Result<()> {
     let dir = tempdir()?;
     let db = dir.path().join("data.links");

@@ -42,15 +42,20 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             }
             else
             {
-                _flushData();
-                foreach (var transition in transaction.Records) MarkApplied(transition);
-                _flushLog();
-                EnforceRetentionLocked();
+                CheckpointBatchLocked(transaction.Records);
             }
             // Failed persistence or queue admission keeps the owner available
             // to Commit, Rollback or Dispose without undoing the decision.
             if (_current == transaction) _current = null;
         }
+    }
+
+    private void CheckpointBatchLocked(IReadOnlyList<JournalRecord<TLinkAddress>> transitions)
+    {
+        _flushData();
+        foreach (var transition in transitions) MarkApplied(transition);
+        _flushLog();
+        EnforceRetentionLocked();
     }
 
     internal void OnRollback(Transaction transaction)
@@ -63,6 +68,14 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                 return;
             }
             if (transaction.IsRolledBack) return;
+            // An image-backed transaction with no image never reached a write.
+            if (BatchCheckpoints && RowUndoPolicy == RowUndoPolicy.WriteAheadImage
+                && transaction.Image is null && transaction.Records.Count == 0)
+            {
+                transaction.MarkRolledBack();
+                if (_current == transaction) _current = null;
+                return;
+            }
             // A failed undo or persistence step must preserve the abort decision.
             transaction.MarkRollbackOnly();
             if (transaction.Image is not null) RestoreImage(transaction.Image);
