@@ -210,11 +210,11 @@ export class TransactionsRecording extends TransactionsReplay {
     const owns = this.ensureOpenTransaction();
     const changed = names.length > 0;
     if (changed) this.recordRecords([nameOnlyRecord(names)], owns);
-    // A name's undo record must survive before a name sidecar can change.
-    // Keep an explicit owner rollback-only when this pre-effect flush fails.
+    // A name's undo record must survive before a durable name sidecar can
+    // change. CLI batches keep the name sidecar in memory until commit.
     let result;
     try {
-      if (changed) this.transitionLog.flushLog();
+      if (changed && !this.deferCheckpoint) this.transitionLog.flushLog();
       result = this.storage.setLinkName(index, name);
     } catch (error) {
       this.current.rollbackOnly = true;

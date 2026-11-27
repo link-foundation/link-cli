@@ -71,6 +71,7 @@ export function exportOutputs(cli, storage) {
  */
 export function runQueryPipelineWith(cli, storage, triggerStage, io = {}) {
   const out = io.stdout ?? process.stdout;
+  const err = io.stderr ?? process.stderr;
   if (cli.before) storage.printAllLino(out);
   importInputs(cli, storage);
   if (cli.structure != null) {
@@ -86,7 +87,7 @@ export function runQueryPipelineWith(cli, storage, triggerStage, io = {}) {
   let changes = [];
   if (query != null && query !== '') {
     const processor = new QueryProcessor(cli.trace, {
-      stderr: io.stderr,
+      stderr: (message) => err.write(`${message}\n`),
     }).withAutoCreateMissingReferences(cli.autoCreateMissingReferences);
     changes = processor.processQuery(storage, query);
   }

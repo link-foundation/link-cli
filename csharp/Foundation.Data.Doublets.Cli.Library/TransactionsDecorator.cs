@@ -256,6 +256,8 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     private LogRetentionPolicy _retentionPolicy;
     private CommitMode _commitMode;
 
+    private bool BatchCheckpoints => _logStore is FileTransitionLog { SyncOnAppend: false };
+
     public TransactionsDecorator(
       INamedTypesLinks<TLinkAddress> inner,
       INamedTypesLinks<TLinkAddress> logStore,
@@ -479,7 +481,9 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             if (_disposed) return;
             lock (_lock) { EnsureNoVersionReplayLocked(); }
             _asyncQueue.Writer.TryComplete();
-            _backgroundCts.Cancel();
+            // A single-shot CLI drains its batched checkpoint before exit.
+            // Reopening a successful import then has no per-record recovery work.
+            if (!BatchCheckpoints) _backgroundCts.Cancel();
             // A timed join cannot establish that borrowed mappings are unused.
             // Never hold the storage lock while waiting for its current owner.
             _backgroundWorker.GetAwaiter().GetResult();
@@ -702,6 +706,15 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     private void ApplyTransitions(IReadOnlyList<JournalRecord<TLinkAddress>> transitions)
     {
+        if (BatchCheckpoints)
+        {
+            lock (_lock)
+            {
+                if (!_versionReplay && !_recoveryPending) CheckpointBatchLocked(transitions);
+            }
+            return;
+        }
+
         foreach (var transition in transitions)
         {
             try
@@ -872,4 +885,15 @@ public class TransactionsDecorator : TransactionsDecorator<uint>
       bool trace = false,
       Action? flushData = null)
       : base(inner, log, retentionPolicy, commitMode, trace, flushData) { }
+
+    /// <summary>Journals into a transition log with the given row undo policy.</summary>
+    public TransactionsDecorator(
+      INamedTypesLinks<uint> inner,
+      ITransitionLogStore log,
+      RowUndoPolicy rowUndoPolicy,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null)
+      : base(inner, log, rowUndoPolicy, retentionPolicy, commitMode, trace, flushData) { }
 }

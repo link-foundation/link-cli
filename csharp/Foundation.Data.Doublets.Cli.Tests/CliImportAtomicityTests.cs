@@ -1,7 +1,155 @@
+using System.Diagnostics;
+
 namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class CliImportAtomicityTests
 {
+    [Theory]
+    [InlineData("sync")]
+    [InlineData("async")]
+    public async Task TransactionalImportAndQueryEachCommitOnce(string mode)
+    {
+        var directory = Directory.CreateTempSubdirectory("clink-batch-").FullName;
+        try
+        {
+            var db = Path.Combine(directory, "data.links");
+            var input = Path.Combine(directory, "input.lino");
+            var rows = Enumerable.Range(1, 10).Select(i => $"(k{i}: a{i} b{i})").ToArray();
+            await File.WriteAllLinesAsync(input, rows);
+            string[] args = ["--db", db, "--transactions", "--commit-mode", mode, "--trace", "--in", input];
+
+            var import = await Clink.RunAsync(args);
+            Clink.AssertSucceeded(import);
+            var commit = Assert.Single(import.Stdout.Split('\n'), line => line.Contains("Committed tx "));
+            var lastSequence = commit.Split("transitions=")[1].Split(')')[0];
+
+            var journal = Path.Combine(directory, "data.transitions.log");
+            Assert.Equal("__transactions:applied:" + lastSequence, File.ReadLines(journal).Last());
+            var before = await File.ReadAllBytesAsync(journal);
+            Clink.AssertSucceeded(await Clink.RunAsync(args));
+            Assert.Equal(before, await File.ReadAllBytesAsync(journal));
+
+            rows[0] = "(k1: b1 a1)";
+            await File.WriteAllLinesAsync(input, rows);
+            var query = await Clink.RunAsync([.. args, "() ((31 31) (32 32))"]);
+            Clink.AssertSucceeded(query);
+            Assert.Single(query.Stdout.Split('\n'), line => line.Contains("Committed tx "));
+            var readback = await Clink.RunAsync("--db", db, "--transactions", "--after");
+            Clink.AssertSucceeded(readback);
+            foreach (var row in rows.Concat(["(31: 31 31)", "(32: 32 32)"]))
+                Assert.Contains(row, readback.Stdout.Split('\n'));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task QueryErrorRollsBackImportInTheSameInvocation()
+    {
+        var directory = Directory.CreateTempSubdirectory("clink-batch-error-").FullName;
+        try
+        {
+            var db = Path.Combine(directory, "data.links");
+            var input = Path.Combine(directory, "input.lino");
+            string[] args = ["--db", db, "--vc", "--in", input];
+            await File.WriteAllTextAsync(input, "(base: base base)\n");
+            Clink.AssertSucceeded(await Clink.RunAsync(args));
+            var branches = await Clink.RunAsync("--db", db, "--list-branches");
+            Clink.AssertSucceeded(branches);
+
+            await File.WriteAllTextAsync(input, "(base: fresh base)\n(new: base fresh)\n");
+            var failed = await Clink.RunAsync([.. args, "((("]);
+            Assert.Equal(1, failed.ExitCode);
+            Assert.Contains("Parse error", failed.Stderr);
+            var readback = await Clink.RunAsync("--db", db, "--vc", "--after");
+            Clink.AssertSucceeded(readback);
+            Assert.Equal("(base: base base)\n", readback.Stdout);
+            Assert.Equal(branches.Stdout, (await Clink.RunAsync("--db", db, "--list-branches")).Stdout);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExportErrorRollsBackEmbeddedTriggerRegistration()
+    {
+        var directory = Directory.CreateTempSubdirectory("clink-batch-trigger-").FullName;
+        try
+        {
+            var db = Path.Combine(directory, "data.links");
+            var input = Path.Combine(directory, "input.lino");
+            await File.WriteAllTextAsync(input, "(base: base base)\n");
+            string[] args = ["--db", db, "--transactions", "--embed-triggers"];
+            Clink.AssertSucceeded(await Clink.RunAsync([.. args, "--in", input]));
+
+            var failed = await Clink.RunAsync([.. args, "--once", "() ((1 1))",
+                "--out", Path.Combine(directory, "missing", "output.lino")]);
+            Assert.Equal(1, failed.ExitCode);
+            Assert.Contains("Once persistent transformation trigger stored", failed.Stdout);
+            Assert.Contains("Error writing LiNo output file", failed.Stderr);
+
+            var readback = await Clink.RunAsync([.. args, "--after"]);
+            Clink.AssertSucceeded(readback);
+            Assert.Equal("(base: base base)\n", readback.Stdout);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task KillingAnImportBeforeItsCommitRecoversTheOriginalMappedStore()
+    {
+        if (OperatingSystem.IsWindows()) return; // The synchronization barrier is a POSIX FIFO.
+        var directory = Directory.CreateTempSubdirectory("clink-batch-crash-").FullName;
+        try
+        {
+            var db = Path.Combine(directory, "data.links");
+            var input = Path.Combine(directory, "input.lino");
+            var fifo = Path.Combine(directory, "export.fifo");
+            var mkfifo = new ProcessStartInfo("mkfifo") { ArgumentList = { fifo } };
+            using var createFifo = Process.Start(mkfifo)!;
+            await createFifo.WaitForExitAsync();
+            Assert.Equal(0, createFifo.ExitCode);
+            string[] args = ["--db", db, "--transactions", "--in", input];
+            await File.WriteAllTextAsync(input, "(base: base base)\n");
+            Clink.AssertSucceeded(await Clink.RunAsync(args));
+            await File.WriteAllTextAsync(input, "(base: added base)\n(new: base added)\n");
+
+            using var child = Process.Start(Clink.StartInfo([.. args, "--after", "--out", fifo]))!;
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var sawImport = false;
+            try
+            {
+                while (await child.StandardOutput.ReadLineAsync(deadline.Token) is { } line)
+                {
+                    if (line != "(new: base added)") continue;
+                    sawImport = true;
+                    break;
+                }
+            }
+            finally
+            {
+                if (!child.HasExited) child.Kill();
+                await child.WaitForExitAsync();
+            }
+            Assert.True(sawImport, "The child did not reach the export FIFO.");
+
+            var readback = await Clink.RunAsync("--db", db, "--transactions", "--after");
+            Clink.AssertSucceeded(readback);
+            Assert.Equal("(base: base base)\n", readback.Stdout);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task ImportDepth_DefaultsTo64AndAllowsABoundedOverride()
     {

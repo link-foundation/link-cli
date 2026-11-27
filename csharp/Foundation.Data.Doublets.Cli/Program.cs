@@ -503,8 +503,10 @@ rootCommand.SetAction(
       using var transitionsStore = transactionsRequested
         ? TransitionsJournal.Open(db, transactionsPathRaw, trace)
         : null;
+      var batchWrites = serveEndpoints.Length == 0 && grantToken is null && revokeToken is null
+        && (inputPath is not null || binaryInputPath is not null || !string.IsNullOrWhiteSpace(queryOptionValue) || !string.IsNullOrWhiteSpace(queryArgumentValue));
       using var transactionsLinks = transitionsStore is not null
-        ? new TransactionsDecorator(baseLinks, transitionsStore, retentionPolicy, commitMode, trace)
+        ? new TransactionsDecorator(baseLinks, transitionsStore, batchWrites ? RowUndoPolicy.WriteAheadImage : RowUndoPolicy.Observed, retentionPolicy, commitMode, trace)
         : null;
       if (transactionsLinks is not null) decoratedLinks = transactionsLinks;
 
@@ -533,7 +535,7 @@ rootCommand.SetAction(
         : null;
       if (persistentTransformationsEnabled)
       {
-          var triggerLinks = (INamedTypesLinks<uint>?)separateTriggersStore ?? baseLinks;
+          var triggerLinks = (INamedTypesLinks<uint>?)separateTriggersStore ?? (batchWrites ? decoratedLinks : baseLinks);
           persistentLinks = new PersistentTransformationDecorator(decoratedLinks, triggerLinks, trace)
           {
               AutoCreateMissingReferences = autoCreateMissingReferences
@@ -586,7 +588,7 @@ rootCommand.SetAction(
                   decoratedLinks = new PermissionsDecorator<uint>(undoableLinks, permissionPolicy, () => subjectOfView);
               }
           }
-          return RunCli();
+          return RunCli(transitionsStore);
       }
       finally
       {
@@ -595,7 +597,7 @@ rootCommand.SetAction(
           transactionsLinks?.Shutdown();
       }
 
-      int RunCli()
+      int RunCli(FileTransitionLog? journal)
       {
           if (vcLinks is not null)
           {
@@ -727,7 +729,9 @@ rootCommand.SetAction(
               return RunServer();
           }
 
-          return RunQueryPipeline();
+          if (!batchWrites || transactionsLinks is null) return RunQueryPipeline();
+
+          return RunTransactionBatch(journal!, transactionsLinks, vcLinks, RunQueryPipeline);
       }
 
       // `--serve`: serves decoratedLinks until the process is interrupted.
