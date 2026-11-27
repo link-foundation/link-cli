@@ -1,0 +1,25 @@
+dotnet format csharp --verify-no-changes --no-restore passed.
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "current-before") [839 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-after") [182 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "current-after") [408 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-before") [206 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-remove-after") [205 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-after") [187 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "applied-before") [159 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "applied-after") [143 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "cleanup-flush-before") [123 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-remove-before") [135 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "cleanup-flush-after") [178 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-before") [1 s]
+  Passed Foundation.Data.Doublets.Cli.Tests.StoreLockTests.PidCleanupRetriesWindowsSharingErrorsButLeavesPermanentErrorsAlone [11 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.StoreLockTests.WindowsPidCleanupCanMoveTheDirectoryAfterItsReaderCloses [6 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(kind: "flock") [3 s]
+  Passed Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(kind: "pid") [3 s]
+  Passed Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(kind: null) [3 s]
+
+Test Run Successful.
+Total tests: 61
+     Passed: 61
+ Total time: 34.7650 Seconds
+
+The real Windows directory-move check is conditional on Windows.

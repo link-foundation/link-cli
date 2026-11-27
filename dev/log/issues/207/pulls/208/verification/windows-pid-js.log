@@ -1,0 +1,79 @@
+(node:59603) ExperimentalWarning: FFI is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ locks the database and every side store it was given, once (4.575941ms)
+✔ shares the lock among read-only runs of an existing store only (4.066502ms)
+✔ --lock-status reports every store without creating any (7.160912ms)
+✔ checks the lock options before any store opens (3.439263ms)
+✔ fails naming the owner of a held pid lock, and --no-lock passes it by (57.899954ms)
+✔ concurrent --in imports under the default lock all keep their writes (#194) (1670.495217ms)
+✔ concurrent --in imports under --lock pid all keep their writes (#194) (1146.103292ms)
+✔ concurrent --in imports under --lock flock all keep their writes (#194) (998.291682ms)
+✔ retries bounded Windows PID cleanup sharing errors (88.030131ms)
+▶ parseStoreLockOptions
+  ✔ defaults to a flock waited for 30 s (7.425885ms)
+  ✔ reads kinds in any case and timeouts as u64 milliseconds (1.400051ms)
+  ✔ rejects other values with the messages of the Rust clink (2.624483ms)
+✔ parseStoreLockOptions (17.094353ms)
+▶ lockOrder
+  ✔ sorts by absolute path and locks a store spelled twice once (5.170139ms)
+  ✔ puts a directory before what it holds, and keeps missing parents (2.219768ms)
+✔ lockOrder (7.925997ms)
+▶ owner probes
+  ✔ names the host (1.081536ms)
+  ✔ reads the PID namespace on Linux only (0.532022ms)
+  ✔ reads the start time past a command name with spaces and parentheses (2.151541ms)
+  ✔ tells running, gone and unknown processes apart (1.500066ms)
+✔ owner probes (7.518618ms)
+▶ LockOwner
+  ✔ describes this process and reads its own record back (8.205008ms)
+  ✔ leaves what a platform cannot report empty (0.404284ms)
+  ✔ parses records leniently but needs a process id (0.472269ms)
+  ✔ judges only owners on this host and in this PID namespace (10.966055ms)
+✔ LockOwner (20.576554ms)
+▶ --lock pid
+  ✔ publishes, reports and releases a lock directory (21.37867ms)
+  ✔ leaves a lock alone once it is no longer its own (7.880553ms)
+  ✔ keeps a lock it cannot move aside on release (7.893057ms)
+  ✔ breaks the lock of a gone owner, tracing it when asked (31.768773ms)
+  ✔ breaks a directory without a record only once it is old (18.684317ms)
+  ✔ moves back a lock that changed hands while being broken (3.874254ms)
+  ✔ gives up after four attempts (44.677109ms)
+✔ --lock pid (137.501439ms)
+▶ StoreLock with --lock flock
+  ✔ holds a store exclusively, naming its owner to waiters (10.877642ms)
+  ✔ shares a store among readers, who clear a crashed writer record (36.792278ms)
+  ✔ waits for the holder to finish (40.769054ms)
+  ✔ names the record when probing for readers fails (5.185158ms)
+  ✔ releases the stores it took when a later one is held (4.431833ms)
+  ✔ reports stores that were never locked without creating anything (2.028633ms)
+  ✔ keeps a record it cannot write to itself (1.749111ms)
+✔ StoreLock with --lock flock (105.501465ms)
+▶ StoreLock with --lock pid and none
+  ✔ takes no lock with --lock none (2.214328ms)
+  ✔ falls back to the pid lock where this runtime has no flock (28.154374ms)
+  ✔ waits for a live owner and names it (33.829575ms)
+  ✔ reports what keeps it from making the lock directory (2.872145ms)
+✔ StoreLock with --lock pid and none (67.593698ms)
+▶ quietFfiWarning
+  ✔ drops only the node:ffi experimental warning (0.576214ms)
+✔ quietFfiWarning (0.716185ms)
+ℹ tests 41
+ℹ suites 8
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4947.346389
+ℹ start of coverage report
+ℹ -----------------------------------------------------------------
+ℹ file             | line % | branch % | funcs % | uncovered lines
+ℹ -----------------------------------------------------------------
+ℹ js               |        |          |         |
+ℹ  server          |        |          |         |
+ℹ   src            |        |          |         |
+ℹ    store-lock.js | 100.00 |   100.00 |  100.00 |
+ℹ -----------------------------------------------------------------
+ℹ all files        | 100.00 |   100.00 |  100.00 |
+ℹ -----------------------------------------------------------------
+ℹ end of coverage report

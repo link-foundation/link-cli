@@ -1,0 +1,12 @@
+{
+  "head_sha": "48f91281be48b70fe96a6f7548b229be68688061",
+  "output": {
+    "title": "1 configuration not found",
+    "summary": "**Warning**: Code scanning cannot determine the alerts introduced by this pull request, because 1 configuration present on `refs/heads/main` was not found:\n\n### Actions workflow (`security.yml`)\n\n* :question:&nbsp;&nbsp;`.github/workflows/security.yml:codeql/build-mode:autobuild/language:csharp`\n\n\n[View all branch alerts](/link-foundation/link-cli/security/code-scanning?query=pr%3A208+tool%3ACodeQL+is%3Aopen).",
+    "text": null,
+    "annotations_count": 0,
+    "annotations_url": "https://api.github.com/repos/link-foundation/link-cli/check-runs/140777680942/annotations"
+  },
+  "conclusion": "neutral",
+  "details_url": "https://github.com/link-foundation/link-cli/runs/140777680942"
+}

@@ -1,0 +1,35 @@
+Windows C# job 140778322490 on PR head 48f91281, 2026-11-27 UTC.
+
+Original job log lines 3232–3252
+2026-11-27T23:14:23.5415942Z   Passed Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ChecksTheLockOptionsBeforeAnyStoreOpens(option: "--lock-timeout", value: "soon", message: "Invalid --lock-timeout value 'soon'. Use a whole n"···) [190 ms]
+2026-11-27T23:14:24.9727969Z   Passed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "applied-after", entry: "owner") [2 s]
+2026-11-27T23:14:26.4751781Z   Passed Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(kind: "flock") [1 s]
+2026-11-27T23:14:27.3916090Z [xUnit.net 00:06:20.62]     Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(kind: "pid") [FAIL]
+2026-11-27T23:14:27.3923089Z [xUnit.net 00:06:20.63]       Assert.DoesNotContain() Failure: Filter matched in collection
+2026-11-27T23:14:27.3924756Z [xUnit.net 00:06:20.63]                                                                                                                                                                                                    ↓ (pos 11)
+2026-11-27T23:14:27.3932248Z [xUnit.net 00:06:20.63]       Collection: [···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···]
+2026-11-27T23:14:27.3934398Z [xUnit.net 00:06:20.63]       Stack Trace:
+2026-11-27T23:14:27.3938126Z [xUnit.net 00:06:20.63]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\CliStoreLockTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(String kind)
+2026-11-27T23:14:27.3940352Z [xUnit.net 00:06:20.63]         --- End of stack trace from previous location ---
+2026-11-27T23:14:27.9802144Z   Passed Foundation.Data.Doublets.Cli.Tests.TransactionRowUndoFailureTests.PreparationRowAndCommitFailuresRecoverImagesAndRetainCleanup(label: "row after", point: "row-after", skip: 0, attemptedCommit: False, explicitOwner: False) [3 s]
+2026-11-27T23:14:27.9803629Z   Passed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-before", entry: "graph") [3 s]
+2026-11-27T23:14:27.9805126Z   Failed Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(kind: "pid") [2 s]
+2026-11-27T23:14:27.9805818Z   Error Message:
+2026-11-27T23:14:27.9806086Z    Assert.DoesNotContain() Failure: Filter matched in collection
+2026-11-27T23:14:27.9806925Z                                                                                                                                                                                              ↓ (pos 11)
+2026-11-27T23:14:27.9808192Z Collection: [···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\cli-"···]
+2026-11-27T23:14:27.9809324Z   Stack Trace:
+2026-11-27T23:14:27.9810052Z      at Foundation.Data.Doublets.Cli.Tests.CliStoreLockTests.ConcurrentImportsAllKeepTheirWrites(String kind) in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\CliStoreLockTests.cs:line 41
+2026-11-27T23:14:27.9810961Z --- End of stack trace from previous location ---
+2026-11-27T23:14:29.5567577Z   Passed Foundation.Data.Doublets.Cli.Tests.AutomaticVersionFailureTests.AutomaticFailureRetainsVersionPublicationThroughRepeatedCleanup(point: "data-after", entry: "graph") [2 s]
+
+Original job log lines 4467–4475
+2026-11-27T23:16:11.6468190Z   Passed Foundation.Data.Doublets.Cli.Tests.Protocol.LinksSessionsTests.RefusesAuthenticationWithoutAnAuthenticator [1 s]
+2026-11-27T23:16:13.0173621Z [xUnit.net 00:08:06.25]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-after") [FAIL]
+2026-11-27T23:16:13.0177160Z [xUnit.net 00:08:06.25]       Test execution timed out after 30000 milliseconds
+2026-11-27T23:16:13.1532086Z   Passed Foundation.Data.Doublets.Cli.Tests.Protocol.LinksSessionsTests.AuthenticatesOverTcp [1 s]
+2026-11-27T23:16:13.1533293Z   Passed Foundation.Data.Doublets.Cli.Tests.MirroredFileTests.InitializationAndCleanupErrorsAreBothPreserved [712 ms]
+2026-11-27T23:16:13.1535291Z   Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-after") [1 ms]
+2026-11-27T23:16:13.1536363Z   Error Message:
+2026-11-27T23:16:13.1536694Z    Test execution timed out after 30000 milliseconds
+2026-11-27T23:16:13.1536970Z

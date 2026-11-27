@@ -1,0 +1,16 @@
+   Compiling link-cli v3.3.1 (/tmp/gh-issue-solver-1795813073025/rust)
+    Finished `test` profile [unoptimized] target(s) in 25.29s
+     Running tests/cli_store_lock_tests.rs (rust/target/debug/deps/cli_store_lock_tests-27e210c358c21e38)
+
+running 9 tests
+test options_parse_and_stores_lock_in_one_order ... ok
+test a_read_of_a_store_not_created_yet_takes_the_lock_alone ... ok
+test lock_options_are_validated_before_any_store_is_created ... ok
+test pid_locks_of_a_reused_process_id_are_broken ... ok
+test explicit_side_stores_are_locked_with_the_database ... ok
+test readers_share_the_store_and_writers_wait_for_them ... ok
+test a_held_flock_times_out_naming_its_owner_and_no_lock_bypasses_it ... ok
+test pid_locks_wait_for_live_owners_and_break_those_of_gone_ones ... ok
+test concurrent_imports_that_succeed_are_all_durable ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.78s
