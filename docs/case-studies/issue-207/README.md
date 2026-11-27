@@ -1,0 +1,62 @@
+# Issue #207. CI reliability and template comparison
+
+## Timeline
+
+All times are UTC on 2026-11-27. The [evidence index](../../../dev/log/issues/207/pulls/208/README.md) links the original issue, draft and run records.
+
+| Time | What happened |
+| --- | --- |
+| 19:54 | Workflows for merge `03f44dd` started. npm returned HTTP 404 for the server’s OIDC exchange at 19:54:57. |
+| 19:57 | Issue #207 opened while the default-branch checks were still running. Its initial “0 not passing” counted conclusions that had yet to be posted. |
+| 20:18–20:21 | After the C# release advanced `main` to `df8b0f8`, JS client conformance for `03f44dd` was cancelled while reopening native pages. The earlier Rust Windows test was cancelled mid-suite. Their status gates correctly rejected the cancellations. |
+| 20:29–20:30 | The replacement JS client run failed its real etcd scenario. A paused node had been resumed before the test checked that the leader changed. |
+| 20:57–21:00 | The issue update recorded the still-running Rust check. The generated initial commit of draft #208 added a root `.gitkeep`, and required JavaScript failed the layout guard. The failure propagated to dependent jobs. |
+| After 21:00 | The Rust release advanced `main` to `d8a26c9`. The next server workflow again reported HTTP 404 for the same package. The PR branch incorporated the new default-branch tip before the fixes. |
+
+## Requirements and verification
+
+| Requirement | Cause, change and verification |
+| --- | --- |
+| Investigate every red or incomplete run named in the issue and follow its update | Job conclusions and compressed logs preserve the initial runs, the next two default-branch revisions, and the draft. Narrow diagnostics in the evidence index distinguish checkout policy, process elections, overlapping workflows, registry configuration, runner acquisition and upstream warnings. |
+| Preserve required check coverage and dependency order | The draft placeholder broke `js/test/repositoryLayout.test.mjs`. Remove it, keep the layout test and keep all three required checks unfiltered. JavaScript lint, unit tests, receipts and parity still gate Rust and C#. |
+| Keep each main commit and intentional run observable | Jobs formerly grouped by branch ref could cancel already-running checks and replace pending jobs. Read-only keys now use the push SHA or run ID, with a per-PR synchronize group. Each matrix keeps its identity. Shared release writers use GitHub’s `queue: max` with cancellation disabled. The workflow policy tests enforce the keys and writer configuration. |
+| Fix the actual consensus assertion | Raft can choose a resumed member in a new election. Observe a majority-backed replacement while the original process is stopped, commit through the available quorum and then rejoin the former member. After recovery, require a healthy converged cluster and check the journal and stale-write guarantees. The focused regression rejects discordant and stale status samples. JS Client CI runs the real experiment in both journal modes. Manual dispatch accepts `verbose_consensus`, and `ETCD_TEST_VERBOSE=1` records member observations and etcd debug logs locally. |
+| Test and release npm packages with appropriate credentials | Package contents can be validated on PRs and ordinary manual runs using `npm pack --dry-run`. Main-only writers require successful preflight. Authentication-only dispatch continues to exercise the real OIDC exchange. Tests distinguish an unpublished package, an existing package with a missing or mismatched trust mapping, a registry outage and a successful exchange. |
+| Run JS client and server CI for changes to their actual inputs | The client’s enumerated experiment paths missed the etcd harness. Cover the full experiment subtree, the shared stage and its policy inputs in both workflows, and the server’s embedded-store examples. Preserve the existing unit, portability and conformance jobs. |
+| Resolve actionable CI warnings | Move Rust’s local transaction tests to a sibling module and centralize C# import option parsing in the existing I/O class. Both files are below the existing 900-line warning threshold. Parity fingerprints were updated with structural-change acknowledgements. Release fragments trigger the normal package release paths. |
+| Compare all six template trees and apply applicable practices | The [file-level comparison](../../../dev/log/issues/207/pulls/208/templates/ci-file-comparison.tsv) enumerates workflows, supporting scripts, CI policy, hooks and matching files from pinned snapshots. The practice crosswalk below records equivalent local coverage and template differences. |
+| Report shared defects where reproducible | The six template reports and the solver placeholder report include reproductions, temporary workarounds and code-level proposals. The existing Actionlint report tracks its rejected queue syntax. |
+| Deliver one PR with evidence and release verification | [PR #208](https://github.com/link-foundation/link-cli/pull/208) owns this work. Issue #207 had no required sub-issues or blocking-issue links when its timeline was captured. npm server release remains dependent on maintainer setup. |
+
+## Template crosswalk
+
+| Practice | Template implementations and link-cli decision |
+| --- | --- |
+| Preserve independent runs | All six templates had branch-scoped cancellation for one or more read-only checks on default-branch pushes. Rust, JS and Python had previously chosen that behavior. C# and C++ already separate writers. link-cli applies the newer guide’s event/revision policy across all sixteen workflow files and enables the existing upstream writer queue pattern. |
+| Run cheap checks first and prove their provenance | Rust and JS contain JavaScript-first examples and policy helpers. link-cli already requires a same-commit reusable stage and validates a golden-fixture receipt per language. Python, Java and C++ examples assume standalone distributables and toolchains. Their language-specific release steps do not apply to the port and fixture code in this monorepo. |
+| Validate scope and fixtures | The templates use change detection, fresh-merge checks, and size and docs gates. link-cli already uses whole-PR comparisons, fresh-merge simulation, conditional native jobs, strict required status, parity and explicit layout checks. The JS package path filters in this PR now include the shared stage, internal examples and all conformance inputs. |
+| Keep releases independently recoverable | Rust uses crate preflight and ordered Git/registry publication. C# includes NuGet authentication/fallback and package verification. JS includes tarball and registry checks. link-cli has existing staged Rust and C# releases, version metadata, smoke checks and retry semantics. Here the npm tarball gate becomes credential-free and the main writer retains npm provenance and trusted publishing. PyPI, Maven, vcpkg, Docker Hub and template app distribution target different outputs. |
+| Audit workflow and dependencies | Templates combine CodeQL, Actionlint, zizmor, lockfiles and secret scans, with tool-specific differences. link-cli already lints embedded shell code, keeps namespace pinning rules, scans historical evidence and runs CodeQL, dependency review and package ecosystem audits. Template Actionlint workarounds use a narrow exception or preprocess supported queue syntax. link-cli pairs a narrow diagnostic exception with a local queue policy check. |
+| Recover runner and link infrastructure | Templates use bounded reruns for unacquired runners and recheck intermittent links. link-cli already distinguishes unacquired jobs, protects active writers, and rechecks transient links with archive evidence. A test process cancelled during execution is a different failure and is addressed in the concurrency keys. |
+| Keep the repository maintainable | C#, Rust, Python, Java and C++ have hook configurations and language-specific size or static checks. JS adds package size and fast lint scripts. link-cli mirrors CI checks in its hook definitions and uses a lower warning threshold than its hard size limit. |
+
+### Remaining registry action
+
+`https://registry.npmjs.org/@link-foundation%2Flink-cli-server` returned 404 for anonymous metadata, while the client package returned 200. A scope maintainer can validate the tarball with `cd js/server && npm pack --dry-run`, publish the initial public version from a reviewed revision, and open the npm package’s **Settings → Trusted publishing**. Select GitHub Actions, set the owner to `link-foundation`, repository to `link-cli`, and workflow filename to `js-server.yml`. Permit direct publication because this workflow uses `npm publish`. Run **JS server CI → Run workflow** on `main` with **Verify npm trusted publishing** enabled, then retry the main workflow. npm currently requires a new configuration to complete a successful trusted publish within two days. Consult npm’s setup and scope documentation for the first-publish or staged approval procedure. [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) · [npm scoped packages](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
+
+### Provider diagnostics and design alternatives
+
+- **Node FFI and LLVM branch coverage.** Node labels the direct `node:ffi` backend experimental. `cargo-llvm-cov` similarly reports the experimental LLVM branch mode on stable. The real FFI backend and branch coverage remain enabled. Switching to native Node-API bindings or dropping branch coverage would change the packaging or verification contract. The workflows preserve those lifecycle messages. [Node v26 FFI](https://nodejs.org/docs/latest-v26.x/api/ffi.html) · [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov)
+- **Codecov and Dependabot.** Codecov’s PGP verification prints the key trust-database advisory alongside a good signature and verified checksum. Dependabot’s managed environment rehashes a bundled CA file and reports that it contains several certificates. The relevant upload and managed jobs completed. [Codecov wrapper](https://github.com/codecov/wrapper) · [OpenSSL rehash](https://docs.openssl.org/3.5/man1/openssl-rehash/)
+- **Concurrency tooling.** GitHub job concurrency is sufficient for repository writers. A local action or custom lock service would not protect jobs pending on independent runners. The pinned Actionlint release still treats the documented queue property as unknown. The exception matches that diagnostic only and policy tests enforce its allowed placement and value. [GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) · [Actionlint #657](https://github.com/rhysd/actionlint/issues/657)
+- **Election observation.** The etcd v3 maintenance endpoint already supplies member, leader and term. Polling it while the original process is stopped provides direct evidence without a new client dependency or an arbitrary election sleep. [etcd maintenance API](https://etcd.io/docs/v3.6/dev-guide/api_reference_v3/#service-maintenance-etcdserveretcdserverpb-rpc-proto)
+
+### Upstream reports
+
+- [Rust template #275](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/275)
+- [JavaScript template #325](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/325)
+- [C# template #121](https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/121)
+- [Python template #173](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/173)
+- [Java template #39](https://github.com/link-foundation/java-ai-driven-development-pipeline-template/issues/39)
+- [C++ template #45](https://github.com/link-foundation/cpp-ai-driven-development-pipeline-template/issues/45)
+- [Hive Mind #4186](https://github.com/link-assistant/hive-mind/issues/4186)

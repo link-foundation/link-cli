@@ -1,0 +1,7 @@
+{"level":"warn","ts":"2026-11-27T20:29:41.623073Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_BIN=/home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd"}
+{"level":"warn","ts":"2026-11-27T20:29:41.624668Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T20:29:41.624718Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T20:29:42.629794Z","caller":"auth/store.go:1137","msg":"simple token is not cryptographically signed"}
+{"level":"warn","ts":"2026-11-27T20:29:44.033411Z","caller":"rafthttp/stream.go:425","msg":"lost TCP streaming connection with remote peer","stream-reader-type":"stream MsgApp v2","local-member-id":"bc2100461b4f7f5b","remote-peer-id":"505850ae75b13a44","error":"unexpected EOF"}
+{"level":"warn","ts":"2026-11-27T20:29:44.033465Z","caller":"rafthttp/peer_status.go:66","msg":"peer became inactive (message send to peer failed)","peer-id":"505850ae75b13a44","error":"failed to read 505850ae75b13a44 on stream MsgApp v2 (unexpected EOF)"}
+{"level":"warn","ts":"2026-11-27T20:29:44.033595Z","caller":"rafthttp/stream.go:425","msg":"lost TCP streaming connection with remote peer","stream-reader-type":"stream Message","local-member-id":"bc2100461b4f7f5b","remote-peer-id":"505850ae75b13a44","error":"unexpected EOF"}

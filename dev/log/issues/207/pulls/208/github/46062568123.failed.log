@@ -1,0 +1,173 @@
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	﻿2026-11-27T20:29:38.2106091Z ##[group]Run mkdir -p experiments/issue-138/etcd
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2106403Z ^[[36;1mmkdir -p experiments/issue-138/etcd^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2107039Z ^[[36;1mcurl --fail --location --retry 3 --output experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.7.3/etcd-v3.7.3-linux-amd64.tar.gz^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2107913Z ^[[36;1mprintf '%s  %s\n' '5dfa9cc3b3ce3b4b491fbcc2057d3daa166bcc6676f743fcd20f8e5760cb9775' 'experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz' | sha256sum --check^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2108568Z ^[[36;1mtar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2109020Z ^[[36;1mnode --test --test-timeout=10000 experiments/issue-138/etcd-harness.test.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2109366Z ^[[36;1mnode experiments/issue-138/etcd-maintenance.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2109803Z ^[[36;1mnode experiments/issue-138/etcd-reclamation.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2110236Z ^[[36;1mRECLAMATION_CHUNKS=1 node experiments/issue-138/etcd-reclamation.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2110580Z ^[[36;1mnode experiments/issue-138/etcd-cluster.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2110916Z ^[[36;1mCLUSTER_JOURNAL_CHECKPOINT_INTERVAL=1 node experiments/issue-138/etcd-cluster.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2111268Z ^[[36;1mnode experiments/issue-138/etcd-partition.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2111569Z ^[[36;1mPARTITION_SEED=2026 node experiments/issue-138/etcd-partition.mjs^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135235Z shell: /usr/bin/bash -e {0}
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135438Z env:
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135587Z   GIT_CONFIG_COUNT: 1
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135765Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135973Z   GIT_CONFIG_VALUE_0: main
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2136232Z   CLINK_RUST: /home/runner/work/link-cli/link-cli/rust/target/release/clink
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2136705Z   CLINK_CSHARP: /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2137136Z   CLINK_WASM: /home/runner/work/link-cli/link-cli/js/pkg
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2137388Z   DOTNET_ROOT: /usr/share/dotnet
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2137735Z   ETCD_BIN: /home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2138254Z   MAINTENANCE_RUST_EXAMPLE: /home/runner/work/link-cli/link-cli/rust/target/release/examples/journal_maintenance
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2138900Z   MAINTENANCE_CSHARP_EXAMPLE: /home/runner/work/link-cli/link-cli/examples/journal-maintenance-csharp/bin/Release/net10.0/JournalMaintenanceExample.dll
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2139543Z   RECLAMATION_RUST_EXAMPLE: /home/runner/work/link-cli/link-cli/rust/target/release/examples/journal_reclamation
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2140351Z   RECLAMATION_CSHARP_EXAMPLE: /home/runner/work/link-cli/link-cli/examples/journal-reclamation-csharp/bin/Release/net10.0/JournalReclamationExample.dll
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2141034Z   CLUSTER_RUST_EXAMPLE: /home/runner/work/link-cli/link-cli/rust/target/release/examples/cluster
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2141505Z   FENCE_RUST_EXAMPLE: /home/runner/work/link-cli/link-cli/rust/target/release/examples/author_fence
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2141986Z   ALLOCATION_RUST_EXAMPLE: /home/runner/work/link-cli/link-cli/rust/target/release/examples/address_allocation
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2142562Z   CLUSTER_CSHARP_EXAMPLE: /home/runner/work/link-cli/link-cli/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2142994Z ##[endgroup]
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2226840Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2227477Z                                  Dload  Upload   Total   Spent    Left  Speed
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2227735Z 
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.3951266Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.3951826Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.5409068Z 
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.5411920Z 100 22.8M  100 22.8M    0     0  71.7M      0 --:--:-- --:--:-- --:--:-- 71.7M
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.5633355Z experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz: OK
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0397952Z ✔ a ready majority cannot hide a slow third member (30.991382ms)
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0398798Z ✔ readiness has a finite attempt limit and preserves the failure (0.470806ms)
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0465266Z ℹ tests 2
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0465521Z ℹ suites 0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0465697Z ℹ pass 2
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0465868Z ℹ fail 0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0466030Z ℹ cancelled 0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0466207Z ℹ skipped 0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0466369Z ℹ todo 0
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.0466582Z ℹ duration_ms 78.032058
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.3358918Z PASS Rust: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.5137526Z PASS C#: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.6106435Z PASS JS: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.6452258Z PASS JS: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.6920740Z PASS JS: pinned pagination, conditional delete, absent conflict, ABA protection, keys-only scan
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.7191611Z PASS real etcd: revision-pinned pages exclude concurrent insert/update/delete
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.7318819Z PASS real etcd: compacted historical page restarts the complete snapshot
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:39.7350602Z PASS real etcd: lost deletion response is discovered without mutation replay
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:40.8612810Z PASS real etcd: complete scan after leader loss
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:41.5675035Z PASS real etcd: majority loss returns no partial scan and no false deletion acknowledgment
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:41.5697867Z PASS all maintenance integration contracts; retained server logs /home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/maintenance-Wb4auM
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:42.9701102Z PASS Rust reclamation: revision 1, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 0 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.1569798Z PASS C# reclamation: revision 2, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.3197669Z PASS WASM reclamation: revision 3, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.3950728Z PASS WASM reclamation: revision 4, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.5020683Z PASS WASM reclamation: revision 5, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.5367541Z PASS real etcd: initialization before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.5524677Z PASS real etcd: initialization after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.5996728Z PASS real etcd: staging before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.6523189Z PASS real etcd: staging after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.7049447Z PASS real etcd: publication before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.7586471Z PASS real etcd: publication after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.7977038Z PASS real etcd: fence before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.8362633Z PASS real etcd: fence after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.8951326Z PASS real etcd: deletion before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.9526716Z PASS real etcd: deletion after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:43.9981917Z PASS real etcd: retired two-shard snapshot refresh returns one complete new group
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:44.0300848Z PASS real etcd: owned retired journals, warm-cache data outage, catalog remains required
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:45.0838990Z PASS Rust reclamation: revision 6, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:45.2822067Z PASS C# reclamation: revision 7, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:45.4492493Z PASS WASM reclamation: revision 8, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:47.5723384Z PASS real etcd: native/WASM handoffs after leader loss, majority loss gives no partial read or false publication/collection acknowledgment
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:47.5747876Z PASS all blob2 reclamation integration contracts; retained server logs /home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/reclamation-6PcbHZ
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.1676778Z PASS Rust reclamation: revision 1, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 0 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.3691487Z PASS C# reclamation: revision 2, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.5516096Z PASS WASM reclamation: revision 3, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 4 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.6408082Z PASS WASM reclamation: revision 4, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 4 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.7682580Z PASS WASM reclamation: revision 5, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 6 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.8017843Z PASS real etcd: initialization before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.8160543Z PASS real etcd: initialization after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.8768435Z PASS real etcd: staging before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:48.9378248Z PASS real etcd: staging after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.0105582Z PASS real etcd: publication before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.0841132Z PASS real etcd: publication after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.1274113Z PASS real etcd: fence before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.1702292Z PASS real etcd: fence after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.2481929Z PASS real etcd: deletion before response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.3298760Z PASS real etcd: deletion after response loss, one mutation send, fresh recovery and collection
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.3866894Z PASS real etcd: retired two-shard snapshot refresh returns one complete new group
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:49.4279426Z PASS real etcd: owned retired journals, warm-cache data outage, catalog remains required
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:51.1171904Z PASS Rust reclamation: revision 6, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 6 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:51.3349090Z PASS C# reclamation: revision 7, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 8 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:51.5702799Z PASS WASM reclamation: revision 8, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 8 retired objects
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:53.6971132Z PASS real etcd: native/WASM handoffs after leader loss, majority loss gives no partial read or false publication/collection acknowledgment
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:53.6998669Z PASS all chunks2 reclamation integration contracts; retained server logs /home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/reclamation-IX060n
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.5773922Z PASS real etcd address reservations: 2 native ports, actual WASM creates, abandoned gap, competing writers, lost reply and exact retained retries
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.7252054Z PASS real etcd author fencing: 2 native claim ports, actual WASM staging, stale preparation refusal, burned suffix, continuing counter and unchanged fence generation
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.7386944Z PASS real etcd: atomic multi-shard CAS and read-only dependency conflict
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.7434280Z PASS real etcd: dropped response discovers both committed shards without replay
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.7487000Z PASS Rust HTTP: both shard journals committed atomically
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.8765134Z PASS C# HTTP: both shard journals committed atomically
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:54.9778088Z Both shard journals committed atomically.
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:55.0032906Z PASS public JS HTTP example: native journals reopen through actual WASM
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:55.9462781Z PASS Rust HTTP: both shard journals committed atomically
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:56.0933736Z PASS C# HTTP: both shard journals committed atomically
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:56.2280853Z Both shard journals committed atomically.
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:56.2372713Z PASS public JS HTTP example: native journals reopen through actual WASM
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:56.2386466Z PASS independent consensus groups: native/WASM interoperability; catalog contains only atomic pointers
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:56.2626082Z PASS independent consensus groups: unavailable west publishes nothing; east still commits
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6951050Z etcd evidence: /home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/run-K49PWa
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6953216Z node:internal/modules/run_main:111
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6953584Z     triggerUncaughtException(
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6953830Z     ^
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6953945Z 
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6954276Z AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: 1
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6955072Z     at file:///home/runner/work/link-cli/link-cli/experiments/issue-138/etcd-cluster.mjs:428:10
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6955780Z     at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6956156Z   generatedMessage: true,
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6956414Z   code: 'ERR_ASSERTION',
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6956645Z   actual: 1,
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6956836Z   expected: 1,
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6957068Z   operator: 'notStrictEqual',
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6957324Z   diff: 'simple'
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6957543Z }
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6957657Z 
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.6957740Z Node.js v26.13.1
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:58.7025608Z ##[error]Process completed with exit code 1.
+Pipeline Status (js-client)	Check every prerequisite	﻿2026-11-27T20:30:13.0933403Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.0933818Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4007724Z shell: /usr/bin/bash -e {0}
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4008461Z env:
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4008874Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4009282Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4009676Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4011090Z   NEEDS_JSON: {
+Pipeline Status (js-client)	Check every prerequisite	  "javascript": {
+Pipeline Status (js-client)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-client)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-client)	Check every prerequisite	  },
+Pipeline Status (js-client)	Check every prerequisite	  "release-preflight": {
+Pipeline Status (js-client)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-client)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-client)	Check every prerequisite	  },
+Pipeline Status (js-client)	Check every prerequisite	  "verify-trusted-publishing": {
+Pipeline Status (js-client)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (js-client)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-client)	Check every prerequisite	  },
+Pipeline Status (js-client)	Check every prerequisite	  "unit": {
+Pipeline Status (js-client)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-client)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-client)	Check every prerequisite	  },
+Pipeline Status (js-client)	Check every prerequisite	  "conformance": {
+Pipeline Status (js-client)	Check every prerequisite	    "result": "failure",
+Pipeline Status (js-client)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-client)	Check every prerequisite	  },
+Pipeline Status (js-client)	Check every prerequisite	  "release": {
+Pipeline Status (js-client)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (js-client)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-client)	Check every prerequisite	  }
+Pipeline Status (js-client)	Check every prerequisite	}
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4012618Z ##[endgroup]
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4282815Z Pipeline jobs did not succeed: conformance (failure)
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4326429Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,571 @@
+repository	path	blob	purpose	other repository matches
+link-cli	.github/CODEOWNERS	410a3e124e2f6fc3551acc696d681328602ea0ee	repository or language-specific infrastructure	-
+link-cli	.github/codecov.yml	927b361e25322e61525d875dee272d0b5a0caf58	repository or language-specific infrastructure	-
+link-cli	.github/codeql/codeql-config.yml	2b1f4c19a2399eae33632dfffa725258523e50ad	security and dependencies	rust/.github/codeql/codeql-config.yml (same stem), js/.github/codeql/codeql-config.yml (same stem), python/.github/codeql/codeql-config.yml (same stem)
+link-cli	.github/dependabot.yml	45f3a5cc8b687627104b23865705b7036e60068a	security and dependencies	rust/.github/dependabot.yml (same stem), csharp/.github/dependabot.yml (same stem), python/.github/dependabot.yml (same stem), java/.github/dependabot.yml (same stem), cpp/.github/dependabot.yml (same stem)
+link-cli	.github/scripts/audit-nuget-dependencies.mjs	41c6c2f069a130e266aed45d8541086abad9310c	registry and release	-
+link-cli	.github/scripts/cargo-warnings.test.mjs	1a6c44b154ecabca5233c1fdf4c365620dce64b8	source and test quality	-
+link-cli	.github/scripts/check-cargo-warnings.sh	562dec7530a2d34734a604d5eae12c1f540183d4	source and test quality	rust/scripts/check-cargo-warnings.sh (identical)
+link-cli	.github/scripts/check-codeql-results.mjs	945e80bf7ea1d6e19bef399fbea9cffdf140af41	security and dependencies	rust/scripts/check-codeql-results.mjs (same stem), js/scripts/check-codeql-results.mjs (same stem), python/scripts/check_codeql_results.py (same stem)
+link-cli	.github/scripts/check-codeql-results.test.mjs	9432559801200792e00fa5c06840827616837bcf	security and dependencies	rust/scripts/check-codeql-results.test.mjs (same stem)
+link-cli	.github/scripts/check-javascript-quality.mjs	6d0fbf825c37d4ceb98ed08a4c7333c947b38346	repository or language-specific infrastructure	-
+link-cli	.github/scripts/check-latest-dependencies.mjs	cfc044b0d17f77a97c4af973a4916a5a781668ff	security and dependencies	-
+link-cli	.github/scripts/check-latest-dependencies.test.mjs	54a82eecd694008038643ea9505accefd40cb9b0	security and dependencies	-
+link-cli	.github/scripts/check-python-quality.py	b3a5cff4374bd97fc328757d05d5583b46d92574	repository or language-specific infrastructure	-
+link-cli	.github/scripts/check-secrets.mjs	4c3904de2eabb9ba7788ba9cddc0096f7fc83538	security and dependencies	rust/.github/scripts/check-secrets.mjs (same stem), js/scripts/check-secrets.mjs (same stem)
+link-cli	.github/scripts/check-secrets.test.mjs	e8e8ef04af962f8b65da31ed1e88849c80b9b986	security and dependencies	rust/.github/scripts/check-secrets.test.mjs (same stem)
+link-cli	.github/scripts/check-sqlite-optional.mjs	6fd06e01666575970f640087bb974a332de0b4ae	repository or language-specific infrastructure	-
+link-cli	.github/scripts/check-web-archive.mjs	2e341c28e5c1b0a5e396e80da9d5aa199f3d389d	documentation and links	rust/scripts/check-web-archive.mjs (same stem), js/scripts/check-web-archive.mjs (same stem), csharp/scripts/check-web-archive.mjs (same stem), python/scripts/check_web_archive.py (same stem), cpp/scripts/check_web_archive.py (same stem)
+link-cli	.github/scripts/check-web-archive.test.mjs	1a3ca7a751d5408601b33ee738d11fed3b597fc5	documentation and links	rust/scripts/check-web-archive.test.mjs (same stem), csharp/scripts/check-web-archive.test.mjs (same stem)
+link-cli	.github/scripts/ci-governance.test.mjs	9d4235d5b5d4e548d7c54c6f6a7dc572a9ce15d7	source and test quality	-
+link-cli	.github/scripts/coverage.mjs	9aa73e2194d2336caca23ec0e03c09c1c6e35f30	source and test quality	-
+link-cli	.github/scripts/coverage.test.mjs	1616211a0850c92eccb0ccc45a6ce371534d841b	source and test quality	-
+link-cli	.github/scripts/crates-publish-preflight.mjs	31c6a03a5b22f4657fb10748184c60bb7dce085c	registry and release	rust/scripts/crates-publish-preflight.mjs (same stem)
+link-cli	.github/scripts/crates-publish-preflight.test.mjs	93c7e80abd42d9c74267e95c3f10ece37a636b0e	registry and release	rust/scripts/crates-publish-preflight.test.mjs (same stem)
+link-cli	.github/scripts/dependency-failures.test.mjs	411aefc6f602c9ec5375a7c3df6ac12ffd1536ec	security and dependencies	-
+link-cli	.github/scripts/dependency-tracking-issue.mjs	553652ad3951d1c1d14e5134bdf408a1718880b0	security and dependencies	-
+link-cli	.github/scripts/dependency-tracking-issue.test.mjs	d4fc4811949a5419e8f6d989090bc15952d3d060	security and dependencies	-
+link-cli	.github/scripts/docker-crash.mjs	c540b2c710b6ec94fda3242178e06b6767b1a556	repository or language-specific infrastructure	-
+link-cli	.github/scripts/docker-crash.test.mjs	b836bae4978de57a20f2fee314b8ff3137cf26fb	source and test quality	-
+link-cli	.github/scripts/dotnet-download-policy.test.mjs	b93039118965dabbeb2430161442f05ecc008171	workflow validation and status	-
+link-cli	.github/scripts/fixtures/lychee-report.md	c5b370ccda0943c1db9defa75e6138d37cec144a	documentation and links	rust/scripts/fixtures/lychee-report.md (same stem), js/scripts/lychee-report.mjs (same stem), csharp/scripts/fixtures/lychee-report.md (same stem)
+link-cli	.github/scripts/link-failures.test.mjs	f64b0d9271b0b8e60a3ae00491d04516a23d854b	source and test quality	csharp/scripts/link-failures.test.mjs (same stem)
+link-cli	.github/scripts/npm-release.test.mjs	bc5aa1865cd1d1b9737ef1202b026f3b61afdb0c	registry and release	-
+link-cli	.github/scripts/nuget-audit.mjs	c4fe9f30ccf37c3829db721876d3b1626d68cfba	registry and release	-
+link-cli	.github/scripts/nuget-audit.test.mjs	7f9882d8b2c1866c6d91dcda1c9a8b55efaebbbe	registry and release	-
+link-cli	.github/scripts/nuget-auth.mjs	6d088c9a1a6a04a09875e7196c09db7a0f993033	registry and release	csharp/scripts/nuget-auth.mjs (same stem)
+link-cli	.github/scripts/nuget-auth.test.mjs	1027699c9ddde6c500a02c17f77e02623c248212	registry and release	csharp/scripts/nuget-auth.test.mjs (same stem)
+link-cli	.github/scripts/pipeline-status.mjs	a70ece1669b784128f62c05a5205a3652973238a	workflow validation and status	-
+link-cli	.github/scripts/pipeline-status.test.mjs	c11c78984d3431a618d9b5e13371b01d1b07d55e	workflow validation and status	-
+link-cli	.github/scripts/python-quality.toml	81dee3cdba3c4ea255601f47b3ac616ca4665039	repository or language-specific infrastructure	-
+link-cli	.github/scripts/recheck-broken-links.mjs	6b505386c9c563e37accac8d9f565ef08d97d1dd	documentation and links	rust/scripts/recheck-broken-links.mjs (same stem), js/scripts/recheck-broken-links.mjs (same stem), csharp/scripts/recheck-broken-links.mjs (same stem), python/scripts/recheck_broken_links.py (same stem), cpp/scripts/recheck_broken_links.py (same stem)
+link-cli	.github/scripts/release-preflight.mjs	eacad3b58575f5f27b68af27bf68c5d8b9fe7257	registry and release	-
+link-cli	.github/scripts/release-preflight.test.mjs	f7fe768c1eaa2183ae17280b9cbd9d930e2bd37f	registry and release	-
+link-cli	.github/scripts/release-scripts.test.mjs	52336ff626c090c71839878a7e75de9d0e990d83	registry and release	-
+link-cli	.github/scripts/requirements-quality.txt	7f4e684ff4b0aa8e44d291a80e5f76fa7ed4bb19	repository or language-specific infrastructure	-
+link-cli	.github/scripts/requirements-workflow-audit.txt	244f376640bff450f0555cffe4c5cb28fc314046	workflow validation and status	-
+link-cli	.github/scripts/runner-recovery.test.mjs	2c2daec322fd167b5ec52e2dc2b574f1ff82a151	runner and artifact handling	-
+link-cli	.github/scripts/simulate-fresh-merge.sh	c6df2e65a4af2a1b769d2894f687ff927a377579	change detection and stage gate	rust/scripts/simulate-fresh-merge.sh (same stem), js/scripts/simulate-fresh-merge.sh (same stem), python/scripts/simulate-fresh-merge.sh (same stem), cpp/scripts/simulate-fresh-merge.sh (same stem)
+link-cli	.github/scripts/stack-paths.mjs	fa89c36d61db3c80d9a145f2cd28f1c971fc3974	repository or language-specific infrastructure	-
+link-cli	.github/scripts/stack-paths.test.mjs	e46f05ad43bf30d0937df22486a1a5b5f655f8b2	source and test quality	-
+link-cli	.github/scripts/transactions-benchmark.mjs	9ba4807de3c2450ef54df3a27fe7564bcc32cf34	repository or language-specific infrastructure	-
+link-cli	.github/scripts/transactions-benchmark.test.mjs	5ad36024b5e0c5d033ed73927310be27bb0aa437	source and test quality	-
+link-cli	.github/scripts/unacquired-jobs.py	f925dd864ba5a364bb509bf859cb52519db0b49c	runner and artifact handling	rust/scripts/unacquired-jobs.py (same stem), cpp/scripts/unacquired_jobs.py (same stem)
+link-cli	.github/scripts/unacquired_jobs_test.py	4ff0128e3a96d28ae1ff1d710aaca4a98f864990	runner and artifact handling	-
+link-cli	.github/scripts/verify-npm-trust.mjs	0b730f251201f412e540af18332558448efc7c55	registry and release	-
+link-cli	.github/scripts/verify-npm-trust.test.mjs	f79c68a2694286b0ed7b9b240edff4d56773647d	registry and release	-
+link-cli	.github/scripts/workflow-files.mjs	d7924465731de008062f6c03a25f88c5493d3a79	workflow validation and status	-
+link-cli	.github/scripts/workflow-policy.test.mjs	ba2026deb6d04802d7b8fdff1cfdfd8d066d41c2	workflow validation and status	java/scripts/workflow-policy.test.mjs (same stem)
+link-cli	.github/workflows/crash.yml	01b497dd13fb74c8a45d44c0f15d3b84323ea0f6	workflow validation and status	-
+link-cli	.github/workflows/csharp.yml	a0fe1bc23ddfd273729cdf174a4135a22a60be73	workflow validation and status	-
+link-cli	.github/workflows/deep-client.yml	e8727644e161df35d02b9172a96c979bb6fc04ae	workflow validation and status	-
+link-cli	.github/workflows/dependencies.yml	cd3a5b44ab51d1fdd2ec6b3c3895f352ade50a19	workflow validation and status	-
+link-cli	.github/workflows/docs.yml	e3e98ee0c69cc4e421a9a3d1bdcee80d7f257d70	workflow validation and status	csharp/.github/workflows/docs.yml (same stem), python/.github/workflows/docs.yml (same stem), cpp/.github/workflows/docs.yml (same stem)
+link-cli	.github/workflows/ipc.yml	a65a06eece7827985ddc669a257108fde752c5b6	workflow validation and status	-
+link-cli	.github/workflows/javascript-stage.yml	198f1d6323ba99043514831dc19b1fb155cb2f6f	change detection and stage gate	-
+link-cli	.github/workflows/javascript.yml	8b24e0e123c6f22cd343760d58d6ee4f91e03c2b	workflow validation and status	-
+link-cli	.github/workflows/js-client.yml	ff23a20cccf484fb932ce7395615f884ef0a082e	workflow validation and status	-
+link-cli	.github/workflows/js-server.yml	810884f1653333c38365baafe767ffb64159940d	workflow validation and status	-
+link-cli	.github/workflows/links.yml	3155689cc03ee093693361c924911b10856eb1e6	workflow validation and status	rust/.github/workflows/links.yml (same stem), js/.github/workflows/links.yml (same stem), csharp/.github/workflows/links.yml (same stem), python/.github/workflows/links.yml (same stem), cpp/.github/workflows/links.yml (same stem)
+link-cli	.github/workflows/rerun-infrastructure-failures.yml	39c693b47ba02479122edd3b579fd42fd8c93d1f	workflow validation and status	rust/.github/workflows/rerun-infrastructure-failures.yml (same stem), csharp/.github/workflows/rerun-infrastructure-failures.yml (same stem), cpp/.github/workflows/rerun-infrastructure-failures.yml (same stem)
+link-cli	.github/workflows/rust.yml	2a51e97798928f44a732ae0fc6474334e4e0002f	workflow validation and status	-
+link-cli	.github/workflows/security.yml	f82495abd6b88c5033da69e0558d17462e69fbcd	workflow validation and status	rust/.github/workflows/security.yml (same stem), js/.github/workflows/security.yml (same stem), csharp/.github/workflows/security.yml (same stem), python/.github/workflows/security.yml (same stem), java/.github/workflows/security.yml (same stem), cpp/.github/workflows/security.yml (same stem)
+link-cli	.github/workflows/wasm.yml	3cef24c1c5abb2581cb6b597613e7fa708f0b182	workflow validation and status	-
+link-cli	.github/workflows/workflows.yml	7e8fdd5a92d86a7948e35eca4581a2857f6c5f03	workflow validation and status	rust/.github/workflows/workflows.yml (same stem), js/.github/workflows/workflows.yml (same stem), csharp/.github/workflows/workflows.yml (same stem), python/.github/workflows/workflows.yml (same stem), java/.github/workflows/workflows.yml (same stem), cpp/.github/workflows/workflows.yml (same stem)
+link-cli	.github/zizmor.yml	dd2187a0290cd4858fd005f5f59d2cc463058cc1	workflow validation and status	rust/.github/zizmor.yml (same stem), js/.github/zizmor.yml (same stem), csharp/.github/zizmor.yml (same stem), python/.github/zizmor.yml (same stem), cpp/.github/zizmor.yml (same stem)
+link-cli	.lycheeignore	e372dbfaee03b69c73f3bc75097bf4b7c010a981	documentation and links	rust/.lycheeignore (same stem), js/.lycheeignore (same stem), csharp/.lycheeignore (same stem), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	.package-registry-manager.json	f8cff3971775066502c0c738af3186b1617fe378	registry and release	-
+link-cli	.pre-commit-config.yaml	1fc3ef23bf4be19a19df2ff13653fe05c95dc5c3	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
+link-cli	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	rust/.secretlintrc.json (identical), js/.secretlintrc.json (identical), python/.secretlintrc.json (identical), cpp/.secretlintrc.json (identical)
+link-cli	csharp/scripts/bump-version.mjs	4457a57f26a8dc2ec02e14459aa87232e9f7799d	registry and release	rust/scripts/bump-version.rs (same stem), csharp/scripts/bump-version.mjs (same stem), python/scripts/bump_version.py (same stem), java/scripts/bump-version.mjs (same stem), cpp/scripts/bump_version.py (same stem)
+link-cli	csharp/scripts/change-detection.test.mjs	7a21e97075772990c05b050362dd67d2eb82fa46	change detection and stage gate	-
+link-cli	csharp/scripts/check-file-size.mjs	122da5fa36cb28eedff86680cc5987a56aed6a36	source and test quality	rust/scripts/check-file-size.rs (same stem), csharp/scripts/check-file-size.mjs (same stem), python/scripts/check_file_size.py (same stem), java/scripts/check-file-size.mjs (same stem), cpp/scripts/check_file_size.py (same stem)
+link-cli	csharp/scripts/check-file-size.test.mjs	b1db140d36f77aa76b5e9af131482cf46f639a88	source and test quality	csharp/scripts/check-file-size.test.mjs (same stem)
+link-cli	csharp/scripts/check-release-needed.mjs	dbdb8fca9fd133a5d7bbc3070a3506c8cd9d9be6	registry and release	rust/scripts/check-release-needed.rs (same stem), js/scripts/check-release-needed.mjs (same stem), csharp/scripts/check-release-needed.mjs (same stem), cpp/scripts/check_release_needed.py (same stem)
+link-cli	csharp/scripts/create-github-release.mjs	f8e14f9de17ade84465a38f5907771bb9f31f84a	registry and release	rust/scripts/create-github-release.rs (same stem), js/scripts/create-github-release.mjs (same stem), csharp/scripts/create-github-release.mjs (same stem), python/scripts/create_github_release.py (same stem), java/scripts/create-github-release.mjs (same stem), cpp/scripts/create_github_release.py (same stem)
+link-cli	csharp/scripts/detect-code-changes.mjs	6fd5d76f6fac9245cf121c14a3764037a87c7d03	change detection and stage gate	rust/scripts/detect-code-changes.rs (same stem), js/scripts/detect-code-changes.mjs (same stem), csharp/scripts/detect-code-changes.mjs (same stem), python/scripts/detect_code_changes.py (same stem), java/scripts/detect-code-changes.mjs (same stem), cpp/scripts/detect_code_changes.py (same stem)
+link-cli	csharp/scripts/merge-changesets.mjs	39fb0a540eeaa3a27e0c577be6f045016cd6642c	registry and release	js/scripts/merge-changesets.mjs (same stem), csharp/scripts/merge-changesets.mjs (same stem), java/scripts/merge-changesets.mjs (same stem)
+link-cli	csharp/scripts/release-packages.test.mjs	490b4819eba71c8785db556159ba3eae0a7c3c30	registry and release	-
+link-cli	csharp/scripts/release-scripts.test.mjs	f5a34ea8a9e7987a44a522a8dac7d8af52c83092	registry and release	-
+link-cli	csharp/scripts/validate-changeset.mjs	23f75223f4677133123807b49e1172244b3137cd	registry and release	js/scripts/validate-changeset.mjs (same stem), csharp/scripts/validate-changeset.mjs (same stem), python/scripts/validate_changeset.py (same stem), java/scripts/validate-changeset.mjs (same stem)
+link-cli	csharp/scripts/verify-packages.mjs	875e8ee8618b37897f13e302bd944337ddac3c05	registry and release	-
+link-cli	csharp/scripts/verify-packages.test.mjs	c537ed7c2859b802b089bc16bb6fad5fbec5bc8d	registry and release	-
+link-cli	csharp/scripts/version-and-commit.mjs	60df37c88913aa4409b16dd7466e9f2696899179	registry and release	rust/scripts/version-and-commit.rs (same stem), js/scripts/version-and-commit.mjs (same stem), csharp/scripts/version-and-commit.mjs (same stem), python/scripts/version_and_commit.py (same stem), java/scripts/version-and-commit.mjs (same stem), cpp/scripts/version_and_commit.py (same stem)
+link-cli	csharp/scripts/wait-for-nuget.mjs	2b4534bfa8aec166c38651f4c761cc48ca036d34	registry and release	csharp/scripts/wait-for-nuget.mjs (same stem)
+link-cli	parity/check-parity.mjs	a61cceb1f086b6ee4dc436310a077c67893b69d5	change detection and stage gate	-
+link-cli	parity/check-parity.test.mjs	b5b1f581c12abe2f27996de92f5ce0a1bcee2543	change detection and stage gate	-
+link-cli	parity/features.json	fe8c74218cd0ffe6e813dded13a9c34287418aab	change detection and stage gate	-
+link-cli	parity/golden-fixtures.json	140d4de599af6a6e56709bae3e55f8b48b0a97e6	change detection and stage gate	-
+link-cli	rust/scripts/bump-version.rs	a2885f09d89ec3ac345a5bb96244523d08b4922b	registry and release	rust/scripts/bump-version.rs (same stem), csharp/scripts/bump-version.mjs (same stem), python/scripts/bump_version.py (same stem), java/scripts/bump-version.mjs (same stem), cpp/scripts/bump_version.py (same stem)
+link-cli	rust/scripts/check-changelog-fragment.rs	65cf78865a21411c60f311125ff0687d98fef646	registry and release	rust/scripts/check-changelog-fragment.rs (same stem), cpp/scripts/check_changelog_fragment.py (same stem)
+link-cli	rust/scripts/check-file-size.rs	67fb04651faa254de4647f5886fb9e7e52770263	source and test quality	rust/scripts/check-file-size.rs (same stem), csharp/scripts/check-file-size.mjs (same stem), python/scripts/check_file_size.py (same stem), java/scripts/check-file-size.mjs (same stem), cpp/scripts/check_file_size.py (same stem)
+link-cli	rust/scripts/check-release-needed.rs	95377f9f76b051f3d11c315fa833dcfd3f9cbcaf	registry and release	rust/scripts/check-release-needed.rs (same stem), js/scripts/check-release-needed.mjs (same stem), csharp/scripts/check-release-needed.mjs (same stem), cpp/scripts/check_release_needed.py (same stem)
+link-cli	rust/scripts/check-scripts.sh	67f7b61037e51e277ca8d5ea6eb77ce9dfeb6386	repository or language-specific infrastructure	-
+link-cli	rust/scripts/check-version-modification.rs	7671d620bf3b8ebd9cb6bd9e47aa05af4974fd63	registry and release	rust/scripts/check-version-modification.rs (same stem), cpp/scripts/check_version_modification.py (same stem)
+link-cli	rust/scripts/collect-changelog.rs	c24ddfb733ac8c11431d3c7690bee8917cbcd224	registry and release	rust/scripts/collect-changelog.rs (same stem), java/scripts/collect-changelog.mjs (same stem), cpp/scripts/collect_changelog.py (same stem)
+link-cli	rust/scripts/create-changelog-fragment.rs	f57cd64ffa134a4e765c0100a15b2d24b722a9e8	registry and release	rust/scripts/create-changelog-fragment.rs (same stem), cpp/scripts/create_changelog_fragment.py (same stem)
+link-cli	rust/scripts/create-github-release.rs	38a564ce6cb451d2e122af32d9ec2ff221407ab5	registry and release	rust/scripts/create-github-release.rs (same stem), js/scripts/create-github-release.mjs (same stem), csharp/scripts/create-github-release.mjs (same stem), python/scripts/create_github_release.py (same stem), java/scripts/create-github-release.mjs (same stem), cpp/scripts/create_github_release.py (same stem)
+link-cli	rust/scripts/detect-code-changes.rs	bad5f4608985ae4c5c92e0603dd67b8f6a4ca0c9	change detection and stage gate	rust/scripts/detect-code-changes.rs (same stem), js/scripts/detect-code-changes.mjs (same stem), csharp/scripts/detect-code-changes.mjs (same stem), python/scripts/detect_code_changes.py (same stem), java/scripts/detect-code-changes.mjs (same stem), cpp/scripts/detect_code_changes.py (same stem)
+link-cli	rust/scripts/get-bump-type.rs	04f5a098195fc9efc07fa3443da29a1a5fe3f52e	repository or language-specific infrastructure	rust/scripts/get-bump-type.rs (same stem), cpp/scripts/get_bump_type.py (same stem)
+link-cli	rust/scripts/get-version.rs	f91f10d4732015c0bf2bc8a1b88da910463ec5cd	registry and release	rust/scripts/get-version.rs (same stem), cpp/scripts/get_version.py (same stem)
+link-cli	rust/scripts/git-config.rs	3c90beea30dcc095b659c084e661ee04c91e1980	repository or language-specific infrastructure	rust/scripts/git-config.rs (same stem)
+link-cli	rust/scripts/install-rust-script.sh	4d028900148f25165df1ab301e03a4dc748e21db	repository or language-specific infrastructure	rust/scripts/install-rust-script.sh (identical)
+link-cli	rust/scripts/publish-crate.rs	b330666761c0d6013570f76b4e73ae01c55174c3	registry and release	rust/scripts/publish-crate.rs (same stem)
+link-cli	rust/scripts/registry.rs	509d9e8301792cf4bc14acc1daed6a432affb8c3	registry and release	rust/scripts/registry.rs (same stem)
+link-cli	rust/scripts/release-changelog.rs	70383f1b246c45a0c22d46fc4d43ed1a8ded80dd	registry and release	-
+link-cli	rust/scripts/release-write.rs	ebbfbc1f03dc7db088f60cb38f102fa3370d3fe3	registry and release	-
+link-cli	rust/scripts/rust-paths.rs	89c00f3ebfb48ef3d89ec0720db43985580114b6	repository or language-specific infrastructure	rust/scripts/rust-paths.rs (same stem)
+link-cli	rust/scripts/test-scripts.sh	7ee2a2e205eea7d165023e591b1b9a0a288281fe	source and test quality	rust/scripts/test-scripts.sh (same stem)
+link-cli	rust/scripts/version-and-commit.rs	28e3cd1c7b158364914e8909c56062435d90be99	registry and release	rust/scripts/version-and-commit.rs (same stem), js/scripts/version-and-commit.mjs (same stem), csharp/scripts/version-and-commit.mjs (same stem), python/scripts/version_and_commit.py (same stem), java/scripts/version-and-commit.mjs (same stem), cpp/scripts/version_and_commit.py (same stem)
+link-cli	rust/scripts/wait-for-crate.rs	6fd72ffeccf06710036bf2eda6e6fed296971a17	repository or language-specific infrastructure	rust/scripts/wait-for-crate.rs (same stem)
+rust	.github/actions/download-artifact/action.yml	2e92de166cade4924d9b8193bc09ebba2689f242	runner and artifact handling	-
+rust	.github/actions/setup-buildx-resilient/action.yml	c5f6560a608109d7045270449a0164526368cebf	runner and artifact handling	-
+rust	.github/actions/setup-python/action.yml	103789129090f22324aae84fb25735892824d786	repository or language-specific infrastructure	-
+rust	.github/codeql/codeql-config.yml	555e8508fecbc2e7e52ddcd8790df7eff5a3563c	security and dependencies	.github/codeql/codeql-config.yml (same stem)
+rust	.github/dependabot.yml	3b5e3cdbdf441d776a65e2207f72b209965b97f3	security and dependencies	.github/dependabot.yml (same stem)
+rust	.github/dependency-policy/check.mjs	dd072bbb4f8ae4306827fac8d9e422d2707015af	workflow validation and status	-
+rust	.github/dependency-policy/check.test.mjs	a584f9ebb95ab771b1a8170ecf1ef37aacaa4090	workflow validation and status	-
+rust	.github/dependency-policy/package-lock.json	b807cf293ef918cae31203f62bf11e8c87368bce	registry and release	-
+rust	.github/dependency-policy/package.json	606a75dfeb299568d9cd4aa60da3c09af664df7c	registry and release	-
+rust	.github/scripts/check-secrets.mjs	d49777d48fa99742e2e037d81ec73964e1a8d5f1	security and dependencies	.github/scripts/check-secrets.mjs (same stem)
+rust	.github/scripts/check-secrets.test.mjs	bd7fd93b420cb1b28ec0a4b01e2ae3926e68e58c	security and dependencies	.github/scripts/check-secrets.test.mjs (same stem)
+rust	.github/secretlint/package-lock.json	66bfcf6de81c92a3254dab5344e704ac544625e2	registry and release	-
+rust	.github/secretlint/package.json	380b72ae66e1fe0f4c08cc4ad02e9023d3b95994	registry and release	-
+rust	.github/workflows/desktop-release.yml	9a253a572b004d4f23d3eb830d72bbd04fa8a7fe	registry and release	-
+rust	.github/workflows/javascript-first-example.yml	4287d41d72dbd9a7288a9d62e7c6205babb5c3dc	change detection and stage gate	-
+rust	.github/workflows/javascript-first-gate.yml	004f6d8264e26806dee6d96537b665d930feca19	change detection and stage gate	-
+rust	.github/workflows/links.yml	70befe1761f2b1a2e526c5a989ffe3fffe87a69a	workflow validation and status	.github/workflows/links.yml (same stem)
+rust	.github/workflows/release.yml	1228b2be27e153a77632cc73ae440be4fe348221	registry and release	-
+rust	.github/workflows/rerun-infrastructure-failures.yml	f9c2f9fed6166826575e2403120570bc555a04fa	workflow validation and status	.github/workflows/rerun-infrastructure-failures.yml (same stem)
+rust	.github/workflows/security.yml	ede61474b42578a8cf5d3c26344ea73237495de6	workflow validation and status	.github/workflows/security.yml (same stem)
+rust	.github/workflows/workflows.yml	aad2b405d6b10fc6d57b7458a113600628732e7f	workflow validation and status	.github/workflows/workflows.yml (same stem)
+rust	.github/zizmor.yml	017190e235f0f2a107660de56f9664caa60ce011	workflow validation and status	.github/zizmor.yml (same stem)
+rust	.lycheeignore	c465921e629701ad5e6b3b3dac7d3b4811ad92a9	documentation and links	.lycheeignore (same stem)
+rust	.pre-commit-config.yaml	746519d0db57c42a81e50e7a205b75375f63da1d	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+rust	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
+rust	scripts/bump-version.rs	852d57f14ff3068b4b0ada107407c62b23574c82	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+rust	scripts/changelog-files.rs	a67e58c1fccd8a206218a97eabcfef653d95e04a	registry and release	-
+rust	scripts/check-cargo-lock.rs	e215bf162042cf3d90385b306b8fd4aad9c2db61	repository or language-specific infrastructure	-
+rust	scripts/check-cargo-warnings.sh	562dec7530a2d34734a604d5eae12c1f540183d4	source and test quality	.github/scripts/check-cargo-warnings.sh (identical)
+rust	scripts/check-changelog-fragment.rs	9835b1ff6024d9df4248cefd947131239e234012	registry and release	rust/scripts/check-changelog-fragment.rs (same stem)
+rust	scripts/check-codeql-results.mjs	3f387081140916b900e6873e481f14f5cded3e91	security and dependencies	.github/scripts/check-codeql-results.mjs (same stem)
+rust	scripts/check-codeql-results.test.mjs	8ef06abb39a34eda6da685c3feb543dac639b008	security and dependencies	.github/scripts/check-codeql-results.test.mjs (same stem)
+rust	scripts/check-crate-size.rs	81b027f01b40cc4f256922032aea9f63a25f01d7	repository or language-specific infrastructure	-
+rust	scripts/check-dependency-graph.sh	7b40977f918f9b00e98f8efac79d50faddcfd307	security and dependencies	-
+rust	scripts/check-file-size.rs	41851cf5067db27fae16b7aa62d50dd71767018d	source and test quality	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+rust	scripts/check-pipeline-status.sh	693bdedd9a630d1d0eb459b59918b64aafcd2587	workflow validation and status	-
+rust	scripts/check-release-needed.rs	6875180730e4c47270fbfbbe77673696c2f95bc8	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+rust	scripts/check-required-docs.sh	1cf417202b4cdecea6b84c1bcf5e9b3cfeed3565	documentation and links	-
+rust	scripts/check-version-modification.rs	78cabb41f1aaa6b5b0af95f3686f2d93bdef9dc3	registry and release	rust/scripts/check-version-modification.rs (same stem)
+rust	scripts/check-web-archive.mjs	988e90a67695c229d30fdb1edf9a3f21c0118114	documentation and links	.github/scripts/check-web-archive.mjs (same stem)
+rust	scripts/check-web-archive.test.mjs	a3acad4f4e51a0fccdb6851fa392bef37ebf977f	documentation and links	.github/scripts/check-web-archive.test.mjs (same stem)
+rust	scripts/check-workflow-tools.rs	034b162b2815134e499dee4e5adda78094bb59aa	workflow validation and status	-
+rust	scripts/collect-changelog.rs	e9d18575d354e9f9c2978abb7c0999339ba6c624	registry and release	rust/scripts/collect-changelog.rs (same stem)
+rust	scripts/crates-publish-preflight.mjs	e074ee62bd5951c1261d0bc05018b9579e17f8b1	registry and release	.github/scripts/crates-publish-preflight.mjs (same stem)
+rust	scripts/crates-publish-preflight.test.mjs	157eee0d2cb470ab774fd7fa044be525648a75dd	registry and release	.github/scripts/crates-publish-preflight.test.mjs (same stem)
+rust	scripts/create-changelog-fragment.rs	822c11845ad445673369e8965905d1da896eb924	registry and release	rust/scripts/create-changelog-fragment.rs (same stem)
+rust	scripts/create-github-release.rs	e505cfa8a198132a8a9d505bd3fd963f540d897c	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+rust	scripts/desktop-release-resolve.sh	1dbbd6e06ba0635e98b528763bd815cce7a747ce	registry and release	-
+rust	scripts/detect-code-changes.rs	f1b87dc98ca96d78625aca3bd6fe0d1872f35813	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+rust	scripts/detect-javascript.mjs	466618c555a96640743313096906424ae4f5f7e5	change detection and stage gate	-
+rust	scripts/detect-javascript.test.mjs	dbf347c88b80349202bfe20507faf7a790bfbaf0	change detection and stage gate	-
+rust	scripts/extract-artifacts.py	588f949e8ed409ca0c8307edceffec612e3c4d32	runner and artifact handling	-
+rust	scripts/fixtures/lychee-report.md	0d6e41d66f455e5bc7a050de8d3bd8e9d1bb9ba7	documentation and links	.github/scripts/fixtures/lychee-report.md (same stem)
+rust	scripts/get-bump-type.rs	774b2f008983e7767b5375768f0c0804a0dc50b3	repository or language-specific infrastructure	rust/scripts/get-bump-type.rs (same stem)
+rust	scripts/get-version.rs	fefce881c4321de1606206619e5d8a6ba5f6b370	registry and release	rust/scripts/get-version.rs (same stem)
+rust	scripts/git-config.rs	8936793f10940d56a6d78d5bcd70248787b100d5	repository or language-specific infrastructure	rust/scripts/git-config.rs (same stem)
+rust	scripts/github-output.rs	43667b054935c6063aee874a1edc02db1401da2c	repository or language-specific infrastructure	-
+rust	scripts/install-rust-script.sh	4d028900148f25165df1ab301e03a4dc748e21db	repository or language-specific infrastructure	rust/scripts/install-rust-script.sh (identical)
+rust	scripts/issue-237.test.mjs	92665ec2831c3f054686c0655e537e38517109f3	source and test quality	-
+rust	scripts/javascript-first-auto.test.mjs	ad8955a2fdb0a3c4a61d9c27210e2868b17a0b2a	change detection and stage gate	-
+rust	scripts/javascript-first-provenance.test.mjs	90a2e6e22442617da8aa1ed0648c9ee454526133	change detection and stage gate	-
+rust	scripts/javascript-first.test.mjs	3bb5b6176589979205503a08992c50becbae48d3	change detection and stage gate	-
+rust	scripts/package-desktop.sh	60ad2f7191b96f97cc68f87591ed2201e5d02959	registry and release	-
+rust	scripts/preflight-credentials.sh	4555f59b27143b7ff502587a61a65191e8b9ba04	security and dependencies	-
+rust	scripts/publish-crate.rs	81dec95401c1794529205714448d70385126dacb	registry and release	rust/scripts/publish-crate.rs (same stem)
+rust	scripts/read-job-cancel-in-progress.sh	f1337ca5d318f285a427712d94a69172955aa6c8	repository or language-specific infrastructure	-
+rust	scripts/recheck-broken-links.mjs	d53864aa5ab1a28dcf602717547931a7c9dd1a1d	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+rust	scripts/recheck-broken-links.test.mjs	c3ab3b168808b5d06a3e0ae6f30ab79ffe3a0b04	documentation and links	-
+rust	scripts/registry.rs	7359d7eb415ba7b628ebe101fa34a74cbfad9d6b	registry and release	rust/scripts/registry.rs (same stem)
+rust	scripts/release-content.rs	bfce983653d2829064382c4a5de020f84364fa90	registry and release	-
+rust	scripts/release-index.rs	e7efe31f4910a60d24d58e7d713e0ef8d0eb2f31	registry and release	-
+rust	scripts/release-naming.rs	675bd8fe3c7417d39d91077235183275da9b36b2	registry and release	-
+rust	scripts/run-javascript-first-auto.mjs	85e9ee9bda7be675fdae61d145a01abade9e7a54	change detection and stage gate	-
+rust	scripts/run-javascript-first.sh	d5ed4b52ad2e0e2d037150ee3f6aa1c6ab5581c0	change detection and stage gate	-
+rust	scripts/run-with-budget-warning.sh	b8d4f0d4be254f0bf3116b4fcb70cbcbfd5a27a2	runner and artifact handling	-
+rust	scripts/rust-paths.rs	ff5f1991a5a82e809d71538f3c61583be536757b	repository or language-specific infrastructure	rust/scripts/rust-paths.rs (same stem)
+rust	scripts/simulate-fresh-merge.sh	4c6db7bad291f3da3b56fe4d1b4e0b3f84f70832	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+rust	scripts/smoke-test-published-crate.rs	1a6465d536fb17241ea48171a1509b2d0803d9be	registry and release	-
+rust	scripts/test-scripts.sh	d14579b0c4a22414d2da6773a8885bcbdbfad2b9	source and test quality	rust/scripts/test-scripts.sh (same stem)
+rust	scripts/unacquired-jobs.py	a4c51d5ad161bc0c5d957b0eef5c409d3c09de00	runner and artifact handling	.github/scripts/unacquired-jobs.py (same stem)
+rust	scripts/verify-javascript-provenance.mjs	4d059574375a9d9e9d9365f1c3befbbc2d3891f6	repository or language-specific infrastructure	-
+rust	scripts/version-and-commit.rs	77586f5e0eab90fed5dca7cf1898cfdb16648679	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+rust	scripts/version-and-commit/crates-io.rs	575d1496e713567ed94547a26183dd99635f03d5	registry and release	-
+rust	scripts/version-and-commit/source-guard.rs	d0aff10f008df0c9e26fc635e282c1badfb17553	registry and release	-
+rust	scripts/version-and-commit/tests.rs	a8eee4ef4f52f61e736ef7509a1fbfd73ebc00bb	registry and release	-
+rust	scripts/wait-for-crate.rs	e07eb143be4359f5c769c4333800bd7227818b65	repository or language-specific infrastructure	rust/scripts/wait-for-crate.rs (same stem)
+js	.github/actions/artifact-transport/README.md	e072748c25e1b82414210986533196bc24e4008d	runner and artifact handling	-
+js	.github/actions/artifact-transport/action.yml	ba9ee3a31b65620d106e1c02ff0bc4f5d02f72ea	runner and artifact handling	-
+js	.github/actions/artifact-transport/extract.mjs	0005a511b93afb1f1a9c7c67114191f8d49d0a89	runner and artifact handling	-
+js	.github/actions/artifact-transport/index.mjs	5b772f4621ecdf824c7bc771db2ffa97e3b229e1	runner and artifact handling	-
+js	.github/actions/artifact-transport/package-lock.json	d1f56c6968b9766dafb018444550754a33f0f5c3	registry and release	-
+js	.github/actions/artifact-transport/package.json	69e95bc0e8d1d87b795688eeb9c7d406cba60d33	registry and release	-
+js	.github/actions/artifact-transport/run/action.yml	d55d40f052ac9c19641488937d693955c57cb5f8	runner and artifact handling	-
+js	.github/actions/publish-dockerhub/action.yml	ae70008cca3c60bccead2847423971cba3ab34a1	registry and release	-
+js	.github/actions/setup-buildx-resilient/action.yml	375a1f7e951b7a267e447754cf9b7d87e03c3469	runner and artifact handling	-
+js	.github/codeql/codeql-config.yml	f306e386d6cd1b61be86d88db1202d0b3798286c	security and dependencies	.github/codeql/codeql-config.yml (same stem)
+js	.github/workflows/example-app.yml	330603553bfa754e009bc2beede5542c4f002320	workflow validation and status	-
+js	.github/workflows/javascript-first-example.yml	ea630c77726b18d228181bf7e4dce3e61040f99e	change detection and stage gate	-
+js	.github/workflows/javascript-first-gate.yml	b8b8ed2943a6b2d231d16447cbf7ffb17c08a05d	change detection and stage gate	-
+js	.github/workflows/links.yml	ab5f1446d33360a9dbf477ba02424c41bbeefb91	workflow validation and status	.github/workflows/links.yml (same stem)
+js	.github/workflows/release.yml	20c830fda840f01fbbc59b22c7e71e6d0e32a5c4	registry and release	-
+js	.github/workflows/rerun-unacquired.yml	b2510949059acf3444f52968e11816d766b36b35	workflow validation and status	-
+js	.github/workflows/security.yml	92a5870f663b7f6de24c980834934e736998d305	workflow validation and status	.github/workflows/security.yml (same stem)
+js	.github/workflows/workflows.yml	559b880d9032f89ad80d1cf35fb1f93bf32d3e76	workflow validation and status	.github/workflows/workflows.yml (same stem)
+js	.github/zizmor.yml	a1c9c8aea4a4907c92cdb4f2cc8009c66c8d2f50	workflow validation and status	.github/zizmor.yml (same stem)
+js	.lycheeignore	6285ad244b6c8469a0f988d71d3cb2545d35b552	documentation and links	.lycheeignore (same stem)
+js	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
+js	scripts/artifact-files.mjs	a28fa87fe9fed6ba77c39132a48b79eef1f03ef1	runner and artifact handling	-
+js	scripts/artifact-transport.mjs	e4d14c3d2b9f037cadf33e4b9835f71df5766d21	runner and artifact handling	-
+js	scripts/bootstrap-dependencies.mjs	790bcacdab36c0b1edcbd4f78572fb2673010b6f	security and dependencies	-
+js	scripts/changeset-version.mjs	a07876423c4b585c2f0a807f4531bece8dcf5b9c	registry and release	-
+js	scripts/check-artifact-archive.mjs	591eff8ae043780ee48ff201af7d263cefd0d6c9	runner and artifact handling	-
+js	scripts/check-changesets.mjs	30c0025a9dc708f3493b1f4c224c178a751669c9	registry and release	-
+js	scripts/check-ci-workflows.mjs	1edff9d6115054a80767a85ddc1f7a21e6a3ea46	workflow validation and status	-
+js	scripts/check-codeql-results.mjs	71e0200121ad0b9af5b62307d4bcf2899526e856	security and dependencies	.github/scripts/check-codeql-results.mjs (same stem)
+js	scripts/check-dependency-graph.sh	5cd220253dce15e7dec29b06f7c2a0cfec2eff4c	security and dependencies	-
+js	scripts/check-deprecated-packages.mjs	cae52d29716609b50f260bf20f034919e057c445	registry and release	-
+js	scripts/check-desktop-compat.mjs	b11dba8cefc96626254cf4f4a0b2ea0fa699789f	repository or language-specific infrastructure	-
+js	scripts/check-docker-build.mjs	59f39e0d4efd7ca40a39ea8c4fd7b6e261a8b01e	repository or language-specific infrastructure	-
+js	scripts/check-docker-publish.mjs	e2793f140c2302c7ee811238dfa59b52a3655911	registry and release	-
+js	scripts/check-file-line-limits.sh	0979d27f20d0b6718039c9f75d77c4f2a216bc6d	source and test quality	-
+js	scripts/check-javascript-syntax.mjs	14799c1dbdb1191b9b4c90038843b37f7a8ccb04	repository or language-specific infrastructure	-
+js	scripts/check-mjs-syntax.sh	7af8da0283cb10c608f93f4607f6cdd1d2c2b4f1	repository or language-specific infrastructure	-
+js	scripts/check-npm-tarball-size.mjs	089008031e64ba1a3428a87c795544d7fae74f26	registry and release	-
+js	scripts/check-package-manager.mjs	426d26b0e8f004f53d8e9e0f7431cd5edbd0459b	registry and release	-
+js	scripts/check-pages.sh	4dc62f664c65aa23f185d20a921308f3e8e4e5c2	documentation and links	-
+js	scripts/check-pipeline-status.sh	88cc6fe9c3cc03cbc6a1929ad9b950c917aaad9f	workflow validation and status	-
+js	scripts/check-preview-tools.sh	801efa9013f50bfc5d3c9d720bf17c92f1b9fb1a	repository or language-specific infrastructure	-
+js	scripts/check-release-needed.mjs	4e3e6c7d45628226939d2c4ecc61897ee7eafa50	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+js	scripts/check-required-docs.sh	b099b07d23dad405aa6927d1c73dde8faa6ac8fd	documentation and links	-
+js	scripts/check-secrets.mjs	d05d7c6002fda60d271e63cd531cf6115fa9eda6	security and dependencies	.github/scripts/check-secrets.mjs (same stem)
+js	scripts/check-staged-formatting.mjs	d22ff2c0a49af834f50e7ab0cbb6cd12ad611d51	source and test quality	-
+js	scripts/check-status-gate-covers-all-jobs.mjs	b57d8afd3ec80f508aeaca05b530331f923140f9	workflow validation and status	-
+js	scripts/check-version.mjs	3a9bd1e183814099dd4c5b434c485954d2c22249	registry and release	-
+js	scripts/check-web-archive.mjs	5112dde070524432ca96df1273730c0b59115d29	documentation and links	.github/scripts/check-web-archive.mjs (same stem)
+js	scripts/create-github-release.mjs	0ab9a24604cedf40b7d4d020ff97c3507588339f	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+js	scripts/create-manual-changeset.mjs	5a80b404959833797fc049f92841708e4904bddf	registry and release	-
+js	scripts/debug-print.mjs	53b2764cce14c73e0d53000188237e5ce8cc6f0d	repository or language-specific infrastructure	-
+js	scripts/deploy-pages.mjs	6d69a97a923db7bb3fddebf38f6eaa0004c43ba0	documentation and links	-
+js	scripts/detect-code-changes.mjs	87f231de7cde7de40e6d60b7970e0aab4f5c1a1f	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+js	scripts/format-github-release.mjs	aa7a8bfe547b1c75d2fa93769619230be7cdd5e6	registry and release	-
+js	scripts/format-release-notes-helpers.mjs	215442cc3fe5f9ac55fbdc8720b7ef6bfccf0c81	registry and release	-
+js	scripts/format-release-notes.mjs	fa86e800b0659486e5f7f903643e5d3b1e7243a9	registry and release	-
+js	scripts/github-actions-log.mjs	d90597feb62e70bef29485e75b2a0d98a626ea42	repository or language-specific infrastructure	-
+js	scripts/github-api-evidence.mjs	780d48ab99982d7400843d33cb270d40d84a241f	repository or language-specific infrastructure	-
+js	scripts/github-api.mjs	bc84822c119b0fe8cfc4d52ae25f043edcc92b6d	repository or language-specific infrastructure	-
+js	scripts/github-release-state.mjs	d5d4ba0bb5230a330708a93c3dec985f0ab04cb2	registry and release	-
+js	scripts/install-git-hooks.mjs	9614f18251884a936111f3ea5a1e59106bd9a7f7	repository or language-specific infrastructure	-
+js	scripts/install-lychee.sh	c6d6e394cc6b693ace401ad2b24c4fff86f6d8c8	documentation and links	-
+js	scripts/instant-version-bump.mjs	c37488560db5e8a3c5da5b2070e26fef5f2942c9	registry and release	-
+js	scripts/js-paths.mjs	0f124c98d313c846c07559b24c6eeecd70030bf3	repository or language-specific infrastructure	-
+js	scripts/land-via-pull-request.mjs	f48a67b9a981291a4978bdda6afb97c8e80d1674	repository or language-specific infrastructure	-
+js	scripts/lint-changed-files.mjs	2505bfe1dbfdd2cd7006f86bce4e1b6927b35556	source and test quality	-
+js	scripts/lint.mjs	c49007bf08fd7e5267e6d2c7e27021eacf8772cf	source and test quality	-
+js	scripts/lychee-report.mjs	eaa44a0043b48e6de4ce28ab9f6607527c181692	documentation and links	.github/scripts/fixtures/lychee-report.md (same stem)
+js	scripts/markdown-lines.mjs	cdb51517aee0536b4bdab37bfa6ea0cc30bb9956	repository or language-specific infrastructure	-
+js	scripts/merge-changesets.mjs	f5295e5513e6744602446ba3fc48605145e9c367	registry and release	csharp/scripts/merge-changesets.mjs (same stem)
+js	scripts/npm-audit-report.mjs	839d33a07af5a9b8e8c72d6ef53b56f4a40cb56c	registry and release	-
+js	scripts/npm-registry.mjs	57bd9398eaeee5767a21b076209b2bd1b219fd96	registry and release	-
+js	scripts/package-info.mjs	2fc44bd2cb2e4f2b284ad8026b78e7194b9fc514	registry and release	-
+js	scripts/pr-comparison.mjs	52309c80ec8faf9a292bb8b356517125a993ef06	repository or language-specific infrastructure	-
+js	scripts/preflight-credentials.sh	ec26006d0d8518713dde6617ee7eefff90387db6	security and dependencies	-
+js	scripts/publish-failure-classifier.mjs	5b301cc307500a2f760d2f82dfe357c50a0dbb5e	registry and release	-
+js	scripts/publish-retry.mjs	7001e0aa3c548b2a941b41e4d374387e57dc4319	registry and release	-
+js	scripts/publish-to-npm.mjs	bc7bcf0a40e1a8fb9c0b12dc87055742eb134845	registry and release	-
+js	scripts/push-failure-classifier.mjs	aeb7705c50012e8b850675abb250617d7b92d2d2	repository or language-specific infrastructure	-
+js	scripts/push-main-with-rebase-retry.mjs	d2d85712ad0e235e717f961cbcc72e51e72ff79e	repository or language-specific infrastructure	-
+js	scripts/read-job-cancel-in-progress.sh	c10fdfd4ffa225e356dbc1b69969cba2b75e8fbd	repository or language-specific infrastructure	-
+js	scripts/recheck-broken-links.mjs	abc88da3de55a737a4186a28ff9872685de0b490	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+js	scripts/release-metadata.mjs	927d3a605bcbb8e8693b0e3e3b574e617bd496bb	registry and release	-
+js	scripts/release-naming.mjs	50cbac339b5c6f2a60766b93c7ac217fd2528bd4	registry and release	-
+js	scripts/release-publication.mjs	cdbfb2efd8818b7b315ec892ed682c80070ddd39	registry and release	-
+js	scripts/rerun-unacquired.mjs	24305c750869c7bc0dd045aa653160a995540d92	runner and artifact handling	-
+js	scripts/run-command.mjs	4fac0033e700f78f5f9888f5d371bae936687363	repository or language-specific infrastructure	-
+js	scripts/run-with-budget-warning.sh	82b03f0c8e52f3c987e8ddaa9cf06f3a362f557b	runner and artifact handling	-
+js	scripts/sanitize-npm-userconfig.mjs	b344a25c1c543176af72fd0b75c227ec1cc512f8	registry and release	-
+js	scripts/setup-npm.mjs	46f97157492690437d7985d6f4b6faac53ca9910	registry and release	-
+js	scripts/setup-preview-gh.sh	a7ca5d08f1e54a76f81f03f8e67422ceaf87f776	repository or language-specific infrastructure	-
+js	scripts/simulate-fresh-merge.sh	c6c9220100f993a69fe6e19e27d9ab344cb04283	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+js	scripts/smoke-test-package.mjs	653fef06bd5428648fc1b761ca2a274dd51fafee	registry and release	-
+js	scripts/update-preview-images.mjs	059e02753bcf6bacf605b742fec2910661976ffc	repository or language-specific infrastructure	-
+js	scripts/use-module.mjs	096b9472c8fb063a6c5811acdc0d3382082d2250	repository or language-specific infrastructure	-
+js	scripts/validate-changeset.mjs	1f235f3e20e2c35bf083f50860b98ebfcef188c8	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+js	scripts/version-and-commit.mjs	25d8e7369bc5886d8440cdab95ebde2111aa8770	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+js	scripts/version-lock.mjs	7d0eac3a875960e1e5722a5f4c2fa7ed8520169f	registry and release	-
+js	scripts/wait-for-npm.mjs	b25a587581fd11ab4f7be6cf5007df07d5c793be	registry and release	-
+csharp	.github/actionlint.yaml	852dc66c0e6170197077305499e0b821297c2a5b	workflow validation and status	-
+csharp	.github/actions/csharp-layout/action.yml	15eb69614ae3006210a3fc280e3a913234d4204b	repository or language-specific infrastructure	-
+csharp	.github/dependabot.yml	0a3b00db90caee695fa6cc6a2a985b7b5a405ea9	security and dependencies	.github/dependabot.yml (same stem)
+csharp	.github/workflows/docs.yml	ce12ecf855eb4662d34bc0e09a4e509e3910996a	workflow validation and status	.github/workflows/docs.yml (same stem)
+csharp	.github/workflows/links.yml	4097283d687d652b24735e3dd69978ba10659fcf	workflow validation and status	.github/workflows/links.yml (same stem)
+csharp	.github/workflows/release.yml	bb3d1c61fa3ca49172cfedeab0fddaa9763da22a	registry and release	-
+csharp	.github/workflows/rerun-infrastructure-failures.yml	0a418433e6491359f6037cf54d4a9e59229af0e8	workflow validation and status	.github/workflows/rerun-infrastructure-failures.yml (same stem)
+csharp	.github/workflows/security.yml	968430063dcbda2ddd990c1922292edf06aa6d6e	workflow validation and status	.github/workflows/security.yml (same stem)
+csharp	.github/workflows/workflows.yml	147545234d071ba9eefb6f7771612bb4112246a5	workflow validation and status	.github/workflows/workflows.yml (same stem)
+csharp	.github/zizmor.yml	2fcbb540127902de45792333d04e81621c91865c	workflow validation and status	.github/zizmor.yml (same stem)
+csharp	.lycheeignore	60ea9289307607e01a5cbc3bf187a429546aaff6	documentation and links	.lycheeignore (same stem)
+csharp	.pre-commit-config.yaml	a451090b2dbb41d911f183d5430cd1ab42e67896	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+csharp	scripts/action-pins.mjs	998d2bd10b9add5a9de40b3e2a15406b057fc1c2	repository or language-specific infrastructure	-
+csharp	scripts/action-pins.test.mjs	552a92ec6fb4b0b6b8916eca77e2c608197dca4a	source and test quality	-
+csharp	scripts/anonymous-package.mjs	ba7d0f41de9934b676e5568e02e7555752f28a56	registry and release	-
+csharp	scripts/anonymous-package.test.mjs	e978ae129ad4ac36ac92e5dec699dd61655c2433	registry and release	-
+csharp	scripts/audit-dependencies.mjs	63d3546b1b8069d50bd96ae8a99bedf8e47b8bbf	security and dependencies	-
+csharp	scripts/audit-javascript.mjs	2417ba809ddbbb8343b6daea81ddc94e77c908f1	security and dependencies	-
+csharp	scripts/bump-version.mjs	5ca7c6e3b9f9ccb80290d9ada631b6a0544a823b	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+csharp	scripts/change-detection-renames.test.mjs	3de97d0edca8bdb0ea9af54694dbf9d6b51421c4	change detection and stage gate	-
+csharp	scripts/check-file-size.mjs	666a3dadeece178ec07d2ab663d869f949ae8002	source and test quality	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+csharp	scripts/check-file-size.test.mjs	eee05472c8c4b88e2212c6c181ac205a0301a524	source and test quality	csharp/scripts/check-file-size.test.mjs (same stem)
+csharp	scripts/check-pipeline-status.sh	96e0e73c72504c6236044d84d82ac8b1ea37fc9e	workflow validation and status	-
+csharp	scripts/check-release-needed.mjs	9d4b6b103c4f961815b1d8a9169eb613b07d5d0c	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+csharp	scripts/check-release-needed.test.mjs	6e1827b97ff2f424f3eb389aaf141083dda0c7ef	registry and release	-
+csharp	scripts/check-web-archive.mjs	cc05c1df865ead64e742622e7eaa6dbd807c40c6	documentation and links	.github/scripts/check-web-archive.mjs (same stem)
+csharp	scripts/check-web-archive.test.mjs	88f7db505a94c262eb8bc7655663a328c361e366	documentation and links	.github/scripts/check-web-archive.test.mjs (same stem)
+csharp	scripts/create-github-release.mjs	5199d8b04548a106ee0bf00e6c171ff3a9702f70	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+csharp	scripts/create-github-release.test.mjs	09bbc695a55e0e0736fc252aaba4a6ee6973de44	registry and release	-
+csharp	scripts/detect-code-changes.mjs	61c697fa62808f12a3fd7e37ab33bd35e699e9c5	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+csharp	scripts/detect-code-changes.test.mjs	0dbc8687c6b724d8e19d35ae3fe2b094d1a83586	change detection and stage gate	-
+csharp	scripts/docs-workflow-policy.test.mjs	a57a8a8068f51e69d4a945587806a6c446bf0182	workflow validation and status	-
+csharp	scripts/fetch-with-retries.mjs	451b238027f926d4679f0705c89209973a2b2e04	repository or language-specific infrastructure	-
+csharp	scripts/fixtures/lychee-report.md	19f524034d4a70b78c7803f98a11c0b54aa01754	documentation and links	.github/scripts/fixtures/lychee-report.md (same stem)
+csharp	scripts/fixtures/runner-acquisition/links-notation-41477660740-kotlin-ios.json	83ec7dbf1f287b4f9a5616b21849e198244fd90d	documentation and links	-
+csharp	scripts/fixtures/runner-acquisition/template-41299533544-detect-changes.json	2feca8366c769ea3858f626e13ec40cc8402e0e4	change detection and stage gate	-
+csharp	scripts/git-inputs.test.mjs	214b83c69ed042b9efb1524f78cb9724f81b8a88	source and test quality	-
+csharp	scripts/git-push.mjs	af790b64876a005085f73aaff731ebf501a66af4	repository or language-specific infrastructure	-
+csharp	scripts/git-push.test.mjs	0813b556802f49cd7ebadd4646d70fcc92c3329d	source and test quality	-
+csharp	scripts/helper-globs.test.mjs	03bde6c6b54aab742db00bb15dda4508eb15cb87	source and test quality	-
+csharp	scripts/issue-82-regressions.test.mjs	4f1cc13447cd02e982588a28ab50cdc83362fd48	source and test quality	-
+csharp	scripts/link-failures.test.mjs	82a6dc3b4ccacfa7d07aec36a40985dd73f8689b	source and test quality	.github/scripts/link-failures.test.mjs (same stem)
+csharp	scripts/links-workflow-policy.test.mjs	7f3c5336bdda9e5403463c2bd653a180048860b1	workflow validation and status	-
+csharp	scripts/lint-integrations.test.mjs	bef582871870717421b3102284621fa211fe6eb9	source and test quality	-
+csharp	scripts/lint-workflows.sh	1982f104fb41f654ba52c95bafecdd9c031fcea9	workflow validation and status	-
+csharp	scripts/merge-changesets.mjs	7efdc178d1aa61ce3dc371c712911295812e4ae1	registry and release	csharp/scripts/merge-changesets.mjs (same stem)
+csharp	scripts/merge-changesets.test.mjs	655b4ba43de1842aa0f89d9324d08a84f94a28e6	registry and release	-
+csharp	scripts/nuget-auth.mjs	2f319e193d510cc03f2bea0ea27e833f35a65c91	registry and release	.github/scripts/nuget-auth.mjs (same stem)
+csharp	scripts/nuget-auth.test.mjs	e3f46dcd93c1e264ad7b692169965fdb7b57c7e4	registry and release	.github/scripts/nuget-auth.test.mjs (same stem)
+csharp	scripts/parse-changeset.mjs	7e3f8a1081e5b62182ed6558f02fc6c764b77cdd	registry and release	-
+csharp	scripts/pipeline-gate.mjs	f3a77aaeb6d2d9f0afbf87806d4d882317b91ffb	workflow validation and status	-
+csharp	scripts/pipeline-gate.test.mjs	b5f8c7a8c1f909453b7848b96f94496fa53b436a	workflow validation and status	-
+csharp	scripts/preflight-credentials.mjs	2eeab16623ad3a381730a81323963ecc8b55b561	security and dependencies	-
+csharp	scripts/preflight-credentials.test.mjs	ebdcc0d1f0d0c1856f7efd08fc730848a6a54e51	security and dependencies	-
+csharp	scripts/print-untrusted.mjs	cd6912155eae258bfe4a94e15fdf33c3006d07b7	repository or language-specific infrastructure	-
+csharp	scripts/print-untrusted.test.mjs	85f8bd3fdec0ca7a077bd25b1d5be280e997d829	source and test quality	-
+csharp	scripts/process-types.d.ts	cc8ef5d61eff90222fccbe7c88f5030bf2f5e7d9	repository or language-specific infrastructure	-
+csharp	scripts/publish-fallback.test.mjs	8139c272a09b098680b8deb01ec1b3c18d65b698	registry and release	-
+csharp	scripts/publishing-configuration.test.mjs	e4c8ac12e63beaa05878268e156d5b62bc7caf48	registry and release	-
+csharp	scripts/push-nuget-package.mjs	abf02499fe27116caf9365c1bf6c9743801ffca5	registry and release	-
+csharp	scripts/push-nuget-package.test.mjs	905dd9bac75779c3f366e79cd559ef1c2015a6c5	registry and release	-
+csharp	scripts/recheck-broken-links.mjs	4b26c9fe0507d930171b1f348aca08b661895542	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+csharp	scripts/recheck-broken-links.test.mjs	4a52910e291ed40247d81cd9d355ec3ea4d0ac0b	documentation and links	-
+csharp	scripts/release-assets.mjs	ec3f4fe562756bad5c723318120ddfa5ba28a7c1	registry and release	-
+csharp	scripts/release-assets.test.mjs	7bd2597659e892594a4214953f3ebf76cc326018	registry and release	-
+csharp	scripts/release-naming.mjs	70cd531aac2eb72cc18de948e5013f8f67b13928	registry and release	-
+csharp	scripts/release-naming.test.mjs	df7c32d38db058b87c96829989f9c29e98bb1d46	registry and release	-
+csharp	scripts/release-workflow-policy.test.mjs	b0c9e3930d25c65b2d450925315bff30de54d6a6	registry and release	-
+csharp	scripts/rerun-workflow-policy.test.mjs	4887ee135cd614b92140b71d083caca31808271d	workflow validation and status	-
+csharp	scripts/run-with-budget-warning.sh	a563c262f176b3c8abfb25952cc248cf6af6fa26	runner and artifact handling	-
+csharp	scripts/runner-acquisition.mjs	4746a4f8a07d5abd94010111caa20a011ab7aa59	runner and artifact handling	-
+csharp	scripts/runner-acquisition.test.mjs	d3567419b24e9b18b120b90ebdf1531b22161299	runner and artifact handling	-
+csharp	scripts/sarif-directory.test.mjs	64df52968e317eb69d6bec934f18aecad072297c	security and dependencies	-
+csharp	scripts/security-gates.mjs	283e958235a2d753d3fc10e70cf1d0a54e736acf	workflow validation and status	-
+csharp	scripts/security-gates.test.mjs	eff54e9bded6ca3a55111a518a1c38ffd6513fe1	workflow validation and status	-
+csharp	scripts/security-workflow-policy.test.mjs	7c7343ffec54123d710e08ba18c48463a4c1905a	workflow validation and status	-
+csharp	scripts/smoke-test-nuget-package.mjs	d44118cb21fff1e696900bc2259ab3025d2a786f	registry and release	-
+csharp	scripts/smoke-test-nuget-package.test.mjs	1d91a44199754364264bc9ebd8bcd862e9c3c408	registry and release	-
+csharp	scripts/toolchain-policy.test.mjs	580b1764e37760359632a2526646cb273da59c41	workflow validation and status	-
+csharp	scripts/validate-changeset.mjs	29e5789d3e5ff2da525045fa55f3e113166bc0d6	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+csharp	scripts/validate-nuget-package.mjs	753817780f6ecd76dda919b70abb93f01ed042c9	registry and release	-
+csharp	scripts/validate-nuget-package.test.mjs	bc0a37caf47104d1f5906d583558ce9b79114f0e	registry and release	-
+csharp	scripts/validate-nuspec.proj	44c0d134904c7af905ad887e7e6bdb3272c4a463	repository or language-specific infrastructure	-
+csharp	scripts/version-and-commit.mjs	642dfd3ccfc2bf264449c58cc9d6825e360132a3	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+csharp	scripts/version-and-commit.test.mjs	b3bd65a43ca8de992d0b9c96a313bc4481f7ffc0	registry and release	-
+csharp	scripts/wait-for-nuget.mjs	e0f7997f5ffc683c329c774bf967fb07072f59dc	registry and release	csharp/scripts/wait-for-nuget.mjs (same stem)
+csharp	scripts/wait-for-nuget.test.mjs	d0784970397713d891e19e1b368fd7e4097382be	registry and release	-
+csharp	scripts/workflow-git-policy.test.mjs	690be3a23e2333b3a00a045de06f7ffd0db0256f	workflow validation and status	-
+csharp	scripts/workflow-injection-policy.test.mjs	96547fb8698848b90b40059d7ba29894abcc635a	workflow validation and status	-
+csharp	scripts/workflow-runner-policy.test.mjs	51ae61ab7f31700786da51943c6f8a1f8da9dbdb	workflow validation and status	-
+csharp	scripts/zip-archive.mjs	ca02d8b2385accce0c7362e78f7c1e4e0654bfd6	runner and artifact handling	-
+csharp	scripts/zip-archive.test.mjs	219cb8166cef46dbe5b7d5531c93a8f90be36dfd	runner and artifact handling	-
+python	.github/actionlint.yaml	50cbd7f6fbd5b415963ddb84c5637954258dc82e	workflow validation and status	-
+python	.github/actions/artifact/action.yml	751d7bc086ecc07001bbaab766120a456df23f75	runner and artifact handling	-
+python	.github/actions/artifact/dist/835.index.mjs	d783d92e34037f1e260a884a09fbdd526492ae8c	runner and artifact handling	-
+python	.github/actions/artifact/dist/extract.py	052276102f87f26d3f4f10a60d432107ca50d0b1	runner and artifact handling	-
+python	.github/actions/artifact/dist/index.mjs	a759533dac04294f24a2ee0e87f757600cdeb929	runner and artifact handling	-
+python	.github/actions/artifact/dist/licenses.txt	9803562fda9d9328fa01234a8031fad39bf91ea9	runner and artifact handling	-
+python	.github/actions/artifact/extract.py	052276102f87f26d3f4f10a60d432107ca50d0b1	runner and artifact handling	-
+python	.github/actions/artifact/files.mjs	36b3d4877bf395f05795b0d6b24d8a5a0eba52a0	runner and artifact handling	-
+python	.github/actions/artifact/index.mjs	936ce4a9a98e77eb6ed8099ad11c5d7da3b97bb5	runner and artifact handling	-
+python	.github/actions/artifact/package-lock.json	e215cdca3b32d3704e666e35397d839da413e6c5	registry and release	-
+python	.github/actions/artifact/package.json	b29c20217061644287e8a559d13fc9c24acbb7b9	registry and release	-
+python	.github/actions/artifact/transport.mjs	603b62158cfa3aedc6e2892084022fb76b6c48d7	runner and artifact handling	-
+python	.github/actions/deploy-pages/action.yml	f7239e878f7cd5aa3c06436063ede7bd146ab794	documentation and links	-
+python	.github/actions/deploy-pages/deploy.mjs	fd69f386f578ae97f58181690ecd5dd6b98681d9	documentation and links	-
+python	.github/actions/deploy-pages/index.mjs	b30584a42cc4114ff853a340eee19ba9ecd41036	documentation and links	-
+python	.github/codeql/codeql-config.yml	d6f1641feb27d62176706f75f861a889d171165a	security and dependencies	.github/codeql/codeql-config.yml (same stem)
+python	.github/dependabot.yml	f53b62e015110f41d4b174c9f4c3e9eaddbb20ce	security and dependencies	.github/dependabot.yml (same stem)
+python	.github/workflows/dependabot-health.yml	71f3c053aceeff722749aece51a400bd7c80aae7	workflow validation and status	-
+python	.github/workflows/docs.yml	c4ea36b81411f119f7cc986e7425ddb0b796aed8	workflow validation and status	.github/workflows/docs.yml (same stem)
+python	.github/workflows/links.yml	b864a3aab933d12b7d951732636d8be089a5ed0f	workflow validation and status	.github/workflows/links.yml (same stem)
+python	.github/workflows/release.yml	994197baa688200397a6d50f6b87bc3b58aa3285	registry and release	-
+python	.github/workflows/security.yml	89078a05219ed97e3b58978d4f00dcbadce2c87e	workflow validation and status	.github/workflows/security.yml (same stem)
+python	.github/workflows/workflows.yml	d198919971f9d6413202b38342886873718c8026	workflow validation and status	.github/workflows/workflows.yml (same stem)
+python	.github/zizmor.yml	2c65dd94fe8ab4b493898aace619262f25d74442	workflow validation and status	.github/zizmor.yml (same stem)
+python	.lycheeignore	5ca7e16e0acb50854522f68070ccf0a287ec1135	documentation and links	.lycheeignore (same stem)
+python	.pre-commit-config.yaml	7d3e9e899e95828ef19179ea43fa32b515edc83c	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+python	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
+python	scripts/audit-npm-locks.sh	dd8411a6e2a3498fce183e330796c89547a228fd	registry and release	-
+python	scripts/audit_dependencies.py	5b45eeeba20964aa790573d374d6998170578120	security and dependencies	-
+python	scripts/bump_version.py	2c115dd7fac04e5bcf376b37dd318a11fde2bcc5	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+python	scripts/check-dependency-graph.sh	e00e61739da4556f4049fbd1e9ef98ba5af21b18	security and dependencies	-
+python	scripts/check-deprecated-packages.mjs	afbcd414181a4b0688e06b9db21393e24c01bfbf	registry and release	-
+python	scripts/check-links.sh	d6657f5539fce6aaf67bbb46d4bb76885bd0ac8c	documentation and links	-
+python	scripts/check-pipeline-status.sh	665e5e304e84dcf7c3c911b2789b1b026d558d48	workflow validation and status	-
+python	scripts/check-required-docs.sh	c00bc9959ff5eb88ece1f2adafcdaa7f23fce89d	documentation and links	-
+python	scripts/check_codeql_results.py	eab13a6d140f63aac1ab624502d5d3d55b213aae	security and dependencies	.github/scripts/check-codeql-results.mjs (same stem)
+python	scripts/check_dependabot_health.py	4db197ac8bde1dd7541cd86bb4d9fd0884b06647	security and dependencies	-
+python	scripts/check_dist_size.py	631b3beb503879b3ec1ae5c83e334574fa21e81a	repository or language-specific infrastructure	-
+python	scripts/check_file_size.py	04e0300c73d13d3a08dc80d799866aceebd15503	repository or language-specific infrastructure	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+python	scripts/check_release.py	69056a1fbbd5ff946f64819dcf888c46f225fcdb	registry and release	-
+python	scripts/check_web_archive.py	a41cc7d6102565b63916f0a8d2caf38639a556fc	runner and artifact handling	.github/scripts/check-web-archive.mjs (same stem)
+python	scripts/check_zizmor_compatibility.py	b3b43d0ca1b2a9d4d78cb2f55fcbbfbc82b29aad	workflow validation and status	-
+python	scripts/create_github_release.py	e8c6fe9e65dff5c4c2e54eaf315e8138b55aba7e	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+python	scripts/create_manual_changeset.py	6481fdc1356d355401d9bf1f796cbe3e5a99ca67	registry and release	-
+python	scripts/detect_code_changes.py	3ec74b5fab354b50ee573459f48d8075704c9b06	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+python	scripts/format_release_notes.py	347b64b8989970ccafef06c17e6d84150a6ac701	registry and release	-
+python	scripts/install-lychee.sh	f9ddafb9c020eb78d5442c187cf1580a82c8d4b9	documentation and links	-
+python	scripts/install-python-dependencies.sh	f0ca104dea1f95af25c1cb6ea27f6415469c1653	security and dependencies	-
+python	scripts/preflight-credentials.sh	2e61bd0dcaf820a9220e49f3af022a7d9afbcbd6	security and dependencies	-
+python	scripts/publish_to_pypi.py	99bcfa5b588a2a6b9face4cf0bb595c08b0669bb	registry and release	-
+python	scripts/read-job-cancel-in-progress.sh	2b46282c900d2fcf901ce7feb2532e7fdcb0c816	repository or language-specific infrastructure	-
+python	scripts/read_manifest.py	56b599b780fe6a7ebfa3b7a12e524bf76f18e8af	repository or language-specific infrastructure	-
+python	scripts/recheck_broken_links.py	c28d791bae9c09894f09451ee2281caef3758366	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+python	scripts/release_naming.py	e5f7625d5cf497682cddd2efceb7f542f0e3f8b2	registry and release	-
+python	scripts/run-with-budget-warning.sh	bc5164961fe1a597bac34bf28e0c51b14d53bef8	runner and artifact handling	-
+python	scripts/simulate-fresh-merge.sh	a592d8ced31cf1104dba637d77c371561ee360e7	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+python	scripts/smoke_test_published_package.py	5ffa28fd21f882c493496220922a42f2c28c81ed	registry and release	-
+python	scripts/validate_changeset.py	8dc52a1685703bee9b2f65d86b4a5e1444260603	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+python	scripts/version_and_commit.py	cc6354e50c999e3a05ed3a1789f18607b83a1739	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+java	.github/actionlint.yaml	ebec83fd5149b8d2b1c7c4c5b5dba05ac541b605	workflow validation and status	-
+java	.github/dependabot.yml	44cc1116596ddc5eee5b4a85d563ec1eb63ef82c	security and dependencies	.github/dependabot.yml (same stem)
+java	.github/workflows/release.yml	15fbed88c68753227e4d12abbbc3eb3ad23b7bff	registry and release	-
+java	.github/workflows/rerun-unacquired.yml	76ceb5b422734d19869d8627eb84cc222bb88a58	workflow validation and status	-
+java	.github/workflows/security.yml	f289df5c9eb8128adeaa547aeca207c118e850cb	workflow validation and status	.github/workflows/security.yml (same stem)
+java	.github/workflows/workflows.yml	9b51c4242b0181f2a5f4106cda7cb7569fe933b6	workflow validation and status	.github/workflows/workflows.yml (same stem)
+java	.pre-commit-config.yaml	608c520da6c678d972686a8071d5555c618faa13	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+java	scripts/audit-maven-plugins.mjs	06479d81de82e3d4b08e83e5487462238cbd2d5d	registry and release	-
+java	scripts/bump-version.mjs	47d77384626514438bb5c0af712a948b6682780d	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+java	scripts/check-ci-dependencies.mjs	de67060089705c49ddc202fa4e82dffeb53ad810	security and dependencies	-
+java	scripts/check-file-size.mjs	6d94cad3bebcedefd1a8734cbfb145e89d56f930	source and test quality	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+java	scripts/ci-security.test.mjs	58b15db903dcabf55541dfe025d18d6563340766	security and dependencies	-
+java	scripts/collect-changelog.mjs	659ecc112fe75039abd66af0ac61bdb9849c84ad	registry and release	rust/scripts/collect-changelog.rs (same stem)
+java	scripts/create-github-release.mjs	cb2c97ab57b61989f430e18d6e693ca936f95548	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+java	scripts/create-manual-changeset.mjs	4e5aa65a3a8f1bf158c49e857907201c226efd15	registry and release	-
+java	scripts/detect-code-changes.mjs	681079b3e92928a631db1a93a5f789e881e62209	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+java	scripts/github-actions-log.mjs	9bc18a78512941ef309b44029a87a5c9243571a9	repository or language-specific infrastructure	-
+java	scripts/github-release-state.mjs	ade97a05e1089d5837d1980a1557060673ca1ac7	registry and release	-
+java	scripts/merge-changesets.mjs	05a07b0cc8c5ca9ad6e85b52c6f09dcbb9828831	registry and release	csharp/scripts/merge-changesets.mjs (same stem)
+java	scripts/rerun-unacquired.mjs	7369df0f548c569d883c34033a8d879bf177e29f	runner and artifact handling	-
+java	scripts/validate-changeset.mjs	e0c08a25eef6f47dbd845a4dd8cb9d7cd862d49d	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+java	scripts/version-and-commit.mjs	0f6812d46591f3f6615f52d834f8c42f965662fc	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+java	scripts/workflow-policy.test.mjs	41e2343f34f9ce0eec5fd09c4677d2ca36a7fc51	workflow validation and status	.github/scripts/workflow-policy.test.mjs (same stem)
+cpp	.github/actionlint.yaml	46265867d10cc19ba4fd7d74411e4b4121d1138f	workflow validation and status	-
+cpp	.github/dependabot.yml	7fe1951100bfa86eff318f934f12b4f286eedbfd	security and dependencies	.github/dependabot.yml (same stem)
+cpp	.github/workflows/dependabot-health.yml	6a5d67b47495fa144e53aab5316c879eb5488541	workflow validation and status	-
+cpp	.github/workflows/docs.yml	bfca7648bb64dc02819d14e63a02261806d990e2	workflow validation and status	.github/workflows/docs.yml (same stem)
+cpp	.github/workflows/links.yml	324b0c4784f8756e82d3ee9e7be335d3b92aeb26	workflow validation and status	.github/workflows/links.yml (same stem)
+cpp	.github/workflows/release.yml	1999bd921710346c66cb813a09fc00f29d12ef62	registry and release	-
+cpp	.github/workflows/rerun-infrastructure-failures.yml	7cc65bcce555862d7c5ceb543c4fe39fa295471f	workflow validation and status	.github/workflows/rerun-infrastructure-failures.yml (same stem)
+cpp	.github/workflows/security.yml	5e48628c9fb614df9a43c0527700e2e8fd011c0f	workflow validation and status	.github/workflows/security.yml (same stem)
+cpp	.github/workflows/workflows.yml	71de472e24f555f017216a0c00004f109962e892	workflow validation and status	.github/workflows/workflows.yml (same stem)
+cpp	.github/zizmor.yml	4062c62f26bae0765552f578572df690a290b843	workflow validation and status	.github/zizmor.yml (same stem)
+cpp	.lycheeignore	c6ddfd12671ad8a10f2f818d52a6460f57a646b6	documentation and links	.lycheeignore (same stem)
+cpp	.pre-commit-config.yaml	7f48ed75932f269274297145b72dbf7bee92bc3e	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem)
+cpp	.secretlintrc.json	7a1a5df3c28e6739fd639bc2a2eac39f62f9a122	source and test quality	.secretlintrc.json (identical)
+cpp	scripts/audit_native_dependencies.py	b54c9b47cf53f2bf71d4a734efc5301e9a9c9c5e	security and dependencies	-
+cpp	scripts/build_codeql.py	eaf4108d594e6465f4bb6833ffcf51bf9145b678	security and dependencies	-
+cpp	scripts/bump_version.py	18c6b45a3270d8318decb5ca6934c3f35d23f943	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+cpp	scripts/check-dependency-review-support.sh	c3aee62c0fc9f82d23a36a9869167e939b0e8d7b	security and dependencies	-
+cpp	scripts/check-nuget-package.sh	a1cc45a697b0cb7f6bd4c4d7bfd0804e6d9d4166	registry and release	-
+cpp	scripts/check-pipeline-status.sh	bea8d4f8544d7170e4d8e5798d16b93f7783c4ad	workflow validation and status	-
+cpp	scripts/check-required-docs.sh	1e325b426099fd2ba4d5a758aa2ae40904a7648f	documentation and links	-
+cpp	scripts/check-vcpkg-port.sh	4b4b97ead020b1261ea13f03ca66194848e62569	registry and release	-
+cpp	scripts/check_changelog_fragment.py	6a87606d18f750b17c29d1ec84dcb99ad711f7b9	registry and release	rust/scripts/check-changelog-fragment.rs (same stem)
+cpp	scripts/check_consumers.py	78e34cdb44ed5f802f169474563bcf32d7d424c8	repository or language-specific infrastructure	-
+cpp	scripts/check_dependabot_health.py	e5a43cf62da49ff5d8328609fc97d27912185fdb	security and dependencies	-
+cpp	scripts/check_file_size.py	8af2e070316281757ca97fdd13434d6edd308f10	repository or language-specific infrastructure	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+cpp	scripts/check_nuget_size.py	343b3fbafa27bdfe4fc336e17755459a9caf24aa	registry and release	-
+cpp	scripts/check_python_audit.py	4fedd17007f01222b8e53531b1226508cb0ed631	security and dependencies	-
+cpp	scripts/check_release_needed.py	c5fa63602f943509bfb9e22e284e611fe48d9546	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+cpp	scripts/check_sarif.py	f49634ffc735d7ca7197dce66dfde285fc0392c0	security and dependencies	-
+cpp	scripts/check_version_modification.py	fc7f5a66ea992b91f0b46c5cf0dc0db8642b6821	registry and release	rust/scripts/check-version-modification.rs (same stem)
+cpp	scripts/check_web_archive.py	d0ce27cc2db822072aca421496efb38b953092f9	runner and artifact handling	.github/scripts/check-web-archive.mjs (same stem)
+cpp	scripts/check_workflow_concurrency.py	44fbc8eadb77d86a141b034ddd431b7a6b5f4bd8	workflow validation and status	-
+cpp	scripts/collect_changelog.py	43b0d36cc3246e87452855b969d6c587535efb05	registry and release	rust/scripts/collect-changelog.rs (same stem)
+cpp	scripts/constraints.txt	133ae3e14115b1fcefe1ebfe1c502ef75f22e05e	repository or language-specific infrastructure	-
+cpp	scripts/cpp_project.py	b994cbdd8ebacacf0a58573b7c7e0c38dc8358e9	repository or language-specific infrastructure	-
+cpp	scripts/create_changelog_fragment.py	be769db7d262acd71fce214a83ab8ac17b04e52f	registry and release	rust/scripts/create-changelog-fragment.rs (same stem)
+cpp	scripts/create_github_release.py	66eade4fc62092cee9700ef6c8b016eed1c752f5	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+cpp	scripts/detect_code_changes.py	301befbe145e2a9699242ce3d9c78d701c2167b7	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+cpp	scripts/download-archive.sh	d683912cdb4024dfb01b672568522a6f817d800f	runner and artifact handling	-
+cpp	scripts/get_bump_type.py	8e38ce6cf73d06d9313982c6329be2efe3788340	repository or language-specific infrastructure	rust/scripts/get-bump-type.rs (same stem)
+cpp	scripts/get_version.py	dbfa283f35a40a8121f824bbad94014fa2a9d4c3	registry and release	rust/scripts/get-version.rs (same stem)
+cpp	scripts/lint_cpp.py	f58f028cf8bc7aacf57b299703268a0de652ef62	source and test quality	-
+cpp	scripts/pack_nuget.py	1fb4c1ae7e08f98ba38bd2e726fe8eb8140c9546	registry and release	-
+cpp	scripts/package_release.py	d7c1fc517209dd338f34ed1363c562469f0b43f1	registry and release	-
+cpp	scripts/preflight-credentials.sh	9ee362e91ba2647b917d14a03dca1acfbe1b514f	security and dependencies	-
+cpp	scripts/publish-release.sh	6ad8c3777fd699327b858f33feef57ad69561e08	registry and release	-
+cpp	scripts/read-job-cancel-in-progress.sh	6457391568a48e2df0eaa0d7d123c0413f037357	repository or language-specific infrastructure	-
+cpp	scripts/recheck_broken_links.py	cd2c832f70682da1153775d3ef1c8ddaf7efab93	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+cpp	scripts/rename_project.py	e77cad4f21fd384d2a7f67c84a367084e522f870	repository or language-specific infrastructure	-
+cpp	scripts/render_vcpkg_port.py	1464bd5ba1dd4c16f617ec0c78e765131fb9807a	registry and release	-
+cpp	scripts/requirements-ci.in	2ed9e3964b86521835fea289c96c2a58b94d76b9	repository or language-specific infrastructure	-
+cpp	scripts/requirements-ci.txt	9770ace0d4f4c679ada68ab856fb91eb68064ec0	repository or language-specific infrastructure	-
+cpp	scripts/requirements-security.in	32283614a1c0a226f8367985635348904624973b	security and dependencies	-
+cpp	scripts/requirements-security.txt	7798463045f3889a35773b06c0fd7d0345097acb	security and dependencies	-
+cpp	scripts/requirements-toolchain.in	16746d81362ae34e522c69e5414e62785731f7ad	repository or language-specific infrastructure	-
+cpp	scripts/requirements-toolchain.txt	cff4972214a049dfdcce523ed935ca377ffe3b8c	repository or language-specific infrastructure	-
+cpp	scripts/run-with-budget-warning.sh	f5ee0c3c351286037802bdff09bd0fcc453a7ab3	runner and artifact handling	-
+cpp	scripts/simulate-fresh-merge.sh	61cf5edae49d4954043e3a6c6e0a3db06c3dab22	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+cpp	scripts/test_secretlint.mjs	8813fc06d08fac76b783828bd97cfdd106dbc786	source and test quality	-
+cpp	scripts/tests/__init__.py	e69de29bb2d1d6434b8b29ae775ad8c2e48c5391	source and test quality	-
+cpp	scripts/tests/conftest.py	64b900bf2a3ea905108bddc7ed270ce7ec2c540a	source and test quality	-
+cpp	scripts/tests/test_audit_dependencies.py	98f2b2d13494fb208d3cc7dda58b6770c45fad89	security and dependencies	-
+cpp	scripts/tests/test_build_codeql.py	1bf5ae741fb360f6c979595b079516db566d9b76	security and dependencies	-
+cpp	scripts/tests/test_changelog.py	150e03009d1bd38794fab837f1db0b77b5d5990c	registry and release	-
+cpp	scripts/tests/test_check_consumers.py	b3089ed1ea6858ee8471216b6b6810704dcf1d48	source and test quality	-
+cpp	scripts/tests/test_check_dependabot_health.py	b34a50e65abd23115675b0feefe6adfe696ba5ca	security and dependencies	-
+cpp	scripts/tests/test_check_dependency_review_support.py	21ca552f318ab1c5d83a54561d0a845b1d843552	security and dependencies	-
+cpp	scripts/tests/test_check_nuget_size.py	1affbf6f14d300bcb7cf6e53fbdaa0ad0c1ff856	registry and release	-
+cpp	scripts/tests/test_check_pipeline_status.py	ae70e18a42b50832a463b73c9e47012796770f3b	workflow validation and status	-
+cpp	scripts/tests/test_check_required_docs.py	4de8d3967d7f62725f103e93f33114e60e5add2a	documentation and links	-
+cpp	scripts/tests/test_check_sarif.py	aa1f24288da1f5c1205da5b6be18bd008d9c6433	security and dependencies	-
+cpp	scripts/tests/test_check_web_archive.py	03a6a93e58abb18bb4c9068c6112aaede25794f8	runner and artifact handling	-
+cpp	scripts/tests/test_check_workflow_concurrency.py	05698d4fc64a3c0e891f10a2209932390dcb7957	workflow validation and status	-
+cpp	scripts/tests/test_cpp_project.py	6015580376b5e2fb80c8965108a09938aebe2742	source and test quality	-
+cpp	scripts/tests/test_dependency_pins.py	9a30e1697e4c0a20f0a4173d1879c120b6e1b858	security and dependencies	-
+cpp	scripts/tests/test_download_archive.py	6444289d640cb40ba49a9350da7b687ffc835751	runner and artifact handling	-
+cpp	scripts/tests/test_lint_cpp.py	668056e021576e4bc7f1a18c7e26266921d47925	source and test quality	-
+cpp	scripts/tests/test_packaging.py	18da8aefba45ad4b82aa6c242b7a1a336ce4fe74	source and test quality	-
+cpp	scripts/tests/test_pr_checks.py	4f520019c7822936a57dadcc197fc6318689cdfe	source and test quality	-
+cpp	scripts/tests/test_preflight_credentials.py	98bf6be6916e58e0b26bc43efd0c7cda66475716	security and dependencies	-
+cpp	scripts/tests/test_publish_release.py	ddd604885fbd1aa9b32aaabbb1f48da34b93788b	registry and release	-
+cpp	scripts/tests/test_recheck_broken_links.py	040d425934631fee849c6b87012cae81a6732cd3	documentation and links	-
+cpp	scripts/tests/test_release.py	a35aa6c8fbd60dd36ade3cc2b781869d891c9bb5	registry and release	-
+cpp	scripts/tests/test_rename_project.py	4b991f2c75e81b0c4810ca4afb23fcc44df353b1	source and test quality	-
+cpp	scripts/tests/test_run_with_budget_warning.py	6a36abf681cf034154440dd9470a2f24094882ea	runner and artifact handling	-
+cpp	scripts/tests/test_simulate_fresh_merge.py	8d67e2b5cad5ff6b8c5b6c60e4167b8166f1dbf0	source and test quality	-
+cpp	scripts/tests/test_unacquired_jobs.py	45cd4e0a50877397692974aa55330dd10b8a9185	runner and artifact handling	-
+cpp	scripts/tests/test_versioning.py	2068926a9609e73dfad9f7dab4c87e27383dc2c1	registry and release	-
+cpp	scripts/tests/test_workflows.py	73390025c3730c2b51cc411c15a1e8adbf593d72	workflow validation and status	-
+cpp	scripts/unacquired_jobs.py	109cba8d0ed9b788f3ac0313dff3d08eb672b006	runner and artifact handling	.github/scripts/unacquired-jobs.py (same stem)
+cpp	scripts/version_and_commit.py	78c4d5d471a84a9672c504e791103a95963e5b02	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)

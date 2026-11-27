@@ -1,0 +1,6 @@
+{"level":"warn","ts":"2026-11-27T20:29:53.770435Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_BIN=/home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd"}
+{"level":"warn","ts":"2026-11-27T20:29:53.771639Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T20:29:53.771702Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T20:29:53.784241Z","caller":"auth/store.go:1137","msg":"simple token is not cryptographically signed"}
+{"level":"warn","ts":"2026-11-27T20:29:57.675074Z","caller":"etcdserver/raft.go:390","msg":"leader failed to send out heartbeat on time; took too long, leader is overloaded likely from slow disk","to":"4eba5b54076660ba","heartbeat-interval":"100ms","expected-duration":"200ms","exceeded-duration":"1.209944512s"}
+{"level":"warn","ts":"2026-11-27T20:29:57.675125Z","caller":"etcdserver/raft.go:390","msg":"leader failed to send out heartbeat on time; took too long, leader is overloaded likely from slow disk","to":"4b199c7130dc33e8","heartbeat-interval":"100ms","expected-duration":"200ms","exceeded-duration":"1.209997575s"}

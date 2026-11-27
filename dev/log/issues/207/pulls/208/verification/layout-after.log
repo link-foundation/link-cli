@@ -1,0 +1,17 @@
+✔ language code package manifests and generated evidence stay out of the root folder (5.369187ms)
+✔ the browser-only WebAssembly wrapper opts out of crates.io publishing (0.950663ms)
+✔ JavaScript package scripts target the relocated WebAssembly crate and split script trees (0.826372ms)
+✔ WebAssembly workflow uses the JavaScript package lockfile from js (0.78309ms)
+✔ the documentation workflow deploys GitHub Pages automatically on push to main (0.923152ms)
+✔ CSharp release workflow attaches NuGet packages to GitHub Releases (0.618263ms)
+✔ CSharp release workflow includes self-healing release gates (0.406069ms)
+✔ CSharp and Rust release workflows are scheduled on every push to main (1.45237ms)
+✔ GitHub workflows avoid Node 20 action major versions that are being retired (0.879101ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 202.128966

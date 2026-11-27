@@ -1,0 +1,912 @@
+javascript / JavaScript stage	UNKNOWN STEP	﻿2026-11-27T20:58:25.5758786Z Current runner version: '2.338.2'
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5783728Z ##[group]Runner Image Provisioner
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5784647Z Hosted Compute Agent
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5785201Z Version: 20261111.635
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5785785Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5786553Z Build Date: 2026-11-11T01:49:01Z
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5787198Z Worker ID: {d8adbdf4-003e-4f3a-81da-439062f2a451}
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5788227Z Region: eastus2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5788793Z Cloud: Azure
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5789298Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5790727Z ##[group]Operating System
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5791315Z Ubuntu
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5791851Z 24.04.5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5792349Z LTS
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5792836Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5793395Z ##[group]Runner Image
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5793959Z Image: ubuntu-24.04
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5794468Z Version: 20261122.23.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5795690Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261122.23/images/ubuntu/Ubuntu2404-Readme.md
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5797169Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261122.23
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5798505Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5799708Z ##[group]GITHUB_TOKEN Permissions
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5802164Z Contents: read
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5802786Z Metadata: read
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5803390Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5805800Z Secret source: Actions
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5806739Z Cache mode: write
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5807678Z Prepare workflow directory
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.6175286Z Prepare all required actions
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.6226014Z Getting action download info
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.8479112Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.9902515Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.2291995Z Uses: link-foundation/link-cli/.github/workflows/javascript-stage.yml@refs/pull/208/merge (b341940f817317b89947f0e71d367b0829c768a2)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.2296370Z Complete job name: javascript / JavaScript stage
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3097241Z ##[group]Run actions/checkout@v7
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3098332Z with:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3098888Z   persist-credentials: false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3099433Z   fetch-depth: 0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3100040Z   repository: link-foundation/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3103688Z   token: ***
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3104173Z   ssh-strict: true
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3104707Z   ssh-user: git
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3105190Z   clean: true
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3105707Z   sparse-checkout-cone-mode: true
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3106280Z   fetch-tags: false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3106762Z   show-progress: true
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3107311Z   lfs: false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3108040Z   submodules: false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3108688Z   set-safe-directory: true
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3109256Z   allow-unsafe-pr-checkout: false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3110059Z env:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3110577Z   GIT_CONFIG_COUNT: 1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3111134Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3111846Z   GIT_CONFIG_VALUE_0: main
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3112372Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.5745975Z Syncing repository: link-foundation/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.5750081Z ##[group]Getting Git version info
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.5751674Z Working directory is '/home/runner/work/link-cli/link-cli'
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.5753135Z [command]/usr/bin/git version
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6034501Z git version 2.56.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6063966Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6078079Z Temporarily overriding HOME='/home/runner/work/_temp/11e12a52-a086-4af1-880b-f8b9f0bee5a3' before making global git config changes
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6080930Z Adding repository directory to the temporary git global config as a safe directory
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6088818Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6143823Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6151255Z ##[group]Determining repository object format
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6153594Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6155259Z ##[group]Initializing the repository
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6159180Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6312078Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6360990Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6425379Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6426484Z ##[group]Disabling automatic garbage collection
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6427485Z [command]/usr/bin/git config --local gc.auto 0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6482999Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6484201Z ##[group]Setting up auth
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6485233Z Removing SSH command configuration
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6489747Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6536845Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6890508Z Removing HTTP extra header
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6897115Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.6950089Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7140043Z Removing includeIf entries pointing to credentials config files
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7143786Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7178707Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7375839Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7413998Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git.path /home/runner/work/_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7448324Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7485806Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7520340Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7554456Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7555463Z ##[group]Fetching the repository
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.7561137Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +b341940f817317b89947f0e71d367b0829c768a2:refs/remotes/pull/208/merge
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2244872Z From https://github.com/link-foundation/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2249508Z  * [new branch]        claude/code-review-and-issues-01WwM3yFJiaRwTrhABNoUkYa -> origin/claude/code-review-and-issues-01WwM3yFJiaRwTrhABNoUkYa
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2253646Z  * [new branch]        issue-100-f2e0ccb162ad                   -> origin/issue-100-f2e0ccb162ad
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2256463Z  * [new branch]        issue-102-72bb31124e81                   -> origin/issue-102-72bb31124e81
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2259300Z  * [new branch]        issue-104-5bb1e3bae0ff                   -> origin/issue-104-5bb1e3bae0ff
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2261717Z  * [new branch]        issue-105-5190ec6fb31a                   -> origin/issue-105-5190ec6fb31a
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2264898Z  * [new branch]        issue-108-62235ad0274f                   -> origin/issue-108-62235ad0274f
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2267233Z  * [new branch]        issue-11-36571c97                        -> origin/issue-11-36571c97
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2269685Z  * [new branch]        issue-110-28a08ef1f701                   -> origin/issue-110-28a08ef1f701
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2272069Z  * [new branch]        issue-111-9490c2c7fe6e                   -> origin/issue-111-9490c2c7fe6e
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2274645Z  * [new branch]        issue-112-013e176b5b81                   -> origin/issue-112-013e176b5b81
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2277229Z  * [new branch]        issue-117-acb0c8ee890a                   -> origin/issue-117-acb0c8ee890a
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2279903Z  * [new branch]        issue-12-fc4292e4                        -> origin/issue-12-fc4292e4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2282318Z  * [new branch]        issue-128-13a266b0bb46                   -> origin/issue-128-13a266b0bb46
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2285099Z  * [new branch]        issue-129-598cb6209722                   -> origin/issue-129-598cb6209722
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2287994Z  * [new branch]        issue-130-e7b80dbef8ba                   -> origin/issue-130-e7b80dbef8ba
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2290732Z  * [new branch]        issue-134-3fbe4eecd082                   -> origin/issue-134-3fbe4eecd082
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2293452Z  * [new branch]        issue-136-fb310c545174                   -> origin/issue-136-fb310c545174
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2296236Z  * [new branch]        issue-138-adc2aa56c4cb                   -> origin/issue-138-adc2aa56c4cb
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2299044Z  * [new branch]        issue-140-29ce266bbba9                   -> origin/issue-140-29ce266bbba9
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2301667Z  * [new branch]        issue-147-c194a6076ce6                   -> origin/issue-147-c194a6076ce6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2304272Z  * [new branch]        issue-148-c4a81f81c109                   -> origin/issue-148-c4a81f81c109
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2307179Z  * [new branch]        issue-149-994398952743                   -> origin/issue-149-994398952743
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2309898Z  * [new branch]        issue-15-d0c58a82                        -> origin/issue-15-d0c58a82
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2312634Z  * [new branch]        issue-150-5cf620d1d8da                   -> origin/issue-150-5cf620d1d8da
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2315369Z  * [new branch]        issue-151-bee7563554a1                   -> origin/issue-151-bee7563554a1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2318647Z  * [new branch]        issue-152-76a04081f2ae                   -> origin/issue-152-76a04081f2ae
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2321853Z  * [new branch]        issue-153-d167e9cdb140                   -> origin/issue-153-d167e9cdb140
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2325351Z  * [new branch]        issue-161-f58f579440c5                   -> origin/issue-161-f58f579440c5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2328622Z  * [new branch]        issue-165-a5206aa5b4c0                   -> origin/issue-165-a5206aa5b4c0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2331964Z  * [new branch]        issue-17-1bd2fb57                        -> origin/issue-17-1bd2fb57
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2334736Z  * [new branch]        issue-172-4d10c904b01e                   -> origin/issue-172-4d10c904b01e
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2337538Z  * [new branch]        issue-176-6bf53b36c196                   -> origin/issue-176-6bf53b36c196
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2340720Z  * [new branch]        issue-176-a607d6af6f4d                   -> origin/issue-176-a607d6af6f4d
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2343508Z  * [new branch]        issue-18-f86143d5                        -> origin/issue-18-f86143d5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2346146Z  * [new branch]        issue-189-517a4cdc44e4                   -> origin/issue-189-517a4cdc44e4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2348869Z  * [new branch]        issue-19-9de6817b                        -> origin/issue-19-9de6817b
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2351884Z  * [new branch]        issue-191-332e62dc1a05                   -> origin/issue-191-332e62dc1a05
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2354736Z  * [new branch]        issue-193-4b5f41d116f6                   -> origin/issue-193-4b5f41d116f6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2358983Z  * [new branch]        issue-194-9d96e6b959d1                   -> origin/issue-194-9d96e6b959d1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2362667Z  * [new branch]        issue-195-7ead777dc5a5                   -> origin/issue-195-7ead777dc5a5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2366009Z  * [new branch]        issue-199-66734c86cf0e                   -> origin/issue-199-66734c86cf0e
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2368893Z  * [new branch]        issue-20-aba7a4fa                        -> origin/issue-20-aba7a4fa
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2371736Z  * [new branch]        issue-200-e65faee466f5                   -> origin/issue-200-e65faee466f5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2374531Z  * [new branch]        issue-201-7297b35dd2fd                   -> origin/issue-201-7297b35dd2fd
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2377218Z  * [new branch]        issue-204-275f00bced2e                   -> origin/issue-204-275f00bced2e
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2380524Z  * [new branch]        issue-207-ac4b1e2ba1ef                   -> origin/issue-207-ac4b1e2ba1ef
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2383927Z  * [new branch]        issue-22-889744b4                        -> origin/issue-22-889744b4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2386475Z  * [new branch]        issue-23-e23fa86d                        -> origin/issue-23-e23fa86d
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2389331Z  * [new branch]        issue-24-3e3135c5                        -> origin/issue-24-3e3135c5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2391817Z  * [new branch]        issue-25-4c1591ce                        -> origin/issue-25-4c1591ce
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2394317Z  * [new branch]        issue-26-c9ed9c27                        -> origin/issue-26-c9ed9c27
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2396809Z  * [new branch]        issue-3-af35a436                         -> origin/issue-3-af35a436
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2399491Z  * [new branch]        issue-30-7073054f                        -> origin/issue-30-7073054f
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2402036Z  * [new branch]        issue-31-e51b89e4                        -> origin/issue-31-e51b89e4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2404584Z  * [new branch]        issue-32-3b3efd02                        -> origin/issue-32-3b3efd02
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2407253Z  * [new branch]        issue-33-a60a3c86                        -> origin/issue-33-a60a3c86
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2409883Z  * [new branch]        issue-34-22f3c425                        -> origin/issue-34-22f3c425
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2412316Z  * [new branch]        issue-35-391818e8                        -> origin/issue-35-391818e8
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2414769Z  * [new branch]        issue-56-73ae4c3a                        -> origin/issue-56-73ae4c3a
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2417178Z  * [new branch]        issue-58-2571f420                        -> origin/issue-58-2571f420
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2420124Z  * [new branch]        issue-63-452491b85cd2                    -> origin/issue-63-452491b85cd2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2423511Z  * [new branch]        issue-65-5d06345e60dc                    -> origin/issue-65-5d06345e60dc
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2426875Z  * [new branch]        issue-67-d67d72474036                    -> origin/issue-67-d67d72474036
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2430312Z  * [new branch]        issue-69-43fc7f1a4ec3                    -> origin/issue-69-43fc7f1a4ec3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2433476Z  * [new branch]        issue-71-c1debd4cdf5e                    -> origin/issue-71-c1debd4cdf5e
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2436949Z  * [new branch]        issue-73-d71d2656d381                    -> origin/issue-73-d71d2656d381
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2440045Z  * [new branch]        issue-75-2384a28fe185                    -> origin/issue-75-2384a28fe185
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2442753Z  * [new branch]        issue-77-388911d8eea6                    -> origin/issue-77-388911d8eea6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2445332Z  * [new branch]        issue-79-49ca4f759246                    -> origin/issue-79-49ca4f759246
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2448086Z  * [new branch]        issue-79-c80df6f859e8                    -> origin/issue-79-c80df6f859e8
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2450954Z  * [new branch]        issue-8-e91a69e5                         -> origin/issue-8-e91a69e5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2453700Z  * [new branch]        issue-82-7aea04680cb2                    -> origin/issue-82-7aea04680cb2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2456312Z  * [new branch]        issue-84-0f4c3bcac49c                    -> origin/issue-84-0f4c3bcac49c
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2459095Z  * [new branch]        issue-86-799717a6ecc6                    -> origin/issue-86-799717a6ecc6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2461617Z  * [new branch]        issue-88-82c1eee49462                    -> origin/issue-88-82c1eee49462
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2464154Z  * [new branch]        issue-88-ba6db304f470                    -> origin/issue-88-ba6db304f470
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2466851Z  * [new branch]        issue-92-ce7d2849a3ea                    -> origin/issue-92-ce7d2849a3ea
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2469529Z  * [new branch]        issue-94-c873317dc78c                    -> origin/issue-94-c873317dc78c
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2472618Z  * [new branch]        issue-96-df5aa0703ffa                    -> origin/issue-96-df5aa0703ffa
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2475190Z  * [new branch]        issue-98-d97a235b2f3d                    -> origin/issue-98-d97a235b2f3d
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2477406Z  * [new branch]        main                                     -> origin/main
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2479668Z  * [new branch]        named-links                              -> origin/named-links
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2482043Z  * [new branch]        nested-creation-1                        -> origin/nested-creation-1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2484674Z  * [new branch]        prm/publish-jobs-1791903284717           -> origin/prm/publish-jobs-1791903284717
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2487414Z  * [new branch]        recovery/issue-138-adc2aa56c4cb          -> origin/recovery/issue-138-adc2aa56c4cb
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2490373Z  * [new branch]        recovery/issue-200-e65faee466f5          -> origin/recovery/issue-200-e65faee466f5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2492644Z  * [new tag]           1.0.1                                    -> 1.0.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2494434Z  * [new tag]           csharp-v2.4.0                            -> csharp-v2.4.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2496490Z  * [new tag]           csharp-v2.5.0                            -> csharp-v2.5.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2498522Z  * [new tag]           csharp-v2.6.0                            -> csharp-v2.6.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2500427Z  * [new tag]           csharp-v3.0.0                            -> csharp-v3.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2502365Z  * [new tag]           csharp-v3.1.0                            -> csharp-v3.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2504256Z  * [new tag]           csharp-v3.2.0                            -> csharp-v3.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2506116Z  * [new tag]           csharp-v4.0.0                            -> csharp-v4.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2508087Z  * [new tag]           csharp-v4.0.1                            -> csharp-v4.0.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2509997Z  * [new tag]           csharp-v4.0.2                            -> csharp-v4.0.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2511943Z  * [new tag]           csharp-v4.0.3                            -> csharp-v4.0.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2513868Z  * [new tag]           csharp-v4.0.4                            -> csharp-v4.0.4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2515784Z  * [new tag]           csharp-v4.0.5                            -> csharp-v4.0.5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2517774Z  * [new tag]           csharp-v4.0.6                            -> csharp-v4.0.6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2519723Z  * [new tag]           csharp-v4.1.0                            -> csharp-v4.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2521646Z  * [new tag]           csharp-v4.2.0                            -> csharp-v4.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2523538Z  * [new tag]           csharp-v4.3.0                            -> csharp-v4.3.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2525463Z  * [new tag]           csharp-v4.4.0                            -> csharp-v4.4.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2527404Z  * [new tag]           csharp-v4.5.0                            -> csharp-v4.5.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2529522Z  * [new tag]           csharp-v5.0.0                            -> csharp-v5.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2531614Z  * [new tag]           csharp-v5.1.0                            -> csharp-v5.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2533557Z  * [new tag]           csharp-v5.2.0                            -> csharp-v5.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2535413Z  * [new tag]           csharp-v5.2.1                            -> csharp-v5.2.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2537318Z  * [new tag]           csharp-v5.3.0                            -> csharp-v5.3.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2539343Z  * [new tag]           csharp-v5.3.1                            -> csharp-v5.3.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2541216Z  * [new tag]           csharp-v5.4.0                            -> csharp-v5.4.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2543083Z  * [new tag]           csharp-v5.4.1                            -> csharp-v5.4.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2544890Z  * [new tag]           rust-v0.1.0                              -> rust-v0.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2546688Z  * [new tag]           rust-v0.2.0                              -> rust-v0.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2548624Z  * [new tag]           rust-v0.2.1                              -> rust-v0.2.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2550443Z  * [new tag]           rust-v0.2.10                             -> rust-v0.2.10
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2552283Z  * [new tag]           rust-v0.2.11                             -> rust-v0.2.11
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2554061Z  * [new tag]           rust-v0.2.12                             -> rust-v0.2.12
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2555865Z  * [new tag]           rust-v0.2.2                              -> rust-v0.2.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2557681Z  * [new tag]           rust-v0.2.3                              -> rust-v0.2.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2559566Z  * [new tag]           rust-v0.2.4                              -> rust-v0.2.4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2561340Z  * [new tag]           rust-v0.2.5                              -> rust-v0.2.5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2563080Z  * [new tag]           rust-v0.2.6                              -> rust-v0.2.6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2564876Z  * [new tag]           rust-v0.2.7                              -> rust-v0.2.7
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2566743Z  * [new tag]           rust-v0.2.8                              -> rust-v0.2.8
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2568699Z  * [new tag]           rust-v0.2.9                              -> rust-v0.2.9
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2570543Z  * [new tag]           rust-v1.0.0                              -> rust-v1.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2572329Z  * [new tag]           rust-v1.0.1                              -> rust-v1.0.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2574119Z  * [new tag]           rust-v1.0.2                              -> rust-v1.0.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2575868Z  * [new tag]           rust-v1.0.3                              -> rust-v1.0.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2577839Z  * [new tag]           rust-v1.0.4                              -> rust-v1.0.4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2579728Z  * [new tag]           rust-v1.0.5                              -> rust-v1.0.5
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2581466Z  * [new tag]           rust-v1.0.6                              -> rust-v1.0.6
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2583305Z  * [new tag]           rust-v1.0.7                              -> rust-v1.0.7
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2585039Z  * [new tag]           rust-v1.0.8                              -> rust-v1.0.8
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2586730Z  * [new tag]           rust-v1.0.9                              -> rust-v1.0.9
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2588721Z  * [new tag]           rust-v1.1.0                              -> rust-v1.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2590513Z  * [new tag]           rust-v1.2.0                              -> rust-v1.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2592311Z  * [new tag]           rust-v1.3.0                              -> rust-v1.3.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2594054Z  * [new tag]           rust-v1.4.0                              -> rust-v1.4.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2595785Z  * [new tag]           rust-v1.5.0                              -> rust-v1.5.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2597540Z  * [new tag]           rust-v2.0.0                              -> rust-v2.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2599496Z  * [new tag]           rust-v2.1.0                              -> rust-v2.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2601386Z  * [new tag]           rust-v2.1.1                              -> rust-v2.1.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2603202Z  * [new tag]           rust-v2.1.2                              -> rust-v2.1.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2604982Z  * [new tag]           rust-v3.0.0                              -> rust-v3.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2606810Z  * [new tag]           rust-v3.0.1                              -> rust-v3.0.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2608894Z  * [new tag]           rust-v3.1.0                              -> rust-v3.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2610748Z  * [new tag]           rust-v3.1.1                              -> rust-v3.1.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2612542Z  * [new tag]           rust-v3.1.2                              -> rust-v3.1.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2614328Z  * [new tag]           rust-v3.1.3                              -> rust-v3.1.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2616151Z  * [new tag]           rust-v3.2.0                              -> rust-v3.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2618122Z  * [new tag]           rust-v3.2.1                              -> rust-v3.2.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2619940Z  * [new tag]           rust-v3.3.0                              -> rust-v3.3.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2621675Z  * [new tag]           rust-v3.3.1                              -> rust-v3.3.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2623440Z  * [new tag]           v1.2.1                                   -> v1.2.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2625070Z  * [new tag]           v1.2.2                                   -> v1.2.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2626675Z  * [new tag]           v1.2.3                                   -> v1.2.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2628666Z  * [new tag]           v1.3.0                                   -> v1.3.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2630302Z  * [new tag]           v1.3.1                                   -> v1.3.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2631936Z  * [new tag]           v1.4.0                                   -> v1.4.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2633559Z  * [new tag]           v1.4.1                                   -> v1.4.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2635170Z  * [new tag]           v1.5.0                                   -> v1.5.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2636884Z  * [new tag]           v1.6.0                                   -> v1.6.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2638724Z  * [new tag]           v1.7.0                                   -> v1.7.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2640383Z  * [new tag]           v1.7.1                                   -> v1.7.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2642040Z  * [new tag]           v1.7.2                                   -> v1.7.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2643730Z  * [new tag]           v1.7.3                                   -> v1.7.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2645367Z  * [new tag]           v1.7.4                                   -> v1.7.4
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2647082Z  * [new tag]           v1.8.0                                   -> v1.8.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2649029Z  * [new tag]           v2.0.2                                   -> v2.0.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2650654Z  * [new tag]           v2.1.0                                   -> v2.1.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2652298Z  * [new tag]           v2.1.1                                   -> v2.1.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2653939Z  * [new tag]           v2.1.2                                   -> v2.1.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2655587Z  * [new tag]           v2.1.3                                   -> v2.1.3
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2657161Z  * [new tag]           v2.2.0                                   -> v2.2.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2658946Z  * [new tag]           v2.2.1                                   -> v2.2.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2660595Z  * [new tag]           v2.2.2                                   -> v2.2.2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2662209Z  * [new tag]           v2.4.0                                   -> v2.4.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2663974Z  * [new ref]           b341940f817317b89947f0e71d367b0829c768a2 -> pull/208/merge
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2668126Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2669828Z ##[group]Determining the checkout info
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2671627Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2672864Z [command]/usr/bin/git sparse-checkout disable
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2675778Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2679431Z ##[group]Checking out the ref
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.2680966Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/208/merge
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5824712Z Note: switching to 'refs/remotes/pull/208/merge'.
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5825172Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5825519Z You are in 'detached HEAD' state. You can look around, make experimental
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5826251Z changes and commit them, and you can discard any commits you make in this
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5826884Z state without impacting any branches by switching back to a branch.
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5827227Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5827484Z If you want to create a new branch to retain commits you create, you may
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5828271Z do so (now or later) by using -c with the switch command. Example:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5828616Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5828814Z   git switch -c <new-branch-name>
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829121Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829375Z Or undo this operation with:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829597Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829754Z   git switch -
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829921Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5830268Z Turn off this advice by setting config variable advice.detachedHead to false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5830661Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5831053Z HEAD is now at b341940f Merge 26852bd276b6cdeef98316fae6d2526e2de80483 into d8a26c917114deecca49e1e11eb3680755e1ec61
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5850218Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5895973Z [command]/usr/bin/git log -1 --format=%H
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5923482Z b341940f817317b89947f0e71d367b0829c768a2
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5932307Z ##[group]Removing auth
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5932650Z Removing SSH command configuration
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5936306Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5968178Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6164664Z Removing HTTP extra header
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6166903Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6197650Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6393150Z Removing includeIf entries pointing to credentials config files
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6396790Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6425500Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6426564Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6427212Z includeif.gitdir:/github/workspace/.git.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6428247Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6434126Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6459083Z /home/runner/work/_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6468499Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-2705136f\-c22d\-40ba\-9312\-3e0574cf5977\.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6510927Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6533612Z /home/runner/work/_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6542233Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-2705136f\-c22d\-40ba\-9312\-3e0574cf5977\.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6579062Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6603544Z /github/runner_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6611978Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-2705136f\-c22d\-40ba\-9312\-3e0574cf5977\.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6645846Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6669411Z /github/runner_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6677011Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-2705136f\-c22d\-40ba\-9312\-3e0574cf5977\.config
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6710950Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6908491Z Removing credentials config '/home/runner/work/_temp/git-credentials-2705136f-c22d-40ba-9312-3e0574cf5977.config'
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.6919244Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7172328Z ##[group]Run actions/setup-node@v7
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7172703Z with:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7173041Z   node-version: 26.x
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7173345Z   cache: npm
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7173694Z   cache-dependency-path: js/package-lock.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7174078Z   check-latest: false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7176896Z   token: ***
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7177249Z   package-manager-cache: true
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7177576Z env:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178165Z   GIT_CONFIG_COUNT: 1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178494Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178835Z   GIT_CONFIG_VALUE_0: main
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7179207Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.8464215Z Found in cache @ /opt/hostedtoolcache/node/26.13.1/x64
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:29.6103165Z ##[group]Environment details
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.5716034Z node: v26.13.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.5716685Z npm: 11.20.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.5717129Z yarn: 1.22.22
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.5718069Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.5733725Z [command]/opt/hostedtoolcache/node/26.13.1/x64/bin/npm config get cache
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.8293428Z /home/runner/.npm
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:31.9204115Z Cache hit for: node-cache-Linux-x64-npm-9673cdef7102f2af4314029aedf43a37efdf4306f13cb1a55d52d77f4a0635c0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.1962215Z Received 26388320 of 26388320 (100.0%), 114.9 MBs/sec
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.1963101Z Cache Size: ~25 MB (26388320 B)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.1985549Z [command]/usr/bin/tar -xf /home/runner/work/_temp/2a754c3a-ab73-4fff-a01a-790a9ce39d62/cache.tzst -P -C /home/runner/work/link-cli/link-cli --use-compress-program unzstd
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2483478Z Cache restored successfully
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2496967Z Cache restored from key: node-cache-Linux-x64-npm-9673cdef7102f2af4314029aedf43a37efdf4306f13cb1a55d52d77f4a0635c0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2674335Z ##[group]Run npm ci
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2674770Z ^[[36;1mnpm ci^[[0m
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2709777Z shell: /usr/bin/bash -e {0}
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710153Z env:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710505Z   GIT_CONFIG_COUNT: 1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710925Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2711291Z   GIT_CONFIG_VALUE_0: main
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2711626Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1466946Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1474336Z added 128 packages, and audited 129 packages in 4s
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1474721Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1475031Z 34 packages are looking for funding
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1475420Z   run `npm fund` for details
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1478128Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1478383Z found 0 vulnerabilities
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1822657Z ##[group]Run npm run lint
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1823055Z ^[[36;1mnpm run lint^[[0m
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1856488Z shell: /usr/bin/bash -e {0}
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1856991Z env:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1857317Z   GIT_CONFIG_COUNT: 1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1857895Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1858260Z   GIT_CONFIG_VALUE_0: main
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1858616Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.2860781Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7131783Z > link-cli-web@2.4.0 lint
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7132650Z > node ../.github/scripts/check-javascript-quality.mjs
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7133332Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7133773Z JavaScript quality: 581 files, 0 formatting/lint findings, 0 near the line limit
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7528997Z ##[group]Run npm run test:js
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7529404Z ^[[36;1mnpm run test:js^[[0m
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7557426Z shell: /usr/bin/bash -e {0}
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558011Z env:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558373Z   GIT_CONFIG_COUNT: 1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558728Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7559087Z   GIT_CONFIG_VALUE_0: main
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7559505Z   GOLDEN_FIXTURES_RECEIPT: /home/runner/work/_temp/golden-javascript.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7560040Z ##[endgroup]
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.8516649Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.8517360Z > link-cli-web@2.4.0 test:js
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.8518775Z > node --test test/*.test.mjs ../csharp/scripts/*.test.mjs ../.github/scripts/*.test.mjs ../parity/*.test.mjs
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.8519308Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:47.0255631Z ✔ Cargo manifest warnings fail even when cargo exits zero; compiler errors retain their exit status (64.262178ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3039922Z ✔ SARIF gate rejects missing/invalid reports and checks every file/run/severity (1316.503855ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3063253Z ✔ SARIF text cannot inject workflow commands and every problem is reported (issue #172) (34.828717ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3122466Z ✔ pinned Python tooling participates in freshness checks instead of disappearing (3.833548ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3124205Z ✔ requirements with wheel hashes still participate in freshness checks (0.345286ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3125814Z ✔ versions compare numerically, not as text (0.79075ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3133309Z ✔ a declared version is compared only as far as it is written (0.357663ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3134579Z ✔ pre-releases are never the latest version (0.394248ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3135696Z ✔ every Cargo dependency form is found, path-only ones are skipped (1.412208ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3154245Z ✔ NuGet package references are found (0.414323ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3155763Z ✔ npm ranges lose their operator, and locked versions come from the lock file (0.45966ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3156968Z ✔ actions pinned to a major tag are found once per repository (0.584626ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3158145Z ✔ runtimes and installed tools are found (2.596887ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3159090Z ✔ actions pinned to a commit, a digest or an exact tag are found (1.079179ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3160629Z ✔ only real updates of cargo update --dry-run count (0.417698ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3161772Z ✔ a manifest comment links the issue that holds a dependency back (0.13003ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3162756Z ✔ Cargo comments hold back the dependency on their line only (0.306137ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3164114Z ✔ csproj comments hold back the package reference on their line (0.198162ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3182719Z ✔ workflow comments hold back actions, runtimes and tools (0.273202ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3202010Z ✔ only an open issue holds an outdated dependency back (0.195765ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3203423Z ✔ a dropped connection to a registry is retried instead of failing the check (15.722892ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3217593Z ✔ a lookup that keeps failing reports the network cause and the attempts (1.68704ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3219175Z ✔ an answer a retry cannot change fails at once (0.485505ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3220230Z ✔ retries wait longer each time and stop after the last attempt (61.374156ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3221585Z ✔ every gzip archive is decompressed and tarballs are unpacked (20.620013ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3222780Z ✔ a secret inside a compressed archive fails the scan (671.469687ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3229057Z   Retrying the Wayback API (attempt 2 of 3) after: fetch failed: ECONNRESET
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3230611Z ✔ the errors section stops at the next top-level heading (1.863553ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3231387Z ✔ a report without an errors section yields nothing (0.243248ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3231981Z ✔ redirected links are not reported as broken (0.995906ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3232590Z ✔ every http error is extracted exactly once (0.964796ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3233408Z ✔ errors that the Wayback Machine cannot answer are still reported (0.460721ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3234116Z ✔ the parsed error count matches the count lychee reports (0.398442ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3234686Z   Retrying the Wayback API (attempt 3 of 3) after: HTTP 503
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3235199Z   Retrying the Wayback API (attempt 2 of 2) after: fetch failed: ECONNRESET
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3235957Z ✔ transient Wayback failures are retried before a snapshot is reported (12.029592ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3236736Z ✔ a Wayback lookup that keeps failing is reported as failed, not as unarchived (0.779187ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3237376Z ✔ a definite Wayback answer is not retried (0.708324ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3238213Z ✔ the required stage checks report on every pull request (issue #111) (1.776352ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3238923Z ✔ every suite proves it loaded the shared golden fixtures (issue #111) (2.449781ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3239653Z ✔ no workflow flags or closes pull requests for inactivity (issue #111) (1.800987ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3240432Z ✔ a red Dependencies check on main opens or updates a tracking issue (issue #111) (0.835563ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3241116Z ✔ no step loads a local action from the workspace (1.827741ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3241790Z ✔ jobs that push a version commit to main use the release deploy key (issue #111) (4.858072ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3242626Z ✔ only inactive or missing Codecov repositories make uploading optional (35.682215ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3243460Z ✔ Codecov lookup failures and malformed responses do not silently disable upload checks (2.422799ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3244213Z ✔ Cobertura totals remain visible in the summary without Codecov (0.65121ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3245040Z ✔ missing and invalid coverage reports fail instead of publishing misleading totals (0.449289ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3246299Z ✔ summary command finds nested Cobertura files and appends the Actions summary (48.623592ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3247568Z ✔ publish body has valid metadata and no archive length or archive bytes (4.22ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3248942Z ✔ only the exact missing tarball response proves scoped API credentials (0.796644ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3249965Z ✔ HTTP 200 cannot pass credential preflight (0.387018ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3250818Z ✔ HTTP 401 cannot pass credential preflight (0.232234ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3251685Z ✔ HTTP 403 cannot pass credential preflight (0.295715ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3252657Z ✔ HTTP 404 cannot pass credential preflight (0.224207ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3253505Z ✔ HTTP 429 cannot pass credential preflight (0.257449ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3254413Z ✔ HTTP 500 cannot pass credential preflight (0.232564ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3255218Z ✔ HTTP 503 cannot pass credential preflight (0.253413ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3256190Z ✔ an unrelated HTTP 400 is unverified: [{"detail":"invalid metadata length"}] (0.741415ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3257558Z ✔ an unrelated HTTP 400 is unverified: [{"detail":"invalid tarball length for remaining payload"}] (0.293613ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3289610Z ✔ an unrelated HTTP 400 is unverified: [] (0.190273ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3290835Z ✔ an unrelated HTTP 400 is unverified: [{"detail":"invalid tarball length"},{"detail":"denied"}] (0.672912ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3291990Z ✔ network and malformed JSON errors stay unknown without leaking secrets (0.541147ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3293095Z ✔ a failed Cargo lookup is unknown, even when it prints updates (1.730803ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3294090Z ✔ successful dry runs report the locked updates (1.480386ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3295129Z ✔ archived template manifests are excluded while runnable examples stay audited (0.216653ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3296525Z ✔ any job that did not succeed counts as a failure (2.006477ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3297548Z ✔ the tracking issue is found by its marker, never by a pull request (3.733866ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3298696Z ✔ an older open tracking issue is found beyond the first thousand items (0.598762ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3299666Z ✔ a failure opens one issue, then comments on it; a pass closes it (0.919937ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3300686Z ✔ a dry run only reads (0.497971ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3301355Z ✔ a seed replays the same choices (4.767413ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3302264Z ✔ writer output separates acknowledgements from everything else (0.500588ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3303340Z ✔ acknowledgements must continue the verified revision one by one (0.78431ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3304366Z ✔ a crash may leave one unacknowledged commit, never lose an acknowledged one (0.505614ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3305322Z ✔ record boundaries locate the record a damaged byte belongs to (0.459073ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3306422Z ✔ power loss keeps every durable byte and only cuts or zeroes the rest (28.603963ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3307464Z ✔ a journal opens at its intact lines and refuses a hole before one (0.524536ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3332646Z ✔ every target names a pinned image, a writer and its default artifact (0.580654ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3334370Z ✔ crash.yml: use an exact SDK version to avoid the broken channel redirect (1.510635ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3335934Z ✔ csharp.yml: use an exact SDK version to avoid the broken channel redirect (0.616417ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3337632Z ✔ deep-client.yml: use an exact SDK version to avoid the broken channel redirect (0.173529ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3343644Z ✔ docs.yml: use an exact SDK version to avoid the broken channel redirect (0.387487ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3344947Z ✔ ipc.yml: use an exact SDK version to avoid the broken channel redirect (0.19358ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3346310Z ✔ js-client.yml: use an exact SDK version to avoid the broken channel redirect (0.307436ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3347897Z ✔ security.yml: use an exact SDK version to avoid the broken channel redirect (0.201373ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3349366Z ✔ missing or incomplete link evidence never turns a failed checker green (44.763402ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3351072Z ✔ transient recovery preserves permanent errors and cannot claim partial recovery as complete (5.061622ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3352362Z ✔ a permanent response terminates retries immediately (4.694074ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3353329Z ✔ timed-out links are failures that must be rechecked (issue #172) (2.05486ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3354860Z ✔ a lychee record never borrows text from the next line (issue #172) (0.389236ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3356004Z ✔ npm release validation uses the actual registry lookup result (1.688844ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3356980Z ✔ npm release validation succeeds when published=true (6.818005ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3358078Z ✔ npm release validation succeeds when published=false (4.964684ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3359202Z ✔ a successful dotnet exit is insufficient without a complete, clean audit graph (1.869198ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3360484Z ✔ NuGet username is configuration, OIDC is authentication and scope remains unverified (1.353587ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3361871Z ✔ fallback rejects expired, unavailable or malformed verification without exposing keys (2.221054ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3363216Z ✔ a 403 is a key without push scope and a 401 is an unaccepted key (issue #172) (31.040444ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3364563Z ✔ terminal gate fails on cancelled, timed out, failed, missing and wholly skipped prerequisites (5.23255ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3366060Z ✔ every workflow terminal gate depends on every other job and executes after failed prerequisites (3.399976ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3367301Z ✔ infrastructure reruns watch every workflow with a terminal gate (issue #172) (2.131374ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3375009Z ✔ PRs and metadata dispatches are advisory without touching credentials or registries (1.013875ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3376104Z ✔ main fails on denied or unknown authentication and validates both NuGet packages (1.476286ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3377609Z ✔ release helper check compiles every executable, denies warnings, and propagates failures (58.408051ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3379108Z ✔ runner recovery verifies annotations, pagination and retry limits offline (134.330856ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3380744Z ✔ each stack keeps the inputs its old pull_request path filter listed (4.91685ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:48.3381951Z ✔ only pull requests may skip a stack, and the verdict reaches GITHUB_OUTPUT (0.9528ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4803828Z ✔ parseArgs reads options and the command after -- (2.631097ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4807434Z ✔ writes keep the store at two links (0.213153ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4814526Z ✔ median and evaluate compare the two windows (0.285717ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4820420Z ✔ benchmark times the window at write N and at write N + gap (0.287169ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4821216Z ✔ main passes a steady clink and fails one that slows down (2193.339011ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4853264Z ✔ main reports a failing write (31.279489ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4915405Z ✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (35.592553ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4917446Z ✔ npm trust verification fails clearly when OIDC or the registry policy is missing (3.257132ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4918783Z ✔ npm trust failures name the workflow each package is published from (3.188256ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4920033Z ✔ generic hooks preserve immutable evidence while secrets still scan it (9.006899ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4920959Z ✔ there is at least one workflow to inspect (0.216756ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4921795Z ✔ CodeQL scans the complete checkout without a truncated PR diff (0.936142ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4922557Z ✔ no workflow reacts to both pull_request and non-main push branches (2.011646ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4923213Z ✔ the JavaScript unit tests are executed by a workflow (0.309435ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4923901Z ✔ crash.yml: every job declares timeout-minutes (0.62443ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4924651Z ✔ crash.yml: declares a top-level permissions block (0.321432ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4925603Z ✔ crash.yml: every job is covered by a concurrency group (0.425914ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4926548Z ✔ crash.yml: writer jobs own a never-cancelled concurrency group (0.551964ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4928179Z ✔ crash.yml: only classified authentication attempts may continue after failure (1.122512ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4929326Z ✔ crash.yml: crates.io trusted publishing runs only when enabled (2.505915ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4930262Z ✔ crash.yml: single-line if expressions do not start with ! (0.53426ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4931241Z ✔ crash.yml: every release_mode option is handled by a job (0.328875ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4932157Z ✔ crash.yml: publish steps do not silently skip on missing credentials (0.444967ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4933205Z ✔ crash.yml: npm lookups tell "not published" apart from a failure (0.53831ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4934154Z ✔ crash.yml: required choice inputs declare a default (0.349865ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4934979Z ✔ crash.yml: hosted runners use pinned OS labels (0.487274ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4935874Z ✔ crash.yml: provides init.defaultBranch to actions/checkout (0.234201ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4936784Z ✔ csharp.yml: every job declares timeout-minutes (0.431233ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4937643Z ✔ csharp.yml: declares a top-level permissions block (0.056965ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4938604Z ✔ csharp.yml: every job is covered by a concurrency group (0.553441ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4939633Z ✔ csharp.yml: writer jobs own a never-cancelled concurrency group (0.604839ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4940693Z ✔ csharp.yml: only classified authentication attempts may continue after failure (1.133647ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4941875Z ✔ csharp.yml: crates.io trusted publishing runs only when enabled (0.586734ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4942801Z ✔ csharp.yml: single-line if expressions do not start with ! (0.494727ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4944389Z ✔ csharp.yml: every release_mode option is handled by a job (0.159643ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4945382Z ✔ csharp.yml: publish steps do not silently skip on missing credentials (0.680874ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4946381Z ✔ csharp.yml: npm lookups tell "not published" apart from a failure (0.437009ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4947374Z ✔ csharp.yml: required choice inputs declare a default (0.332709ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4948557Z ✔ csharp.yml: hosted runners use pinned OS labels (0.668634ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4949478Z ✔ csharp.yml: provides init.defaultBranch to actions/checkout (0.06585ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4950388Z ✔ deep-client.yml: every job declares timeout-minutes (0.081928ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4951331Z ✔ deep-client.yml: declares a top-level permissions block (0.039799ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4952248Z ✔ deep-client.yml: every job is covered by a concurrency group (0.065733ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4953289Z ✔ deep-client.yml: writer jobs own a never-cancelled concurrency group (0.064277ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4954427Z ✔ deep-client.yml: only classified authentication attempts may continue after failure (0.100777ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4955567Z ✔ deep-client.yml: crates.io trusted publishing runs only when enabled (0.077413ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4956602Z ✔ deep-client.yml: single-line if expressions do not start with ! (0.054664ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4957525Z ✔ deep-client.yml: every release_mode option is handled by a job (0.050022ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4958759Z ✔ deep-client.yml: publish steps do not silently skip on missing credentials (0.287235ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4959813Z ✔ deep-client.yml: npm lookups tell "not published" apart from a failure (0.071875ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4960822Z ✔ deep-client.yml: required choice inputs declare a default (0.050768ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4961736Z ✔ deep-client.yml: hosted runners use pinned OS labels (0.061227ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4962678Z ✔ deep-client.yml: provides init.defaultBranch to actions/checkout (0.044224ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4963631Z ✔ dependencies.yml: every job declares timeout-minutes (0.109687ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4964590Z ✔ dependencies.yml: declares a top-level permissions block (0.040914ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4965559Z ✔ dependencies.yml: every job is covered by a concurrency group (0.102709ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4966540Z ✔ dependencies.yml: writer jobs own a never-cancelled concurrency group (0.096051ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4967844Z ✔ dependencies.yml: only classified authentication attempts may continue after failure (0.116622ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4968982Z ✔ dependencies.yml: crates.io trusted publishing runs only when enabled (0.138969ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4969998Z ✔ dependencies.yml: single-line if expressions do not start with ! (0.080582ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4971071Z ✔ dependencies.yml: every release_mode option is handled by a job (0.100472ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4972162Z ✔ dependencies.yml: publish steps do not silently skip on missing credentials (0.118836ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4973152Z ✔ dependencies.yml: npm lookups tell "not published" apart from a failure (0.160995ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4973898Z ✔ dependencies.yml: required choice inputs declare a default (0.084806ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4974896Z ✔ dependencies.yml: hosted runners use pinned OS labels (0.105662ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4975934Z ✔ dependencies.yml: provides init.defaultBranch to actions/checkout (0.081918ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4976924Z ✔ docs.yml: every job declares timeout-minutes (0.459494ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4978065Z ✔ docs.yml: declares a top-level permissions block (0.120145ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4978778Z ✔ docs.yml: every job is covered by a concurrency group (0.285388ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4979464Z ✔ docs.yml: writer jobs own a never-cancelled concurrency group (0.476867ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4980491Z ✔ docs.yml: only classified authentication attempts may continue after failure (0.336564ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4981667Z ✔ docs.yml: crates.io trusted publishing runs only when enabled (0.394479ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4982490Z ✔ docs.yml: single-line if expressions do not start with ! (1.059363ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4983201Z ✔ docs.yml: every release_mode option is handled by a job (0.138396ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4983977Z ✔ docs.yml: publish steps do not silently skip on missing credentials (0.304453ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4984694Z ✔ docs.yml: npm lookups tell "not published" apart from a failure (0.341854ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4985643Z ✔ docs.yml: required choice inputs declare a default (0.472972ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4986539Z ✔ docs.yml: hosted runners use pinned OS labels (0.463115ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4987205Z ✔ docs.yml: provides init.defaultBranch to actions/checkout (0.190057ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4988064Z ✔ ipc.yml: every job declares timeout-minutes (0.10675ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4988736Z ✔ ipc.yml: declares a top-level permissions block (0.044445ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4989346Z ✔ ipc.yml: every job is covered by a concurrency group (0.110819ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4990026Z ✔ ipc.yml: writer jobs own a never-cancelled concurrency group (0.086833ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4990851Z ✔ ipc.yml: only classified authentication attempts may continue after failure (0.101391ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4991560Z ✔ ipc.yml: crates.io trusted publishing runs only when enabled (0.104181ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4992247Z ✔ ipc.yml: single-line if expressions do not start with ! (0.066228ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4992918Z ✔ ipc.yml: every release_mode option is handled by a job (0.057291ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4994035Z ✔ ipc.yml: publish steps do not silently skip on missing credentials (0.103674ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4995076Z ✔ ipc.yml: npm lookups tell "not published" apart from a failure (0.083924ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4996055Z ✔ ipc.yml: required choice inputs declare a default (0.058922ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4996660Z ✔ ipc.yml: hosted runners use pinned OS labels (0.080195ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4997288Z ✔ ipc.yml: provides init.defaultBranch to actions/checkout (0.056779ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4998218Z ✔ javascript-stage.yml: every job declares timeout-minutes (0.078649ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4998938Z ✔ javascript-stage.yml: declares a top-level permissions block (0.040531ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.4999662Z ✔ javascript-stage.yml: every job is covered by a concurrency group (0.083086ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5000484Z ✔ javascript-stage.yml: writer jobs own a never-cancelled concurrency group (0.073738ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5001383Z ✔ javascript-stage.yml: only classified authentication attempts may continue after failure (1.009932ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5002269Z ✔ javascript-stage.yml: crates.io trusted publishing runs only when enabled (0.124095ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5003008Z ✔ javascript-stage.yml: single-line if expressions do not start with ! (0.068414ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5003741Z ✔ javascript-stage.yml: every release_mode option is handled by a job (0.053712ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5004545Z ✔ javascript-stage.yml: publish steps do not silently skip on missing credentials (0.064229ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5005366Z ✔ javascript-stage.yml: npm lookups tell "not published" apart from a failure (0.071764ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5006121Z ✔ javascript-stage.yml: required choice inputs declare a default (0.049895ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5006811Z ✔ javascript-stage.yml: hosted runners use pinned OS labels (0.063251ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5007550Z ✔ javascript-stage.yml: provides init.defaultBranch to actions/checkout (0.042972ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5008564Z ✔ javascript.yml: every job declares timeout-minutes (0.05453ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5009250Z ✔ javascript.yml: declares a top-level permissions block (0.031614ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5009896Z ✔ javascript.yml: every job is covered by a concurrency group (0.045993ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5010583Z ✔ javascript.yml: writer jobs own a never-cancelled concurrency group (0.046639ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5011483Z ✔ javascript.yml: only classified authentication attempts may continue after failure (0.051859ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5012274Z ✔ javascript.yml: crates.io trusted publishing runs only when enabled (0.054623ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5013144Z ✔ javascript.yml: single-line if expressions do not start with ! (0.049422ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5013855Z ✔ javascript.yml: every release_mode option is handled by a job (0.042391ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5014579Z ✔ javascript.yml: publish steps do not silently skip on missing credentials (0.053305ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5015389Z ✔ javascript.yml: npm lookups tell "not published" apart from a failure (0.340256ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5016180Z ✔ javascript.yml: required choice inputs declare a default (0.081444ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5016838Z ✔ javascript.yml: hosted runners use pinned OS labels (0.06447ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5017486Z ✔ javascript.yml: provides init.defaultBranch to actions/checkout (0.044268ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5018571Z ✔ js-client.yml: every job declares timeout-minutes (0.287438ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5019217Z ✔ js-client.yml: declares a top-level permissions block (0.052383ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5019897Z ✔ js-client.yml: every job is covered by a concurrency group (0.250184ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5020685Z ✔ js-client.yml: writer jobs own a never-cancelled concurrency group (0.331725ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5021625Z ✔ js-client.yml: only classified authentication attempts may continue after failure (0.338592ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5022654Z ✔ js-client.yml: crates.io trusted publishing runs only when enabled (0.46966ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5023522Z ✔ js-client.yml: single-line if expressions do not start with ! (0.212319ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5024385Z ✔ js-client.yml: every release_mode option is handled by a job (0.18238ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5025413Z ✔ js-client.yml: publish steps do not silently skip on missing credentials (0.294916ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5026209Z ✔ js-client.yml: npm lookups tell "not published" apart from a failure (0.562022ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5027027Z ✔ js-client.yml: required choice inputs declare a default (0.151446ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5027933Z ✔ js-client.yml: hosted runners use pinned OS labels (0.278138ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5028777Z ✔ js-client.yml: provides init.defaultBranch to actions/checkout (0.062138ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5029542Z ✔ js-server.yml: every job declares timeout-minutes (0.162746ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5030258Z ✔ js-server.yml: declares a top-level permissions block (0.028911ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5031107Z ✔ js-server.yml: every job is covered by a concurrency group (0.218808ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5031917Z ✔ js-server.yml: writer jobs own a never-cancelled concurrency group (0.199832ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5032896Z ✔ js-server.yml: only classified authentication attempts may continue after failure (0.230557ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5033881Z ✔ js-server.yml: crates.io trusted publishing runs only when enabled (0.282808ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5034744Z ✔ js-server.yml: single-line if expressions do not start with ! (0.15946ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5035552Z ✔ js-server.yml: every release_mode option is handled by a job (0.099515ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5036430Z ✔ js-server.yml: publish steps do not silently skip on missing credentials (0.231277ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5037383Z ✔ js-server.yml: npm lookups tell "not published" apart from a failure (0.25913ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5038253Z ✔ js-server.yml: required choice inputs declare a default (0.132925ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5039118Z ✔ js-server.yml: hosted runners use pinned OS labels (0.941865ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5040070Z ✔ js-server.yml: provides init.defaultBranch to actions/checkout (0.078578ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5041012Z ✔ links.yml: every job declares timeout-minutes (0.300125ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5041942Z ✔ links.yml: declares a top-level permissions block (0.060816ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5042615Z ✔ links.yml: every job is covered by a concurrency group (0.105039ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5043388Z ✔ links.yml: writer jobs own a never-cancelled concurrency group (0.108128ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5044199Z ✔ links.yml: only classified authentication attempts may continue after failure (0.106461ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5044948Z ✔ links.yml: crates.io trusted publishing runs only when enabled (0.107926ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5045750Z ✔ links.yml: single-line if expressions do not start with ! (0.056269ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5046463Z ✔ links.yml: every release_mode option is handled by a job (0.077196ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5047162Z ✔ links.yml: publish steps do not silently skip on missing credentials (0.092473ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5049051Z ✔ links.yml: npm lookups tell "not published" apart from a failure (0.076572ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5049952Z ✔ links.yml: required choice inputs declare a default (0.062289ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5050613Z ✔ links.yml: hosted runners use pinned OS labels (0.071146ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5051422Z ✔ links.yml: provides init.defaultBranch to actions/checkout (0.063883ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5052157Z ✔ rerun-infrastructure-failures.yml: every job declares timeout-minutes (0.085525ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5052933Z ✔ rerun-infrastructure-failures.yml: declares a top-level permissions block (0.037321ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5053875Z ✔ rerun-infrastructure-failures.yml: every job is covered by a concurrency group (0.061674ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5054745Z ✔ rerun-infrastructure-failures.yml: writer jobs own a never-cancelled concurrency group (0.059019ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5055727Z ✔ rerun-infrastructure-failures.yml: only classified authentication attempts may continue after failure (0.061528ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5056704Z ✔ rerun-infrastructure-failures.yml: crates.io trusted publishing runs only when enabled (0.08399ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5057581Z ✔ rerun-infrastructure-failures.yml: single-line if expressions do not start with ! (0.049166ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5058803Z ✔ rerun-infrastructure-failures.yml: every release_mode option is handled by a job (0.047014ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5059717Z ✔ rerun-infrastructure-failures.yml: publish steps do not silently skip on missing credentials (0.061052ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5060928Z ✔ rerun-infrastructure-failures.yml: npm lookups tell "not published" apart from a failure (0.056931ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5061839Z ✔ rerun-infrastructure-failures.yml: required choice inputs declare a default (0.044254ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5062681Z ✔ rerun-infrastructure-failures.yml: hosted runners use pinned OS labels (0.056604ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5063542Z ✔ rerun-infrastructure-failures.yml: provides init.defaultBranch to actions/checkout (0.037869ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5064245Z ✔ rust.yml: every job declares timeout-minutes (0.311491ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5064894Z ✔ rust.yml: declares a top-level permissions block (0.043017ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5065559Z ✔ rust.yml: every job is covered by a concurrency group (0.363549ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5066269Z ✔ rust.yml: writer jobs own a never-cancelled concurrency group (0.564207ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5067093Z ✔ rust.yml: only classified authentication attempts may continue after failure (0.488411ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5068108Z ✔ rust.yml: crates.io trusted publishing runs only when enabled (1.263711ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5069032Z ✔ rust.yml: single-line if expressions do not start with ! (0.194662ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5070008Z ✔ rust.yml: every release_mode option is handled by a job (0.20458ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5070780Z ✔ rust.yml: publish steps do not silently skip on missing credentials (0.350707ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5071466Z ✔ rust.yml: npm lookups tell "not published" apart from a failure (0.704935ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5072163Z ✔ rust.yml: required choice inputs declare a default (0.144251ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5072740Z ✔ rust.yml: hosted runners use pinned OS labels (0.169084ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5073382Z ✔ rust.yml: provides init.defaultBranch to actions/checkout (0.08033ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5074053Z ✔ security.yml: every job declares timeout-minutes (0.105787ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5074642Z ✔ security.yml: declares a top-level permissions block (0.021473ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5075300Z ✔ security.yml: every job is covered by a concurrency group (0.092723ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5076014Z ✔ security.yml: writer jobs own a never-cancelled concurrency group (0.10632ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5076969Z ✔ security.yml: only classified authentication attempts may continue after failure (0.103662ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5077865Z ✔ security.yml: crates.io trusted publishing runs only when enabled (0.100946ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5078655Z ✔ security.yml: single-line if expressions do not start with ! (0.048781ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5079416Z ✔ security.yml: every release_mode option is handled by a job (0.047439ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5080333Z ✔ security.yml: publish steps do not silently skip on missing credentials (0.072282ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5081330Z ✔ security.yml: npm lookups tell "not published" apart from a failure (0.091702ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5082002Z ✔ security.yml: required choice inputs declare a default (0.042304ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5082673Z ✔ security.yml: hosted runners use pinned OS labels (0.064348ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5083403Z ✔ security.yml: provides init.defaultBranch to actions/checkout (0.034627ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5084019Z ✔ wasm.yml: every job declares timeout-minutes (0.102103ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5084723Z ✔ wasm.yml: declares a top-level permissions block (0.032487ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5085369Z ✔ wasm.yml: every job is covered by a concurrency group (0.094635ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5086030Z ✔ wasm.yml: writer jobs own a never-cancelled concurrency group (0.133999ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5086800Z ✔ wasm.yml: only classified authentication attempts may continue after failure (0.087694ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5087552Z ✔ wasm.yml: crates.io trusted publishing runs only when enabled (0.125533ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5088442Z ✔ wasm.yml: single-line if expressions do not start with ! (0.07418ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5089076Z ✔ wasm.yml: every release_mode option is handled by a job (0.056893ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5089805Z ✔ wasm.yml: publish steps do not silently skip on missing credentials (0.268609ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5090521Z ✔ wasm.yml: npm lookups tell "not published" apart from a failure (0.112621ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5091159Z ✔ wasm.yml: required choice inputs declare a default (0.066734ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5091942Z ✔ wasm.yml: hosted runners use pinned OS labels (0.100076ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5092843Z ✔ wasm.yml: provides init.defaultBranch to actions/checkout (0.036992ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5093653Z ✔ workflows.yml: every job declares timeout-minutes (0.368507ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5094346Z ✔ workflows.yml: declares a top-level permissions block (0.048124ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5095004Z ✔ workflows.yml: every job is covered by a concurrency group (0.119975ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5095709Z ✔ workflows.yml: writer jobs own a never-cancelled concurrency group (0.126129ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5096774Z ✔ workflows.yml: only classified authentication attempts may continue after failure (0.115678ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5098204Z ✔ workflows.yml: crates.io trusted publishing runs only when enabled (1.714411ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5099678Z ✔ workflows.yml: single-line if expressions do not start with ! (0.104278ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5100608Z ✔ workflows.yml: every release_mode option is handled by a job (0.115625ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5101333Z ✔ workflows.yml: publish steps do not silently skip on missing credentials (0.119975ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5102142Z ✔ workflows.yml: npm lookups tell "not published" apart from a failure (0.103386ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5102838Z ✔ workflows.yml: required choice inputs declare a default (0.056917ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5103447Z ✔ workflows.yml: hosted runners use pinned OS labels (0.09581ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5104169Z ✔ workflows.yml: provides init.defaultBranch to actions/checkout (0.048877ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5104958Z ✔ exactly one workflow publishes GitHub Pages (0.532229ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5105870Z ✔ only the Pages publisher uploads a Pages artifact (0.417344ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5106723Z ✔ every clippy invocation denies warnings (1.904189ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5107626Z ✔ the Rust and C# pipelines simulate a fresh merge on pull requests (0.225776ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5108841Z ✔ every cargo audit invocation denies warnings (1.210004ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5109816Z ✔ coverage uploads use OIDC and retain reports without requiring Codecov (3.790278ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5110887Z ✔ Rust PR lint compiles release helpers without executing them (0.274202ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5111838Z ✔ registry trust can be verified without versioning or publishing a release (1.665117ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5113052Z ✔ Dependabot watches every directory the dependency check reads (10.327555ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5114110Z ✔ caches are restored everywhere but saved only by main pushes on a miss (3.362073ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5115308Z ✔ the Rust test cache is saved before the long test run, under its own key (0.339227ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5116495Z ✔ a failed release preflight blocks publishing but never the code checks (1.242411ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5117500Z ✔ the gate rule rejects workflows that bypass the JavaScript stage (1.940207ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5118709Z ✔ crash.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.44176ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5119730Z ✔ csharp.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (1.813541ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5120725Z ✔ deep-client.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.135874ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5121769Z ✔ dependencies.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.131949ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5122698Z ✔ docs.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.934174ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5123630Z ✔ ipc.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.151875ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5124642Z ✔ javascript.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.071045ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5125689Z ✔ js-client.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.572975ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5126779Z ✔ js-server.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.390069ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5128287Z ✔ links.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.159193ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5129483Z ✔ rerun-infrastructure-failures.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.094889ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5130570Z ✔ rust.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.795892ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5131693Z ✔ security.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.298813ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5132616Z ✔ wasm.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.196195ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5133559Z ✔ workflows.yml: Rust and C# jobs wait for the JavaScript stage (issue #111) (0.147466ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5134723Z ✔ the JavaScript stage needs no Rust or .NET and runs lint, tests and parity (0.396196ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5135740Z ✔ a failed PR Git comparison fails change detection (44.596632ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5136889Z ✔ a first commit checks all files instead of treating Git failure as no changes (72.893182ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5137960Z ✔ PR change detection requires both comparison SHAs (43.520648ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5138846Z ✔ PR change detection rejects invalid commit identities (38.266629ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5139718Z ✔ moving C# code into examples still requires a changeset (67.08948ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5140747Z ✔ exclusions match whole path components, not substrings (3.999257ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5141773Z ✔ a trailing newline does not count as an extra line (0.608908ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5142678Z ✔ CLI fails when a file exceeds the limit and passes otherwise (70.249548ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5143812Z ✔ files above the warning threshold warn without failing (issue #172) (31.571435ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5144685Z ✔ the JavaScript quality check warns in the same band (issue #172) (1.162081ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5145384Z ✔ release resumes when only clink is missing (150.187298ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5146231Z ✔ release resumes when only foundation.data.doublets.cli is missing (179.54979ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5147901Z ✔ unpublished current version is recovered before consuming new changesets (0.821962ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5149048Z Fetching https://api.nuget.org/v3-flatcontainer/example/index.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5149848Z Fetching https://api.nuget.org/v3-flatcontainer/example/index.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5150437Z Fetching https://api.nuget.org/v3-flatcontainer/example/index.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5151279Z ✔ NuGet release lookup rejects an incomplete provider response (5.094332ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5152039Z ✔ merge-changesets honors the requested directory and package name (46.807944ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5152796Z ✔ merge-changesets fails on a changeset it cannot parse and keeps every file (45.851915ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5153686Z ✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (206.407579ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5154493Z ✔ create-github-release dry run uses tag prefix and component changelog (36.461113ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5155341Z ✔ create-github-release dry run omits NuGet badges when no package id is provided (37.529743ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5156134Z ✔ buildNugetBadges links both badges to the exact version (2.338914ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5156793Z ✔ buildNugetBadges URL-encodes the package id (0.236983ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5157479Z ✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.292095ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5158489Z ✔ prependNugetBadges is a no-op without a package id (0.33511ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5159162Z ✔ buildNugetBadges accepts multiple package ids (0.191607ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5159875Z ✔ buildReleasePayload includes badges for both CLI and library packages (1.071356ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5160661Z ✔ buildReleasePayload places NuGet badges above the package footer (0.522096ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5161403Z ✔ create-github-release dry run reports matching assets without uploading (39.095377ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5162164Z ✔ version-and-commit creates a C# release commit when the next tag is missing (154.333645ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5163067Z ✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.335409ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5163853Z ✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.078855ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5164648Z ✔ insertChangelogEntry creates the header for a missing changelog (0.107177ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5165360Z ✔ classifyPushFailure separates repository rules from lost races (0.116533ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5166101Z ✔ version-and-commit rebases and retries when another release pushed first (248.640915ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5167002Z ✔ version-and-commit fails fast without tagging when a repository rule declines the push (142.257548ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5168078Z ✔ check-release-needed decide(): changesets bump an already published version (0.250985ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5168957Z ✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.144649ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5169788Z ✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.068518ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5170687Z ✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.06027ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5171506Z ✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.061347ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5172310Z ✔ check-release-needed readCsprojInfo() extracts version and package id (0.396235ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5173135Z ✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (95.93672ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5173795Z Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5174500Z Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5175315Z ✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (87.855068ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5176195Z ✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.570923ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5176977Z ✔ wait-for-nuget builds the flat-container nuspec URL (0.311775ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5177613Z ✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.450199ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5178748Z ✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.381949ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5179463Z ✔ wait-for-nuget fails only after exhausting all attempts (0.291372ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5180193Z Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5180845Z Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5181542Z Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5182357Z ✔ the release decision retries a dropped NuGet connection instead of failing (3.544338ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5182976Z Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5183729Z Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5184470Z Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5185284Z ✔ the release decision reports the network cause once retries run out (1.058366ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5185912Z ✔ answers a retry cannot change are not retried (1.980326ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5186551Z ✔ every example and experiment project explicitly disables packing (5.248664ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5187346Z ✔ package allowlist rejects extra, missing, stale and mismatched packages (0.901544ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5188486Z ✔ every pack/upload/publish path validates the package allowlist (0.755007ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5189250Z ✔ globs follow the repository syntax (1.471728ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5189879Z ✔ fingerprints ignore line endings but not content or paths (1.847921ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5190463Z ✔ a complete manifest passes every check (1.919687ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5191052Z ✔ the schema requires status evidence for each language (0.315412ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5191655Z ✔ a glob that matches nothing fails (0.339056ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5192260Z ✔ a new source file outside every feature fails coverage (0.333311ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5192883Z ✔ changing code without refreshing the manifest fails (0.310783ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5193592Z ✔ one implementation changing a feature without the others fails (0.472594ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5194253Z ✔ changing every implementation together passes (1.061584ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5194887Z ✔ an acknowledgement covers exactly the current one-sided change (4.360004ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5195665Z ✔ missing, delegated and new features do not need the other languages (0.592859ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5196401Z ✔ golden fixtures must match their hash and stay referenced by every suite (0.895837ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5197166Z ✔ golden fixtures must be checked out byte for byte (-text) (0.305531ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5197970Z ✔ every repository golden fixture is marked -text (5.656907ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5198653Z ✔ a suite receipt must list every golden fixture with its hash (0.254316ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5199330Z ✔ the repository manifest is complete and current (263.948606ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5200018Z ✔ a base commit missing from a shallow clone fails instead of skipping the rule (2.81149ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5200776Z ✔ the JavaScript suite loads every golden fixture (issue #111) (16.072141ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5201395Z ✔ hashes are lowercase hex (0.218047ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5202065Z ✔ buildGraph reflects create, delete, and recreate snapshots without stale nodes (1.502909ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5202924Z ✖ language code package manifests and generated evidence stay out of the root folder (5.617049ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5203743Z ✔ the browser-only WebAssembly wrapper opts out of crates.io publishing (0.484824ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5204613Z ✔ JavaScript package scripts target the relocated WebAssembly crate and split script trees (0.342036ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5205512Z ✔ WebAssembly workflow uses the JavaScript package lockfile from js (0.44832ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5206341Z ✔ the documentation workflow deploys GitHub Pages automatically on push to main (0.459953ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5207094Z ✔ CSharp release workflow attaches NuGet packages to GitHub Releases (0.261609ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5207910Z ✔ CSharp release workflow includes self-healing release gates (0.322161ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5208803Z ✔ CSharp and Rust release workflows are scheduled on every push to main (0.608676ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5209543Z ✔ GitHub workflows avoid Node 20 action major versions that are being retired (1.254531ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5210096Z ℹ tests 437
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5210441Z ℹ suites 0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5210790Z ℹ pass 436
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5211097Z ℹ fail 1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5211449Z ℹ cancelled 0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5211776Z ℹ skipped 0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5212075Z ℹ todo 0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5212445Z ℹ duration_ms 3611.22972
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5212676Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5212852Z ✖ failing tests:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5213023Z 
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5213247Z test at test/repositoryLayout.test.mjs:27:1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5213993Z ✖ language code package manifests and generated evidence stay out of the root folder (5.617049ms)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5214811Z   AssertionError [ERR_ASSERTION]: .gitkeep should live under the package-specific project tree or case-study evidence
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5215410Z   
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5215737Z   true !== false
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5216047Z   
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5216631Z       at TestContext.<anonymous> (file:///home/runner/work/link-cli/link-cli/js/test/repositoryLayout.test.mjs:42:12)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5217345Z       at Test.runInAsyncScope (node:async_hooks:226:14)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5217956Z       at Test.run (node:internal/test_runner/test:1402:25)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5218453Z       at Test.start (node:internal/test_runner/test:1262:17)
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5219065Z       at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5219588Z     generatedMessage: false,
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5219941Z     code: 'ERR_ASSERTION',
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5220314Z     actual: true,
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5220598Z     expected: false,
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5220945Z     operator: 'strictEqual',
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5221295Z     diff: 'simple'
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5221640Z   }
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5232679Z ##[error]Process completed with exit code 1.
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5421687Z Post job cleanup.
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6299500Z [command]/usr/bin/git version
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6340931Z git version 2.56.1
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6373413Z Temporarily overriding HOME='/home/runner/work/_temp/8ecc47be-9811-4a31-b21d-0d5ca1cc950f' before making global git config changes
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6374916Z Adding repository directory to the temporary git global config as a safe directory
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6377589Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6413479Z Removing SSH command configuration
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6420418Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6460698Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6693852Z Removing HTTP extra header
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6704070Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6742611Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6989860Z Removing includeIf entries pointing to credentials config files
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6998163Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.7033938Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.7469062Z Cleaning up orphan processes
+Pipeline Status (javascript)	Check every prerequisite	﻿2026-11-27T20:59:03.8162600Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8162998Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8206710Z shell: /usr/bin/bash -e {0}
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8206953Z env:
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207125Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207329Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207553Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207846Z   NEEDS_JSON: {
+Pipeline Status (javascript)	Check every prerequisite	  "javascript": {
+Pipeline Status (javascript)	Check every prerequisite	    "result": "failure",
+Pipeline Status (javascript)	Check every prerequisite	    "outputs": {}
+Pipeline Status (javascript)	Check every prerequisite	  }
+Pipeline Status (javascript)	Check every prerequisite	}
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8208157Z ##[endgroup]
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8498035Z Pipeline jobs did not succeed: javascript (failure)
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8636859Z ##[error]Process completed with exit code 1.

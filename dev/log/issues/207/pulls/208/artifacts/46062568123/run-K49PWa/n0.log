@@ -1,0 +1,8 @@
+{"level":"warn","ts":"2026-11-27T20:29:53.763007Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_BIN=/home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd"}
+{"level":"warn","ts":"2026-11-27T20:29:53.763764Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T20:29:53.763844Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-27T20:29:53.771246Z","caller":"auth/store.go:1137","msg":"simple token is not cryptographically signed"}
+{"level":"warn","ts":"2026-11-27T20:29:56.766822Z","caller":"read/read.go:206","msg":"waiting for ReadIndex response took too long, retrying","sent-request-id":6970061626049358445,"retry-timeout":"500ms"}
+{"level":"warn","ts":"2026-11-27T20:29:56.967096Z","caller":"v3rpc/interceptor.go:203","msg":"request stats","start time":"2026-11-27T20:29:56.266462Z","time spent":"700.625388ms","remote":"127.0.0.1:41350","response type":"/etcdserverpb.KV/Txn","request count":0,"request size":0,"response count":0,"response size":0,"request content":""}
+{"level":"warn","ts":"2026-11-27T20:29:57.267744Z","caller":"read/read.go:206","msg":"waiting for ReadIndex response took too long, retrying","sent-request-id":6970061626049358446,"retry-timeout":"500ms"}
+{"level":"warn","ts":"2026-11-27T20:29:58.676746Z","caller":"etcdserver/raft.go:213","msg":"timed out sending read state","timeout":"1s"}
