@@ -6,12 +6,19 @@
 import { readFileSync } from 'node:fs';
 import { parseU32 } from './link.js';
 import { isEmptyLino, parseLino, valuesCount } from './parser.js';
+import { DEFAULT_MAX_DEPTH } from './protocol-lino-parser.js';
 import { trim } from './text-storage-format.js';
 
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+export const DEFAULT_IMPORT_DEPTH = DEFAULT_MAX_DEPTH;
+export const MAX_IMPORT_DEPTH = 128;
 
-/** Imports the LiNo file at `path` into `storage`, then saves it. */
-export function importLinoFile(storage, path) {
+export function isImportDepth(value) {
+  return Number.isInteger(value) && value >= 1 && value <= MAX_IMPORT_DEPTH;
+}
+
+/** Imports and saves a LiNo file with a nesting limit of 64 by default (range 1 to 128). */
+export function importLinoFile(storage, path, options) {
   const failure = (cause) => new Error(`Failed to read LiNo input: ${path}`, { cause });
   let bytes;
   try {
@@ -26,13 +33,18 @@ export function importLinoFile(storage, path) {
     // `fs::read_to_string` reports undecodable text as an I/O error.
     throw failure(new Error('stream did not contain valid UTF-8'));
   }
-  importLinoText(storage, text);
+  importLinoText(storage, text, options);
   storage.save();
 }
 
-/** Imports LiNo text into `storage`, without saving. */
-export function importLinoText(storage, linksNotation) {
-  const links = parseLino(normalizeLinksNotation(linksNotation)).filter(
+/** Imports LiNo text without saving, with a nesting limit of 64 by default (range 1 to 128). */
+export function importLinoText(storage, linksNotation, { maxDepth = DEFAULT_IMPORT_DEPTH } = {}) {
+  if (!isImportDepth(maxDepth)) {
+    throw new RangeError(
+      `LiNo import nesting limit must be an integer from 1 to ${MAX_IMPORT_DEPTH}`,
+    );
+  }
+  const links = parseLino(normalizeLinksNotation(linksNotation), { maxDepth }).filter(
     (value) => !isEmptyLino(value),
   );
   for (const value of links) validateLink(value, false);

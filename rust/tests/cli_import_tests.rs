@@ -23,6 +23,63 @@ fn import_option_reads_numbered_lino_file() -> Result<()> {
 }
 
 #[test]
+fn import_depth_defaults_to_64_and_can_be_raised_but_is_bounded() -> Result<()> {
+    let dir = tempdir()?;
+    let db = dir.path().join("data.links");
+    let input = dir.path().join("input.lino");
+    let run = |args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_clink"))
+            .arg("--db")
+            .arg(&db)
+            .args(args)
+            .arg(&input)
+            .output()
+    };
+    let document = |depth: usize| {
+        format!(
+            "(root: end {}end{}\n",
+            "(item ".repeat(depth - 1),
+            ")".repeat(depth)
+        )
+    };
+
+    std::fs::write(&input, document(64))?;
+    ensure_success(&run(&["--in"])?)?;
+    for (depth, args, limit) in [
+        (65, &["--import"][..], 64),
+        (129, &["--in-max-depth=128", "--lino-input"][..], 128),
+        (2, &["--in-max-depth", "1", "--in"][..], 1),
+    ] {
+        std::fs::write(
+            &input,
+            format!("(unwritten: fresh another)\n{}", document(depth)),
+        )?;
+        let output = run(args)?;
+        assert_eq!(output.status.code(), Some(1));
+        assert!(
+            String::from_utf8_lossy(&output.stderr)
+                .contains(&format!("nesting depth exceeds the maximum of {limit}")),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    std::fs::write(&input, document(128))?;
+    ensure_success(&run(&["--in-max-depth", "128", "--lino-input"])?)?;
+    let export = Command::new(env!("CARGO_BIN_EXE_clink"))
+        .arg("--db")
+        .arg(db)
+        .arg("--after")
+        .output()?;
+    ensure_success(&export)?;
+    let exported = String::from_utf8(export.stdout)?;
+    assert!(exported.lines().any(|line| line.starts_with("(root: end ")));
+    assert!(!exported.contains("unwritten"));
+    assert_eq!(exported.lines().count(), 130);
+    Ok(())
+}
+
+#[test]
 fn invalid_import_preserves_database_after_reopening() -> Result<()> {
     for (option, flags) in [
         ("--import", vec![]),

@@ -122,6 +122,8 @@ LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
 `LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before
 writing. Invalid input leaves existing links and names unchanged, without
 requiring `--transactions`.
+The default nesting limit is 64 levels. Use `--in-max-depth <N>` on the CLI
+or the library overloads that take `maxDepth` to set a limit from 1 to 128.
 
 LiNo import/export preserves backslashes literally in quoted names, including
 Windows paths and a backslash immediately before the closing delimiter. Names

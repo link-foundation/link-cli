@@ -8,7 +8,26 @@ use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
 use crate::parser::Parser;
 
+/// Default nesting limit for a LiNo text import.
+pub const DEFAULT_IMPORT_DEPTH: usize = links_notation::parser::DEFAULT_MAX_DEPTH;
+/// Highest nesting limit supported by the recursive import path.
+pub const MAX_IMPORT_DEPTH: usize = 128;
+
+/// Imports and saves a LiNo file with a nesting limit of 64 levels.
 pub fn import_lino_file<T, P>(storage: &mut T, path: P) -> Result<()>
+where
+    T: NamedTypeLinks,
+    P: AsRef<Path>,
+{
+    import_lino_file_with_max_depth(storage, path, DEFAULT_IMPORT_DEPTH)
+}
+
+/// Imports and saves a LiNo file with a nesting limit from 1 to 128.
+pub fn import_lino_file_with_max_depth<T, P>(
+    storage: &mut T,
+    path: P,
+    max_depth: usize,
+) -> Result<()>
 where
     T: NamedTypeLinks,
     P: AsRef<Path>,
@@ -16,18 +35,33 @@ where
     let path = path.as_ref();
     let text = fs::read_to_string(path)
         .with_context(|| format!("Failed to read LiNo input: {}", path.display()))?;
-    import_lino_text(storage, &text)?;
+    import_lino_text_with_max_depth(storage, &text, max_depth)?;
     storage.save()?;
     Ok(())
 }
 
+/// Imports LiNo text with a nesting limit of 64 levels, without saving.
 pub fn import_lino_text<T>(storage: &mut T, links_notation: &str) -> Result<()>
 where
     T: NamedTypeLinks,
 {
-    let parser = Parser::new();
+    import_lino_text_with_max_depth(storage, links_notation, DEFAULT_IMPORT_DEPTH)
+}
+
+/// Imports LiNo text with a nesting limit from 1 to 128, without saving.
+pub fn import_lino_text_with_max_depth<T>(
+    storage: &mut T,
+    links_notation: &str,
+    max_depth: usize,
+) -> Result<()>
+where
+    T: NamedTypeLinks,
+{
+    if !(1..=MAX_IMPORT_DEPTH).contains(&max_depth) {
+        bail!("LiNo import nesting limit must be an integer from 1 to {MAX_IMPORT_DEPTH}");
+    }
     let normalized_links_notation = normalize_links_notation(links_notation);
-    let links = parser.parse(&normalized_links_notation)?;
+    let links = parse_import(&normalized_links_notation, max_depth)?;
 
     // Parsing accepts more shapes than database import does. Validate the whole
     // tree before resolving references, which may create links and names.
@@ -40,6 +74,29 @@ where
     }
 
     Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn parse_import(text: &str, max_depth: usize) -> Result<Vec<LinoLink>> {
+    // The notation parser's recursive frames can exceed a native caller's
+    // stack budget, especially in debug builds. Only parsing needs this stack.
+    std::thread::scope(|scope| {
+        let parser = std::thread::Builder::new()
+            .stack_size(8 * 1024 * 1024)
+            .spawn_scoped(scope, || {
+                Parser::new().parse_with_max_depth(text, max_depth)
+            })
+            .context("Failed to start the LiNo import parser")?;
+        match parser.join() {
+            Ok(parsed) => Ok(parsed?),
+            Err(panic) => std::panic::resume_unwind(panic),
+        }
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+fn parse_import(text: &str, max_depth: usize) -> Result<Vec<LinoLink>> {
+    Ok(Parser::new().parse_with_max_depth(text, max_depth)?)
 }
 
 fn validate_link(link: &LinoLink, allow_anonymous_index: bool) -> Result<()> {

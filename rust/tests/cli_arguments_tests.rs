@@ -234,3 +234,18 @@ fn indexed_lookups_are_opt_in_and_accept_boolean_values() {
     assert!(!parse_run(&["clink", "--indexed-lookups=false"]).indexed_lookups);
     assert!(!parse_run(&["clink", "--indexed-lookups", "false"]).indexed_lookups);
 }
+#[test]
+fn input_max_depth_is_a_bounded_integer() {
+    assert_eq!(parse_run(&["clink"]).lino_input_max_depth, 64);
+    assert_eq!(
+        parse_run(&["clink", "--in-max-depth=128"]).lino_input_max_depth,
+        128
+    );
+    for invalid in ["0", "129", "-1", "1.5", "abc", ""] {
+        let error = Cli::parse_from(["clink", "--in-max-depth", invalid]).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "invalid value for '--in-max-depth': expected an integer from 1 to 128"
+        );
+    }
+}

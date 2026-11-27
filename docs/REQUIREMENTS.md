@@ -40,7 +40,7 @@ the core CLI behavior and is also used by the WebAssembly browser workbench.
 | Clean up names when links are deleted. | #11, #23 | Deleting a named link removes its name mapping. |
 | Deduplicate identical links and sub-links. | #65, #66 | Creation reuses existing `(source target)` pairs instead of storing duplicates. |
 | Export the database as LiNo. | #8, #24, #44, #54 | `--out`, `--export`, and `--lino-output` write a complete LiNo file. |
-| Import a database from LiNo. | #25, #43 | `--in`, `--import`, and `--lino-input` read a LiNo file before query execution. |
+| Import a database from LiNo. | #25, #43, #200 | `--in`, `--import`, and `--lino-input` read a LiNo file before query execution. Nesting is limited to 64 levels by default; `--in-max-depth <N>` (and the library overloads) sets a limit from 1 to 128. |
 | Export and import the whole store in binary links notation. | #105 | `--export-binary` (`--binary-output`, `--binary-out`) writes a [store archive](protocol/binary-links-notation.md#10-store-archive) of every link at its own address plus every name, and `--import-binary` (`--binary-input`, `--binary-in`) reads one before `--in`. Rust `export_store`/`import_store` and C# `StoreArchive.Export`/`Import` work on any named store, a remote one included, and both ports write identical bytes. |
 | Format a link structure. | #19, #48 | `--structure` recursively formats the left branch with indexes preserved. |
 | Store persistent transformations. | #3, #55 | C# supports `--always`, `--once`, `--never`, `--triggers`, `--triggers-file`, and `--embed-triggers`. |

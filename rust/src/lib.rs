@@ -105,7 +105,10 @@ pub use indexed_links::IndexedLinksDecorator;
 pub use link::{DoubletsLink, GenericLink, Link};
 pub use link_storage::LinkStorage;
 pub use link_storage_doublets::link_storage_constants;
-pub use lino_database_input::{import_lino_file, import_lino_text};
+pub use lino_database_input::{
+    import_lino_file, import_lino_file_with_max_depth, import_lino_text,
+    import_lino_text_with_max_depth,
+};
 pub use lino_link::LinoLink;
 pub use named_links::NamedLinks;
 pub use named_type_links::NamedTypeLinks;

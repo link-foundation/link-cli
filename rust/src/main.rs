@@ -5,7 +5,7 @@
 
 use anyhow::{anyhow, bail, Result};
 use link_cli::cli::{Cli, CliCommand};
-use link_cli::import_lino_file;
+use link_cli::import_lino_file_with_max_depth;
 use link_cli::protocol::ipc;
 use link_cli::protocol::{
     export_store_file, import_store_file, AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol,
@@ -636,7 +636,7 @@ fn import_inputs<S: NamedTypeLinks>(cli: &Cli, storage: &mut S) -> Result<()> {
         import_store_file(storage, input_path)?;
     }
     if let Some(input_path) = &cli.lino_input {
-        import_lino_file(storage, input_path)?;
+        import_lino_file_with_max_depth(storage, input_path, cli.lino_input_max_depth)?;
     }
     Ok(())
 }

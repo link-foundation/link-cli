@@ -1,5 +1,6 @@
 //! Command-line argument parsing for the `clink` binary.
 
+use crate::lino_database_input::{DEFAULT_IMPORT_DEPTH, MAX_IMPORT_DEPTH};
 use crate::protocol::ArityRange;
 use anyhow::{bail, Result};
 use std::env;
@@ -20,6 +21,7 @@ pub struct Cli {
     pub changes: bool,
     pub after: bool,
     pub lino_input: Option<String>,
+    pub lino_input_max_depth: usize,
     pub lino_output: Option<String>,
     pub binary_input: Option<String>,
     pub binary_output: Option<String>,
@@ -96,6 +98,7 @@ impl Default for Cli {
             changes: false,
             after: false,
             lino_input: None,
+            lino_input_max_depth: DEFAULT_IMPORT_DEPTH,
             lino_output: None,
             binary_input: None,
             binary_output: None,
@@ -273,6 +276,10 @@ impl Cli {
             }
             if let Some(value) = inline_value(&arg, &["--in", "--lino-input", "--import"]) {
                 cli.lino_input = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--in-max-depth"]) {
+                cli.lino_input_max_depth = parse_import_depth(value)?;
                 continue;
             }
             if let Some(value) = inline_value(
@@ -482,6 +489,9 @@ impl Cli {
                 "--in" | "--lino-input" | "--import" => {
                     cli.lino_input = Some(next_value(&mut args, &arg)?);
                 }
+                "--in-max-depth" => {
+                    cli.lino_input_max_depth = parse_import_depth(&next_value(&mut args, &arg)?)?;
+                }
                 "--export-binary" | "--binary-output" | "--binary-out" => {
                     cli.binary_output = Some(next_value(&mut args, &arg)?);
                 }
@@ -655,6 +665,8 @@ impl Cli {
             "          Print the state of the database after applying changes\n",
             "      --in <IN>, --lino-input <IN>, --import <IN>\n",
             "          Read and import a LiNo file into the database\n",
+            "      --in-max-depth <N>\n",
+            "          LiNo import nesting limit (1 to 128; default: 64)\n",
             "      --out <OUT>, --lino-output <OUT>, --export <OUT>\n",
             "          Write the complete database as a LiNo file\n",
             "      --import-binary <PATH>, --binary-input <PATH>, --binary-in <PATH>\n",
@@ -793,6 +805,18 @@ fn parse_arity(value: &str) -> Result<ArityRange> {
         .trim()
         .parse()
         .map_err(|error| anyhow::anyhow!("invalid value for '--arity': {error}"))
+}
+
+fn parse_import_depth(value: &str) -> Result<usize> {
+    value
+        .parse()
+        .ok()
+        .filter(|depth| (1..=MAX_IMPORT_DEPTH).contains(depth))
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "invalid value for '--in-max-depth': expected an integer from 1 to {MAX_IMPORT_DEPTH}"
+            )
+        })
 }
 
 fn inline_value<'a>(arg: &'a str, names: &[&str]) -> Option<&'a str> {

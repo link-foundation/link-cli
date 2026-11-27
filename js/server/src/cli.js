@@ -10,6 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { ArityRange } from 'links-notation';
 import { parseU32 } from './link.js';
+import { DEFAULT_IMPORT_DEPTH, isImportDepth, MAX_IMPORT_DEPTH } from './lino-database-input.js';
 import { rustTrim } from './query-parser.js';
 
 const DEFAULT_DATABASE_FILENAME = 'db.links';
@@ -22,7 +23,7 @@ const MAX_MIN_ARITY = U64_MAX >> 4n;
 
 // How an option takes its value: `value` a string, `bool` an optional
 // boolean literal, `link` a u32 link id, `seq` an i64 sequence point,
-// `arity` an `ArityRange`, `append` one more string of a list, `constant`
+// `arity` an `ArityRange`, `depth` a LiNo import limit, `append` one more string of a list, `constant`
 // no value: the option sets `value`.
 const OPTIONS = [
   { field: 'db', kind: 'value', names: ['-d', '--db', '--data-source', '--data'] },
@@ -40,6 +41,7 @@ const OPTIONS = [
   { field: 'after', kind: 'bool', names: ['-a', '--after', '--links'] },
   { field: 'linoOutput', kind: 'value', names: ['--out', '--lino-output', '--export'] },
   { field: 'linoInput', kind: 'value', names: ['--in', '--lino-input', '--import'] },
+  { field: 'linoInputMaxDepth', kind: 'depth', names: ['--in-max-depth'] },
   {
     field: 'binaryOutput',
     kind: 'value',
@@ -135,6 +137,8 @@ const HELP_TEXT = [
   '          Print the state of the database after applying changes\n',
   '      --in <IN>, --lino-input <IN>, --import <IN>\n',
   '          Read and import a LiNo file into the database\n',
+  '      --in-max-depth <N>\n',
+  '          LiNo import nesting limit (1 to 128; default: 64)\n',
   '      --out <OUT>, --lino-output <OUT>, --export <OUT>\n',
   '          Write the complete database as a LiNo file\n',
   '      --import-binary <PATH>, --binary-input <PATH>, --binary-in <PATH>\n',
@@ -282,6 +286,16 @@ function parseLinkId(option, value) {
   return parsed;
 }
 
+function parseImportDepth(value) {
+  const depth = parseU32(value);
+  if (!isImportDepth(depth)) {
+    throw new Error(
+      `invalid value for '--in-max-depth': expected an integer from 1 to ${MAX_IMPORT_DEPTH}`,
+    );
+  }
+  return depth;
+}
+
 /** Rust's `str::parse::<i64>()`, kept exact as a BigInt. */
 function parseSeq(option, value) {
   if (/^[+-]?[0-9]+$/.test(value)) {
@@ -334,6 +348,7 @@ export class Cli {
     this.changes = false;
     this.after = false;
     this.linoInput = null;
+    this.linoInputMaxDepth = DEFAULT_IMPORT_DEPTH;
     this.linoOutput = null;
     this.binaryInput = null;
     this.binaryOutput = null;
@@ -446,6 +461,9 @@ export class Cli {
         break;
       case 'link':
         this[option.field] = parseLinkId(label, value);
+        break;
+      case 'depth':
+        this[option.field] = parseImportDepth(value);
         break;
       case 'seq':
         this[option.field] = parseSeq(label, value);

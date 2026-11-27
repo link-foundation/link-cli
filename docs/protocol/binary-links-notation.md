@@ -308,6 +308,10 @@ The text protocol has its own limit, 64 MiB per message
 in C#). `ProtocolLimits` carries both budgets for the server and for
 protocol detection.
 
+These limits are separate from LiNo text import (`--in`, `--import`,
+`--lino-input`), whose nesting limit is also 64 by default and is set with
+`--in-max-depth <N>` from 1 to 128.
+
 The LiNo mapping also requires that:
 
 - links are contiguous from address 6;

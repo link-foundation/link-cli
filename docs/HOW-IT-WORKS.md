@@ -124,7 +124,11 @@ link as both source and target.
 `--in`, `--import`, and `--lino-input` read a `.lino` file before processing the
 query.
 
-Each non-empty line is imported as one complete two-value link definition:
+Each non-empty line is imported as one two-value link definition whose
+references can themselves be nested pairs. Nesting is limited to 64 levels by
+default, counting the outermost pair as level 1; `--in-max-depth <N>` sets a
+limit from 1 to 128. Deeper data can name inner pairs and define them on
+separate lines:
 
 ```text
 (father: father father)
