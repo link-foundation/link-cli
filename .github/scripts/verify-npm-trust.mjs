@@ -43,7 +43,7 @@ export async function verifyNpmTrust(
       ).catch(() => null);
       if (packument?.status === 404) {
         throw new Error(
-          `${context}. A maintainer must publish the first public version, then configure ${NPM_WORKFLOWS[packageName] ?? 'the release workflow'} as its trusted publisher and rerun authentication-only verification on main.`,
+          `${context}. The package is unavailable publicly. A maintainer must publish the first public version or make the existing package public, then configure ${NPM_WORKFLOWS[packageName] ?? 'the release workflow'} as its trusted publisher and rerun authentication-only verification on main.`,
         );
       }
       if (!packument?.ok) {
