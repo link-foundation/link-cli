@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.3.1] - 2026-11-27
+
+Commit transactional CLI imports and queries as one operation, with one data checkpoint and rollback on errors.
+
 ## [3.3.0] - 2026-11-27
 
 Added `--in-max-depth <N>` (1 to 128, default 64) to set the nesting limit of
