@@ -869,8 +869,17 @@
           "js/client/test/ipc*.test.mjs",
           "js/server/test/ipc*.test.mjs"
         ],
-        "fingerprint": "aa781fc0b7abcd75"
-      }
+        "fingerprint": "ca0d3298082f4332"
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "javascript": "ca0d3298082f4332"
+          },
+          "reason": "JavaScript now follows the existing Windows last-close ring cleanup contract used by Rust and C# when a peer still owns the mapped view.",
+          "ref": "https://github.com/link-foundation/link-cli/pull/208"
+        }
+      ]
     },
     {
       "id": "graphql",
