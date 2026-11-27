@@ -39,7 +39,8 @@ even between a mutation and its journal append can be recovered.
 
 The automated tests exercise a changed import followed by a mutating query
 in the same invocation and a malformed query after an import under
-version control. The process tests stop the CLI after it prints the
+version control. C# also checks that an export error rolls back embedded
+trigger registration. The process tests stop the CLI after it prints the
 pending import and while it waits on an export FIFO. Reopening checks that
 the original named row is restored and the newly imported rows and names
 are absent. Existing recovery tests cover a journal decision whose

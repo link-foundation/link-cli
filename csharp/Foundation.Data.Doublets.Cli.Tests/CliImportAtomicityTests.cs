@@ -75,6 +75,34 @@ public class CliImportAtomicityTests
     }
 
     [Fact]
+    public async Task ExportErrorRollsBackEmbeddedTriggerRegistration()
+    {
+        var directory = Directory.CreateTempSubdirectory("clink-batch-trigger-").FullName;
+        try
+        {
+            var db = Path.Combine(directory, "data.links");
+            var input = Path.Combine(directory, "input.lino");
+            await File.WriteAllTextAsync(input, "(base: base base)\n");
+            string[] args = ["--db", db, "--transactions", "--embed-triggers"];
+            Clink.AssertSucceeded(await Clink.RunAsync([.. args, "--in", input]));
+
+            var failed = await Clink.RunAsync([.. args, "--once", "() ((1 1))",
+                "--out", Path.Combine(directory, "missing", "output.lino")]);
+            Assert.Equal(1, failed.ExitCode);
+            Assert.Contains("Once persistent transformation trigger stored", failed.Stdout);
+            Assert.Contains("Error writing LiNo output file", failed.Stderr);
+
+            var readback = await Clink.RunAsync([.. args, "--after"]);
+            Clink.AssertSucceeded(readback);
+            Assert.Equal("(base: base base)\n", readback.Stdout);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task KillingAnImportBeforeItsCommitRecoversTheOriginalMappedStore()
     {
         if (OperatingSystem.IsWindows()) return; // The synchronization barrier is a POSIX FIFO.
