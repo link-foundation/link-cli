@@ -1,3 +1,5 @@
+using System.CommandLine;
+using System.Globalization;
 using Foundation.Data.Doublets.Cli.Protocol;
 using Link.Foundation.Links.Notation;
 using Link.Foundation.Links.Notation.Binary;
@@ -13,6 +15,44 @@ namespace Foundation.Data.Doublets.Cli;
 /// </summary>
 internal static class CliIo
 {
+    internal static (Option<string?>, Option<int>, Option<string?>, Option<string?>) ImportOptions()
+    {
+        var inputOption = new Option<string?>("--in", "--lino-input", "--import")
+        {
+            Description = "Path to read and import a LiNo file into the database"
+        };
+
+        var inputMaxDepthOption = new Option<int>("--in-max-depth")
+        {
+            Description = $"LiNo import nesting limit (1 to {LinoDatabaseInput.MaxImportDepth}; default: {LinoDatabaseInput.DefaultImportDepth})",
+            DefaultValueFactory = _ => LinoDatabaseInput.DefaultImportDepth,
+            CustomParser = result =>
+            {
+                if (result.Tokens.Count == 1
+                    && int.TryParse(result.Tokens[0].Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var depth)
+                    && depth is >= 1 and <= LinoDatabaseInput.MaxImportDepth)
+                {
+                    return depth;
+                }
+
+                result.AddError($"Invalid value for '--in-max-depth': expected an integer from 1 to {LinoDatabaseInput.MaxImportDepth}");
+                return LinoDatabaseInput.DefaultImportDepth;
+            }
+        };
+
+        var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
+        {
+            Description = "Path to read and import a store archive in binary links notation"
+        };
+
+        var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output", "--binary-out")
+        {
+            Description = "Path to write the complete database, names included, as a store archive in binary links notation"
+        };
+
+        return (inputOption, inputMaxDepthOption, binaryInputOption, binaryOutputOption);
+    }
+
     internal static int RunTransactionBatch(FileTransitionLog journal, TransactionsDecorator transactions,
         VersionControlDecorator? versionControl, Func<int> run)
     {

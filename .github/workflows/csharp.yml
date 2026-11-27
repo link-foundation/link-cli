@@ -41,11 +41,8 @@ on:
         required: false
         type: string
 
-# Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on every branch, main included (issue #172), while writer jobs
-# share a never-cancelled group. A workflow-level group held the whole run,
-# including the release and the registry wait, so a third push to main
-# cancelled the queued run.
+# Read-only concurrency cancels superseded PR synchronizations. Each main
+# revision keeps its results. Release writers share the repository queue.
 
 # Least privilege by default; the publishing jobs opt into more below.
 permissions:
@@ -85,8 +82,8 @@ jobs:
       contents: read
       id-token: write
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -120,8 +117,8 @@ jobs:
     permissions:
       id-token: write
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - name: Validate NuGet account
         working-directory: .
@@ -153,8 +150,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-detect-changes
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     needs: [javascript]
     if: github.event_name != 'workflow_dispatch'
     outputs:
@@ -206,8 +203,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-changeset-check
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     needs: [javascript, detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.csharp-code-changed == 'true'
     steps:
@@ -247,8 +244,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-lint
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-lint
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     needs: [javascript, detect-changes]
     if: |
       !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
@@ -304,8 +301,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-test-${{ matrix.os }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     needs: [javascript, detect-changes, changeset-check, lint]
     if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     permissions:
@@ -422,8 +419,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-fresh-merge
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     if: github.event_name == 'pull_request'
     needs: [javascript, detect-changes, lint]
     steps:
@@ -454,8 +451,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-build
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-build
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     needs: [javascript, lint, test]
     if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
@@ -510,6 +507,7 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}
       cancel-in-progress: false
+      queue: max
     permissions:
       contents: write
       packages: write
@@ -743,6 +741,7 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}
       cancel-in-progress: false
+      queue: max
     permissions:
       contents: write
       packages: write
@@ -905,6 +904,7 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}
       cancel-in-progress: false
+      queue: max
     permissions:
       contents: write
       pull-requests: write
@@ -976,8 +976,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:

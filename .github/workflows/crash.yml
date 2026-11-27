@@ -65,8 +65,8 @@ permissions:
 
 # Superseded runs on a pull request are cancelled; no job here writes.
 concurrency:
-  group: crash-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: crash-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
 
 # Provide Git config to actions/checkout itself; checkout runs git init before
 # any workflow step can configure Git, which otherwise prints the

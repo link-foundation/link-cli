@@ -38,8 +38,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:

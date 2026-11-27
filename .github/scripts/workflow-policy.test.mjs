@@ -199,8 +199,8 @@ for (const workflow of workflows) {
     for (const job of writers) {
       assert.match(
         job.body,
-        /^ {4}concurrency:\n {6}group: [^\n]+\n {6}cancel-in-progress: false$/m,
-        `writer job "${job.name}" in ${workflow.name} needs its own concurrency group with cancel-in-progress: false`,
+        /^ {4}concurrency:\n {6}group: main-writer-\$\{\{ github\.repository \}\}\n {6}cancel-in-progress: false\n {6}queue: max$/m,
+        `writer job "${job.name}" in ${workflow.name} must serialize through the shared writer queue`,
       );
     }
   });

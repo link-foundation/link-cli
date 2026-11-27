@@ -36,8 +36,8 @@ jobs:
     # In a called workflow, github.workflow is the caller's name, so each
     # caller cancels only its own superseded stage.
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-javascript-stage
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-javascript-stage
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:

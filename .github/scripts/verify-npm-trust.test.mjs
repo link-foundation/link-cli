@@ -71,3 +71,35 @@ test('npm trust failures name the workflow each package is published from', asyn
   }
   assert.deepEqual(Object.values(NPM_WORKFLOWS), ['js-client.yml', 'js-server.yml']);
 });
+
+test('npm OIDC exchange distinguishes a first publish, a missing trust mapping and an outage', async () => {
+  const env = {
+    ACTIONS_ID_TOKEN_REQUEST_URL: 'https://example.test/oidc',
+    ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'runner',
+  };
+  const name = '@link-foundation/link-cli-server';
+  for (const [exchange, metadata, expected] of [
+    [404, 404, /first public version.+js-server\.yml/],
+    [404, 200, /settings.+js-server\.yml.+publish directly/],
+    [404, 503, /lookup was inconclusive \(503\)/],
+    [429, undefined, /HTTP 429.+registry availability/],
+  ]) {
+    const requests = [];
+    await assert.rejects(
+      verifyNpmTrust(name, {
+        env,
+        fetch: async (url, options) => {
+          requests.push({ url: String(url), options });
+          if (requests.length === 1) return Response.json({ value: 'oidc' });
+          return new Response('', { status: requests.length === 2 ? exchange : metadata });
+        },
+      }),
+      expected,
+    );
+    assert.equal(requests.length, metadata === undefined ? 2 : 3);
+    if (metadata !== undefined) {
+      assert.equal(requests[2].url, `https://registry.npmjs.org/${encodeURIComponent(name)}`);
+      assert.equal(requests[2].options.headers, undefined);
+    }
+  }
+});

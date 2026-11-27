@@ -8,7 +8,7 @@ import net from 'node:net';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ClusterEngine, EtcdJournalStore } from '../../js/client/src/cluster.js';
-import { waitForMembers } from './etcd-harness.mjs';
+import { electedMember, memberStatus, waitForMembers } from './etcd-harness.mjs';
 import { verifyAuthorFence } from '../../examples/native-lsm-js/author-fence-consensus.mjs';
 import { verifyAddressAllocation } from '../../examples/native-lsm-js/allocation-consensus.mjs';
 import { PartitionedJournalStore } from '../../js/client/src/partitioned.js';
@@ -20,6 +20,7 @@ const binary =
   process.env.ETCD_BIN ?? resolve('experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd');
 const directory = mkdtempSync(resolve('experiments/issue-138/etcd/run-'));
 const checkpoint = process.env.CLUSTER_JOURNAL_CHECKPOINT_INTERVAL === '1';
+const verbose = process.env.ETCD_TEST_VERBOSE === '1';
 const checkpointFlags = checkpoint ? ['--checkpoint'] : [];
 const checkpointOptions = checkpoint ? { journalCheckpointInterval: 1 } : {};
 const ports = [];
@@ -104,7 +105,7 @@ try {
         '--snapshot-count',
         '1000',
         '--log-level',
-        'warn',
+        verbose ? 'debug' : 'warn',
       ],
       { env: { ...process.env, GOMEMLIMIT: '100MiB' }, stdio: ['ignore', 'pipe', 'pipe'] },
     );
@@ -225,7 +226,7 @@ try {
         '--quota-backend-bytes',
         '16777216',
         '--log-level',
-        'warn',
+        verbose ? 'debug' : 'warn',
       ],
       { env: { ...process.env, GOMEMLIMIT: '100MiB' }, stdio: ['ignore', 'pipe', 'pipe'] },
     );
@@ -367,45 +368,37 @@ try {
     'PASS independent consensus groups: unavailable west publishes nothing; east still commits',
   );
 
-  // The member each reachable endpoint names as leader, as an index.
+  // Return the member the sampled endpoints agree is leading this group.
   async function leaderOf(indices) {
-    const status = await Promise.all(
-      indices.map(async (i) =>
-        (
-          await fetch(`${endpoints[i]}/v3/maintenance/status`, {
-            method: 'POST',
-            body: '{}',
-            signal: AbortSignal.timeout(2000),
-          })
-        ).json(),
-      ),
-    );
-    const leaders = new Set(status.map((item) => item.leader));
-    assert.equal(leaders.size, 1, 'reachable members agree on one leader');
-    const index = status.findIndex((item) => item.header.member_id === item.leader);
-    return index >= 0 ? indices[index] : null;
+    const statuses = await Promise.all(indices.map((index) => memberStatus(endpoints[index])));
+    if (verbose) {
+      console.error(
+        'etcd election status',
+        statuses.map(({ header, leader, raftTerm }) => ({
+          member: header.member_id,
+          leader,
+          raftTerm,
+        })),
+      );
+    }
+    return indices[electedMember(statuses)];
   }
 
   // A paused leader. SIGSTOP freezes it, so its peers stop hearing from it as
   // if a partition cut it off, and on SIGCONT it comes back still believing it
   // leads, as after a healed partition (Jepsen's "pause" fault). A transaction
   // staged before the pause must not commit after it: the majority moved on.
-  const paused = await leaderOf([0, 1, 2]);
-  assert.ok(paused !== null);
+  const members = [0, 1, 2];
+  const paused = await ready(() => leaderOf(members));
   const beforePause = await engine.begin(['a', 'b']);
   await beforePause.shard('a').setName(1, 'staged before the pause');
-  nodes[paused].child.kill('SIGSTOP');
+  assert.ok(nodes[paused].child.kill('SIGSTOP'), `could not pause etcd member n${paused}`);
+  let elected;
   try {
+    elected = await ready(() => leaderOf(members.filter((index) => index !== paused)));
     const majority = await ready(() => engine.begin(['a', 'b']));
     await majority.shard('b').setName(1, 'majority while the leader is paused');
     await majority.commit();
-    const others = [0, 1, 2].filter((i) => i !== paused);
-    const elected = await ready(async () => {
-      const leader = await leaderOf(others);
-      if (leader === null) throw new Error('no leader among the majority yet');
-      return leader;
-    });
-    assert.notEqual(elected, paused);
   } finally {
     nodes[paused].child.kill('SIGCONT');
   }
@@ -425,13 +418,13 @@ try {
   assert.equal(await healed.shard('b').getName(1), 'majority while the leader is paused');
   assert.notEqual(await healed.shard('a').getName(1), 'staged before the pause');
   await healed.close();
-  assert.notEqual(await ready(() => leaderOf([0, 1, 2])), paused);
+  // The healed member can legitimately campaign in another term. The test
+  // requires the paused-phase election and the committed history above.
+  const leader = await ready(() => leaderOf(members));
   console.log(
-    `PASS real etcd: paused leader n${paused}; the majority elected another and committed, the stale transaction was refused, and the resumed member serves the new history`,
+    `PASS real etcd: paused leader n${paused}; the majority elected n${elected} and committed, the stale transaction was refused, and the resumed member serves the new history (healed leader n${leader})`,
   );
 
-  const leader = await leaderOf([0, 1, 2]);
-  assert.ok(leader !== null);
   await stop(nodes[leader]);
   const after = await ready(() => engine.begin(['a', 'b']));
   assert.equal(await after.shard('a').count(), 1n);

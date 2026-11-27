@@ -1,6 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { waitForMembers } from './etcd-harness.mjs';
+import { electedMember, waitForMembers } from './etcd-harness.mjs';
+
+test('a replacement is required while the leader is paused, and any member may lead after healing', () => {
+  const statuses = (members, leader) =>
+    members.map((member_id) => ({ header: { member_id }, leader }));
+  const majority = ['n0', 'n2'];
+  assert.throws(() => electedMember(statuses(majority, 'n1')), /outside the sampled group/);
+  assert.throws(
+    () => electedMember([...statuses(['n0'], 'n0'), ...statuses(['n2'], 'n2')]),
+    /disagree on leader/,
+  );
+  assert.equal(electedMember(statuses(majority, 'n2')), 1);
+  assert.equal(electedMember(statuses(['n0', 'n1', 'n2'], 'n1')), 1);
+});
 
 test('a ready majority cannot hide a slow third member', async () => {
   const calls = new Map();

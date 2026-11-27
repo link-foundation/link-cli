@@ -422,7 +422,7 @@
           "rust/tests/transaction_*_tests.rs",
           "rust/tests/undoable_links_edges_tests.rs"
         ],
-        "fingerprint": "ef37a5e868f1f4dd"
+        "fingerprint": "997ca9e3e4df4ac9"
       },
       "javascript": {
         "status": "implemented",
@@ -436,7 +436,16 @@
           "js/server/test/differential/transactions.test.mjs"
         ],
         "fingerprint": "73bf66999f669e5a"
-      }
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "rust": "997ca9e3e4df4ac9"
+          },
+          "reason": "Rust transaction serialization tests moved to a sibling module to resolve the source line warning. The same tests exercise the same transaction code.",
+          "ref": "https://github.com/link-foundation/link-cli/pull/208"
+        }
+      ]
     },
     {
       "id": "version-control",
@@ -914,7 +923,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
         ],
-        "fingerprint": "66de5f03b415ffd9"
+        "fingerprint": "0b820926931a6841"
       },
       "rust": {
         "status": "implemented",
@@ -952,7 +961,16 @@
           "js/server/test/differential/cli.test.mjs"
         ],
         "fingerprint": "cfdcd5b102bf7cb9"
-      }
+      },
+      "parityExceptions": [
+        {
+          "fingerprints": {
+            "csharp": "0b820926931a6841"
+          },
+          "reason": "C# import option parsing moved to the existing CLI I/O helper. The flags, defaults, parsing, and execution behavior are identical.",
+          "ref": "https://github.com/link-foundation/link-cli/pull/208"
+        }
+      ]
     },
     {
       "id": "cli-store-locking",

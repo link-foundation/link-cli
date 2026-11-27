@@ -21,6 +21,30 @@ test('the required stage checks report on every pull request (issue #111)', () =
   }
 });
 
+test('read-only concurrency only replaces superseded PR synchronizations (issue #207)', () => {
+  const scope =
+    "${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}";
+  const cancel =
+    "${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}";
+  for (const { name, text } of workflows) {
+    const groups = [...text.matchAll(/^ +group: (.*)\n +cancel-in-progress: (.*)$/gm)];
+    assert.ok(groups.length, `${name}: missing concurrency groups`);
+    const queueCount = [...text.matchAll(/^ +queue\s*:/gm)].length;
+    let writerGroups = 0;
+    for (const [block, group, policy] of groups) {
+      if (group.startsWith('main-writer-')) {
+        writerGroups++;
+        const nextLine = text.slice(text.indexOf(block) + block.length + 1).split('\n')[0];
+        assert.equal(nextLine.trim(), 'queue: max', `${name}: writer lost its queue`);
+      }
+      if (policy === 'false') continue;
+      assert.equal(policy, cancel, `${name}: ${group} cancels unrelated runs`);
+      assert.ok(group.includes(scope), `${name}: ${group} can collide across revisions or events`);
+    }
+    assert.equal(queueCount, writerGroups, `${name}: queue is only supported for shared writers`);
+  }
+});
+
 test('every suite proves it loaded the shared golden fixtures (issue #111)', () => {
   for (const [name, suite, job] of [
     ['rust.yml', 'rust', 'test'],
