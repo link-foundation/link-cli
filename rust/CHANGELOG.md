@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.3.0] - 2026-11-27
+
+Added `--in-max-depth <N>` (1 to 128, default 64) to set the nesting limit of
+LiNo imports through `--in`, `--import` and `--lino-input`, and the
+`import_lino_text_with_max_depth`/`import_lino_file_with_max_depth` library
+functions. The 64-level default is now documented for imports (#200).
+The WebAssembly wrapper now links with an 8 MiB stack, matching the native
+parse thread, so 128-level imports also work in the browser build.
+
 ## [3.2.1] - 2026-11-26
 
 `clink --transactions` writes no longer slow down as history grows (issue #195). The CLI journal is now an append-only `<db>.transitions.log` file (`FileTransitionLog`): a write appends its transitions and markers instead of rewriting the whole transitions store. A bounded `--retention` policy also compacts the journal on disk, so the file stays bounded. An existing `<db>.transitions.links` journal is imported once. CI runs a benchmark that fails when write N+100 is much slower than write N on a constant-size store.
