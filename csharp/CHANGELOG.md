@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.4.1] - 2026-11-27
+
+Commit transactional CLI imports and queries as one operation and recover the original store if the process dies before commit.
+
 ## [5.4.0] - 2026-11-27
 
 Added `--in-max-depth <N>` (1 to 128, default 64) to set the nesting limit of
