@@ -1,6 +1,6 @@
 {
   "name": "@link-foundation/link-cli-server",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Pure JavaScript link-cli server and embedded store: the clink query language, named types and unicode strings, LiNo and binary import/export, persistent transformations, transactions, version control, triplets, permissions, the clink --serve protocol server and the GraphQL endpoint, with the same command line and on-disk formats as the Rust clink",
   "type": "module",
   "license": "Unlicense",

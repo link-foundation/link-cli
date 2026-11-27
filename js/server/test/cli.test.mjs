@@ -377,7 +377,7 @@ describe('Cli texts', () => {
   });
 
   it('prints the package version', () => {
-    assert.equal(Cli.versionText(), 'clink 0.2.0');
+    assert.equal(Cli.versionText(), 'clink 0.1.0');
   });
 });
 
