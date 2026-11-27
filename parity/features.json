@@ -997,7 +997,7 @@
           "csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs",
           "csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs"
         ],
-        "fingerprint": "c812003e553ba382"
+        "fingerprint": "f6978dbbc6b1efd7"
       },
       "rust": {
         "status": "implemented",
@@ -1007,7 +1007,7 @@
         "tests": [
           "rust/tests/cli_store_lock_tests.rs"
         ],
-        "fingerprint": "d041702ee5bb5c5b"
+        "fingerprint": "b24379482f5bb30d"
       },
       "javascript": {
         "status": "implemented",
@@ -1019,7 +1019,7 @@
           "js/server/test/store-lock.test.mjs",
           "js/server/test/main-store-lock.test.mjs"
         ],
-        "fingerprint": "5a1bed84443ac276"
+        "fingerprint": "fe937e5bfc9389fa"
       }
     },
     {

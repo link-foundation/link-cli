@@ -26,11 +26,13 @@ public sealed class StorePidLock : IDisposable
     private const string OwnerFile = "owner";
 
     private readonly string _token;
+    private readonly bool _trace;
 
-    private StorePidLock(string directory, string token)
+    private StorePidLock(string directory, string token, bool trace)
     {
         Path = directory;
         _token = token;
+        _trace = trace;
     }
 
     /// <summary>The lock directory.</summary>
@@ -48,7 +50,10 @@ public sealed class StorePidLock : IDisposable
     {
         try
         {
-            return StoreLockOwner.Parse(File.ReadAllText(System.IO.Path.Combine(directory, OwnerFile)));
+            using var file = new FileStream(System.IO.Path.Combine(directory, OwnerFile),
+              FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(file);
+            return StoreLockOwner.Parse(reader.ReadToEnd());
         }
         catch (IOException)
         {
@@ -96,7 +101,7 @@ public sealed class StorePidLock : IDisposable
                 WriteOwner(staging, owner);
                 Directory.Move(staging, directory);
                 holder = null;
-                return new StorePidLock(directory, token);
+                return new StorePidLock(directory, token, trace);
             }
             catch (IOException error)
             {
@@ -106,7 +111,7 @@ public sealed class StorePidLock : IDisposable
             {
                 lastError = error;
             }
-            TryDelete(staging);
+            TryCleanup(() => Directory.Delete(staging, recursive: true), trace);
             if (!Exists(directory))
             {
                 // Released between the rename and this check, or a real error.
@@ -117,7 +122,7 @@ public sealed class StorePidLock : IDisposable
             var reason = StaleReason(directory, holder);
             if (reason is null) return null;
             if (trace) Console.Error.WriteLine($"[TRACE] Breaking stale lock {directory}: {reason}");
-            BreakStale(directory, holder);
+            BreakStale(directory, holder, trace);
         }
         if (lastError is not null) throw new IOException($"Cannot create the lock {directory}: {lastError.Message}", lastError);
         holder = ReadOwner(directory);
@@ -130,21 +135,24 @@ public sealed class StorePidLock : IDisposable
     /// that cannot be moved (another waiter moved it first, or the directory
     /// is not writable) is left alone: the next attempt sees what became of it.
     /// </summary>
-    public static void BreakStale(string directory, StoreLockOwner? expected)
+    public static void BreakStale(string directory, StoreLockOwner? expected) => BreakStale(directory, expected, false);
+
+    private static void BreakStale(string directory, StoreLockOwner? expected, bool trace)
     {
         ArgumentNullException.ThrowIfNull(directory);
         var tombstone = $"{directory}.{Environment.ProcessId}.{StoreLockOwner.UniqueToken()}.stale";
-        if (!TryMove(directory, tombstone)) return;
+        // Let the next acquisition reread the owner before another attempt.
+        if (!TryCleanup(() => Directory.Move(directory, tombstone), trace, retry: false)) return;
         var moved = ReadOwner(tombstone);
         if (moved?.Token == expected?.Token)
         {
-            TryDelete(tombstone);
+            TryCleanup(() => Directory.Delete(tombstone, recursive: true), trace);
         }
         else
         {
             // A third process may have published meanwhile; then the moved
             // owner has lost its lock and its directory stays for inspection.
-            _ = TryMove(tombstone, directory);
+            TryCleanup(() => Directory.Move(tombstone, directory), trace, retry: false);
         }
     }
 
@@ -153,7 +161,8 @@ public sealed class StorePidLock : IDisposable
     {
         if (ReadOwner(Path)?.Token != _token) return;
         var tombstone = $"{Path}.{_token}.released";
-        if (TryMove(Path, tombstone)) TryDelete(tombstone);
+        if (TryCleanup(() => Directory.Move(Path, tombstone), _trace))
+            TryCleanup(() => Directory.Delete(tombstone, recursive: true), _trace);
     }
 
     private static void WriteOwner(string directory, StoreLockOwner owner)
@@ -167,34 +176,28 @@ public sealed class StorePidLock : IDisposable
     /// <summary>Whether anything, even a dangling link, is at <paramref name="path"/>.</summary>
     internal static bool Exists(string path) => Directory.Exists(path) || File.Exists(path) || new FileInfo(path).LinkTarget is not null;
 
-    private static bool TryMove(string from, string to)
+    internal static bool TryCleanup(Action cleanup, bool trace, bool retry = true)
     {
-        try
+        // On Windows a waiter can still have the owner record open when the
+        // holder renames the containing directory. Retry for at most 75 ms.
+        for (var delay = 5; ; delay *= 2)
         {
-            Directory.Move(from, to);
-            return true;
-        }
-        catch (IOException)
-        {
-            return false;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return false;
-        }
-    }
-
-    private static void TryDelete(string directory)
-    {
-        try
-        {
-            Directory.Delete(directory, recursive: true);
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
+            try
+            {
+                cleanup();
+                return true;
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                const int accessDenied = unchecked((int)0x80070005);
+                const int sharingViolation = unchecked((int)0x80070020);
+                const int lockViolation = unchecked((int)0x80070021);
+                if (trace) Console.Error.WriteLine($"[TRACE] PID-lock cleanup: 0x{error.HResult:X8} {error.Message}");
+                if (!retry || !OperatingSystem.IsWindows() || delay > 40 ||
+                    error.HResult is not (accessDenied or sharingViolation or lockViolation))
+                    return false;
+                Thread.Sleep(delay);
+            }
         }
     }
 }

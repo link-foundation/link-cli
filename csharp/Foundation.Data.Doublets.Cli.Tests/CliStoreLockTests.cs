@@ -39,7 +39,7 @@ public sealed class CliStoreLockTests : IDisposable
             Assert.Contains($"(w{index}: w{index} w{index})", exported, StringComparison.Ordinal);
         }
         Assert.DoesNotContain(
-          Directory.GetFileSystemEntries(_directory),
+          Directory.GetFileSystemEntries(_directory).Select(Path.GetFileName).OfType<string>(),
           entry => entry.EndsWith(".owner", StringComparison.Ordinal) || entry.Contains(".lock.d", StringComparison.Ordinal));
     }
 

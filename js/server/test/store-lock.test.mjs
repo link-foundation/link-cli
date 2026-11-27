@@ -37,6 +37,7 @@ import {
   processStartTime,
   quietFfiWarning,
   readOwner,
+  retryPidCleanup,
   staleReason,
   StoreLock,
   StoreLockKind,
@@ -46,6 +47,57 @@ import {
 import { capture, literally, scratchDirectory } from './helpers/storage.mjs';
 
 afterEach(() => setLockBackend(null));
+
+it('retries bounded Windows PID cleanup sharing errors', () => {
+  const shared = Object.assign(new Error('owner record still open'), { code: 'EPERM' });
+  const diagnostics = [];
+  let attempts = 0;
+  retryPidCleanup(
+    () => {
+      if (++attempts === 1) throw shared;
+    },
+    { write: (line) => diagnostics.push(line) },
+    'win32',
+  );
+  assert.equal(attempts, 2);
+  assert.match(diagnostics.join(''), /PID-lock cleanup: EPERM/);
+
+  attempts = 0;
+  assert.throws(
+    () =>
+      retryPidCleanup(
+        () => {
+          attempts++;
+          throw shared;
+        },
+        undefined,
+        'win32',
+      ),
+    (error) => error === shared,
+  );
+  assert.equal(attempts, 5);
+
+  for (const [platform, code] of [
+    ['linux', 'EPERM'],
+    ['win32', 'ENOENT'],
+  ]) {
+    attempts = 0;
+    const error = Object.assign(new Error('cannot clean up'), { code });
+    assert.throws(
+      () =>
+        retryPidCleanup(
+          () => {
+            attempts++;
+            throw error;
+          },
+          undefined,
+          platform,
+        ),
+      (failure) => failure === error,
+    );
+    assert.equal(attempts, 1);
+  }
+});
 
 /** A process id no system hands out: `processAlive` calls it gone. */
 const GONE_PID = 0xffffffff;
