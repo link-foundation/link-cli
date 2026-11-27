@@ -334,7 +334,8 @@ jobs:
           node-version: '26.x'
       - name: Validate package contents without registry access
         working-directory: js/server
-        run: npm pack --dry-run
+        shell: bash
+        run: npm pack --dry-run --json | node ../../.github/scripts/check-npm-tarball-size.mjs
 
   release:
     name: Release to npm
