@@ -1,0 +1,12 @@
+✔ Windows ring cleanup leaves the mapped file for the peer on EPERM (23.303535ms)
+✔ Windows ring cleanup leaves the mapped file for the peer on EBUSY (23.214388ms)
+✔ Windows ring cleanup delivers other deletion errors through the stream (2.155721ms)
+✔ Windows ring cleanup preserves a rejected handshake while the peer still maps the file (16.226865ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 293.923592

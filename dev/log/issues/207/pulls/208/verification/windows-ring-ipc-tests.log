@@ -1,0 +1,45 @@
+✔ endpoints parse as the Rust reference does (6.996319ms)
+✔ option values are whole numbers within their ranges (1.806519ms)
+✔ exec commands are words or a JSON array (1.99997ms)
+✔ the registry adds custom kinds but keeps the built-in ones (2.507207ms)
+✔ the support sets follow the platform (0.451913ms)
+✔ connecting reports unusable endpoints (22.329738ms)
+✔ datagram frames round trip (5.815437ms)
+✔ the ring region layout matches the specification (1.376027ms)
+✔ random ids are twenty hex digits (2.952897ms)
+✔ a ring carries both directions through wrap-around and ends (94.106329ms)
+✔ a ring hang-up ends the peer stream after the data before it (4.67539ms)
+✔ an aborted ring direction resets the reader (5.910043ms)
+✔ datagram sessions survive loss (4117.007476ms)
+✔ a peer hanging up instead of acknowledging the end still ends the stream (2.206466ms)
+✔ a destroyed datagram session hangs up its peer (54.90315ms)
+✔ file: connects through the rendezvous and echoes (108.81425ms)
+✔ mmap: connects through the rendezvous and echoes (29.020686ms)
+✔ signal: connects through the rendezvous and echoes (54.532349ms)
+✔ shm: connects through the rendezvous and echoes (25.475736ms)
+✔ a ring keeps its file until it hangs up on Windows (10.36938ms)
+✔ Windows ring cleanup leaves the mapped file for the peer on EPERM (15.150506ms)
+✔ Windows ring cleanup leaves the mapped file for the peer on EBUSY (16.956406ms)
+✔ Windows ring cleanup delivers other deletion errors through the stream (3.696023ms)
+✔ Windows ring cleanup preserves a rejected handshake while the peer still maps the file (14.245029ms)
+✔ a refused ring connection removes its region (21.10904ms)
+✔ a ring region that cannot be sized is removed (6.667325ms)
+✔ ring handshakes check the signal numbers (0.971171ms)
+✔ the signal ring takes the report signal over (1.148111ms)
+✔ a signal the process cannot handle is reported (1.895947ms)
+✔ the signal notifier waits for a signal or its limit (103.01319ms)
+✔ ring regions are checked before use (5.539962ms)
+✔ a torn ring counter fails the reader (297.694953ms)
+✔ a ring reader takes the bytes published with the end (2.493942ms)
+✔ a ring wraps around, and a reader held back at its limit resumes (130.488744ms)
+✔ a ring notices a peer process that is gone (299.16824ms)
+✔ a ring refuses writes once its direction is closed (28.135786ms)
+✔ a ring whose region fails still hangs up (3.660306ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4616.062315

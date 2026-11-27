@@ -1,0 +1,158 @@
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	﻿2026-11-27T22:20:02.8844429Z ##[group]Run export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8845384Z ^[[36;1mexport CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8846061Z ^[[36;1mnode examples/ipc/interop.mjs --js \^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8846575Z ^[[36;1m  rust=rust/target/debug/clink \^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8847112Z ^[[36;1m  'csharp=["dotnet","csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll"]'^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8863868Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864273Z env:
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864442Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864656Z   GIT_CONFIG_KEY_0: init.defaultBranch
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864912Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8865150Z   DOTNET_ROOT: C:\Program Files\dotnet
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8865405Z ##[endgroup]
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:03.0780517Z ok    tcp: rust server listens (14 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:03.0950563Z ok    tcp: rust server <- js client, text (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:03.1195893Z ok    tcp: rust server <- rust client, text (24 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:03.1409271Z ok    tcp: rust server <- rust client, binary (22 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:05.6920237Z ok    tcp: rust server <- csharp client, text (2551 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:06.0165724Z ok    tcp: rust server <- csharp client, binary (324 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:06.0355684Z ok    tcp: rust server keeps every write (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:06.4438301Z ok    tcp: csharp server listens (402 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:06.6060489Z ok    tcp: csharp server <- js client, text (162 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:06.7037917Z ok    tcp: csharp server <- rust client, text (98 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:06.7856203Z ok    tcp: csharp server <- rust client, binary (81 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:07.0525072Z ok    tcp: csharp server <- csharp client, text (266 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:07.3610669Z ok    tcp: csharp server <- csharp client, binary (306 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:07.3839359Z ok    tcp: csharp server keeps every write (26 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:07.7760452Z ok    tcp: js client -> rust relay -> csharp server (tcp) (153 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:07.9010166Z ok    tcp: rust client -> rust relay -> csharp server (tcp) (125 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.1731891Z ok    tcp: csharp client -> rust relay -> csharp server (tcp) (272 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.3539944Z ok    tcp: js client -> csharp relay -> rust server (tcp) (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.3743955Z ok    tcp: rust client -> csharp relay -> rust server (tcp) (20 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.6504497Z ok    tcp: csharp client -> csharp relay -> rust server (tcp) (276 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.6716047Z ok    udp: rust server listens (9 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.6844443Z ok    udp: rust server <- js client, text (13 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.7035931Z ok    udp: rust server <- rust client, text (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.7219069Z ok    udp: rust server <- rust client, binary (18 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:08.9858726Z ok    udp: rust server <- csharp client, text (264 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:09.2955745Z ok    udp: rust server <- csharp client, binary (309 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:09.3144535Z ok    udp: rust server keeps every write (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:09.5520226Z ok    udp: csharp server listens (232 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:09.7208181Z ok    udp: csharp server <- js client, text (170 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:09.7892513Z ok    udp: csharp server <- rust client, text (68 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:09.8734035Z ok    udp: csharp server <- rust client, binary (84 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:10.1480600Z ok    udp: csharp server <- csharp client, text (275 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:10.4764257Z ok    udp: csharp server <- csharp client, binary (328 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:10.4973654Z ok    udp: csharp server keeps every write (21 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:10.9140068Z ok    udp: js client -> rust relay -> csharp server (tcp) (161 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.0272646Z ok    udp: rust client -> rust relay -> csharp server (tcp) (113 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.3070095Z ok    udp: csharp client -> rust relay -> csharp server (tcp) (280 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.4915805Z ok    udp: js client -> csharp relay -> rust server (tcp) (29 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.5124202Z ok    udp: rust client -> csharp relay -> rust server (tcp) (20 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.7783700Z ok    udp: csharp client -> csharp relay -> rust server (tcp) (266 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.7959379Z ok    pipe: rust server listens (8 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.8042220Z ok    pipe: rust server <- js client, text (8 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.8193823Z ok    pipe: rust server <- rust client, text (15 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:11.8335731Z ok    pipe: rust server <- rust client, binary (14 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.0877231Z ok    pipe: rust server <- csharp client, text (254 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.3863149Z ok    pipe: rust server <- csharp client, binary (298 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.4045975Z ok    pipe: rust server keeps every write (18 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.6381934Z ok    pipe: csharp server listens (228 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.7949032Z ok    pipe: csharp server <- js client, text (157 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.8747903Z ok    pipe: csharp server <- rust client, text (79 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:12.9457258Z ok    pipe: csharp server <- rust client, binary (72 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:13.1863360Z ok    pipe: csharp server <- csharp client, text (240 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:13.4958644Z ok    pipe: csharp server <- csharp client, binary (310 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:13.5180487Z ok    pipe: csharp server keeps every write (22 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:13.9232791Z ok    pipe: js client -> rust relay -> csharp server (tcp) (155 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.0388178Z ok    pipe: rust client -> rust relay -> csharp server (tcp) (116 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.2841649Z ok    pipe: csharp client -> rust relay -> csharp server (tcp) (245 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.4687963Z ok    pipe: js client -> csharp relay -> rust server (tcp) (38 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.4897645Z ok    pipe: rust client -> csharp relay -> rust server (tcp) (21 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.7304757Z ok    pipe: csharp client -> csharp relay -> rust server (tcp) (238 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.7493364Z clink server listening on stdio
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.7935131Z ok    stdio: rust server (exec) <- js client (55 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:14.9106607Z ok    stdio: rust server (exec) <- rust client (118 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:15.6194656Z ok    stdio: rust server (exec) <- csharp client (708 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:15.8230930Z clink server listening on stdio
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:16.3184068Z ok    stdio: csharp server (exec) <- js client (699 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:17.5899103Z ok    stdio: csharp server (exec) <- rust client (1272 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.0331666Z ok    stdio: csharp server (exec) <- csharp client (1443 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.0442837Z ok    shm: rust server listens (8 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.0921397Z ok    shm: rust server <- js client, text (48 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.1227606Z ok    shm: rust server <- rust client, text (31 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.1605339Z ok    shm: rust server <- rust client, binary (37 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.4450616Z ok    shm: rust server <- csharp client, text (284 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.7480128Z ok    shm: rust server <- csharp client, binary (303 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.7740391Z ok    shm: rust server keeps every write (26 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:19.9949953Z ok    shm: csharp server listens (217 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:20.1899158Z ok    shm: csharp server <- js client, text (195 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:20.2880932Z ok    shm: csharp server <- rust client, text (98 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:20.3883592Z ok    shm: csharp server <- rust client, binary (100 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:20.6813173Z ok    shm: csharp server <- csharp client, text (293 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:21.0128154Z ok    shm: csharp server <- csharp client, binary (332 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:21.0530464Z ok    shm: csharp server keeps every write (40 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:21.4871414Z ok    shm: js client -> rust relay -> csharp server (tcp) (197 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:21.6201117Z ok    shm: rust client -> rust relay -> csharp server (tcp) (133 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:21.8953228Z ok    shm: csharp client -> rust relay -> csharp server (tcp) (275 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.1531322Z ok    shm: js client -> csharp relay -> rust server (tcp) (115 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.2177679Z ok    shm: rust client -> csharp relay -> rust server (tcp) (65 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.4965741Z ok    shm: csharp client -> csharp relay -> rust server (tcp) (278 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.5145687Z ok    mmap: rust server listens (9 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.5319266Z ok    mmap: rust server <- js client, text (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.5512848Z ok    mmap: rust server <- rust client, text (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.5696363Z ok    mmap: rust server <- rust client, binary (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:22.9067841Z ok    mmap: rust server <- csharp client, text (337 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:23.2283311Z ok    mmap: rust server <- csharp client, binary (321 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:23.2545641Z ok    mmap: rust server keeps every write (27 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:23.4713562Z ok    mmap: csharp server listens (207 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:23.7090168Z ok    mmap: csharp server <- js client, text (238 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:23.8331582Z ok    mmap: csharp server <- rust client, text (124 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:23.9396975Z ok    mmap: csharp server <- rust client, binary (107 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:24.2640452Z ok    mmap: csharp server <- csharp client, text (324 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:24.6143967Z ok    mmap: csharp server <- csharp client, binary (350 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:24.6865441Z ok    mmap: csharp server keeps every write (72 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2585378Z node:events:505
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2586617Z     throw er; // Unhandled 'error' event
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2587079Z     ^
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2587245Z 
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2588148Z Error: EPERM, Permission denied: 'C:\Users\RUNNER~1\AppData\Local\Temp\clink-interop-klOFQT\n19\8e7e5ee7b13ade5d9994.mmap'
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2589144Z     at Object.rmSync (node:fs:1593:18)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2589692Z     at RingStream._destroy (file:///D:/a/link-cli/link-cli/js/client/src/ipc-ring.js:404:44)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2590247Z     at _destroy (node:internal/streams/destroy:122:10)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2590671Z     at RingStream.destroy (node:internal/streams/destroy:84:5)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2591120Z     at Writable.destroy (node:internal/streams/writable:1161:11)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2591555Z     at endReadableNT (node:internal/streams/readable:2163:16)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2592077Z     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2592639Z Emitted 'error' event on RingStream instance at:
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2593027Z     at emitErrorNT (node:internal/streams/destroy:170:8)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2593447Z     at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2593984Z     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2594385Z   errno: 1,
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2594553Z   code: 'EPERM',
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2595618Z   path: 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\clink-interop-klOFQT\\n19\\8e7e5ee7b13ade5d9994.mmap',
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2596388Z   syscall: 'rm'
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2596677Z }
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2596825Z 
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2596954Z Node.js v26.13.1
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:25.2727758Z ##[error]Process completed with exit code 1.
+Pipeline Status (ipc)	Check every prerequisite	﻿2026-11-27T22:20:37.9457747Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9458353Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9492622Z shell: /usr/bin/bash -e {0}
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493098Z env:
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493405Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493756Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9494170Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9494729Z   NEEDS_JSON: {
+Pipeline Status (ipc)	Check every prerequisite	  "javascript": {
+Pipeline Status (ipc)	Check every prerequisite	    "result": "success",
+Pipeline Status (ipc)	Check every prerequisite	    "outputs": {}
+Pipeline Status (ipc)	Check every prerequisite	  },
+Pipeline Status (ipc)	Check every prerequisite	  "interop": {
+Pipeline Status (ipc)	Check every prerequisite	    "result": "failure",
+Pipeline Status (ipc)	Check every prerequisite	    "outputs": {}
+Pipeline Status (ipc)	Check every prerequisite	  }
+Pipeline Status (ipc)	Check every prerequisite	}
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9495268Z ##[endgroup]
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9855356Z Pipeline jobs did not succeed: interop (failure)
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9904625Z ##[error]Process completed with exit code 1.
