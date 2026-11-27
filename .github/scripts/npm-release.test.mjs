@@ -11,6 +11,8 @@ for (const name of ['js-client', 'js-server']) {
     const { body: pack } = jobs.find((job) => job.name === 'package-check');
     const { body: release } = jobs.find((job) => job.name === 'release');
     const { body: preflight } = jobs.find((job) => job.name === 'release-preflight');
+    const { body: publicPackage } = jobs.find((job) => job.name === 'verify-public-package');
+    const { body: status } = jobs.find((job) => job.name === 'pipeline-status');
     const mainOnly = /if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/;
     assert.match(pack, /if: inputs\.verify_trusted_publishing != true/);
     assert.match(
@@ -21,6 +23,10 @@ for (const name of ['js-client', 'js-server']) {
     assert.match(release, mainOnly);
     assert.match(release, /needs: \[release-preflight, package-check,/);
     assert.match(preflight, mainOnly);
+    assert.match(publicPackage, /needs: \[release\]/);
+    assert.match(publicPackage, /run: bash .*verify-public-npm-package\.sh/);
+    assert.doesNotMatch(publicPackage, /id-token: write|secrets\.|registry-url:|main-writer/);
+    assert.match(status, /^ {6}- verify-public-package$/m);
   });
 }
 
