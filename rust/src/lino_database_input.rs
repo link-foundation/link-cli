@@ -94,6 +94,9 @@ fn parse_import(text: &str, max_depth: usize) -> Result<Vec<LinoLink>> {
     })
 }
 
+// WebAssembly has no threads, so the parse uses the module's shadow stack.
+// The wasm wrapper (rust/wasm/build.rs) links with an 8 MiB stack to match the
+// native parse thread; other wasm32 embedders need a similar `-zstack-size`.
 #[cfg(target_arch = "wasm32")]
 fn parse_import(text: &str, max_depth: usize) -> Result<Vec<LinoLink>> {
     Ok(Parser::new().parse_with_max_depth(text, max_depth)?)

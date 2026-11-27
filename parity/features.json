@@ -333,7 +333,7 @@
           "rust/tests/cli_export_tests.rs",
           "rust/tests/cli_import_tests.rs"
         ],
-        "fingerprint": "3704515d793ca26a"
+        "fingerprint": "27638439411570cc"
       },
       "javascript": {
         "status": "implemented",
