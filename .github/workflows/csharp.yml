@@ -333,6 +333,7 @@ jobs:
       - name: Run tests
         env:
           GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-csharp.json
+          LINK_CSHARP_RECOVERY_TRACE: ${{ vars.CI_VERBOSE == 'true' && '1' || '0' }}
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage;Format=json,cobertura"
 
       - name: Verify every compiled causal branch
