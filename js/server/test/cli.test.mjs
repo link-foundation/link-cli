@@ -240,6 +240,17 @@ describe('Cli.parse', () => {
     assert.equal(run('--db', 'a', '-d', 'b').db, 'b', 'the last value wins');
   });
 
+  it('accepts a bounded integer as the LiNo import depth', () => {
+    assert.equal(run().linoInputMaxDepth, 64);
+    assert.equal(run('--in-max-depth=128').linoInputMaxDepth, 128);
+    assert.equal(run('--in-max-depth', '1').linoInputMaxDepth, 1);
+    for (const invalid of ['0', '129', '-1', '1.5', 'abc', '']) {
+      assert.throws(() => run('--in-max-depth', invalid), {
+        message: "invalid value for '--in-max-depth': expected an integer from 1 to 128",
+      });
+    }
+  });
+
   it('takes --no-lock as --lock none, the last of them winning (#194)', () => {
     assert.equal(run('--no-lock').lock, 'none');
     assert.equal(run('--no-lock', '--lock', 'pid').lock, 'pid');

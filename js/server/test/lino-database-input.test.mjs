@@ -83,6 +83,16 @@ describe('importLinoFile', () => {
 });
 
 describe('importLinoText', () => {
+  it('requires an integer depth limit in range before writing', () => {
+    const storage = LinkStorage.inMemory();
+    for (const maxDepth of [0, 129, 1.5, '64']) {
+      assert.throws(() => importLinoText(storage, '(new: a b)', { maxDepth }), RangeError);
+      assert.deepEqual(rows(storage), []);
+    }
+    importLinoText(storage, '(new: a b)', { maxDepth: 1 });
+    assert.notEqual(storage.getByName('new'), null);
+  });
+
   it('rejects what the Rust clink rejects', () => {
     for (const [text, message] of [
       ['(1 2 3)', 'LiNo import supports links with exactly two values'],

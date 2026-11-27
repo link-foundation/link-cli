@@ -345,15 +345,26 @@ clink --db structure.links --structure 4
 ## Import database from LiNo
 
 Use `--in`, `--import`, or `--lino-input` to read a `.lino` file before the
-query runs. Import accepts one complete two-value link definition per non-empty
-line. In C#, a quoted name can span physical lines.
+query runs. Each non-empty line can define a two-value link whose references
+can themselves be nested pairs. In C#, a quoted name can span physical lines.
 
-Both implementations parse and validate the entire LiNo input before changing
+The import nesting limit defaults to **64 levels**, counting the outermost
+pair as level 1. Use `--in-max-depth <N>` with an integer from 1 to 128, for
+example `clink --import deep.lino --in-max-depth 128`. For deeper data,
+give inner pairs names and define them on separate lines. The
+[binary protocol nesting limit](docs/protocol/binary-links-notation.md#8-decoding-untrusted-input)
+is also 64 by default and is configured independently.
+
+All implementations parse and validate the entire LiNo input before changing
 links or names. A malformed file leaves an empty or populated database unchanged
-and the CLI exits with code 1; no `--transactions` flag is needed. This validation
-also applies to the C# `LinoDatabaseInput.ImportText`/`ReadFromFile` and Rust
-`import_lino_text`/`import_lino_file` library APIs. Storage failures or process
-termination during writes retain the underlying store's durability guarantees.
+and the CLI exits with code 1, with or without `--transactions`. The same
+validation and 64-level default apply to the library APIs. To override the
+limit, use Rust's `import_lino_text_with_max_depth` or
+`import_lino_file_with_max_depth` in place of `import_lino_text` or
+`import_lino_file`, pass `maxDepth` to C#'s `LinoDatabaseInput.ImportText`
+or `ReadFromFile` overload, or pass `{ maxDepth }` to JavaScript's
+`importLinoText` or `importLinoFile`. Storage failures or process termination
+during writes retain the underlying store's durability guarantees.
 
 ```lino
 (father: father father)
@@ -1151,7 +1162,8 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
 | `--indexed-lookups`     | bool    | `false`        | _None_                            | Rust only: compose optional indexes for local data and names stores        |
-| `--in`                  | string  | _None_         | `--import`, `--lino-input`          | Read and import a LiNo file before query execution                         |
+| `--in`                  | string  | _None_         | `--import`, `--lino-input`          | Import a LiNo file before query execution, with a nesting limit of 64 by default |
+| `--in-max-depth`        | integer | `64`           | _None_                              | LiNo text import nesting limit, from 1 to 128 (separate from the binary protocol limit) |
 | `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
 | `--import-binary`       | string  | _None_         | `--binary-input`, `--binary-in`     | Read and import a store archive in binary links notation before `--in`    |
 | `--export-binary`       | string  | _None_         | `--binary-output`, `--binary-out`   | Write the complete database, names included, as a binary store archive    |

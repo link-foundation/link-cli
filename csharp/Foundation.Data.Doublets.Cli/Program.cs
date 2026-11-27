@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Globalization;
 using Foundation.Data.Doublets.Cli;
 using Foundation.Data.Doublets.Cli.Graphql;
 using Foundation.Data.Doublets.Cli.Ipc;
@@ -110,6 +111,24 @@ var embedTriggersOption = new Option<bool>("--embed-triggers")
 var inputOption = new Option<string?>("--in", "--lino-input", "--import")
 {
     Description = "Path to read and import a LiNo file into the database"
+};
+
+var inputMaxDepthOption = new Option<int>("--in-max-depth")
+{
+    Description = $"LiNo import nesting limit (1 to {LinoDatabaseInput.MaxImportDepth}; default: {LinoDatabaseInput.DefaultImportDepth})",
+    DefaultValueFactory = _ => LinoDatabaseInput.DefaultImportDepth,
+    CustomParser = result =>
+    {
+        if (result.Tokens.Count == 1
+            && int.TryParse(result.Tokens[0].Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var depth)
+            && depth is >= 1 and <= LinoDatabaseInput.MaxImportDepth)
+        {
+            return depth;
+        }
+
+        result.AddError($"Invalid value for '--in-max-depth': expected an integer from 1 to {LinoDatabaseInput.MaxImportDepth}");
+        return LinoDatabaseInput.DefaultImportDepth;
+    }
 };
 
 var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
@@ -291,6 +310,7 @@ rootCommand.Options.Add(triggersOption);
 rootCommand.Options.Add(triggersFileOption);
 rootCommand.Options.Add(embedTriggersOption);
 rootCommand.Options.Add(inputOption);
+rootCommand.Options.Add(inputMaxDepthOption);
 rootCommand.Options.Add(outputOption);
 rootCommand.Options.Add(binaryInputOption);
 rootCommand.Options.Add(binaryOutputOption);
@@ -343,6 +363,7 @@ rootCommand.SetAction(
       var triggersFile = parseResult.GetValue(triggersFileOption);
       var embedTriggers = parseResult.GetValue(embedTriggersOption);
       var inputPath = parseResult.GetValue(inputOption);
+      var inputMaxDepth = parseResult.GetValue(inputMaxDepthOption);
       var outputPath = parseResult.GetValue(outputOption);
       var binaryInputPath = parseResult.GetValue(binaryInputOption);
       var binaryOutputPath = parseResult.GetValue(binaryOutputOption);
@@ -775,7 +796,7 @@ rootCommand.SetAction(
               PrintAllLinks(decoratedLinks);
           }
 
-          if (!TryReadBinaryInput(decoratedLinks, binaryInputPath) || !TryReadLinoInput(decoratedLinks, inputPath))
+          if (!TryReadBinaryInput(decoratedLinks, binaryInputPath) || !TryReadLinoInput(decoratedLinks, inputPath, inputMaxDepth))
           {
               return 1;
           }

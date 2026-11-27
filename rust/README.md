@@ -60,6 +60,13 @@ limits are in the [main README](../README.md#concurrent-invocations).
 LiNo input is fully parsed and validated before any links or names change,
 including nested definitions. Invalid input leaves the store unchanged through
 both the CLI aliases and `import_lino_text`/`import_lino_file` library APIs.
+The default nesting limit is 64 levels. Use `--in-max-depth <N>` on the CLI
+or the library's `import_lino_text_with_max_depth` and
+`import_lino_file_with_max_depth` variants to set a limit from 1 to 128.
+Native builds parse on a dedicated thread with an 8 MiB stack. WebAssembly has
+no threads, so the browser wrapper links with an 8 MiB stack instead
+(`rust/wasm/build.rs`); other `wasm32` embedders that import deep LiNo should
+pass a similar `-C link-arg=-zstack-size=8388608`.
 
 For thousands of named links, enable the Rust lookup-index decorator:
 

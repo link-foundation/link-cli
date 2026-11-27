@@ -27,6 +27,8 @@ Options:
           Print the state of the database after applying changes
       --in <IN>, --lino-input <IN>, --import <IN>
           Read and import a LiNo file into the database
+      --in-max-depth <N>
+          LiNo import nesting limit (1 to 128; default: 64)
       --out <OUT>, --lino-output <OUT>, --export <OUT>
           Write the complete database as a LiNo file
       --import-binary <PATH>, --binary-input <PATH>, --binary-in <PATH>

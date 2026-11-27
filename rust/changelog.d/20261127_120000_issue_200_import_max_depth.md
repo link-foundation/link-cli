@@ -1,0 +1,10 @@
+---
+bump: minor
+---
+
+Added `--in-max-depth <N>` (1 to 128, default 64) to set the nesting limit of
+LiNo imports through `--in`, `--import` and `--lino-input`, and the
+`import_lino_text_with_max_depth`/`import_lino_file_with_max_depth` library
+functions. The 64-level default is now documented for imports (#200).
+The WebAssembly wrapper now links with an 8 MiB stack, matching the native
+parse thread, so 128-level imports also work in the browser build.
