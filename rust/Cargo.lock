@@ -653,7 +653,7 @@ dependencies = [
 
 [[package]]
 name = "link-cli"
-version = "3.3.2"
+version = "3.3.3"
 dependencies = [
  "anyhow",
  "base64",
