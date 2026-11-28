@@ -1,0 +1,47 @@
+✖ a malformed gzip reports its path and fails the scan (94.238112ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 281.078878
+
+✖ failing tests:
+
+test at .github/scripts/check-secrets.test.mjs:57:1
+✖ a malformed gzip reports its path and fails the scan (94.238112ms)
+  AssertionError [ERR_ASSERTION]: node:internal/modules/run_main:111
+      triggerUncaughtException(
+      ^
+
+  Error: incorrect header check
+      at genericNodeError (node:internal/errors:999:15)
+      at wrappedFn (node:internal/errors:544:14)
+      at Zlib.zlibOnError [as onerror] (node:zlib:210:13)
+      at processChunkSync (node:zlib:458:12)
+      at zlibBufferSync (node:zlib:195:12)
+      at syncBufferWrapper (node:zlib:833:14)
+      at gunzip (file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.mjs:25:10)
+      at main (file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.mjs:127:39)
+      at file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.mjs:135:85
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25) {
+    errno: -3,
+    code: 'Z_DATA_ERROR'
+  }
+
+  Node.js v26.13.1
+
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.test.mjs:65:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -1,0 +1,4 @@
+163 gzip archives passed gzip -t
+{'png': 1, 'gz': 154} byte-identical archive and image moves
+Five repaired originals match the previously passing Git revision
+Three repaired copies match complete GitHub Actions downloads

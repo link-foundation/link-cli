@@ -79,3 +79,7 @@ All times are UTC on 2026-11-27. The [evidence index](../../../dev/log/issues/20
 - [Java template #39](https://github.com/link-foundation/java-ai-driven-development-pipeline-template/issues/39)
 - [C++ template #45](https://github.com/link-foundation/cpp-ai-driven-development-pipeline-template/issues/45)
 - [Hive Mind #4186](https://github.com/link-assistant/hive-mind/issues/4186)
+
+## Committed-secrets follow-up
+
+The first fully passing revision was followed by an automatic development-log commit that corrupted eight gzip files. After restoring the original logs and relocating the archives outside Hive Mind’s text sanitation directory, the same secret scan checks the decoded files. A regression test covers diagnostics for malformed archives and verifies that secrets in `.tgz` members trigger the same failure as `.tar.gz` members. [Investigation and evidence](../../../dev/log/issues/207/pulls/208/SECURITY.md) · [Hive Mind #4188](https://github.com/link-assistant/hive-mind/issues/4188)

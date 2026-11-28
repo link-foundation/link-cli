@@ -32,6 +32,7 @@ function tarball(files) {
 test('every gzip archive is decompressed and tarballs are unpacked', () => {
   assert.ok(isCompressed('research/codeql-tree.json.gz'));
   assert.ok(isCompressed('ci-logs/run.log.GZ'));
+  assert.ok(isCompressed('packages/client.tgz'));
   assert.ok(!isCompressed('notes.gzip.md'));
   assert.ok(isTarball('templates/rust/snapshot.tar.gz'));
   assert.ok(!isTarball('research/codeql-tree.json.gz'));
@@ -54,6 +55,22 @@ test('every gzip archive is decompressed and tarballs are unpacked', () => {
   assert.throws(() => gunzip(Buffer.from('not gzip')));
 });
 
+test('a malformed gzip reports its path and fails the scan', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'check-secrets-test-'));
+  try {
+    for (const name of ['broken.log.gz', 'broken.tar.gz', 'broken.tgz']) {
+      const file = join(dir, name);
+      writeFileSync(file, 'not gzip');
+      const result = spawnSync(process.execPath, [script, file], { encoding: 'utf8' });
+      assert.equal(result.status, 1);
+      assert.ok(result.stderr.includes(`Cannot decompress ${file}`), result.stderr);
+      assert.ok(result.stderr.includes('Z_DATA_ERROR'), result.stderr);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test(
   'a secret inside a compressed archive fails the scan',
   {
@@ -67,7 +84,9 @@ test(
         return spawnSync(process.execPath, [script, join(dir, name)], { encoding: 'utf8' });
       };
       assert.equal(scan('clean.tar.gz', tarball({ 'a.txt': 'nothing here' })).status, 0);
+      assert.equal(scan('clean.tgz', tarball({ 'a.txt': 'nothing here' })).status, 0);
       assert.notEqual(scan('leak.tar.gz', tarball({ 'docs/key.pem': leakedToken })).status, 0);
+      assert.notEqual(scan('leak.tgz', tarball({ 'docs/key.pem': leakedToken })).status, 0);
       assert.notEqual(scan('leak.json.gz', gzipSync(leakedToken)).status, 0);
     } finally {
       rmSync(dir, { recursive: true, force: true });

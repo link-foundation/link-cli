@@ -1,0 +1,20 @@
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+
+Error: incorrect header check
+    at genericNodeError (node:internal/errors:999:15)
+    at wrappedFn (node:internal/errors:544:14)
+    at Zlib.zlibOnError [as onerror] (node:zlib:210:13)
+    at processChunkSync (node:zlib:458:12)
+    at zlibBufferSync (node:zlib:195:12)
+    at syncBufferWrapper (node:zlib:833:14)
+    at gunzip (file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.mjs:25:10)
+    at main (file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.mjs:127:39)
+    at file:///tmp/gh-issue-solver-1795813073025/.github/scripts/check-secrets.mjs:135:85
+    at ModuleJob.run (node:internal/modules/esm/module_job:569:25) {
+  errno: -3,
+  code: 'Z_DATA_ERROR'
+}
+
+Node.js v26.13.1

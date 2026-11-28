@@ -1,0 +1,22 @@
+coverage_artifact	line	hits	condition_coverage
+csharp-coverage	145	6	50% (1/2)
+csharp-coverage	162	13	75% (3/4)
+csharp-coverage	164	22	50% (1/2)
+csharp-coverage	195	2	50% (1/2)
+csharp-coverage	196	2	41.66% (5/12)
+csharp-coverage	199	0	-
+csharp-coverage	200	0	-
+csharp-coverage-macos-26-intel	145	6	50% (1/2)
+csharp-coverage-macos-26-intel	162	13	75% (3/4)
+csharp-coverage-macos-26-intel	164	22	50% (1/2)
+csharp-coverage-macos-26-intel	195	2	50% (1/2)
+csharp-coverage-macos-26-intel	196	2	41.66% (5/12)
+csharp-coverage-macos-26-intel	199	0	-
+csharp-coverage-macos-26-intel	200	0	-
+csharp-coverage-windows-2025	145	6	50% (1/2)
+csharp-coverage-windows-2025	162	13	75% (3/4)
+csharp-coverage-windows-2025	164	22	50% (1/2)
+csharp-coverage-windows-2025	195	4	100% (2/2)
+csharp-coverage-windows-2025	196	3	100% (12/12)
+csharp-coverage-windows-2025	199	2	-
+csharp-coverage-windows-2025	200	2	-

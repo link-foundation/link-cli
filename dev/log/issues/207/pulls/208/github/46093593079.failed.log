@@ -1,0 +1,77 @@
+Scan for committed secrets	Run secretlint on every tracked file	﻿2026-11-28T01:33:03.8930658Z ##[group]Run node .github/scripts/check-secrets.mjs
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8931033Z ^[[36;1mnode .github/scripts/check-secrets.mjs^[[0m
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8955049Z shell: /usr/bin/bash -e {0}
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8955337Z env:
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8955658Z   GIT_CONFIG_COUNT: 1
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8955954Z   GIT_CONFIG_KEY_0: ini…nch
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8956262Z   GIT_CONFIG_VALUE_0: main
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:03.8956586Z ##[endgroup]
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:24.0799684Z Scanning 99 file(s) inside dev/log/issues/165/pulls/166/templates/csharp/snapshot.tar.gz (unpacked under /tmp/check-secrets-mPomCi/dev/log/issues/165/pulls/166/templates/csharp/snapshot.tar.gz)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:24.1920662Z Scanning 201 file(s) inside dev/log/issues/165/pulls/166/templates/js/snapshot.tar.gz (unpacked under /tmp/check-secrets-5QTJsE/dev/log/issues/165/pulls/166/templates/js/snapshot.tar.gz)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:24.5039069Z Scanning 89 file(s) inside dev/log/issues/165/pulls/166/templates/python/snapshot.tar.gz (unpacked under /tmp/check-secrets-LXYcNE/dev/log/issues/165/pulls/166/templates/python/snapshot.tar.gz)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:24.6320687Z Scanning 110 file(s) inside dev/log/issues/165/pulls/166/templates/rust/snapshot.tar.gz (unpacked under /tmp/check-secrets-Fcf44B/dev/log/issues/165/pulls/166/templates/rust/snapshot.tar.gz)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3261099Z node:internal/modules/run_main:111
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3261889Z     triggerUncaughtException(
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3262253Z     ^
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3262415Z
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3262569Z Error: incorrect header check
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3262968Z     at genericNodeError (node:internal/errors:999:15)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3263767Z     at wrappedFn (node:internal/errors:544:14)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3264212Z     at Zlib.zlibOnError [as onerror] (node:zlib:210:13)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3264654Z     at processChunkSync (node:zlib:458:12)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3265044Z     at zlibBufferSync (node:zlib:195:12)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3265530Z     at syncBufferWrapper (node:zlib:833:14)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3266130Z     at gunzip (file:///home/runner/work/link-cli/link-cli/.github/scripts/check-secrets.mjs:25:10)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3266955Z     at main (file:///home/runner/work/link-cli/link-cli/.github/scripts/check-secrets.mjs:127:39)
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3267622Z     at file:///home/runner/work/link-cli/link-cli/.github/scripts/check-secrets.mjs:135:85
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3268214Z     at ModuleJob.run (node:internal/modules/esm/module_job:569:25) {
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3268655Z   errno: -3,
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3268967Z   code: 'Z_DATA_ERROR'
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3269592Z }
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3269728Z
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3269925Z Node.js v26.13.1
+Scan for committed secrets	Run secretlint on every tracked file	2026-11-28T01:33:29.3295258Z ##[error]Process completed with exit code 1.
+Pipeline Status (security)	Check every prerequisite	﻿2026-11-28T01:40:55.5361752Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5362236Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5405579Z shell: /usr/bin/bash -e {0}
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5405851Z env:
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5406063Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5406292Z   GIT_CONFIG_KEY_0: ini…nch
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5406552Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5407949Z   NEEDS_JSON: {
+Pipeline Status (security)	Check every prerequisite	  "javascript": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "codeql": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "dependency-review": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "cargo-audit": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "npm-audit": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "nuget-audit": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "python-audit": {
+Pipeline Status (security)	Check every prerequisite	    "result": "success",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  },
+Pipeline Status (security)	Check every prerequisite	  "secrets-scan": {
+Pipeline Status (security)	Check every prerequisite	    "result": "failure",
+Pipeline Status (security)	Check every prerequisite	    "outputs": {}
+Pipeline Status (security)	Check every prerequisite	  }
+Pipeline Status (security)	Check every prerequisite	}
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5409168Z ##[endgroup]
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5695429Z Pipeline jobs did not succeed: secrets-scan (failure)
+Pipeline Status (security)	Check every prerequisite	2026-11-28T01:40:55.5741729Z ##[error]Process completed with exit code 1.
