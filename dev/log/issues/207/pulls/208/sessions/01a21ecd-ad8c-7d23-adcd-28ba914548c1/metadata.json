@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "collectedAt": "2026-11-28T01:05:38.632Z",
+  "collectedAt": "2026-11-28T03:23:26.129Z",
   "issueNumber": 207,
   "prNumber": "208",
   "branchName": "issue-207-ac4b1e2ba1ef",
@@ -13,7 +13,7 @@
     "solveLog": "./dev/log/issues/207/pulls/208/sessions/01a21ecd-ad8c-7d23-adcd-28ba914548c1/solve.log",
     "solveLogRange": {
       "startByte": 0,
-      "endByte": 4785295
+      "endByte": 6855329
     },
     "sessionFiles": [
       "./dev/log/issues/207/pulls/208/sessions/01a21ecd-ad8c-7d23-adcd-28ba914548c1/codex-01a21ecd-ad8c-7d23-adcd-28ba914548c1.jsonl"
