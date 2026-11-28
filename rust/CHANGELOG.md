@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [3.3.2] - 2026-11-28
+
+Keep Rust checks for each main revision and move transaction serialization tests below the source-size warning threshold.
+
+Retry transient Windows sharing failures while releasing PID store locks.
+
 ## [3.3.1] - 2026-11-27
 
 Commit transactional CLI imports and queries as one operation, with one data checkpoint and rollback on errors.
