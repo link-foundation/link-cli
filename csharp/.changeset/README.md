@@ -29,6 +29,6 @@ The first line after `---` should be the package name followed by the bump type:
 
 The content after the second `---` is the changelog description.
 
-## Multiple changesets
+## Changesets per pull request
 
-If your PR has multiple logical changes, you can create multiple changeset files. They will be merged automatically during release.
+The C# CI workflow requires exactly one new changeset per pull request that changes C# code. Describe all C# changes and select the highest required version bump in that file. A release can combine changesets from multiple pull requests.

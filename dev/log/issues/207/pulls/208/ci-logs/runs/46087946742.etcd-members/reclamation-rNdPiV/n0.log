@@ -1,0 +1,8 @@
+{"level":"warn","ts":"2026-11-28T00:39:52.413843Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_BIN=/home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd"}
+{"level":"warn","ts":"2026-11-28T00:39:52.413948Z","caller":"flags/flag.go:94","msg":"unrecognized environment variable","environment-variable":"ETCD_TEST_VERBOSE=0"}
+{"level":"warn","ts":"2026-11-28T00:39:52.414576Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-28T00:39:52.414689Z","caller":"embed/config.go:956","msg":"Running http and grpc server on single port. This is not recommended for production."}
+{"level":"warn","ts":"2026-11-28T00:39:54.421745Z","caller":"auth/store.go:1137","msg":"simple token is not cryptographically signed"}
+{"level":"warn","ts":"2026-11-28T00:39:56.322311Z","caller":"rafthttp/stream.go:425","msg":"lost TCP streaming connection with remote peer","stream-reader-type":"stream Message","local-member-id":"3ee03b2336b2cf67","remote-peer-id":"d3b28e12ed0de3ab","error":"unexpected EOF"}
+{"level":"warn","ts":"2026-11-28T00:39:56.322354Z","caller":"rafthttp/peer_status.go:66","msg":"peer became inactive (message send to peer failed)","peer-id":"d3b28e12ed0de3ab","error":"failed to read d3b28e12ed0de3ab on stream Message (unexpected EOF)"}
+{"level":"warn","ts":"2026-11-28T00:39:56.322492Z","caller":"rafthttp/stream.go:425","msg":"lost TCP streaming connection with remote peer","stream-reader-type":"stream MsgApp v2","local-member-id":"3ee03b2336b2cf67","remote-peer-id":"d3b28e12ed0de3ab","error":"unexpected EOF"}

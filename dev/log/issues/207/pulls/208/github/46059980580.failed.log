@@ -1,0 +1,222 @@
+Release authentication preflight	UNKNOWN STEP	﻿2026-11-27T19:54:50.6397432Z Current runner version: '2.338.2'
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6426715Z ##[group]Runner Image Provisioner
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6427745Z Hosted Compute Agent
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6428569Z Version: 20261111.635
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6429346Z Commit: b8a…2ed
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6430399Z Build Date: 2026-11-11T01:49:01Z
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6431240Z Worker ID: {13cb706a-c7a3-4c52-bb9b-d3b8b1ef12bc}
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6432264Z Region: eastus2
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6433206Z Cloud: Azure
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6433879Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6435703Z ##[group]Operating System
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6436486Z Ubuntu
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6437228Z 24.04.5
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6437887Z LTS
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6438514Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6439263Z ##[group]Runner Image
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6440002Z Image: ubuntu-24.04
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6440813Z Version: 20261122.23.1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6442354Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261122.23/images/ubuntu/Ubuntu2404-Readme.md
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6444676Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261122.23
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6445979Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6447409Z ##[group]GITHUB_TOKEN Permissions
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6449870Z Contents: read
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6450583Z Metadata: read
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6451403Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6454100Z Secret source: Actions
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6455328Z Cache mode: write
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6456178Z Prepare workflow directory
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6903205Z Prepare all required actions
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6959623Z Getting action download info
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.8555233Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.9645037Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.1513088Z Complete job name: Release authentication preflight
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2219728Z ##[group]Run actions/checkout@v7
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2220767Z with:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2221271Z   persist-credentials: false
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2221922Z   repository: link-foundation/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2227344Z   token: ***
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2227896Z   ssh-strict: true
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2228450Z   ssh-user: git
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2228974Z   clean: true
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2229534Z   sparse-checkout-cone-mode: true
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2230206Z   fetch-depth: 1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2230711Z   fetch-tags: false
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2231277Z   show-progress: true
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2231785Z   lfs: false
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2232287Z   submodules: false
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2233017Z   set-safe-directory: true
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2233646Z   allow-unsafe-pr-checkout: false
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2234558Z env:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2235073Z   GIT_CONFIG_COUNT: 1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2235666Z   GIT_CONFIG_KEY_0: ini…nch
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2236374Z   GIT_CONFIG_VALUE_0: main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2236966Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5272432Z Syncing repository: link-foundation/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5274534Z ##[group]Getting Git version info
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5275171Z Working directory is '/home/runner/work/link-cli/link-cli'
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5276782Z [command]/usr/bin/git version
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5385219Z git version 2.56.1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5401167Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5410810Z Temporarily overriding HOME='/ho…7c2' before making global git config changes
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5412969Z Adding repository directory to the temporary git global config as a safe directory
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5416725Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5466795Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5474120Z ##[group]Determining repository object format
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5475983Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5477267Z ##[group]Initializing the repository
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5478582Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5652247Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5667305Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5732130Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5733409Z ##[group]Disabling automatic garbage collection
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5734520Z [command]/usr/bin/git config --local gc.auto 0
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5773119Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5774166Z ##[group]Setting up auth
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5774932Z Removing SSH command configuration
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5778372Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5819351Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6227638Z Removing HTTP extra header
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6233051Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6272051Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6504259Z Removing includeIf entries pointing to credentials config files
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6510661Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6558298Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6801251Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6851236Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git.path /home/runner/work/_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6894915Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6939863Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.6983228Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.7025003Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.7031024Z ##[group]Fetching the repository
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.7032301Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +03f44dd58c1688b296b2eabfff4a352c1eab4ee0:refs/remotes/origin/main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3148095Z From https://github.com/link-foundation/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3150191Z  * [new ref]         03f44dd58c1688b296b2eabfff4a352c1eab4ee0 -> origin/main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3154408Z [command]/usr/bin/git branch --list --remote origin/main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3200712Z   origin/main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3207854Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3238743Z 03f44dd58c1688b296b2eabfff4a352c1eab4ee0
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3242463Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3244259Z ##[group]Determining the checkout info
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3245451Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3248087Z [command]/usr/bin/git sparse-checkout disable
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3390423Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3455663Z ##[group]Checking out the ref
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.3459852Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6583772Z Reset branch 'main'
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6586960Z branch 'main' set up to track 'origin/main'.
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6607588Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6665789Z [command]/usr/bin/git log -1 --format=%H
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6703080Z 03f44dd58c1688b296b2eabfff4a352c1eab4ee0
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6713292Z ##[group]Removing auth
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6713534Z Removing SSH command configuration
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6719265Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6762849Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.6998069Z Removing HTTP extra header
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7001624Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7041816Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7258957Z Removing includeIf entries pointing to credentials config files
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7262151Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7300612Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7301376Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7301883Z includeif.gitdir:/github/workspace/.git.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7302267Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7308775Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7338979Z /home/runner/work/_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7346752Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-ee74cef3\-cddb\-4126\-93c8\-de40f805d6e0\.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7386966Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7418320Z /home/runner/work/_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7426157Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-ee74cef3\-cddb\-4126\-93c8\-de40f805d6e0\.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7466298Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7496361Z /github/runner_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7503520Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-ee74cef3\-cddb\-4126\-93c8\-de40f805d6e0\.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7543598Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7572732Z /github/runner_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7579826Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-ee74cef3\-cddb\-4126\-93c8\-de40f805d6e0\.config
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7622184Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7829435Z Removing credentials config '/home/runner/work/_temp/git-credentials-ee74cef3-cddb-4126-93c8-de40f805d6e0.config'
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.7838440Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8055978Z ##[group]Run actions/setup-node@v7
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8056397Z with:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8056558Z   node-version: 26.x
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8056733Z   check-latest: false
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8058536Z   token: ***
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8058730Z   package-manager-cache: true
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8058932Z env:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059089Z   GIT_CONFIG_COUNT: 1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059283Z   GIT_CONFIG_KEY_0: ini…nch
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059497Z   GIT_CONFIG_VALUE_0: main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059680Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.9196915Z Found in cache @ /opt/hostedtoolcache/node/26.13.1/x64
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:54.5996817Z ##[group]Environment details
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5563502Z node: v26.13.1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5563810Z npm: 11.20.0
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5564006Z yarn: 1.22.22
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5564463Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5692852Z ##[group]Run node .github/scripts/release-preflight.mjs npm
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5693305Z ^[[36;1mnode .github/scripts/release-preflight.mjs npm^[[0m
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5736763Z shell: /usr/bin/bash -e {0}
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737009Z env:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737177Z   GIT_CONFIG_COUNT: 1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737377Z   GIT_CONFIG_KEY_0: ini…nch
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737602Z   GIT_CONFIG_VALUE_0: main
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737825Z   NPM_PACKAGE: @link-foundation/link-cli-server
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5738052Z ##[endgroup]
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.4001800Z ##[error]npm trusted publisher verification failed (HTTP 404). Configure this repository and js-server.yml in the trusted publisher settings of @link-foundation/link-cli-server on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.4166234Z ##[error]Process completed with exit code 1.
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.4279017Z Post job cleanup.
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.4999176Z [command]/usr/bin/git version
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5035363Z git version 2.56.1
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5067696Z Temporarily overriding HOME='/home/runner/work/_temp/6810264d-f80d-4ee1-9d55-bbd8161d4d4d' before making global git config changes
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5068758Z Adding repository directory to the temporary git global config as a safe directory
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5073432Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5209944Z Removing SSH command configuration
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5218260Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5253522Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5507564Z Removing HTTP extra header
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5513775Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5551568Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5779939Z Removing includeIf entries pointing to credentials config files
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5786760Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.5832973Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:57.6250768Z Cleaning up orphan processes
+Pipeline Status (js-server)	Check every prerequisite	﻿2026-11-27T20:00:24.4357150Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4357619Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4406346Z shell: /usr/bin/bash -e {0}
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4406637Z env:
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4406827Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4407061Z   GIT_CONFIG_KEY_0: ini…nch
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4407328Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4408675Z   NEEDS_JSON: {
+Pipeline Status (js-server)	Check every prerequisite	  "javascript": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "release-preflight": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "failure",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "verify-trusted-publishing": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "unit": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "portability": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "differential": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "release": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  }
+Pipeline Status (js-server)	Check every prerequisite	}
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4410359Z ##[endgroup]
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4752155Z Pipeline jobs did not succeed: release-preflight (failure)
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4901044Z ##[error]Process completed with exit code 1.

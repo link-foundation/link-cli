@@ -1,0 +1,51 @@
+Release authentication preflight	Prove authentication before version writes or publishing	﻿2026-11-27T20:58:12.8566132Z ##[group]Run node .github/scripts/release-preflight.mjs npm
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8566956Z ^[[36;1mnode .github/scripts/release-preflight.mjs npm^[[0m
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8600430Z shell: /usr/bin/bash -e {0}
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8600834Z env:
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8601200Z   GIT_CONFIG_COUNT: 1
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8601550Z   GIT_CONFIG_KEY_0: ini…nch
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8601910Z   GIT_CONFIG_VALUE_0: main
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8602279Z   NPM_PACKAGE: @link-foundation/link-cli-server
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:12.8602656Z ##[endgroup]
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:13.6773557Z ##[error]npm trusted publisher verification failed (HTTP 404). Configure this repository and js-server.yml in the trusted publisher settings of @link-foundation/link-cli-server on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).
+Release authentication preflight	Prove authentication before version writes or publishing	2026-11-27T20:58:13.6837615Z ##[error]Process completed with exit code 1.
+Pipeline Status (js-server)	Check every prerequisite	﻿2026-11-27T21:04:25.7472497Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:25.7472997Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0347896Z shell: /usr/bin/bash -e {0}
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0348260Z env:
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0348634Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0349042Z   GIT_CONFIG_KEY_0: ini…nch
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0349321Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0350343Z   NEEDS_JSON: {
+Pipeline Status (js-server)	Check every prerequisite	  "javascript": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "release-preflight": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "failure",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "verify-trusted-publishing": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "unit": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "portability": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "differential": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "success",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  },
+Pipeline Status (js-server)	Check every prerequisite	  "release": {
+Pipeline Status (js-server)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (js-server)	Check every prerequisite	    "outputs": {}
+Pipeline Status (js-server)	Check every prerequisite	  }
+Pipeline Status (js-server)	Check every prerequisite	}
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0351323Z ##[endgroup]
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0622715Z Pipeline jobs did not succeed: release-preflight (failure)
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T21:04:26.0669484Z ##[error]Process completed with exit code 1.

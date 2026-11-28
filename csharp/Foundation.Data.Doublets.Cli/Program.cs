@@ -1,5 +1,4 @@
 using System.CommandLine;
-using System.Globalization;
 using Foundation.Data.Doublets.Cli;
 using Foundation.Data.Doublets.Cli.Graphql;
 using Foundation.Data.Doublets.Cli.Ipc;
@@ -108,38 +107,7 @@ var embedTriggersOption = new Option<bool>("--embed-triggers")
     DefaultValueFactory = _ => false
 };
 
-var inputOption = new Option<string?>("--in", "--lino-input", "--import")
-{
-    Description = "Path to read and import a LiNo file into the database"
-};
-
-var inputMaxDepthOption = new Option<int>("--in-max-depth")
-{
-    Description = $"LiNo import nesting limit (1 to {LinoDatabaseInput.MaxImportDepth}; default: {LinoDatabaseInput.DefaultImportDepth})",
-    DefaultValueFactory = _ => LinoDatabaseInput.DefaultImportDepth,
-    CustomParser = result =>
-    {
-        if (result.Tokens.Count == 1
-            && int.TryParse(result.Tokens[0].Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var depth)
-            && depth is >= 1 and <= LinoDatabaseInput.MaxImportDepth)
-        {
-            return depth;
-        }
-
-        result.AddError($"Invalid value for '--in-max-depth': expected an integer from 1 to {LinoDatabaseInput.MaxImportDepth}");
-        return LinoDatabaseInput.DefaultImportDepth;
-    }
-};
-
-var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
-{
-    Description = "Path to read and import a store archive in binary links notation"
-};
-
-var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output", "--binary-out")
-{
-    Description = "Path to write the complete database, names included, as a store archive in binary links notation"
-};
+var (inputOption, inputMaxDepthOption, binaryInputOption, binaryOutputOption) = ImportOptions();
 
 var transactionsOption = new Option<bool>("--transactions")
 {

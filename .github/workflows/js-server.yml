@@ -14,22 +14,30 @@ on:
     paths:
       - '.github/workflows/js-server.yml'
       - '.github/scripts/**'
+      - '.github/workflows/javascript-stage.yml'
+      - 'parity/**'
+      - 'js/package*.json'
       - 'js/server/**'
       - 'js/client/**'
       - 'rust/**'
       - 'docs/protocol/**'
       - 'examples/concurrent-writers/**'
+      - 'examples/embedded-store/**'
   pull_request:
     branches:
       - main
     paths:
       - '.github/workflows/js-server.yml'
       - '.github/scripts/**'
+      - '.github/workflows/javascript-stage.yml'
+      - 'parity/**'
+      - 'js/package*.json'
       - 'js/server/**'
       - 'js/client/**'
       - 'rust/**'
       - 'docs/protocol/**'
       - 'examples/concurrent-writers/**'
+      - 'examples/embedded-store/**'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -37,9 +45,8 @@ on:
         type: boolean
         default: false
 
-# Concurrency is set per job (issue #134): superseded read-only checks are
-# cancelled on every branch, main included (issue #172), while writer jobs
-# share a never-cancelled group.
+# Read-only concurrency cancels superseded PR synchronizations. Each main
+# revision keeps its results. Release writers share the repository queue.
 
 # Least privilege by default; the release job opts into more below.
 permissions:
@@ -65,15 +72,15 @@ jobs:
 
   release-preflight:
     name: Release authentication preflight
-    if: inputs.verify_trusted_publishing != true
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
       id-token: write
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -96,8 +103,8 @@ jobs:
       contents: read
       id-token: write
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -118,8 +125,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-unit
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-unit
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     defaults:
       run:
         working-directory: js/server
@@ -188,8 +195,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-portability-${{ matrix.os }}-${{ matrix.node }}
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-portability-${{ matrix.os }}-${{ matrix.node }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     strategy:
       fail-fast: false
       matrix:
@@ -228,8 +235,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-differential
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-differential
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     env:
       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
       # The Rust `DoubletsStorage` driver test/differential/doublets-storage
@@ -310,15 +317,37 @@ jobs:
             rust/target
           key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
+  package-check:
+    name: Validate npm tarball
+    if: inputs.verify_trusted_publishing != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-package-check
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Validate package contents without registry access
+        working-directory: js/server
+        shell: bash
+        run: npm pack --dry-run --json | node ../../.github/scripts/check-npm-tarball-size.mjs
+
   release:
     name: Release to npm
-    needs: [release-preflight, unit, portability, differential]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release-preflight.result == 'success'
+    needs: [release-preflight, package-check, unit, portability, differential]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a publish that may already be under way.
     concurrency:
       group: main-writer-${{ github.repository }}
       cancel-in-progress: false
+      queue: max
     permissions:
       contents: read
       # Trusted publishing and npm provenance use a GitHub OIDC token.
@@ -358,24 +387,10 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      # Pull requests check what would be published, without a token.
-      - name: Dry-run the release
-        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
-        env:
-          PUBLISHED: ${{ steps.check.outputs.published }}
-        run: |
-          # npm publish --dry-run still rejects an existing registry version.
-          # Validate the tarball on those PRs without trying to republish it.
-          if [ "$PUBLISHED" == 'true' ]; then
-            npm pack --dry-run
-          else
-            npm publish --dry-run --access public
-          fi
-
       # The package's OIDC policy is verified through the authentication-only
       # dispatch above (issue #136). No long-lived publishing token is used.
       - name: Publish to npm
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outputs.published == 'false'
+        if: steps.check.outputs.published == 'false'
         env:
           VERSION: ${{ steps.check.outputs.version }}
         run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
@@ -389,6 +404,28 @@ jobs:
           echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-server $VERSION could not be published. Add this repository and js-server.yml as a trusted publisher of @link-foundation/link-cli-server on npmjs.com (a maintainer publishes the first version by hand if the package does not exist yet), run the authentication-only verification dispatch, then retry."
           exit 1
 
+  verify-public-package:
+    name: Verify published npm tarball anonymously
+    needs: [release]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-public-package
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Download the released version from npm
+        working-directory: js/server
+        shell: bash
+        run: bash ../../.github/scripts/verify-public-npm-package.sh
+
   pipeline-status:
     name: Pipeline Status (js-server)
     needs:
@@ -398,13 +435,15 @@ jobs:
       - unit
       - portability
       - differential
+      - package-check
       - release
+      - verify-public-package
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
-      cancel-in-progress: true
+      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
+      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
     steps:
       - uses: actions/checkout@v7
         with:

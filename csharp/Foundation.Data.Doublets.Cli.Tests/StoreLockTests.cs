@@ -194,6 +194,55 @@ public sealed class StoreLockTests : IDisposable
     }
 
     [Fact]
+    public void PidCleanupRetriesWindowsSharingErrorsButLeavesPermanentErrorsAlone()
+    {
+        const int sharingViolation = unchecked((int)0x80070020);
+        var attempts = 0;
+        var cleaned = StorePidLock.TryCleanup(() =>
+        {
+            if (++attempts == 1) throw new IOException("held by a reader", sharingViolation);
+        }, trace: false);
+        Assert.Equal(OperatingSystem.IsWindows(), cleaned);
+        Assert.Equal(OperatingSystem.IsWindows() ? 2 : 1, attempts);
+
+        attempts = 0;
+        Assert.False(StorePidLock.TryCleanup(() =>
+        {
+            attempts++;
+            throw new DirectoryNotFoundException();
+        }, trace: false));
+        Assert.Equal(1, attempts);
+    }
+
+    [Fact]
+    public void WindowsPidCleanupCanMoveTheDirectoryAfterItsReaderCloses()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        var directory = PlantPidLock(Store(), StoreLockOwner.Current("held"));
+        var released = directory + ".released";
+        using var reader = new FileStream(Path.Combine(directory, "owner"),
+          FileMode.Open, FileAccess.Read, FileShare.Read);
+        var attempts = 0;
+        Assert.True(StorePidLock.TryCleanup(() =>
+        {
+            attempts++;
+            try
+            {
+                Directory.Move(directory, released);
+            }
+            catch (IOException) when (attempts == 1)
+            {
+                reader.Dispose();
+                throw;
+            }
+        }, trace: true));
+        Assert.Equal(2, attempts);
+        Assert.Equal("held", StorePidLock.ReadOwner(released)?.Token);
+        Assert.False(Directory.Exists(directory));
+    }
+
+    [Fact]
     public void BreaksTheLockOfAnOwnerThatIsGone()
     {
         var store = Store();

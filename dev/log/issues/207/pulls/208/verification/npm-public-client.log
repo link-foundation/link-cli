@@ -1,0 +1,114 @@
+npm notice
+npm notice 📦  @link-foundation/link-cli-client@0.5.0
+npm notice Tarball Contents
+npm notice 35.8kB README.md
+npm notice 4.9kB package.json
+npm notice 13.9kB src/cache.js
+npm notice 4.2kB src/capabilities.js
+npm notice 21.6kB src/client.js
+npm notice 5.6kB src/cluster-maintenance.js
+npm notice 15.9kB src/cluster.js
+npm notice 5.6kB src/composed.js
+npm notice 3.0kB src/deadline.js
+npm notice 5.7kB src/engine-address-allocator.js
+npm notice 7.1kB src/engine-author-fence.js
+npm notice 10.9kB src/engine-causal-batch.js
+npm notice 14.3kB src/engine-causal-merkle.js
+npm notice 2.3kB src/engine-causal-projection.js
+npm notice 10.3kB src/engine-causal-replica.js
+npm notice 6.7kB src/engine-causal-session.js
+npm notice 6.1kB src/engine-causal-version.js
+npm notice 2.8kB src/engine-checkpoint-inspection.js
+npm notice 2.1kB src/engine-checkpoint-page-format.js
+npm notice 6.4kB src/engine-checkpoint-pages.js
+npm notice 5.1kB src/engine-checkpoint-root.js
+npm notice 7.5kB src/engine-delta.js
+npm notice 2.7kB src/engine-file-checkpoint-pages.js
+npm notice 8.9kB src/engine-file-log.js
+npm notice 8.5kB src/engine-file-lsm-files.js
+npm notice 4.0kB src/engine-file-lsm-readonly.js
+npm notice 3.6kB src/engine-file-lsm-store.js
+npm notice 1.6kB src/engine-file-mirrored-pages.js
+npm notice 5.9kB src/engine-file-paged-log.js
+npm notice 3.4kB src/engine-lock-wait.js
+npm notice 4.0kB src/engine-logs.js
+npm notice 18.8kB src/engine-lsm-store.js
+npm notice 6.9kB src/engine-lsm-wal.js
+npm notice 5.9kB src/engine-mirrored-pages.js
+npm notice 3.2kB src/engine-page-format.js
+npm notice 3.9kB src/engine-page-reader.js
+npm notice 5.6kB src/engine-paged-log.js
+npm notice 6.7kB src/engine-sorted-table.js
+npm notice 8.1kB src/engine-sqlite-log.js
+npm notice 2.8kB src/engine-timed-log.js
+npm notice 13.7kB src/engine.js
+npm notice 2.5kB src/errors.js
+npm notice 7.0kB src/external-ids.js
+npm notice 3.3kB src/framing.js
+npm notice 1.9kB src/index.js
+npm notice 13.4kB src/ipc-datagram.js
+npm notice 9.0kB src/ipc-endpoint.js
+npm notice 4.7kB src/ipc-fifo.js
+npm notice 2.7kB src/ipc-joined.js
+npm notice 5.7kB src/ipc-rendezvous.js
+npm notice 15.0kB src/ipc-ring.js
+npm notice 610B src/ipc-trace.js
+npm notice 16.7kB src/ipc.js
+npm notice 3.1kB src/journal-chunks.js
+npm notice 11.5kB src/lino.js
+npm notice 14.7kB src/operations.js
+npm notice 9.4kB src/partitioned.js
+npm notice 6.8kB src/process.js
+npm notice 18.1kB src/raft.js
+npm notice 6.9kB src/reclaiming-codec.js
+npm notice 2.3kB src/reclaiming-collector.js
+npm notice 8.2kB src/reclaiming-store.js
+npm notice 932B src/reclaiming.js
+npm notice 11.4kB src/remap.js
+npm notice 14.6kB src/tcp.js
+npm notice 8.7kB src/union.js
+npm notice 6.4kB src/wasm.js
+npm notice 1.1kB types/engine-address-allocator.d.ts
+npm notice 1.1kB types/engine-author-fence.d.ts
+npm notice 1.2kB types/engine-causal-batch.d.ts
+npm notice 2.7kB types/engine-causal-merkle.d.ts
+npm notice 906B types/engine-causal-projection.d.ts
+npm notice 941B types/engine-causal-replica.d.ts
+npm notice 2.5kB types/engine-causal-session.d.ts
+npm notice 968B types/engine-causal-version.d.ts
+npm notice 1.5kB types/engine-checkpoint-pages.d.ts
+npm notice 966B types/engine-checkpoint-root.d.ts
+npm notice 771B types/engine-file-checkpoint-pages.d.ts
+npm notice 1.0kB types/engine-file-log.d.ts
+npm notice 1.7kB types/engine-file-lsm-store.d.ts
+npm notice 438B types/engine-file-mirrored-pages.d.ts
+npm notice 1.2kB types/engine-file-paged-log.d.ts
+npm notice 2.2kB types/engine-lsm-store.d.ts
+npm notice 1.5kB types/engine-lsm-wal.d.ts
+npm notice 956B types/engine-mirrored-pages.d.ts
+npm notice 1.9kB types/engine-paged-log.d.ts
+npm notice 1.3kB types/engine-sorted-table.d.ts
+npm notice 1.1kB types/engine-sqlite-log.d.ts
+npm notice 31.4kB types/index.d.ts
+npm notice 4.9kB types/ipc.d.ts
+npm notice 933B types/lino.d.ts
+npm notice 1.5kB types/process.d.ts
+npm notice 3.8kB types/raft.d.ts
+npm notice 2.0kB types/tcp.d.ts
+npm notice Tarball Details
+npm notice name: @link-foundation/link-cli-client
+npm notice version: 0.5.0
+npm notice filename: link-foundation-link-cli-client-0.5.0.tgz
+npm notice package size: 156.9 kB
+npm notice unpacked size: 594.2 kB
+npm notice shasum: 3cc…8ad
+npm notice integrity: sha512-MxFZeJv6j5mBe[...]GoSLkxUWxQ24g==
+npm notice total files: 94
+npm notice
+link-foundation-link-cli-client-0.5.0.tgz
+npm notice
+npm notice New major version of npm available! 11.20.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
+Downloaded @link-foundation/link-cli-client@0.5.0 anonymously from npm.

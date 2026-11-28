@@ -32,6 +32,17 @@ export const ringBase = (ring, capacity) => HEADER + ring * (RING_HEADER + capac
 const immediate = () => new Promise((resolve) => setImmediate(resolve));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function removeRingFile(file, windows) {
+  try {
+    fs.rmSync(file, { force: true });
+  } catch (error) {
+    if (!windows || (error.code !== 'EPERM' && error.code !== 'EBUSY')) throw error;
+    // Windows holds mapped files until the peer unmaps its view. The last
+    // endpoint to release the region also tries to delete it.
+    trace(`ring file cleanup left to the peer (${error.code})`);
+  }
+}
+
 /** A region of bytes both processes see: any object with `read` and `write` at offsets. */
 export class FileRegion {
   constructor(fd, length) {
@@ -401,7 +412,7 @@ export class RingStream extends Duplex {
       } catch {
         // Already closed.
       }
-      for (const file of this.#cleanup) fs.rmSync(file, { force: true });
+      for (const file of this.#cleanup) removeRingFile(file, true);
     }
     callback(error);
   }
@@ -431,10 +442,11 @@ export async function connectRing(endpoint, { signal } = {}, platform = process.
   const rendezvous = Rendezvous.begin(endpoint, kind);
   const capacity = endpoint.number('capacity', 65536, 64, 1 << 30);
   const size = regionSize(capacity);
+  const windows = platform === 'win32';
   // `shm` is the POSIX object `/lcID`, which Linux keeps in /dev/shm.
   const file = kind === 'shm' ? `/dev/shm/lc${rendezvous.id}` : rendezvous.path(SUFFIX[kind]);
   const region = new FileRegion(createFile(file, size), size);
-  const forget = () => fs.rmSync(file, { force: true });
+  const forget = () => removeRingFile(file, windows);
   try {
     initialize(region, capacity);
     const poll = endpoint.millis('poll', 5);
@@ -449,7 +461,6 @@ export async function connectRing(endpoint, { signal } = {}, platform = process.
     const notifier =
       kind === 'signal' ? new SignalNotifier(peer, peerSignal(ack)) : new PollNotifier(poll);
     // Both sides hold the region open now; nothing should outlive a crash.
-    const windows = platform === 'win32';
     const cleanup = windows ? [file] : [];
     if (!windows) forget();
     const stream = new RingStream({ kind, region, notifier, peerPid: peer, cleanup });

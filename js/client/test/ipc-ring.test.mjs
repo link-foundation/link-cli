@@ -2,6 +2,7 @@
 // listener of the rendezvous directory (test/support/ipc-listener.mjs), and of
 // the ring stream's failure paths on in-memory regions. They need no `clink`.
 import assert from 'node:assert/strict';
+import { once } from 'node:events';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -97,6 +98,70 @@ test('a ring keeps its file until it hangs up on Windows', async (t) => {
   assert.equal(fs.readdirSync(dir).filter((name) => name.endsWith('.ring')).length, 1);
   await new Promise((resolve) => stream.destroy().once('close', resolve));
   assert.deepEqual(fs.readdirSync(dir), ['listener.json']);
+});
+
+for (const code of ['EPERM', 'EBUSY']) {
+  test(`Windows ring cleanup leaves the mapped file for the peer on ${code}`, async (t) => {
+    const dir = tempDir(t);
+    const listener = new Listener(dir, 'mmap', { answer: () => ({ pid: process.pid }) });
+    t.after(() => listener.close());
+    const stream = await connectRing(parseEndpoint(`mmap:${dir}`), {}, 'win32');
+    const file = path.join(
+      dir,
+      fs.readdirSync(dir).find((name) => name.endsWith('.mmap')),
+    );
+    const remove = fs.rmSync;
+    const attempt = t.mock.method(fs, 'rmSync', (name, options) => {
+      if (name === file) throw Object.assign(new Error('peer still maps the file'), { code });
+      return remove(name, options);
+    });
+    const closed = once(stream, 'close');
+    stream.destroy();
+    await closed;
+    assert.ok(attempt.mock.calls.some(({ arguments: [name] }) => name === file));
+    assert.ok(fs.existsSync(file));
+    // The peer closes its mapping after the JS stream and removes the file.
+    remove(file);
+    assert.deepEqual(fs.readdirSync(dir), ['listener.json']);
+  });
+}
+
+test('Windows ring cleanup delivers other deletion errors through the stream', async (t) => {
+  const failure = Object.assign(new Error('I/O error removing file'), { code: 'EIO' });
+  const remove = fs.rmSync;
+  t.mock.method(fs, 'rmSync', (file, options) => {
+    if (file.endsWith('.mmap')) throw failure;
+    return remove(file, options);
+  });
+
+  const region = fresh();
+  const stream = new RingStream({
+    kind: 'mmap',
+    region,
+    notifier: new PollNotifier(1),
+    peerPid: process.pid,
+    cleanup: ['unused.mmap'],
+  });
+  const error = once(stream, 'error');
+  stream.destroy();
+  assert.deepEqual(await error, [failure]);
+});
+
+test('Windows ring cleanup preserves a rejected handshake while the peer still maps the file', async (t) => {
+  const dir = tempDir(t);
+  const listener = new Listener(dir, 'mmap', { answer: () => ({ error: 'no room' }) });
+  t.after(() => listener.close());
+  const remove = fs.rmSync;
+  t.mock.method(fs, 'rmSync', (file, options) => {
+    if (file.endsWith('.mmap')) {
+      throw Object.assign(new Error('peer still maps the file'), { code: 'EPERM' });
+    }
+    return remove(file, options);
+  });
+  await assert.rejects(
+    connectRing(parseEndpoint(`mmap:${dir}`), {}, 'win32'),
+    rejectsWith('ECONNREFUSED', /no room/),
+  );
 });
 
 test('a refused ring connection removes its region', async (t) => {

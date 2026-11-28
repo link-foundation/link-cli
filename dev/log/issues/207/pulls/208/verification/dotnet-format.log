@@ -1,0 +1,1 @@
+dotnet format csharp --verify-no-changes passed on .NET SDK 10.0.403 (the version pinned by C# CI).

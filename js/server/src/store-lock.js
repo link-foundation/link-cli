@@ -342,6 +342,7 @@ export class LockOwner {
  */
 const UNOWNED_GRACE_MS = 10000;
 const OWNER_FILE = 'owner';
+const windowsCleanupWait = new Int32Array(new SharedArrayBuffer(4));
 
 /** `<db>.lock.d`. */
 export const lockDirPath = (store) => `${store}.lock.d`;
@@ -398,7 +399,7 @@ const exists = (path) => {
  * left alone: the next attempt sees what became of it. `rename` stands in for
  * `renameSync`.
  */
-export function breakStale(dir, expected, rename = renameSync) {
+export function breakStale(dir, expected, rename = renameSync, trace) {
   const tombstone = `${dir}.${process.pid}.${uniqueToken()}.stale`;
   try {
     rename(dir, tombstone);
@@ -406,7 +407,7 @@ export function breakStale(dir, expected, rename = renameSync) {
     return;
   }
   if (readOwner(tombstone)?.token === expected?.token) {
-    rmSync(tombstone, { recursive: true, force: true });
+    removePidDirectory(tombstone, trace);
     return;
   }
   try {
@@ -419,9 +420,10 @@ export function breakStale(dir, expected, rename = renameSync) {
 
 /** A held `--lock pid` lock; `release()` removes the directory. */
 export class PidLock {
-  constructor(dir, token) {
+  constructor(dir, token, trace) {
     this.dir = dir;
     this.token = token;
+    this.trace = trace;
   }
 
   path() {
@@ -433,11 +435,37 @@ export class PidLock {
     if (readOwner(this.dir)?.token !== this.token) return;
     const tombstone = `${this.dir}.${this.token}.released`;
     try {
-      renameSync(this.dir, tombstone);
+      retryPidCleanup(() => renameSync(this.dir, tombstone), this.trace);
     } catch {
       return;
     }
-    rmSync(tombstone, { recursive: true, force: true });
+    removePidDirectory(tombstone, this.trace);
+  }
+}
+
+function removePidDirectory(dir, trace) {
+  retryPidCleanup(() => rmSync(dir, { recursive: true, force: true }), trace);
+}
+
+// A short synchronous wait preserves the release()/Symbol.dispose contract.
+// Other processes can close their owner handles while the holder waits.
+export function retryPidCleanup(cleanup, trace, platform = process.platform) {
+  let delay = 5;
+  for (;;) {
+    try {
+      return cleanup();
+    } catch (error) {
+      trace?.write(`[TRACE] PID-lock cleanup: ${error.code} ${error.message}\n`);
+      if (
+        platform !== 'win32' ||
+        delay > 40 ||
+        !['EACCES', 'EBUSY', 'EPERM'].includes(error.code)
+      ) {
+        throw error;
+      }
+      Atomics.wait(windowsCleanupWait, 0, 0, delay);
+      delay *= 2;
+    }
   }
 }
 
@@ -451,6 +479,7 @@ export function tryAcquirePid(dir, trace = false, stderr = process.stderr, renam
   if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
   const token = uniqueToken();
   const owner = LockOwner.current(token);
+  const cleanupTrace = trace ? stderr : undefined;
   let lastError = null;
   for (let attempt = 0; attempt < 4; attempt++) {
     const staging = `${dir}.${owner.pid}.${uniqueToken()}.tmp`;
@@ -458,9 +487,9 @@ export function tryAcquirePid(dir, trace = false, stderr = process.stderr, renam
     try {
       writeOwner(staging, owner);
       rename(staging, dir);
-      return { acquired: new PidLock(dir, token) };
+      return { acquired: new PidLock(dir, token, cleanupTrace) };
     } catch (error) {
-      rmSync(staging, { recursive: true, force: true });
+      removePidDirectory(staging, cleanupTrace);
       if (!exists(dir)) {
         // Released between the rename and this check, or a real error.
         lastError = error;
@@ -471,7 +500,7 @@ export function tryAcquirePid(dir, trace = false, stderr = process.stderr, renam
     const reason = staleReason(dir, holder);
     if (reason === null) return { held: holder };
     if (trace) stderr.write(`[TRACE] Breaking stale lock ${dir}: ${reason}\n`);
-    breakStale(dir, holder, rename);
+    breakStale(dir, holder, rename, cleanupTrace);
   }
   if (lastError !== null) throw lastError;
   return { held: readOwner(dir) };

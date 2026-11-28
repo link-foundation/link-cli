@@ -48,6 +48,20 @@ function isWriterJob(body) {
 
 const trustedPublishingAuth = /^\s*uses:\s*rust-lang\/crates-io-auth-action@/m;
 
+const defaultJobTimeout = 30;
+const jobTimeoutExceptions = {
+  // Cold runners build native implementations before running cross-language suites.
+  'ipc.yml/interop': 45,
+  'js-client.yml/conformance': 40,
+  'js-server.yml/differential': 40,
+  'rust.yml/test': 45,
+  // Release jobs wait for registry confirmation after publishing signed artifacts.
+  'csharp.yml/release': 45,
+  'csharp.yml/instant-release': 45,
+  'rust.yml/auto-release': 60,
+  'rust.yml/manual-release': 60,
+};
+
 /** Splits a workflow into `{ first, last, text }` entries, one per job step. */
 function readSteps(text) {
   const steps = [];
@@ -153,12 +167,14 @@ for (const workflow of workflows) {
   // burn the whole CI budget before anyone notices.
   // A job that calls a reusable workflow (`uses:`) cannot set
   // timeout-minutes; the called workflow's own jobs carry it.
-  test(`${workflow.name}: every job declares timeout-minutes`, () => {
+  test(`${workflow.name}: every job declares a bounded timeout`, () => {
     for (const job of readJobs(workflow.text).filter(({ body }) => !isCallerJob(body))) {
-      assert.match(
-        job.body,
-        /^ {4}timeout-minutes: \d+$/m,
-        `job "${job.name}" in ${workflow.name} has no timeout-minutes`,
+      const id = `${workflow.name}/${job.name}`;
+      const timeout = Number(/^ {4}timeout-minutes: (\d+)$/m.exec(job.body)?.[1]);
+      const ceiling = jobTimeoutExceptions[id] ?? defaultJobTimeout;
+      assert.ok(
+        timeout > 0 && timeout <= ceiling,
+        `${id} needs timeout-minutes between 1 and ${ceiling}`,
       );
     }
   });
@@ -199,8 +215,8 @@ for (const workflow of workflows) {
     for (const job of writers) {
       assert.match(
         job.body,
-        /^ {4}concurrency:\n {6}group: [^\n]+\n {6}cancel-in-progress: false$/m,
-        `writer job "${job.name}" in ${workflow.name} needs its own concurrency group with cancel-in-progress: false`,
+        /^ {4}concurrency:\n {6}group: main-writer-\$\{\{ github\.repository \}\}\n {6}cancel-in-progress: false\n {6}queue: max$/m,
+        `writer job "${job.name}" in ${workflow.name} must serialize through the shared writer queue`,
       );
     }
   });
@@ -352,7 +368,10 @@ for (const workflow of workflows) {
   test(`${workflow.name}: hosted runners use pinned OS labels`, () => {
     const offenders = workflow.text
       .split('\n')
-      .map((line, index) => ({ line: line.replace(/#.*$/, ''), number: index + 1 }))
+      .map((line, index) => ({
+        line: line.replace(/#.*$/, ''),
+        number: index + 1,
+      }))
       .filter(({ line }) => /\b(?:ubuntu|macos|windows)-latest\b/.test(line))
       .map(({ number }) => number);
     assert.deepEqual(

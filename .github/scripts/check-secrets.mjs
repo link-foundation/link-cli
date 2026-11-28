@@ -15,7 +15,7 @@ export const MAX_DECOMPRESSED_BYTES = 128 * 1024 * 1024;
 // Only `.log.gz` used to be decompressed. secretlint received every other
 // archive - JSON evidence and whole template snapshots in .tar.gz - as
 // compressed bytes, so their contents were never scanned (issue #172).
-export const isCompressed = (file) => /\.gz$/i.test(file);
+export const isCompressed = (file) => /\.(gz|tgz)$/i.test(file);
 export const isTarball = (file) => /\.(tar\.gz|tgz)$/i.test(file);
 
 // `./` keeps a tracked file named `-x` from being parsed as a CLI option.
@@ -23,6 +23,15 @@ export const asOperand = (file) => (file.startsWith('/') ? file : `./${file}`);
 
 export function gunzip(buffer) {
   return gunzipSync(buffer, { maxOutputLength: MAX_DECOMPRESSED_BYTES });
+}
+
+function readGzip(file) {
+  const compressed = readFileSync(resolve(root, file));
+  try {
+    return gunzip(compressed);
+  } catch (cause) {
+    throw new Error(`Cannot decompress ${file}`, { cause });
+  }
 }
 
 const field = (block, start, length) =>
@@ -90,7 +99,7 @@ function scanTarball(file) {
   try {
     const base = join(scratch, file);
     const names = [];
-    for (const { name, content } of readTarEntries(gunzip(readFileSync(resolve(root, file))))) {
+    for (const { name, content } of readTarEntries(readGzip(file))) {
       const target = resolve(base, name);
       if (!target.startsWith(`${base}/`)) throw new Error(`Unsafe path ${name} in ${file}`);
       mkdirSync(dirname(target), { recursive: true });
@@ -124,7 +133,7 @@ function main() {
   let members = 0;
   for (const file of regular.filter(isCompressed)) {
     if (isTarball(file)) members += scanTarball(file);
-    else scanStdin(file.slice(0, -3), gunzip(readFileSync(resolve(root, file))));
+    else scanStdin(file.slice(0, -3), readGzip(file));
   }
   console.log(
     `Secrets scan: ${files.length} tracked files checked, ` +

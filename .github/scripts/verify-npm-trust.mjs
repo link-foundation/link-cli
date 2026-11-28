@@ -34,11 +34,35 @@ export async function verifyNpmTrust(
       signal: AbortSignal.timeout(30_000),
     },
   );
-  if (!exchange.ok || !(await exchange.json()).token) {
+  if (!exchange.ok) {
+    const context = `npm trusted publisher verification failed for ${packageName} (HTTP ${exchange.status})`;
+    if (exchange.status === 404) {
+      const packument = await fetch(
+        `https://registry.npmjs.org/${encodeURIComponent(packageName)}`,
+        { signal: AbortSignal.timeout(15_000) },
+      ).catch(() => null);
+      if (packument?.status === 404) {
+        throw new Error(
+          `${context}. The package is unavailable publicly. A maintainer must publish the first public version or make the existing package public, then configure ${NPM_WORKFLOWS[packageName] ?? 'the release workflow'} as its trusted publisher and rerun authentication-only verification on main.`,
+        );
+      }
+      if (!packument?.ok) {
+        throw new Error(
+          `${context}. Public package lookup was inconclusive (${packument?.status ?? 'network error'}). Check registry availability and retry the authentication-only verification.`,
+        );
+      }
+    }
+    if ([401, 403, 404].includes(exchange.status)) {
+      throw new Error(
+        `${context}. Check the npm trusted publisher settings for this repository and ${NPM_WORKFLOWS[packageName] ?? 'its release workflow'}, including any required environment and permission to publish directly.`,
+      );
+    }
     throw new Error(
-      `npm trusted publisher verification failed (HTTP ${exchange.status}). Configure this repository and ${NPM_WORKFLOWS[packageName] ?? 'its release workflow'} in the trusted publisher settings of ${packageName} on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).`,
+      `${context}. Check registry availability and retry the authentication-only verification.`,
     );
   }
+  if (!(await exchange.json()).token)
+    throw new Error(`npm trusted publisher response for ${packageName} is missing a token`);
   // Discard the short-lived credential. Never write it to logs, disk or outputs.
 }
 

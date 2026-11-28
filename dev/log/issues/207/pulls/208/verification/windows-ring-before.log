@@ -1,0 +1,62 @@
+✖ Windows ring cleanup leaves the mapped file for the peer on EPERM (23.559001ms)
+✖ Windows ring cleanup leaves the mapped file for the peer on EBUSY (21.025646ms)
+✔ Windows ring cleanup delivers other deletion errors through the stream (3.285649ms)
+✖ Windows ring cleanup preserves a rejected handshake while the peer still maps the file (10.608887ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 253.187288
+
+✖ failing tests:
+
+test at js/client/test/ipc-ring.test.mjs:104:3
+✖ Windows ring cleanup leaves the mapped file for the peer on EPERM (23.559001ms)
+  Error: peer still maps the file
+      at Object.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/js/client/test/ipc-ring.test.mjs:112:46)
+      at Object.apply (node:internal/test_runner/mock/mock:805:20)
+      at RingStream._destroy (file:///tmp/gh-issue-solver-1795813073025/js/client/src/ipc-ring.js:404:44)
+      at _destroy (node:internal/streams/destroy:122:10)
+      at RingStream.destroy (node:internal/streams/destroy:84:5)
+      at Writable.destroy (node:internal/streams/writable:1161:11)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/js/client/test/ipc-ring.test.mjs:116:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'EPERM'
+  }
+
+test at js/client/test/ipc-ring.test.mjs:104:3
+✖ Windows ring cleanup leaves the mapped file for the peer on EBUSY (21.025646ms)
+  Error: peer still maps the file
+      at Object.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/js/client/test/ipc-ring.test.mjs:112:46)
+      at Object.apply (node:internal/test_runner/mock/mock:805:20)
+      at RingStream._destroy (file:///tmp/gh-issue-solver-1795813073025/js/client/src/ipc-ring.js:404:44)
+      at _destroy (node:internal/streams/destroy:122:10)
+      at RingStream.destroy (node:internal/streams/destroy:84:5)
+      at Writable.destroy (node:internal/streams/writable:1161:11)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/js/client/test/ipc-ring.test.mjs:116:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    code: 'EBUSY'
+  }
+
+test at js/client/test/ipc-ring.test.mjs:147:1
+✖ Windows ring cleanup preserves a rejected handshake while the peer still maps the file (10.608887ms)
+  AssertionError [ERR_ASSERTION]: an IpcError, got Error: peer still maps the file
+      at Object.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/js/client/test/support/ipc-listener.mjs:19:10)
+      at expectedException (node:assert:547:17)
+      at expectsError (node:assert:672:21)
+      at strict.rejects (node:assert:738:3)
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1795813073025/js/client/test/ipc-ring.test.mjs:158:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

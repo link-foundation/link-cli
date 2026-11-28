@@ -1,0 +1,82 @@
+✔ the required stage checks report on every pull request (issue #111) (6.77491ms)
+✖ read-only concurrency only replaces superseded PR synchronizations (issue #207) (11.121731ms)
+✔ every suite proves it loaded the shared golden fixtures (issue #111) (8.529093ms)
+✔ no workflow flags or closes pull requests for inactivity (issue #111) (2.515965ms)
+✔ a red Dependencies check on main opens or updates a tracking issue (issue #111) (0.896703ms)
+✔ no step loads a local action from the workspace (3.287814ms)
+✔ jobs that push a version commit to main use the release deploy key (issue #111) (20.563887ms)
+✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (149.092294ms)
+✔ npm trust verification fails clearly when OIDC or the registry policy is missing (7.433058ms)
+✔ npm trust failures name the workflow each package is published from (4.912054ms)
+✖ npm OIDC exchange distinguishes a first publish, a missing trust mapping and an outage (3.152051ms)
+file:///tmp/link-cli-207-before.j2YQrX/experiments/issue-138/etcd-harness.test.mjs:3
+import { electedMember, waitForMembers } from './etcd-harness.mjs';
+         ^^^^^^^^^^^^^
+SyntaxError: The requested module './etcd-harness.mjs' does not provide an export named 'electedMember'
+    at #asyncInstantiate (node:internal/modules/esm/module_job:463:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:561:5)
+    at async node:internal/modules/esm/loader:650:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)
+
+Node.js v26.13.1
+✖ experiments/issue-138/etcd-harness.test.mjs (127.634951ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 9
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 541.584895
+
+✖ failing tests:
+
+test at .github/scripts/ci-governance.test.mjs:24:1
+✖ read-only concurrency only replaces superseded PR synchronizations (issue #207) (11.121731ms)
+  AssertionError [ERR_ASSERTION]: crash.yml: crash-${{ github.workflow }}-${{ github.ref }} cancels unrelated runs
+  + actual - expected
+  
+  + 'true'
+  - "${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}"
+  
+      at TestContext.<anonymous> (file:///tmp/link-cli-207-before.j2YQrX/.github/scripts/ci-governance.test.mjs:41:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'true',
+    expected: "${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}",
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .github/scripts/verify-npm-trust.test.mjs:75:1
+✖ npm OIDC exchange distinguishes a first publish, a missing trust mapping and an outage (3.152051ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /first public version.+js-server\.yml/. Input:
+  
+  'Error: npm trusted publisher verification failed (HTTP 404). Configure this repository and js-server.yml in the trusted publisher settings of @link-foundation/link-cli-server on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).'
+  
+      at async TestContext.<anonymous> (file:///tmp/link-cli-207-before.j2YQrX/.github/scripts/verify-npm-trust.test.mjs:88:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: npm trusted publisher verification failed (HTTP 404). Configure this repository and js-server.yml in the trusted publisher settings of @link-foundation/link-cli-server on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).
+        at verifyNpmTrust (file:///tmp/link-cli-207-before.j2YQrX/.github/scripts/verify-npm-trust.mjs:38:11)
+        at async waitForActual (node:assert:615:5)
+        at async strict.rejects (node:assert:738:25)
+        at async TestContext.<anonymous> (file:///tmp/link-cli-207-before.j2YQrX/.github/scripts/verify-npm-trust.test.mjs:88:5)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:974:7),
+    expected: /first public version.+js-server\.yml/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at experiments/issue-138/etcd-harness.test.mjs:1:1
+✖ experiments/issue-138/etcd-harness.test.mjs (127.634951ms)
+  'test failed'

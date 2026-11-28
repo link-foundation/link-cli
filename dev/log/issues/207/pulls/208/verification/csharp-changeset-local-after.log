@@ -1,0 +1,11 @@
+Validating changesets added by this PR...
+Comparing d8a26c917114deecca49e1e11eb3680755e1ec61...bc3e059fa76b35896ea6b4dd15e64e6536bbb235
+Found 1 changeset file(s) added by this PR
+Added changesets:
+  - ci-reliability.md
+Validating changeset: csharp/.changeset/ci-reliability.md
+Changeset validation passed
+   Type: patch
+   Description: Keep C# checks for each main revision and group import and export options with the CLI I/O helpers.
+
+Retry transient Windows sharing failures while releasing PID store locks.

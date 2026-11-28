@@ -1,0 +1,588 @@
+repository	path	blob	purpose	other repository matches
+link-cli	.github/CODEOWNERS	410…0ee	repository or language-specific infrastructure	-
+link-cli	.github/codecov.yml	927…f58	repository or language-specific infrastructure	-
+link-cli	.github/codeql/codeql-config.yml	2b1…0ad	security and dependencies	rust/.github/codeql/codeql-config.yml (same stem), js/.github/codeql/codeql-config.yml (same stem), python/.github/codeql/codeql-config.yml (same stem)
+link-cli	.github/dependabot.yml	45f…68a	security and dependencies	rust/.github/dependabot.yml (same stem), csharp/.github/dependabot.yml (same stem), python/.github/dependabot.yml (same stem), java/.github/dependabot.yml (same stem), cpp/.github/dependabot.yml (same stem)
+link-cli	.github/scripts/audit-nuget-dependencies.mjs	41c…10c	registry and release	-
+link-cli	.github/scripts/cargo-warnings.test.mjs	1a6…4b8	source and test quality	-
+link-cli	.github/scripts/check-cargo-warnings.sh	562…3d4	source and test quality	rust/scripts/check-cargo-warnings.sh (identical)
+link-cli	.github/scripts/check-codeql-results.mjs	945…f41	security and dependencies	rust/scripts/check-codeql-results.mjs (same stem), js/scripts/check-codeql-results.mjs (same stem), python/scripts/check_codeql_results.py (same stem)
+link-cli	.github/scripts/check-codeql-results.test.mjs	943…bcf	security and dependencies	rust/scripts/check-codeql-results.test.mjs (same stem)
+link-cli	.github/scripts/check-javascript-quality.mjs	6d0…346	repository or language-specific infrastructure	-
+link-cli	.github/scripts/check-latest-dependencies.mjs	cfc…8ff	security and dependencies	-
+link-cli	.github/scripts/check-latest-dependencies.test.mjs	54a…9b0	security and dependencies	-
+link-cli	.github/scripts/check-python-quality.py	b3a…574	repository or language-specific infrastructure	-
+link-cli	.github/scripts/check-secrets.mjs	4c3…538	security and dependencies	rust/.github/scripts/check-secrets.mjs (same stem), js/scripts/check-secrets.mjs (same stem)
+link-cli	.github/scripts/check-secrets.test.mjs	e8e…986	security and dependencies	rust/.github/scripts/check-secrets.test.mjs (same stem)
+link-cli	.github/scripts/check-sqlite-optional.mjs	6fd…4ae	repository or language-specific infrastructure	-
+link-cli	.github/scripts/check-web-archive.mjs	2e3…89d	documentation and links	rust/scripts/check-web-archive.mjs (same stem), js/scripts/check-web-archive.mjs (same stem), csharp/scripts/check-web-archive.mjs (same stem), python/scripts/check_web_archive.py (same stem), cpp/scripts/check_web_archive.py (same stem)
+link-cli	.github/scripts/check-web-archive.test.mjs	1a3…fc5	documentation and links	rust/scripts/check-web-archive.test.mjs (same stem), csharp/scripts/check-web-archive.test.mjs (same stem)
+link-cli	.github/scripts/ci-governance.test.mjs	9d4…5d7	source and test quality	-
+link-cli	.github/scripts/coverage.mjs	9aa…f30	source and test quality	-
+link-cli	.github/scripts/coverage.test.mjs	161…41b	source and test quality	-
+link-cli	.github/scripts/crates-publish-preflight.mjs	31c…85c	registry and release	rust/scripts/crates-publish-preflight.mjs (same stem)
+link-cli	.github/scripts/crates-publish-preflight.test.mjs	93c…b0e	registry and release	rust/scripts/crates-publish-preflight.test.mjs (same stem)
+link-cli	.github/scripts/dependency-failures.test.mjs	411…6ec	security and dependencies	-
+link-cli	.github/scripts/dependency-tracking-issue.mjs	553…0b0	security and dependencies	-
+link-cli	.github/scripts/dependency-tracking-issue.test.mjs	d4f…060	security and dependencies	-
+link-cli	.github/scripts/docker-crash.mjs	c54…556	repository or language-specific infrastructure	-
+link-cli	.github/scripts/docker-crash.test.mjs	b83…6fb	source and test quality	-
+link-cli	.github/scripts/dotnet-download-policy.test.mjs	b93…171	workflow validation and status	-
+link-cli	.github/scripts/fixtures/lychee-report.md	c5b…44a	documentation and links	rust/scripts/fixtures/lychee-report.md (same stem), js/scripts/lychee-report.mjs (same stem), csharp/scripts/fixtures/lychee-report.md (same stem)
+link-cli	.github/scripts/link-failures.test.mjs	f64…54b	source and test quality	csharp/scripts/link-failures.test.mjs (same stem)
+link-cli	.github/scripts/npm-release.test.mjs	bc5…b0c	registry and release	-
+link-cli	.github/scripts/nuget-audit.mjs	c4f…fba	registry and release	-
+link-cli	.github/scripts/nuget-audit.test.mjs	7f9…bbe	registry and release	-
+link-cli	.github/scripts/nuget-auth.mjs	6d0…033	registry and release	csharp/scripts/nuget-auth.mjs (same stem)
+link-cli	.github/scripts/nuget-auth.test.mjs	102…212	registry and release	csharp/scripts/nuget-auth.test.mjs (same stem)
+link-cli	.github/scripts/pipeline-status.mjs	a70…38a	workflow validation and status	-
+link-cli	.github/scripts/pipeline-status.test.mjs	c11…55e	workflow validation and status	-
+link-cli	.github/scripts/python-quality.toml	81d…039	repository or language-specific infrastructure	-
+link-cli	.github/scripts/recheck-broken-links.mjs	6b5…1dd	documentation and links	rust/scripts/recheck-broken-links.mjs (same stem), js/scripts/recheck-broken-links.mjs (same stem), csharp/scripts/recheck-broken-links.mjs (same stem), python/scripts/recheck_broken_links.py (same stem), cpp/scripts/recheck_broken_links.py (same stem)
+link-cli	.github/scripts/release-preflight.mjs	eac…257	registry and release	-
+link-cli	.github/scripts/release-preflight.test.mjs	f7f…37f	registry and release	-
+link-cli	.github/scripts/release-scripts.test.mjs	523…d83	registry and release	-
+link-cli	.github/scripts/requirements-quality.txt	7f4…b19	repository or language-specific infrastructure	-
+link-cli	.github/scripts/requirements-workflow-audit.txt	244…046	workflow validation and status	-
+link-cli	.github/scripts/runner-recovery.test.mjs	2c2…151	runner and artifact handling	-
+link-cli	.github/scripts/simulate-fresh-merge.sh	c6d…579	change detection and stage gate	rust/scripts/simulate-fresh-merge.sh (same stem), js/scripts/simulate-fresh-merge.sh (same stem), python/scripts/simulate-fresh-merge.sh (same stem), cpp/scripts/simulate-fresh-merge.sh (same stem)
+link-cli	.github/scripts/stack-paths.mjs	fa8…974	repository or language-specific infrastructure	-
+link-cli	.github/scripts/stack-paths.test.mjs	e46…8b2	source and test quality	-
+link-cli	.github/scripts/transactions-benchmark.mjs	9ba…f34	repository or language-specific infrastructure	-
+link-cli	.github/scripts/transactions-benchmark.test.mjs	5ad…437	source and test quality	-
+link-cli	.github/scripts/unacquired-jobs.py	f92…49c	runner and artifact handling	rust/scripts/unacquired-jobs.py (same stem), cpp/scripts/unacquired_jobs.py (same stem)
+link-cli	.github/scripts/unacquired_jobs_test.py	4ff…990	runner and artifact handling	-
+link-cli	.github/scripts/verify-npm-trust.mjs	0b7…c55	registry and release	-
+link-cli	.github/scripts/verify-npm-trust.test.mjs	f79…47d	registry and release	-
+link-cli	.github/scripts/workflow-files.mjs	d79…a79	workflow validation and status	-
+link-cli	.github/scripts/workflow-policy.test.mjs	ba2…1c2	workflow validation and status	java/scripts/workflow-policy.test.mjs (same stem)
+link-cli	.github/workflows/crash.yml	01b…0f6	workflow validation and status	-
+link-cli	.github/workflows/csharp.yml	a0f…e73	workflow validation and status	-
+link-cli	.github/workflows/deep-client.yml	e87…4ae	workflow validation and status	-
+link-cli	.github/workflows/dependencies.yml	cd3…a19	workflow validation and status	-
+link-cli	.github/workflows/docs.yml	e3e…d70	workflow validation and status	csharp/.github/workflows/docs.yml (same stem), python/.github/workflows/docs.yml (same stem), cpp/.github/workflows/docs.yml (same stem)
+link-cli	.github/workflows/ipc.yml	a65…5b6	workflow validation and status	-
+link-cli	.github/workflows/javascript-stage.yml	198…f6f	change detection and stage gate	-
+link-cli	.github/workflows/javascript.yml	8b2…c2b	workflow validation and status	-
+link-cli	.github/workflows/js-client.yml	ff2…82e	workflow validation and status	-
+link-cli	.github/workflows/js-server.yml	810…40d	workflow validation and status	-
+link-cli	.github/workflows/links.yml	315…1e6	workflow validation and status	rust/.github/workflows/links.yml (same stem), js/.github/workflows/links.yml (same stem), csharp/.github/workflows/links.yml (same stem), python/.github/workflows/links.yml (same stem), cpp/.github/workflows/links.yml (same stem)
+link-cli	.github/workflows/rerun-infrastructure-failures.yml	39c…d1f	workflow validation and status	rust/.github/workflows/rerun-infrastructure-failures.yml (same stem), csharp/.github/workflows/rerun-infrastructure-failures.yml (same stem), cpp/.github/workflows/rerun-infrastructure-failures.yml (same stem)
+link-cli	.github/workflows/rust.yml	2a5…02f	workflow validation and status	-
+link-cli	.github/workflows/security.yml	f82…bcd	workflow validation and status	rust/.github/workflows/security.yml (same stem), js/.github/workflows/security.yml (same stem), csharp/.github/workflows/security.yml (same stem), python/.github/workflows/security.yml (same stem), java/.github/workflows/security.yml (same stem), cpp/.github/workflows/security.yml (same stem)
+link-cli	.github/workflows/wasm.yml	3ce…182	workflow validation and status	-
+link-cli	.github/workflows/workflows.yml	7e8…f03	workflow validation and status	rust/.github/workflows/workflows.yml (same stem), js/.github/workflows/workflows.yml (same stem), csharp/.github/workflows/workflows.yml (same stem), python/.github/workflows/workflows.yml (same stem), java/.github/workflows/workflows.yml (same stem), cpp/.github/workflows/workflows.yml (same stem)
+link-cli	.github/zizmor.yml	dd2…cc1	workflow validation and status	rust/.github/zizmor.yml (same stem), js/.github/zizmor.yml (same stem), csharp/.github/zizmor.yml (same stem), python/.github/zizmor.yml (same stem), cpp/.github/zizmor.yml (same stem)
+link-cli	.lycheeignore	e37…981	documentation and links	rust/.lycheeignore (same stem), js/.lycheeignore (same stem), csharp/.lycheeignore (same stem), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	.package-registry-manager.json	f8c…378	registry and release	-
+link-cli	.pre-commit-config.yaml	1fc…5c3	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
+link-cli	.secretlintrc.json	7a1…122	source and test quality	rust/.secretlintrc.json (identical), js/.secretlintrc.json (identical), python/.secretlintrc.json (identical), cpp/.secretlintrc.json (identical)
+link-cli	csharp/.editorconfig	3a8…ea4	repository or language-specific infrastructure	csharp/.editorconfig (same stem), cpp/.editorconfig (same stem)
+link-cli	csharp/scripts/bump-version.mjs	445…99d	registry and release	rust/scripts/bump-version.rs (same stem), csharp/scripts/bump-version.mjs (same stem), python/scripts/bump_version.py (same stem), java/scripts/bump-version.mjs (same stem), cpp/scripts/bump_version.py (same stem)
+link-cli	csharp/scripts/change-detection.test.mjs	7a2…a46	change detection and stage gate	-
+link-cli	csharp/scripts/check-file-size.mjs	122…a36	source and test quality	rust/scripts/check-file-size.rs (same stem), csharp/scripts/check-file-size.mjs (same stem), python/scripts/check_file_size.py (same stem), java/scripts/check-file-size.mjs (same stem), cpp/scripts/check_file_size.py (same stem)
+link-cli	csharp/scripts/check-file-size.test.mjs	b1d…a88	source and test quality	csharp/scripts/check-file-size.test.mjs (same stem)
+link-cli	csharp/scripts/check-release-needed.mjs	dbd…be6	registry and release	rust/scripts/check-release-needed.rs (same stem), js/scripts/check-release-needed.mjs (same stem), csharp/scripts/check-release-needed.mjs (same stem), cpp/scripts/check_release_needed.py (same stem)
+link-cli	csharp/scripts/create-github-release.mjs	f8e…84a	registry and release	rust/scripts/create-github-release.rs (same stem), js/scripts/create-github-release.mjs (same stem), csharp/scripts/create-github-release.mjs (same stem), python/scripts/create_github_release.py (same stem), java/scripts/create-github-release.mjs (same stem), cpp/scripts/create_github_release.py (same stem)
+link-cli	csharp/scripts/detect-code-changes.mjs	6fd…d03	change detection and stage gate	rust/scripts/detect-code-changes.rs (same stem), js/scripts/detect-code-changes.mjs (same stem), csharp/scripts/detect-code-changes.mjs (same stem), python/scripts/detect_code_changes.py (same stem), java/scripts/detect-code-changes.mjs (same stem), cpp/scripts/detect_code_changes.py (same stem)
+link-cli	csharp/scripts/merge-changesets.mjs	39f…42c	registry and release	js/scripts/merge-changesets.mjs (same stem), csharp/scripts/merge-changesets.mjs (same stem), java/scripts/merge-changesets.mjs (same stem)
+link-cli	csharp/scripts/release-packages.test.mjs	490…c30	registry and release	-
+link-cli	csharp/scripts/release-scripts.test.mjs	f5a…092	registry and release	-
+link-cli	csharp/scripts/validate-changeset.mjs	23f…7cd	registry and release	js/scripts/validate-changeset.mjs (same stem), csharp/scripts/validate-changeset.mjs (same stem), python/scripts/validate_changeset.py (same stem), java/scripts/validate-changeset.mjs (same stem)
+link-cli	csharp/scripts/verify-packages.mjs	875…c05	registry and release	-
+link-cli	csharp/scripts/verify-packages.test.mjs	c53…c8d	registry and release	-
+link-cli	csharp/scripts/version-and-commit.mjs	60d…179	registry and release	rust/scripts/version-and-commit.rs (same stem), js/scripts/version-and-commit.mjs (same stem), csharp/scripts/version-and-commit.mjs (same stem), python/scripts/version_and_commit.py (same stem), java/scripts/version-and-commit.mjs (same stem), cpp/scripts/version_and_commit.py (same stem)
+link-cli	csharp/scripts/wait-for-nuget.mjs	2b4…d34	registry and release	csharp/scripts/wait-for-nuget.mjs (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore	60e…ff6	documentation and links	rust/.lycheeignore (same stem), js/.lycheeignore (same stem), csharp/.lycheeignore (identical), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml	6a6…287	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/js/.lycheeignore	628…552	documentation and links	rust/.lycheeignore (same stem), js/.lycheeignore (identical), csharp/.lycheeignore (same stem), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/rust/.lycheeignore	c46…2a9	documentation and links	rust/.lycheeignore (identical), js/.lycheeignore (same stem), csharp/.lycheeignore (same stem), python/.lycheeignore (same stem), cpp/.lycheeignore (same stem)
+link-cli	dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml	ce4…aed	repository or language-specific infrastructure	rust/.pre-commit-config.yaml (same stem), csharp/.pre-commit-config.yaml (same stem), python/.pre-commit-config.yaml (same stem), java/.pre-commit-config.yaml (same stem), cpp/.pre-commit-config.yaml (same stem)
+link-cli	js/eslint.config.mjs	72b…131	source and test quality	js/eslint.config.js (same stem), csharp/eslint.config.mjs (same stem)
+link-cli	parity/check-parity.mjs	a61…9d5	change detection and stage gate	-
+link-cli	parity/check-parity.test.mjs	b5b…543	change detection and stage gate	-
+link-cli	parity/features.json	fe8…aab	change detection and stage gate	-
+link-cli	parity/golden-fixtures.json	140…7e6	change detection and stage gate	-
+link-cli	rust/scripts/bump-version.rs	a28…22b	registry and release	rust/scripts/bump-version.rs (same stem), csharp/scripts/bump-version.mjs (same stem), python/scripts/bump_version.py (same stem), java/scripts/bump-version.mjs (same stem), cpp/scripts/bump_version.py (same stem)
+link-cli	rust/scripts/check-changelog-fragment.rs	65c…646	registry and release	rust/scripts/check-changelog-fragment.rs (same stem), cpp/scripts/check_changelog_fragment.py (same stem)
+link-cli	rust/scripts/check-file-size.rs	67f…263	source and test quality	rust/scripts/check-file-size.rs (same stem), csharp/scripts/check-file-size.mjs (same stem), python/scripts/check_file_size.py (same stem), java/scripts/check-file-size.mjs (same stem), cpp/scripts/check_file_size.py (same stem)
+link-cli	rust/scripts/check-release-needed.rs	953…caf	registry and release	rust/scripts/check-release-needed.rs (same stem), js/scripts/check-release-needed.mjs (same stem), csharp/scripts/check-release-needed.mjs (same stem), cpp/scripts/check_release_needed.py (same stem)
+link-cli	rust/scripts/check-scripts.sh	67f…386	repository or language-specific infrastructure	-
+link-cli	rust/scripts/check-version-modification.rs	767…d63	registry and release	rust/scripts/check-version-modification.rs (same stem), cpp/scripts/check_version_modification.py (same stem)
+link-cli	rust/scripts/collect-changelog.rs	c24…224	registry and release	rust/scripts/collect-changelog.rs (same stem), java/scripts/collect-changelog.mjs (same stem), cpp/scripts/collect_changelog.py (same stem)
+link-cli	rust/scripts/create-changelog-fragment.rs	f57…9e8	registry and release	rust/scripts/create-changelog-fragment.rs (same stem), cpp/scripts/create_changelog_fragment.py (same stem)
+link-cli	rust/scripts/create-github-release.rs	38a…ab5	registry and release	rust/scripts/create-github-release.rs (same stem), js/scripts/create-github-release.mjs (same stem), csharp/scripts/create-github-release.mjs (same stem), python/scripts/create_github_release.py (same stem), java/scripts/create-github-release.mjs (same stem), cpp/scripts/create_github_release.py (same stem)
+link-cli	rust/scripts/detect-code-changes.rs	bad…0c9	change detection and stage gate	rust/scripts/detect-code-changes.rs (same stem), js/scripts/detect-code-changes.mjs (same stem), csharp/scripts/detect-code-changes.mjs (same stem), python/scripts/detect_code_changes.py (same stem), java/scripts/detect-code-changes.mjs (same stem), cpp/scripts/detect_code_changes.py (same stem)
+link-cli	rust/scripts/get-bump-type.rs	04f…52e	repository or language-specific infrastructure	rust/scripts/get-bump-type.rs (same stem), cpp/scripts/get_bump_type.py (same stem)
+link-cli	rust/scripts/get-version.rs	f91…5cd	registry and release	rust/scripts/get-version.rs (same stem), cpp/scripts/get_version.py (same stem)
+link-cli	rust/scripts/git-config.rs	3c9…980	repository or language-specific infrastructure	rust/scripts/git-config.rs (same stem)
+link-cli	rust/scripts/install-rust-script.sh	4d0…1db	repository or language-specific infrastructure	rust/scripts/install-rust-script.sh (identical)
+link-cli	rust/scripts/publish-crate.rs	b33…4c3	registry and release	rust/scripts/publish-crate.rs (same stem)
+link-cli	rust/scripts/registry.rs	509…8c3	registry and release	rust/scripts/registry.rs (same stem)
+link-cli	rust/scripts/release-changelog.rs	703…0dd	registry and release	-
+link-cli	rust/scripts/release-write.rs	ebb…fe3	registry and release	-
+link-cli	rust/scripts/rust-paths.rs	89c…4b6	repository or language-specific infrastructure	rust/scripts/rust-paths.rs (same stem)
+link-cli	rust/scripts/test-scripts.sh	7ee…1fe	source and test quality	rust/scripts/test-scripts.sh (same stem)
+link-cli	rust/scripts/version-and-commit.rs	28e…e99	registry and release	rust/scripts/version-and-commit.rs (same stem), js/scripts/version-and-commit.mjs (same stem), csharp/scripts/version-and-commit.mjs (same stem), python/scripts/version_and_commit.py (same stem), java/scripts/version-and-commit.mjs (same stem), cpp/scripts/version_and_commit.py (same stem)
+link-cli	rust/scripts/wait-for-crate.rs	6fd…a17	repository or language-specific infrastructure	rust/scripts/wait-for-crate.rs (same stem)
+rust	.github/actions/download-artifact/action.yml	2e9…242	runner and artifact handling	-
+rust	.github/actions/setup-buildx-resilient/action.yml	c5f…ebf	runner and artifact handling	-
+rust	.github/actions/setup-python/action.yml	103…786	repository or language-specific infrastructure	-
+rust	.github/codeql/codeql-config.yml	555…63c	security and dependencies	.github/codeql/codeql-config.yml (same stem)
+rust	.github/dependabot.yml	3b5…7f3	security and dependencies	.github/dependabot.yml (same stem)
+rust	.github/dependency-policy/check.mjs	dd0…5af	workflow validation and status	-
+rust	.github/dependency-policy/check.test.mjs	a58…090	workflow validation and status	-
+rust	.github/dependency-policy/package-lock.json	b80…bce	registry and release	-
+rust	.github/dependency-policy/package.json	606…f7c	registry and release	-
+rust	.github/scripts/check-secrets.mjs	d49…5f1	security and dependencies	.github/scripts/check-secrets.mjs (same stem)
+rust	.github/scripts/check-secrets.test.mjs	bd7…58c	security and dependencies	.github/scripts/check-secrets.test.mjs (same stem)
+rust	.github/secretlint/package-lock.json	66b…5e2	registry and release	-
+rust	.github/secretlint/package.json	380…994	registry and release	-
+rust	.github/workflows/desktop-release.yml	9a2…7fe	registry and release	-
+rust	.github/workflows/javascript-first-example.yml	428…3dc	change detection and stage gate	-
+rust	.github/workflows/javascript-first-gate.yml	004…a19	change detection and stage gate	-
+rust	.github/workflows/links.yml	70b…69a	workflow validation and status	.github/workflows/links.yml (same stem)
+rust	.github/workflows/release.yml	122…221	registry and release	-
+rust	.github/workflows/rerun-infrastructure-failures.yml	f9c…4fa	workflow validation and status	.github/workflows/rerun-infrastructure-failures.yml (same stem)
+rust	.github/workflows/security.yml	ede…de6	workflow validation and status	.github/workflows/security.yml (same stem)
+rust	.github/workflows/workflows.yml	aad…e7f	workflow validation and status	.github/workflows/workflows.yml (same stem)
+rust	.github/zizmor.yml	017…011	workflow validation and status	.github/zizmor.yml (same stem)
+rust	.lycheeignore	c46…2a9	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (identical)
+rust	.pre-commit-config.yaml	746…a1d	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
+rust	.secretlintrc.json	7a1…122	source and test quality	.secretlintrc.json (identical)
+rust	scripts/bump-version.rs	852…c82	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+rust	scripts/changelog-files.rs	a67…04a	registry and release	-
+rust	scripts/check-cargo-lock.rs	e21…b61	repository or language-specific infrastructure	-
+rust	scripts/check-cargo-warnings.sh	562…3d4	source and test quality	.github/scripts/check-cargo-warnings.sh (identical)
+rust	scripts/check-changelog-fragment.rs	983…012	registry and release	rust/scripts/check-changelog-fragment.rs (same stem)
+rust	scripts/check-codeql-results.mjs	3f3…e91	security and dependencies	.github/scripts/check-codeql-results.mjs (same stem)
+rust	scripts/check-codeql-results.test.mjs	8ef…008	security and dependencies	.github/scripts/check-codeql-results.test.mjs (same stem)
+rust	scripts/check-crate-size.rs	81b…1d7	repository or language-specific infrastructure	-
+rust	scripts/check-dependency-graph.sh	7b4…307	security and dependencies	-
+rust	scripts/check-file-size.rs	418…18d	source and test quality	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+rust	scripts/check-pipeline-status.sh	693…587	workflow validation and status	-
+rust	scripts/check-release-needed.rs	687…bc8	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+rust	scripts/check-required-docs.sh	1cf…565	documentation and links	-
+rust	scripts/check-version-modification.rs	78c…dc3	registry and release	rust/scripts/check-version-modification.rs (same stem)
+rust	scripts/check-web-archive.mjs	988…114	documentation and links	.github/scripts/check-web-archive.mjs (same stem)
+rust	scripts/check-web-archive.test.mjs	a3a…77f	documentation and links	.github/scripts/check-web-archive.test.mjs (same stem)
+rust	scripts/check-workflow-tools.rs	034…9aa	workflow validation and status	-
+rust	scripts/collect-changelog.rs	e9d…624	registry and release	rust/scripts/collect-changelog.rs (same stem)
+rust	scripts/crates-publish-preflight.mjs	e07…8b1	registry and release	.github/scripts/crates-publish-preflight.mjs (same stem)
+rust	scripts/crates-publish-preflight.test.mjs	157…5dd	registry and release	.github/scripts/crates-publish-preflight.test.mjs (same stem)
+rust	scripts/create-changelog-fragment.rs	822…924	registry and release	rust/scripts/create-changelog-fragment.rs (same stem)
+rust	scripts/create-github-release.rs	e50…97c	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+rust	scripts/desktop-release-resolve.sh	1db…7ce	registry and release	-
+rust	scripts/detect-code-changes.rs	f1b…813	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+rust	scripts/detect-javascript.mjs	466…7e5	change detection and stage gate	-
+rust	scripts/detect-javascript.test.mjs	dbf…af0	change detection and stage gate	-
+rust	scripts/extract-artifacts.py	588…d32	runner and artifact handling	-
+rust	scripts/fixtures/lychee-report.md	0d6…ba7	documentation and links	.github/scripts/fixtures/lychee-report.md (same stem)
+rust	scripts/get-bump-type.rs	774…0b3	repository or language-specific infrastructure	rust/scripts/get-bump-type.rs (same stem)
+rust	scripts/get-version.rs	fef…370	registry and release	rust/scripts/get-version.rs (same stem)
+rust	scripts/git-config.rs	893…0d5	repository or language-specific infrastructure	rust/scripts/git-config.rs (same stem)
+rust	scripts/github-output.rs	436…a2c	repository or language-specific infrastructure	-
+rust	scripts/install-rust-script.sh	4d0…1db	repository or language-specific infrastructure	rust/scripts/install-rust-script.sh (identical)
+rust	scripts/issue-237.test.mjs	926…9f3	source and test quality	-
+rust	scripts/javascript-first-auto.test.mjs	ad8…b2a	change detection and stage gate	-
+rust	scripts/javascript-first-provenance.test.mjs	90a…133	change detection and stage gate	-
+rust	scripts/javascript-first.test.mjs	3bb…8d3	change detection and stage gate	-
+rust	scripts/package-desktop.sh	60a…959	registry and release	-
+rust	scripts/preflight-credentials.sh	455…a04	security and dependencies	-
+rust	scripts/publish-crate.rs	81d…acb	registry and release	rust/scripts/publish-crate.rs (same stem)
+rust	scripts/read-job-cancel-in-progress.sh	f13…6c8	repository or language-specific infrastructure	-
+rust	scripts/recheck-broken-links.mjs	d53…a1d	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+rust	scripts/recheck-broken-links.test.mjs	c3a…b04	documentation and links	-
+rust	scripts/registry.rs	735…d6b	registry and release	rust/scripts/registry.rs (same stem)
+rust	scripts/release-content.rs	bfc…a90	registry and release	-
+rust	scripts/release-index.rs	e7e…f31	registry and release	-
+rust	scripts/release-naming.rs	675…6b2	registry and release	-
+rust	scripts/run-javascript-first-auto.mjs	85e…a54	change detection and stage gate	-
+rust	scripts/run-javascript-first.sh	d5e…1c0	change detection and stage gate	-
+rust	scripts/run-with-budget-warning.sh	b8d…7a2	runner and artifact handling	-
+rust	scripts/rust-paths.rs	ff5…57b	repository or language-specific infrastructure	rust/scripts/rust-paths.rs (same stem)
+rust	scripts/simulate-fresh-merge.sh	4c6…832	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+rust	scripts/smoke-test-published-crate.rs	1a6…9be	registry and release	-
+rust	scripts/test-scripts.sh	d14…2b9	source and test quality	rust/scripts/test-scripts.sh (same stem)
+rust	scripts/unacquired-jobs.py	a4c…e00	runner and artifact handling	.github/scripts/unacquired-jobs.py (same stem)
+rust	scripts/verify-javascript-provenance.mjs	4d0…1f6	repository or language-specific infrastructure	-
+rust	scripts/version-and-commit.rs	775…679	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+rust	scripts/version-and-commit/crates-io.rs	575…3d5	registry and release	-
+rust	scripts/version-and-commit/source-guard.rs	d0a…553	registry and release	-
+rust	scripts/version-and-commit/tests.rs	a8e…0bb	registry and release	-
+rust	scripts/wait-for-crate.rs	e07…b65	repository or language-specific infrastructure	rust/scripts/wait-for-crate.rs (same stem)
+js	.github/actions/artifact-transport/README.md	e07…08d	runner and artifact handling	-
+js	.github/actions/artifact-transport/action.yml	ba9…2ea	runner and artifact handling	-
+js	.github/actions/artifact-transport/extract.mjs	000…a89	runner and artifact handling	-
+js	.github/actions/artifact-transport/index.mjs	5b7…9e1	runner and artifact handling	-
+js	.github/actions/artifact-transport/package-lock.json	d1f…5c3	registry and release	-
+js	.github/actions/artifact-transport/package.json	69e…d33	registry and release	-
+js	.github/actions/artifact-transport/run/action.yml	d55…5f8	runner and artifact handling	-
+js	.github/actions/publish-dockerhub/action.yml	ae7…4a1	registry and release	-
+js	.github/actions/setup-buildx-resilient/action.yml	375…469	runner and artifact handling	-
+js	.github/codeql/codeql-config.yml	f30…86c	security and dependencies	.github/codeql/codeql-config.yml (same stem)
+js	.github/workflows/example-app.yml	330…320	workflow validation and status	-
+js	.github/workflows/javascript-first-example.yml	ea6…99e	change detection and stage gate	-
+js	.github/workflows/javascript-first-gate.yml	b8b…05d	change detection and stage gate	-
+js	.github/workflows/links.yml	ab5…b91	workflow validation and status	.github/workflows/links.yml (same stem)
+js	.github/workflows/release.yml	20c…5c4	registry and release	-
+js	.github/workflows/rerun-unacquired.yml	b25…b35	workflow validation and status	-
+js	.github/workflows/security.yml	92a…305	workflow validation and status	.github/workflows/security.yml (same stem)
+js	.github/workflows/workflows.yml	559…e76	workflow validation and status	.github/workflows/workflows.yml (same stem)
+js	.github/zizmor.yml	a1c9c8aea4a4907c92cdb4f2cc8009c66c8d2f50	workflow validation and status	.github/zizmor.yml (same stem)
+js	.husky/pre-commit	6a28abfe71fd879017849969d7399b63eeb825f2	repository or language-specific infrastructure	-
+js	.lycheeignore	628…552	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (identical), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+js	.prettierignore	7ff…5de	repository or language-specific infrastructure	-
+js	.prettierrc	317…958	repository or language-specific infrastructure	-
+js	.secretlintrc.json	7a1…122	source and test quality	.secretlintrc.json (identical)
+js	eslint.config.js	195…b76	source and test quality	js/eslint.config.mjs (same stem)
+js	scripts/artifact-files.mjs	a28…ef1	runner and artifact handling	-
+js	scripts/artifact-transport.mjs	e4d…d21	runner and artifact handling	-
+js	scripts/bootstrap-dependencies.mjs	790…b6f	security and dependencies	-
+js	scripts/changeset-version.mjs	a07…b9c	registry and release	-
+js	scripts/check-artifact-archive.mjs	591…6c9	runner and artifact handling	-
+js	scripts/check-changesets.mjs	30c…9c9	registry and release	-
+js	scripts/check-ci-workflows.mjs	1ed…a46	workflow validation and status	-
+js	scripts/check-codeql-results.mjs	71e…856	security and dependencies	.github/scripts/check-codeql-results.mjs (same stem)
+js	scripts/check-dependency-graph.sh	5cd…f4c	security and dependencies	-
+js	scripts/check-deprecated-packages.mjs	cae…445	registry and release	-
+js	scripts/check-desktop-compat.mjs	b11…89f	repository or language-specific infrastructure	-
+js	scripts/check-docker-build.mjs	59f…01e	repository or language-specific infrastructure	-
+js	scripts/check-docker-publish.mjs	e27…911	registry and release	-
+js	scripts/check-file-line-limits.sh	097…c6d	source and test quality	-
+js	scripts/check-javascript-syntax.mjs	147…b04	repository or language-specific infrastructure	-
+js	scripts/check-mjs-syntax.sh	7af…4f1	repository or language-specific infrastructure	-
+js	scripts/check-npm-tarball-size.mjs	089…f26	registry and release	-
+js	scripts/check-package-manager.mjs	426…59b	registry and release	-
+js	scripts/check-pages.sh	4dc…5c2	documentation and links	-
+js	scripts/check-pipeline-status.sh	88c…d9f	workflow validation and status	-
+js	scripts/check-preview-tools.sh	801…b1a	repository or language-specific infrastructure	-
+js	scripts/check-release-needed.mjs	4e3…a50	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+js	scripts/check-required-docs.sh	b09…8fd	documentation and links	-
+js	scripts/check-secrets.mjs	d05…da6	security and dependencies	.github/scripts/check-secrets.mjs (same stem)
+js	scripts/check-staged-formatting.mjs	d22…d51	source and test quality	-
+js	scripts/check-status-gate-covers-all-jobs.mjs	b57…0f9	workflow validation and status	-
+js	scripts/check-version.mjs	3a9…249	registry and release	-
+js	scripts/check-web-archive.mjs	511…d29	documentation and links	.github/scripts/check-web-archive.mjs (same stem)
+js	scripts/create-github-release.mjs	0ab…39f	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+js	scripts/create-manual-changeset.mjs	5a8…ddf	registry and release	-
+js	scripts/debug-print.mjs	53b…f0d	repository or language-specific infrastructure	-
+js	scripts/deploy-pages.mjs	6d6…ba0	documentation and links	-
+js	scripts/detect-code-changes.mjs	87f…a1f	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+js	scripts/format-github-release.mjs	aa7…5e6	registry and release	-
+js	scripts/format-release-notes-helpers.mjs	215…c81	registry and release	-
+js	scripts/format-release-notes.mjs	fa8…3a9	registry and release	-
+js	scripts/github-actions-log.mjs	d90…a42	repository or language-specific infrastructure	-
+js	scripts/github-api-evidence.mjs	780…41f	repository or language-specific infrastructure	-
+js	scripts/github-api.mjs	bc8…b6d	repository or language-specific infrastructure	-
+js	scripts/github-release-state.mjs	d5d…cb2	registry and release	-
+js	scripts/install-git-hooks.mjs	961…7f7	repository or language-specific infrastructure	-
+js	scripts/install-lychee.sh	c6d…8c8	documentation and links	-
+js	scripts/instant-version-bump.mjs	c37…2c9	registry and release	-
+js	scripts/js-paths.mjs	0f1…bf3	repository or language-specific infrastructure	-
+js	scripts/land-via-pull-request.mjs	f48…674	repository or language-specific infrastructure	-
+js	scripts/lint-changed-files.mjs	250…556	source and test quality	-
+js	scripts/lint.mjs	c49…2cf	source and test quality	-
+js	scripts/lychee-report.mjs	eaa…692	documentation and links	.github/scripts/fixtures/lychee-report.md (same stem)
+js	scripts/markdown-lines.mjs	cdb…956	repository or language-specific infrastructure	-
+js	scripts/merge-changesets.mjs	f52…367	registry and release	csharp/scripts/merge-changesets.mjs (same stem)
+js	scripts/npm-audit-report.mjs	839…56c	registry and release	-
+js	scripts/npm-registry.mjs	57b…d96	registry and release	-
+js	scripts/package-info.mjs	2fc…514	registry and release	-
+js	scripts/pr-comparison.mjs	523…f06	repository or language-specific infrastructure	-
+js	scripts/preflight-credentials.sh	ec2…db6	security and dependencies	-
+js	scripts/publish-failure-classifier.mjs	5b3…b5e	registry and release	-
+js	scripts/publish-retry.mjs	700…319	registry and release	-
+js	scripts/publish-to-npm.mjs	bc7…845	registry and release	-
+js	scripts/push-failure-classifier.mjs	aeb…2d2	repository or language-specific infrastructure	-
+js	scripts/push-main-with-rebase-retry.mjs	d2d…79e	repository or language-specific infrastructure	-
+js	scripts/read-job-cancel-in-progress.sh	c10…fbd	repository or language-specific infrastructure	-
+js	scripts/recheck-broken-links.mjs	abc…490	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+js	scripts/release-metadata.mjs	927…6bb	registry and release	-
+js	scripts/release-naming.mjs	50c…bd4	registry and release	-
+js	scripts/release-publication.mjs	cdb…d39	registry and release	-
+js	scripts/rerun-unacquired.mjs	243…d92	runner and artifact handling	-
+js	scripts/run-command.mjs	4fa…363	repository or language-specific infrastructure	-
+js	scripts/run-with-budget-warning.sh	82b…57b	runner and artifact handling	-
+js	scripts/sanitize-npm-userconfig.mjs	b34…2f8	registry and release	-
+js	scripts/setup-npm.mjs	46f…910	registry and release	-
+js	scripts/setup-preview-gh.sh	a7c…776	repository or language-specific infrastructure	-
+js	scripts/simulate-fresh-merge.sh	c6c…283	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+js	scripts/smoke-test-package.mjs	653…fee	registry and release	-
+js	scripts/update-preview-images.mjs	059…ffc	repository or language-specific infrastructure	-
+js	scripts/use-module.mjs	096…250	repository or language-specific infrastructure	-
+js	scripts/validate-changeset.mjs	1f2…8c8	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+js	scripts/version-and-commit.mjs	25d…770	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+js	scripts/version-lock.mjs	7d0…69f	registry and release	-
+js	scripts/wait-for-npm.mjs	b25…3be	registry and release	-
+csharp	.config/dotnet-tools.json	149…792	repository or language-specific infrastructure	-
+csharp	.editorconfig	003…5d0	repository or language-specific infrastructure	csharp/.editorconfig (same stem)
+csharp	.github/actionlint.yaml	852…a5b	workflow validation and status	-
+csharp	.github/actions/csharp-layout/action.yml	15e…04b	repository or language-specific infrastructure	-
+csharp	.github/dependabot.yml	0a3…ea9	security and dependencies	.github/dependabot.yml (same stem)
+csharp	.github/workflows/docs.yml	ce1…96a	workflow validation and status	.github/workflows/docs.yml (same stem)
+csharp	.github/workflows/links.yml	409…fcf	workflow validation and status	.github/workflows/links.yml (same stem)
+csharp	.github/workflows/release.yml	bb3…22a	registry and release	-
+csharp	.github/workflows/rerun-infrastructure-failures.yml	0a4…0e8	workflow validation and status	.github/workflows/rerun-infrastructure-failures.yml (same stem)
+csharp	.github/workflows/security.yml	968…d6e	workflow validation and status	.github/workflows/security.yml (same stem)
+csharp	.github/workflows/workflows.yml	147…6a5	workflow validation and status	.github/workflows/workflows.yml (same stem)
+csharp	.github/zizmor.yml	2fc…65c	workflow validation and status	.github/zizmor.yml (same stem)
+csharp	.lycheeignore	60e…ff6	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (identical), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+csharp	.pre-commit-config.yaml	a45…896	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
+csharp	.prettierrc.json	2bf…1fe	repository or language-specific infrastructure	-
+csharp	eslint.config.mjs	1a1…853	source and test quality	js/eslint.config.mjs (same stem)
+csharp	scripts/action-pins.mjs	998…1c2	repository or language-specific infrastructure	-
+csharp	scripts/action-pins.test.mjs	552…a4a	source and test quality	-
+csharp	scripts/anonymous-package.mjs	ba7…a56	registry and release	-
+csharp	scripts/anonymous-package.test.mjs	e97…433	registry and release	-
+csharp	scripts/audit-dependencies.mjs	63d…bbf	security and dependencies	-
+csharp	scripts/audit-javascript.mjs	241…8f1	security and dependencies	-
+csharp	scripts/bump-version.mjs	5ca…23b	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+csharp	scripts/change-detection-renames.test.mjs	3de…1c4	change detection and stage gate	-
+csharp	scripts/check-file-size.mjs	666…002	source and test quality	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+csharp	scripts/check-file-size.test.mjs	eee…524	source and test quality	csharp/scripts/check-file-size.test.mjs (same stem)
+csharp	scripts/check-pipeline-status.sh	96e…c9e	workflow validation and status	-
+csharp	scripts/check-release-needed.mjs	9d4…d0c	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+csharp	scripts/check-release-needed.test.mjs	6e1…7ef	registry and release	-
+csharp	scripts/check-web-archive.mjs	cc0…0c6	documentation and links	.github/scripts/check-web-archive.mjs (same stem)
+csharp	scripts/check-web-archive.test.mjs	88f…366	documentation and links	.github/scripts/check-web-archive.test.mjs (same stem)
+csharp	scripts/create-github-release.mjs	519…f70	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+csharp	scripts/create-github-release.test.mjs	09b…e44	registry and release	-
+csharp	scripts/detect-code-changes.mjs	61c…9c5	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+csharp	scripts/detect-code-changes.test.mjs	0db…586	change detection and stage gate	-
+csharp	scripts/docs-workflow-policy.test.mjs	a57…182	workflow validation and status	-
+csharp	scripts/fetch-with-retries.mjs	451…e04	repository or language-specific infrastructure	-
+csharp	scripts/fixtures/lychee-report.md	19f…754	documentation and links	.github/scripts/fixtures/lychee-report.md (same stem)
+csharp	scripts/fixtures/runner-acquisition/links-notation-41477660740-kotlin-ios.json	83e…90d	documentation and links	-
+csharp	scripts/fixtures/runner-acquisition/template-41299533544-detect-changes.json	2fe…0e4	change detection and stage gate	-
+csharp	scripts/git-inputs.test.mjs	214…a88	source and test quality	-
+csharp	scripts/git-push.mjs	af7…af4	repository or language-specific infrastructure	-
+csharp	scripts/git-push.test.mjs	081…29d	source and test quality	-
+csharp	scripts/helper-globs.test.mjs	03b…b87	source and test quality	-
+csharp	scripts/issue-82-regressions.test.mjs	4f1…d48	source and test quality	-
+csharp	scripts/link-failures.test.mjs	82a…89b	source and test quality	.github/scripts/link-failures.test.mjs (same stem)
+csharp	scripts/links-workflow-policy.test.mjs	7f3…0b1	workflow validation and status	-
+csharp	scripts/lint-integrations.test.mjs	bef…eb9	source and test quality	-
+csharp	scripts/lint-workflows.sh	198…ea9	workflow validation and status	-
+csharp	scripts/merge-changesets.mjs	7ef…ae1	registry and release	csharp/scripts/merge-changesets.mjs (same stem)
+csharp	scripts/merge-changesets.test.mjs	655…8e6	registry and release	-
+csharp	scripts/nuget-auth.mjs	2f3…c91	registry and release	.github/scripts/nuget-auth.mjs (same stem)
+csharp	scripts/nuget-auth.test.mjs	e3f…7e4	registry and release	.github/scripts/nuget-auth.test.mjs (same stem)
+csharp	scripts/parse-changeset.mjs	7e3…cdd	registry and release	-
+csharp	scripts/pipeline-gate.mjs	f3a…ffb	workflow validation and status	-
+csharp	scripts/pipeline-gate.test.mjs	b5f…36a	workflow validation and status	-
+csharp	scripts/preflight-credentials.mjs	2ee…561	security and dependencies	-
+csharp	scripts/preflight-credentials.test.mjs	ebd…e51	security and dependencies	-
+csharp	scripts/print-untrusted.mjs	cd6…7b7	repository or language-specific infrastructure	-
+csharp	scripts/print-untrusted.test.mjs	85f…829	source and test quality	-
+csharp	scripts/process-types.d.ts	cc8…7d9	repository or language-specific infrastructure	-
+csharp	scripts/publish-fallback.test.mjs	813…698	registry and release	-
+csharp	scripts/publishing-configuration.test.mjs	e4c…f48	registry and release	-
+csharp	scripts/push-nuget-package.mjs	abf…ca5	registry and release	-
+csharp	scripts/push-nuget-package.test.mjs	905…6c5	registry and release	-
+csharp	scripts/recheck-broken-links.mjs	4b2…542	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+csharp	scripts/recheck-broken-links.test.mjs	4a5…c0b	documentation and links	-
+csharp	scripts/release-assets.mjs	ec3…7c1	registry and release	-
+csharp	scripts/release-assets.test.mjs	7bd…018	registry and release	-
+csharp	scripts/release-naming.mjs	70c…928	registry and release	-
+csharp	scripts/release-naming.test.mjs	df7…d46	registry and release	-
+csharp	scripts/release-workflow-policy.test.mjs	b0c…6a6	registry and release	-
+csharp	scripts/rerun-workflow-policy.test.mjs	488…71d	workflow validation and status	-
+csharp	scripts/run-with-budget-warning.sh	a56…a26	runner and artifact handling	-
+csharp	scripts/runner-acquisition.mjs	474…a59	runner and artifact handling	-
+csharp	scripts/runner-acquisition.test.mjs	d35…299	runner and artifact handling	-
+csharp	scripts/sarif-directory.test.mjs	64d…97c	security and dependencies	-
+csharp	scripts/security-gates.mjs	283…acf	workflow validation and status	-
+csharp	scripts/security-gates.test.mjs	eff…fe1	workflow validation and status	-
+csharp	scripts/security-workflow-policy.test.mjs	7c7…05a	workflow validation and status	-
+csharp	scripts/smoke-test-nuget-package.mjs	d44…86f	registry and release	-
+csharp	scripts/smoke-test-nuget-package.test.mjs	1d9…408	registry and release	-
+csharp	scripts/toolchain-policy.test.mjs	580…c41	workflow validation and status	-
+csharp	scripts/validate-changeset.mjs	29e…0d6	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+csharp	scripts/validate-nuget-package.mjs	753…2c9	registry and release	-
+csharp	scripts/validate-nuget-package.test.mjs	bc0…f0e	registry and release	-
+csharp	scripts/validate-nuspec.proj	44c…463	repository or language-specific infrastructure	-
+csharp	scripts/version-and-commit.mjs	642…2a3	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+csharp	scripts/version-and-commit.test.mjs	b3b…fc0	registry and release	-
+csharp	scripts/wait-for-nuget.mjs	e0f…9dc	registry and release	csharp/scripts/wait-for-nuget.mjs (same stem)
+csharp	scripts/wait-for-nuget.test.mjs	d07…2be	registry and release	-
+csharp	scripts/workflow-git-policy.test.mjs	690…56f	workflow validation and status	-
+csharp	scripts/workflow-injection-policy.test.mjs	965…35a	workflow validation and status	-
+csharp	scripts/workflow-runner-policy.test.mjs	51a…bdb	workflow validation and status	-
+csharp	scripts/zip-archive.mjs	ca0…fd6	runner and artifact handling	-
+csharp	scripts/zip-archive.test.mjs	219…dfd	runner and artifact handling	-
+python	.github/actionlint.yaml	50c…82e	workflow validation and status	-
+python	.github/actions/artifact/action.yml	751…f75	runner and artifact handling	-
+python	.github/actions/artifact/dist/835.index.mjs	d78…e8c	runner and artifact handling	-
+python	.github/actions/artifact/dist/extract.py	052…0b1	runner and artifact handling	-
+python	.github/actions/artifact/dist/index.mjs	a75…929	runner and artifact handling	-
+python	.github/actions/artifact/dist/licenses.txt	980…ea9	runner and artifact handling	-
+python	.github/actions/artifact/extract.py	052…0b1	runner and artifact handling	-
+python	.github/actions/artifact/files.mjs	36b…2a0	runner and artifact handling	-
+python	.github/actions/artifact/index.mjs	936…bb5	runner and artifact handling	-
+python	.github/actions/artifact/package-lock.json	e21…6c5	registry and release	-
+python	.github/actions/artifact/package.json	b29…7b9	registry and release	-
+python	.github/actions/artifact/transport.mjs	603…8d7	runner and artifact handling	-
+python	.github/actions/deploy-pages/action.yml	f72…794	documentation and links	-
+python	.github/actions/deploy-pages/deploy.mjs	fd6…1d9	documentation and links	-
+python	.github/actions/deploy-pages/index.mjs	b30…036	documentation and links	-
+python	.github/codeql/codeql-config.yml	d6f…65a	security and dependencies	.github/codeql/codeql-config.yml (same stem)
+python	.github/dependabot.yml	f53…0ce	security and dependencies	.github/dependabot.yml (same stem)
+python	.github/workflows/dependabot-health.yml	71f…ae7	workflow validation and status	-
+python	.github/workflows/docs.yml	c4e…ed8	workflow validation and status	.github/workflows/docs.yml (same stem)
+python	.github/workflows/links.yml	b86…d0f	workflow validation and status	.github/workflows/links.yml (same stem)
+python	.github/workflows/release.yml	994…285	registry and release	-
+python	.github/workflows/security.yml	890…87e	workflow validation and status	.github/workflows/security.yml (same stem)
+python	.github/workflows/workflows.yml	d19…026	workflow validation and status	.github/workflows/workflows.yml (same stem)
+python	.github/zizmor.yml	2c6…442	workflow validation and status	.github/zizmor.yml (same stem)
+python	.lycheeignore	5ca…135	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+python	.pre-commit-config.yaml	7d3…83c	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
+python	.secretlintrc.json	7a1…122	source and test quality	.secretlintrc.json (identical)
+python	scripts/audit-npm-locks.sh	dd8…8fd	registry and release	-
+python	scripts/audit_dependencies.py	5b4…120	security and dependencies	-
+python	scripts/bump_version.py	2c1…cc5	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+python	scripts/check-dependency-graph.sh	e00…b18	security and dependencies	-
+python	scripts/check-deprecated-packages.mjs	afb…fbf	registry and release	-
+python	scripts/check-links.sh	d66…c8c	documentation and links	-
+python	scripts/check-pipeline-status.sh	665…d48	workflow validation and status	-
+python	scripts/check-required-docs.sh	c00…89d	documentation and links	-
+python	scripts/check_codeql_results.py	eab…aae	security and dependencies	.github/scripts/check-codeql-results.mjs (same stem)
+python	scripts/check_dependabot_health.py	4db…647	security and dependencies	-
+python	scripts/check_dist_size.py	631…81a	repository or language-specific infrastructure	-
+python	scripts/check_file_size.py	04e…503	repository or language-specific infrastructure	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+python	scripts/check_release.py	690…cdb	registry and release	-
+python	scripts/check_web_archive.py	a41…6fc	runner and artifact handling	.github/scripts/check-web-archive.mjs (same stem)
+python	scripts/check_zizmor_compatibility.py	b3b…aad	workflow validation and status	-
+python	scripts/create_github_release.py	e8c…a7e	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+python	scripts/create_manual_changeset.py	648…a67	registry and release	-
+python	scripts/detect_code_changes.py	3ec…b06	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+python	scripts/format_release_notes.py	347…701	registry and release	-
+python	scripts/install-lychee.sh	f9d…4b9	documentation and links	-
+python	scripts/install-python-dependencies.sh	f0c…653	security and dependencies	-
+python	scripts/preflight-credentials.sh	2e6…bd6	security and dependencies	-
+python	scripts/publish_to_pypi.py	99b…9bb	registry and release	-
+python	scripts/read-job-cancel-in-progress.sh	2b4…816	repository or language-specific infrastructure	-
+python	scripts/read_manifest.py	56b…8af	repository or language-specific infrastructure	-
+python	scripts/recheck_broken_links.py	c28…366	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+python	scripts/release_naming.py	e5f…8b2	registry and release	-
+python	scripts/run-with-budget-warning.sh	bc5…ef8	runner and artifact handling	-
+python	scripts/simulate-fresh-merge.sh	a59…0e7	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+python	scripts/smoke_test_published_package.py	5ff…1ed	registry and release	-
+python	scripts/validate_changeset.py	8dc…603	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+python	scripts/version_and_commit.py	cc6…739	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+java	.github/actionlint.yaml	ebe…605	workflow validation and status	-
+java	.github/dependabot.yml	44c…82c	security and dependencies	.github/dependabot.yml (same stem)
+java	.github/workflows/release.yml	15f…bff	registry and release	-
+java	.github/workflows/rerun-unacquired.yml	76c…a58	workflow validation and status	-
+java	.github/workflows/security.yml	f28…0cb	workflow validation and status	.github/workflows/security.yml (same stem)
+java	.github/workflows/workflows.yml	9b5…3b6	workflow validation and status	.github/workflows/workflows.yml (same stem)
+java	.pre-commit-config.yaml	608…a13	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
+java	scripts/audit-maven-plugins.mjs	064…d5d	registry and release	-
+java	scripts/bump-version.mjs	47d…80d	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+java	scripts/check-ci-dependencies.mjs	de6…810	security and dependencies	-
+java	scripts/check-file-size.mjs	6d9…930	source and test quality	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+java	scripts/ci-security.test.mjs	58b…766	security and dependencies	-
+java	scripts/collect-changelog.mjs	659…4ad	registry and release	rust/scripts/collect-changelog.rs (same stem)
+java	scripts/create-github-release.mjs	cb2…548	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+java	scripts/create-manual-changeset.mjs	4e5…d15	registry and release	-
+java	scripts/detect-code-changes.mjs	681…209	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+java	scripts/github-actions-log.mjs	9bc…1a9	repository or language-specific infrastructure	-
+java	scripts/github-release-state.mjs	ade…ac7	registry and release	-
+java	scripts/merge-changesets.mjs	05a…831	registry and release	csharp/scripts/merge-changesets.mjs (same stem)
+java	scripts/rerun-unacquired.mjs	736…29f	runner and artifact handling	-
+java	scripts/validate-changeset.mjs	e0c…49d	registry and release	csharp/scripts/validate-changeset.mjs (same stem)
+java	scripts/version-and-commit.mjs	0f6…2fc	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)
+java	scripts/workflow-policy.test.mjs	41e…c51	workflow validation and status	.github/scripts/workflow-policy.test.mjs (same stem)
+cpp	.clang-format	d12…020	source and test quality	-
+cpp	.editorconfig	12c…bdf	repository or language-specific infrastructure	csharp/.editorconfig (same stem)
+cpp	.github/actionlint.yaml	462…38f	workflow validation and status	-
+cpp	.github/dependabot.yml	7fe…bfd	security and dependencies	.github/dependabot.yml (same stem)
+cpp	.github/workflows/dependabot-health.yml	6a5…541	workflow validation and status	-
+cpp	.github/workflows/docs.yml	bfc…0e2	workflow validation and status	.github/workflows/docs.yml (same stem)
+cpp	.github/workflows/links.yml	324…b26	workflow validation and status	.github/workflows/links.yml (same stem)
+cpp	.github/workflows/release.yml	199…f62	registry and release	-
+cpp	.github/workflows/rerun-infrastructure-failures.yml	7cc…71f	workflow validation and status	.github/workflows/rerun-infrastructure-failures.yml (same stem)
+cpp	.github/workflows/security.yml	5e4…c0f	workflow validation and status	.github/workflows/security.yml (same stem)
+cpp	.github/workflows/workflows.yml	71d…892	workflow validation and status	.github/workflows/workflows.yml (same stem)
+cpp	.github/zizmor.yml	406…843	workflow validation and status	.github/zizmor.yml (same stem)
+cpp	.lycheeignore	c6d…6b6	documentation and links	.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/csharp/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/js/.lycheeignore (same stem), dev/log/issues/134/pulls/135/templates/rust/.lycheeignore (same stem)
+cpp	.pre-commit-config.yaml	7f4…c3e	repository or language-specific infrastructure	.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/csharp/.pre-commit-config.yaml (same stem), dev/log/issues/134/pulls/135/templates/rust/.pre-commit-config.yaml (same stem)
+cpp	.secretlintrc.json	7a1…122	source and test quality	.secretlintrc.json (identical)
+cpp	scripts/audit_native_dependencies.py	b54…c5e	security and dependencies	-
+cpp	scripts/build_codeql.py	eaf…678	security and dependencies	-
+cpp	scripts/bump_version.py	18c…943	registry and release	csharp/scripts/bump-version.mjs (same stem), rust/scripts/bump-version.rs (same stem)
+cpp	scripts/check-dependency-review-support.sh	c3a…d7b	security and dependencies	-
+cpp	scripts/check-nuget-package.sh	a1c…166	registry and release	-
+cpp	scripts/check-pipeline-status.sh	bea…4ad	workflow validation and status	-
+cpp	scripts/check-required-docs.sh	1e3…48f	documentation and links	-
+cpp	scripts/check-vcpkg-port.sh	4b4…569	registry and release	-
+cpp	scripts/check_changelog_fragment.py	6a8…7b9	registry and release	rust/scripts/check-changelog-fragment.rs (same stem)
+cpp	scripts/check_consumers.py	78e…4c8	repository or language-specific infrastructure	-
+cpp	scripts/check_dependabot_health.py	e5a…fdb	security and dependencies	-
+cpp	scripts/check_file_size.py	8af…f10	repository or language-specific infrastructure	csharp/scripts/check-file-size.mjs (same stem), rust/scripts/check-file-size.rs (same stem)
+cpp	scripts/check_nuget_size.py	343…4aa	registry and release	-
+cpp	scripts/check_python_audit.py	4fe…631	security and dependencies	-
+cpp	scripts/check_release_needed.py	c5f…546	registry and release	csharp/scripts/check-release-needed.mjs (same stem), rust/scripts/check-release-needed.rs (same stem)
+cpp	scripts/check_sarif.py	f49…2c0	security and dependencies	-
+cpp	scripts/check_version_modification.py	fc7…821	registry and release	rust/scripts/check-version-modification.rs (same stem)
+cpp	scripts/check_web_archive.py	d0c…2f9	runner and artifact handling	.github/scripts/check-web-archive.mjs (same stem)
+cpp	scripts/check_workflow_concurrency.py	44f…bd8	workflow validation and status	-
+cpp	scripts/collect_changelog.py	43b…b05	registry and release	rust/scripts/collect-changelog.rs (same stem)
+cpp	scripts/constraints.txt	133…05e	repository or language-specific infrastructure	-
+cpp	scripts/cpp_project.py	b99…8e9	repository or language-specific infrastructure	-
+cpp	scripts/create_changelog_fragment.py	be7…52f	registry and release	rust/scripts/create-changelog-fragment.rs (same stem)
+cpp	scripts/create_github_release.py	66e…2f5	registry and release	csharp/scripts/create-github-release.mjs (same stem), rust/scripts/create-github-release.rs (same stem)
+cpp	scripts/detect_code_changes.py	301…7b7	change detection and stage gate	csharp/scripts/detect-code-changes.mjs (same stem), rust/scripts/detect-code-changes.rs (same stem)
+cpp	scripts/download-archive.sh	d68…00f	runner and artifact handling	-
+cpp	scripts/get_bump_type.py	8e3…340	repository or language-specific infrastructure	rust/scripts/get-bump-type.rs (same stem)
+cpp	scripts/get_version.py	dbf…4c3	registry and release	rust/scripts/get-version.rs (same stem)
+cpp	scripts/lint_cpp.py	f58…f62	source and test quality	-
+cpp	scripts/pack_nuget.py	1fb…546	registry and release	-
+cpp	scripts/package_release.py	d7c…3f1	registry and release	-
+cpp	scripts/preflight-credentials.sh	9ee…14f	security and dependencies	-
+cpp	scripts/publish-release.sh	6ad…e08	registry and release	-
+cpp	scripts/read-job-cancel-in-progress.sh	645…357	repository or language-specific infrastructure	-
+cpp	scripts/recheck_broken_links.py	cd2…b93	documentation and links	.github/scripts/recheck-broken-links.mjs (same stem)
+cpp	scripts/rename_project.py	e77…870	repository or language-specific infrastructure	-
+cpp	scripts/render_vcpkg_port.py	146…07a	registry and release	-
+cpp	scripts/requirements-ci.in	2ed…6b9	repository or language-specific infrastructure	-
+cpp	scripts/requirements-ci.txt	977…ec0	repository or language-specific infrastructure	-
+cpp	scripts/requirements-security.in	322…73b	security and dependencies	-
+cpp	scripts/requirements-security.txt	779…acb	security and dependencies	-
+cpp	scripts/requirements-toolchain.in	167…7ad	repository or language-specific infrastructure	-
+cpp	scripts/requirements-toolchain.txt	cff…b8c	repository or language-specific infrastructure	-
+cpp	scripts/run-with-budget-warning.sh	f5e…ab3	runner and artifact handling	-
+cpp	scripts/simulate-fresh-merge.sh	61c…b22	change detection and stage gate	.github/scripts/simulate-fresh-merge.sh (same stem)
+cpp	scripts/test_secretlint.mjs	881…786	source and test quality	-
+cpp	scripts/tests/__init__.py	e69…391	source and test quality	-
+cpp	scripts/tests/conftest.py	64b…40a	source and test quality	-
+cpp	scripts/tests/test_audit_dependencies.py	98f…d89	security and dependencies	-
+cpp	scripts/tests/test_build_codeql.py	1bf…b76	security and dependencies	-
+cpp	scripts/tests/test_changelog.py	150…90c	registry and release	-
+cpp	scripts/tests/test_check_consumers.py	b30…d48	source and test quality	-
+cpp	scripts/tests/test_check_dependabot_health.py	b34…5ca	security and dependencies	-
+cpp	scripts/tests/test_check_dependency_review_support.py	21c…552	security and dependencies	-
+cpp	scripts/tests/test_check_nuget_size.py	1af…856	registry and release	-
+cpp	scripts/tests/test_check_pipeline_status.py	ae7…f3b	workflow validation and status	-
+cpp	scripts/tests/test_check_required_docs.py	4de…d2a	documentation and links	-
+cpp	scripts/tests/test_check_sarif.py	aa1…433	security and dependencies	-
+cpp	scripts/tests/test_check_web_archive.py	03a…4f8	runner and artifact handling	-
+cpp	scripts/tests/test_check_workflow_concurrency.py	056…957	workflow validation and status	-
+cpp	scripts/tests/test_cpp_project.py	601…742	source and test quality	-
+cpp	scripts/tests/test_dependency_pins.py	9a3…858	security and dependencies	-
+cpp	scripts/tests/test_download_archive.py	644…751	runner and artifact handling	-
+cpp	scripts/tests/test_lint_cpp.py	668…925	source and test quality	-
+cpp	scripts/tests/test_packaging.py	18d…e74	source and test quality	-
+cpp	scripts/tests/test_pr_checks.py	4f5…dfe	source and test quality	-
+cpp	scripts/tests/test_preflight_credentials.py	98b…716	security and dependencies	-
+cpp	scripts/tests/test_publish_release.py	ddd…88b	registry and release	-
+cpp	scripts/tests/test_recheck_broken_links.py	040…cd3	documentation and links	-
+cpp	scripts/tests/test_release.py	a35…bb5	registry and release	-
+cpp	scripts/tests/test_rename_project.py	4b9…3b1	source and test quality	-
+cpp	scripts/tests/test_run_with_budget_warning.py	6a3…2ea	runner and artifact handling	-
+cpp	scripts/tests/test_simulate_fresh_merge.py	8d6…bf0	source and test quality	-
+cpp	scripts/tests/test_unacquired_jobs.py	45c…185	runner and artifact handling	-
+cpp	scripts/tests/test_versioning.py	206…2c1	registry and release	-
+cpp	scripts/tests/test_workflows.py	733…d72	workflow validation and status	-
+cpp	scripts/unacquired_jobs.py	109…006	runner and artifact handling	.github/scripts/unacquired-jobs.py (same stem)
+cpp	scripts/version_and_commit.py	78c…b02	registry and release	csharp/scripts/version-and-commit.mjs (same stem), rust/scripts/version-and-commit.rs (same stem)

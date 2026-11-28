@@ -22,6 +22,9 @@ use crate::storage::lock::unique_token;
 /// made it).
 const UNOWNED_GRACE: Duration = Duration::from_secs(10);
 const OWNER_FILE: &str = "owner";
+const ERROR_ACCESS_DENIED: i32 = 5;
+const ERROR_SHARING_VIOLATION: i32 = 32;
+const ERROR_LOCK_VIOLATION: i32 = 33;
 
 /// `<db>.lock.d`.
 pub fn lock_dir_path(store: &Path) -> PathBuf {
@@ -33,6 +36,7 @@ pub fn lock_dir_path(store: &Path) -> PathBuf {
 pub struct PidLock {
     dir: PathBuf,
     token: String,
+    trace: bool,
 }
 
 /// The outcome of one attempt.
@@ -82,11 +86,12 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
                 return Ok(Attempt::Acquired(PidLock {
                     dir: dir.to_path_buf(),
                     token,
+                    trace,
                 }))
             }
             Err(error) => error,
         };
-        let _ = fs::remove_dir_all(&staging);
+        let _ = retry_cleanup(|| fs::remove_dir_all(&staging), trace);
         if fs::symlink_metadata(dir).is_err() {
             // Released between the rename and this check, or a real error.
             last_error = Some(error);
@@ -98,7 +103,7 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
                 if trace {
                     diagnostics::stderr!("[TRACE] Breaking stale lock {}: {reason}", dir.display());
                 }
-                break_stale(dir, holder.as_ref());
+                break_stale(dir, holder.as_ref(), trace);
             }
             None => return Ok(Attempt::Held(holder)),
         }
@@ -113,7 +118,7 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
 /// published a new lock in between, its directory is moved back. A lock
 /// that cannot be moved (another waiter moved it first, or the directory is
 /// not writable) is left alone: the next attempt sees what became of it.
-fn break_stale(dir: &Path, expected: Option<&LockOwner>) {
+fn break_stale(dir: &Path, expected: Option<&LockOwner>, trace: bool) {
     let tombstone = sibling(
         dir,
         &format!(".{}.{}.stale", std::process::id(), unique_token()),
@@ -123,7 +128,7 @@ fn break_stale(dir: &Path, expected: Option<&LockOwner>) {
     }
     let moved = read_owner(&tombstone);
     if moved.as_ref().map(|owner| &owner.token) == expected.map(|owner| &owner.token) {
-        let _ = fs::remove_dir_all(&tombstone);
+        let _ = retry_cleanup(|| fs::remove_dir_all(&tombstone), trace);
     } else if fs::rename(&tombstone, dir).is_err() {
         // A third process published meanwhile; the moved owner has lost its
         // lock. Keep its directory for inspection.
@@ -147,10 +152,39 @@ impl Drop for PidLock {
         // Only remove the lock while it is still ours.
         if read_owner(&self.dir).is_some_and(|owner| owner.token == self.token) {
             let tombstone = sibling(&self.dir, &format!(".{}.released", self.token));
-            if fs::rename(&self.dir, &tombstone).is_ok() {
-                let _ = fs::remove_dir_all(&tombstone);
+            if retry_cleanup(|| fs::rename(&self.dir, &tombstone), self.trace).is_ok() {
+                let _ = retry_cleanup(|| fs::remove_dir_all(&tombstone), self.trace);
             }
         }
+    }
+}
+
+fn retry_cleanup(
+    mut cleanup: impl FnMut() -> std::io::Result<()>,
+    trace: bool,
+) -> std::io::Result<()> {
+    let mut delay_ms = 5;
+    loop {
+        let error = match cleanup() {
+            Ok(()) => return Ok(()),
+            Err(error) => error,
+        };
+        if trace {
+            diagnostics::stderr!("[TRACE] PID-lock cleanup: {error}");
+        }
+        // Windows may block renaming a directory while a waiter reads its
+        // owner record. The four delays add at most 75 ms per operation.
+        if !cfg!(windows)
+            || delay_ms > 40
+            || !matches!(
+                error.raw_os_error(),
+                Some(ERROR_ACCESS_DENIED | ERROR_SHARING_VIOLATION | ERROR_LOCK_VIOLATION)
+            )
+        {
+            return Err(error);
+        }
+        std::thread::sleep(Duration::from_millis(delay_ms));
+        delay_ms *= 2;
     }
 }
 
@@ -158,4 +192,39 @@ fn sibling(path: &Path, suffix: &str) -> PathBuf {
     let mut name = path.as_os_str().to_owned();
     name.push(suffix);
     PathBuf::from(name)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::retry_cleanup;
+    use std::io::Error;
+
+    #[test]
+    fn pid_cleanup_retries_windows_sharing_errors_only() {
+        let mut attempts = 0;
+        let result = retry_cleanup(
+            || {
+                attempts += 1;
+                if attempts == 1 {
+                    return Err(Error::from_raw_os_error(32));
+                }
+                Ok(())
+            },
+            false,
+        );
+        assert_eq!(result.is_ok(), cfg!(windows));
+        assert_eq!(attempts, if cfg!(windows) { 2 } else { 1 });
+
+        attempts = 0;
+        let error = retry_cleanup(
+            || {
+                attempts += 1;
+                Err(Error::from_raw_os_error(2))
+            },
+            false,
+        )
+        .unwrap_err();
+        assert_eq!(error.raw_os_error(), Some(2));
+        assert_eq!(attempts, 1);
+    }
 }

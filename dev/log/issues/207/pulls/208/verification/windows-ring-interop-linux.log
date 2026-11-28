@@ -1,0 +1,54 @@
+ok    mmap: csharp server listens (925 ms)
+[ipc] connect mmap:/tmp/clink-interop-BIr2dw/n1
+[ipc] mmap request 90c58c2176cbf6cbf17b written
+[ipc] mmap connected as 90c58c2176cbf6cbf17b to process 45914, 65536 bytes per ring
+[ipc] connected mmap:/tmp/clink-interop-BIr2dw/n1
+[ipc] mmap ring to process 45914 hung up
+ok    mmap: csharp server <- js client, text (507 ms)
+ok    mmap: csharp server <- csharp client, text (783 ms)
+ok    mmap: csharp server <- csharp client, binary (887 ms)
+ok    mmap: csharp server keeps every write (843 ms)
+[ipc] connect mmap:/tmp/clink-interop-BIr2dw/n2
+[ipc] mmap request f7be0fc304b1616b6b5b written
+[ipc] mmap connected as f7be0fc304b1616b6b5b to process 46007, 65536 bytes per ring
+[ipc] connected mmap:/tmp/clink-interop-BIr2dw/n2
+[ipc] mmap ring to process 46007 hung up
+ok    mmap: js client -> csharp relay -> csharp server (tcp) (899 ms)
+ok    mmap: csharp client -> csharp relay -> csharp server (tcp) (1576 ms)
+ok    file: csharp server listens (653 ms)
+[ipc] connect file:/tmp/clink-interop-BIr2dw/n3
+[ipc] file request bdc35c8b831b45eb2dec written
+[ipc] file connected as bdc35c8b831b45eb2dec to process 46051, 65536 bytes per ring
+[ipc] connected file:/tmp/clink-interop-BIr2dw/n3
+[ipc] file ring to process 46051 hung up
+ok    file: csharp server <- js client, text (679 ms)
+ok    file: csharp server <- csharp client, text (1075 ms)
+ok    file: csharp server <- csharp client, binary (1351 ms)
+ok    file: csharp server keeps every write (721 ms)
+[ipc] connect file:/tmp/clink-interop-BIr2dw/n4
+[ipc] file request ca21f3bbfeca061e0ef9 written
+[ipc] file connected as ca21f3bbfeca061e0ef9 to process 46106, 65536 bytes per ring
+[ipc] connected file:/tmp/clink-interop-BIr2dw/n4
+[ipc] file ring to process 46106 hung up
+ok    file: js client -> csharp relay -> csharp server (tcp) (639 ms)
+ok    file: csharp client -> csharp relay -> csharp server (tcp) (1530 ms)
+ok    signal: csharp server listens (699 ms)
+[ipc] connect signal:/tmp/clink-interop-BIr2dw/n5
+[ipc] signal handler installed for signal 12
+[ipc] signal request c43a2d301acfe3b36a00 written
+[ipc] signal connected as c43a2d301acfe3b36a00 to process 46138, 65536 bytes per ring
+[ipc] connected signal:/tmp/clink-interop-BIr2dw/n5
+[ipc] signal ring to process 46138 hung up
+ok    signal: csharp server <- js client, text (548 ms)
+ok    signal: csharp server <- csharp client, text (896 ms)
+ok    signal: csharp server <- csharp client, binary (1317 ms)
+ok    signal: csharp server keeps every write (958 ms)
+[ipc] connect signal:/tmp/clink-interop-BIr2dw/n6
+[ipc] signal request 7812afbfe35eca29e82d written
+[ipc] signal connected as 7812afbfe35eca29e82d to process 46457, 65536 bytes per ring
+[ipc] connected signal:/tmp/clink-interop-BIr2dw/n6
+[ipc] signal ring to process 46457 hung up
+ok    signal: js client -> csharp relay -> csharp server (tcp) (656 ms)
+ok    signal: csharp client -> csharp relay -> csharp server (tcp) (2105 ms)
+
+21 of 21 conversations passed

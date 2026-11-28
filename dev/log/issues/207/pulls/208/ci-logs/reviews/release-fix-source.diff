@@ -1,0 +1,3155 @@
+diff --git a/.github/scripts/check-npm-tarball-size.mjs b/.github/scripts/check-npm-tarball-size.mjs
+new file mode 100644
+index 00000000..2bb7dfc6
+--- /dev/null
++++ b/.github/scripts/check-npm-tarball-size.mjs
+@@ -0,0 +1,39 @@
++import { readFileSync } from 'node:fs';
++
++// Match the JS pipeline template's compressed package budget. The budget
++// leaves headroom under npm uploads known to have succeeded in that project.
++const maxTarballBytes = 157 * 1024 * 1024;
++const quote = (value) => JSON.stringify(value).replaceAll(':', '\\u003a');
++
++try {
++  const report = JSON.parse(readFileSync(0, 'utf8'));
++  const pack = report?.[0];
++  if (
++    !Array.isArray(report) ||
++    report.length !== 1 ||
++    typeof pack?.name !== 'string' ||
++    !Number.isSafeInteger(pack.size) ||
++    pack.size < 1 ||
++    !Array.isArray(pack.files) ||
++    pack.files.length === 0 ||
++    pack.files.some(
++      (file) => typeof file?.path !== 'string' || !Number.isSafeInteger(file.size) || file.size < 0,
++    )
++  ) {
++    throw new Error('Expected one npm pack report with a compressed size and file list');
++  }
++  if (pack.size > maxTarballBytes) {
++    const largest = [...pack.files]
++      .sort((first, second) => second.size - first.size)
++      .slice(0, 10)
++      .map((file) => `${quote(file.path)} (${file.size} bytes unpacked)`)
++      .join(', ');
++    throw new Error(
++      `${quote(pack.name)} is ${pack.size} compressed bytes. Budget is ${maxTarballBytes} bytes. Largest files: ${largest}. Review the files list in package.json.`,
++    );
++  }
++  console.log(`${quote(pack.name)} tarball: ${pack.size}/${maxTarballBytes} compressed bytes`);
++} catch (error) {
++  console.error(error.message);
++  process.exitCode = 1;
++}
+diff --git a/.github/scripts/ci-governance.test.mjs b/.github/scripts/ci-governance.test.mjs
+index 9d4235d5..3bfb0c43 100644
+--- a/.github/scripts/ci-governance.test.mjs
++++ b/.github/scripts/ci-governance.test.mjs
+@@ -21,6 +21,30 @@ test('the required stage checks report on every pull request (issue #111)', () =
+   }
+ });
+ 
++test('read-only concurrency only replaces superseded PR synchronizations (issue #207)', () => {
++  const scope =
++    "${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}";
++  const cancel =
++    "${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}";
++  for (const { name, text } of workflows) {
++    const groups = [...text.matchAll(/^ +group: (.*)\n +cancel-in-progress: (.*)$/gm)];
++    assert.ok(groups.length, `${name}: missing concurrency groups`);
++    const queueCount = [...text.matchAll(/^ +queue\s*:/gm)].length;
++    let writerGroups = 0;
++    for (const [block, group, policy] of groups) {
++      if (group.startsWith('main-writer-')) {
++        writerGroups++;
++        const nextLine = text.slice(text.indexOf(block) + block.length + 1).split('\n')[0];
++        assert.equal(nextLine.trim(), 'queue: max', `${name}: writer lost its queue`);
++      }
++      if (policy === 'false') continue;
++      assert.equal(policy, cancel, `${name}: ${group} cancels unrelated runs`);
++      assert.ok(group.includes(scope), `${name}: ${group} can collide across revisions or events`);
++    }
++    assert.equal(queueCount, writerGroups, `${name}: queue is only supported for shared writers`);
++  }
++});
++
+ test('every suite proves it loaded the shared golden fixtures (issue #111)', () => {
+   for (const [name, suite, job] of [
+     ['rust.yml', 'rust', 'test'],
+diff --git a/.github/scripts/npm-release.test.mjs b/.github/scripts/npm-release.test.mjs
+index bc5aa186..0256b49f 100644
+--- a/.github/scripts/npm-release.test.mjs
++++ b/.github/scripts/npm-release.test.mjs
+@@ -1,63 +1,60 @@
+ import assert from 'node:assert/strict';
+ import { spawnSync } from 'node:child_process';
+-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+-import { tmpdir } from 'node:os';
+-import { join } from 'node:path';
+ import test from 'node:test';
++import { fileURLToPath } from 'node:url';
++import { readJobs, workflows } from './workflow-files.mjs';
+ 
+-const workflow = readFileSync(new URL('../workflows/js-client.yml', import.meta.url), 'utf8');
+-const step = workflow.split('      - name: Dry-run the release\n')[1]?.split(/\n {6}- name:/)[0];
+-assert.ok(step, 'npm release must validate pull requests');
+-const run = /^ {8}run: (.+)$/m.exec(step);
+-assert.ok(run, 'release validation needs a run command');
+-const script =
+-  run[1] === '|'
+-    ? step
+-        .slice(run.index + run[0].length)
+-        .split('\n')
+-        .filter((line) => line.startsWith('          '))
+-        .map((line) => line.slice(10))
+-        .join('\n')
+-    : run[1];
+-
+-test('npm release validation uses the actual registry lookup result', () => {
+-  assert.match(step, /PUBLISHED: \$\{\{ steps\.check\.outputs\.published \}\}/);
+-});
+-
+-for (const published of ['true', 'false']) {
+-  test(`npm release validation succeeds when published=${published}`, () => {
+-    const root = mkdtempSync(join(tmpdir(), 'npm-release-136-'));
+-    try {
+-      writeFileSync(
+-        join(root, 'npm'),
+-        `#!/usr/bin/env bash
+-set -eu
+-printf '%s\\n' "$*" >> "$INVOCATIONS"
+-if [[ "$PUBLISHED" == true && "$1" == publish ]]; then
+-  echo 'You cannot publish over the previously published versions: 0.1.0.' >&2
+-  exit 1
+-fi
+-`,
+-        { mode: 0o755 },
+-      );
+-      const invocations = join(root, 'invocations');
+-      const result = spawnSync('bash', ['-euo', 'pipefail', '-c', script], {
+-        env: {
+-          ...process.env,
+-          PATH: `${root}:${process.env.PATH}`,
+-          PUBLISHED: published,
+-          INVOCATIONS: invocations,
+-        },
+-        encoding: 'utf8',
+-        timeout: 10_000,
+-      });
+-      assert.equal(result.status, 0, result.stdout + result.stderr);
+-      assert.equal(
+-        readFileSync(invocations, 'utf8').trim(),
+-        published === 'true' ? 'pack --dry-run' : 'publish --dry-run --access public',
+-      );
+-    } finally {
+-      rmSync(root, { recursive: true, force: true });
+-    }
++for (const name of ['js-client', 'js-server']) {
++  test(`${name}: pull requests validate the tarball without npm registry credentials`, () => {
++    const { text } = workflows.find((workflow) => workflow.name === `${name}.yml`);
++    const jobs = readJobs(text);
++    const { body: pack } = jobs.find((job) => job.name === 'package-check');
++    const { body: release } = jobs.find((job) => job.name === 'release');
++    const { body: preflight } = jobs.find((job) => job.name === 'release-preflight');
++    const { body: publicPackage } = jobs.find((job) => job.name === 'verify-public-package');
++    const { body: status } = jobs.find((job) => job.name === 'pipeline-status');
++    const mainOnly = /if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/;
++    assert.match(pack, /if: inputs\.verify_trusted_publishing != true/);
++    assert.match(
++      pack,
++      /shell: bash\n +run: npm pack --dry-run --json \| node .*check-npm-tarball-size\.mjs/,
++    );
++    assert.doesNotMatch(pack, /main-writer|npm (view|publish)|id-token: [REDACTED]
++    assert.match(release, mainOnly);
++    assert.match(release, /needs: \[release-preflight, package-check,/);
++    assert.match(preflight, mainOnly);
++    assert.match(publicPackage, /needs: \[release\]/);
++    assert.match(publicPackage, /run: bash .*verify-public-npm-package\.sh/);
++    assert.doesNotMatch(publicPackage, /id-token: wri…/);
++    assert.match(status, /^ {6}- verify-public-package$/m);
+   });
+ }
++
++test('the npm tarball size check requires a report and identifies the largest files on failure', () => {
++  const script = fileURLToPath(new URL('./check-npm-tarball-size.mjs', import.meta.url));
++  const validate = (report) =>
++    spawnSync(process.execPath, [script], {
++      input: JSON.stringify(report),
++      encoding: 'utf8',
++    });
++  const maxTarballBytes = 157 * 1024 * 1024;
++  const pack = {
++    name: 'fixture',
++    size: maxTarballBytes,
++    files: [
++      { path: 'small.js', size: 1 },
++      { path: 'large.bin', size: maxTarballBytes },
++    ],
++  };
++  const accepted = validate([pack]);
++  assert.equal(accepted.status, 0, accepted.stderr);
++  assert.match(accepted.stdout, /compressed bytes/);
++
++  const oversized = validate([{ ...pack, size: maxTarballBytes + 1 }]);
++  assert.equal(oversized.status, 1);
++  assert.match(oversized.stderr, /Largest files: "large\.bin".*"small\.js"/);
++
++  const missing = validate([]);
++  assert.equal(missing.status, 1);
++  assert.match(missing.stderr, /Expected one npm pack report/);
++});
+diff --git a/.github/scripts/verify-npm-trust.mjs b/.github/scripts/verify-npm-trust.mjs
+index 0b730f25..6b642ebf 100644
+--- a/.github/scripts/verify-npm-trust.mjs
++++ b/.github/scripts/verify-npm-trust.mjs
+@@ -34,11 +34,35 @@ export async function verifyNpmTrust(
+       signal: AbortSignal.timeout(30_000),
+     },
+   );
+-  if (!exchange.ok || !(await exchange.json()).token) {
++  if (!exchange.ok) {
++    const context = `npm trusted publisher verification failed for ${packageName} (HTTP ${exchange.status})`;
++    if (exchange.status === 404) {
++      const packument = await fetch(
++        `https://registry.npmjs.org/${encodeURIComponent(packageName)}`,
++        { signal: AbortSignal.timeout(15_000) },
++      ).catch(() => null);
++      if (packument?.status === 404) {
++        throw new Error(
++          `${context}. The package is unavailable publicly. A maintainer must publish the first public version or make the existing package public, then configure ${NPM_WORKFLOWS[packageName] ?? 'the release workflow'} as its trusted publisher and rerun authentication-only verification on main.`,
++        );
++      }
++      if (!packument?.ok) {
++        throw new Error(
++          `${context}. Public package lookup was inconclusive (${packument?.status ?? 'network error'}). Check registry availability and retry the authentication-only verification.`,
++        );
++      }
++    }
++    if ([401, 403, 404].includes(exchange.status)) {
++      throw new Error(
++        `${context}. Check the npm trusted publisher settings for this repository and ${NPM_WORKFLOWS[packageName] ?? 'its release workflow'}, including any required environment and permission to publish directly.`,
++      );
++    }
+     throw new Error(
+-      `npm trusted publisher verification failed (HTTP ${exchange.status}). Configure this repository and ${NPM_WORKFLOWS[packageName] ?? 'its release workflow'} in the trusted publisher settings of ${packageName} on npmjs.com (a package that is not on npm yet must be published once by a maintainer first).`,
++      `${context}. Check registry availability and retry the authentication-only verification.`,
+     );
+   }
++  if (!(await exchange.json()).token)
++    throw new Error(`npm trusted publisher response for ${packageName} is missing a token`);
+   // Discard the short-lived credential. Never write it to logs, disk or outputs.
+ }
+ 
+diff --git a/.github/scripts/verify-npm-trust.test.mjs b/.github/scripts/verify-npm-trust.test.mjs
+index f79c68a2..3c19230a 100644
+--- a/.github/scripts/verify-npm-trust.test.mjs
++++ b/.github/scripts/verify-npm-trust.test.mjs
+@@ -71,3 +71,35 @@ test('npm trust failures name the workflow each package is published from', asyn
+   }
+   assert.deepEqual(Object.values(NPM_WORKFLOWS), ['js-client.yml', 'js-server.yml']);
+ });
++
++test('npm OIDC exchange distinguishes a package unavailable publicly, a missing trust mapping and an outage', async () => {
++  const env = {
++    ACTIONS_ID_TOKEN_REQUEST_URL: 'htt…idc',
++    ACTIONS_ID_TOKEN_REQUEST_TOKEN: '[REDACTED]',
++  };
++  const name = '@link-foundation/link-cli-server';
++  for (const [exchange, metadata, expected] of [
++    [404, 404, /first public version or make the existing package public.+js-server\.yml/],
++    [404, 200, /settings.+js-server\.yml.+publish directly/],
++    [404, 503, /lookup was inconclusive \(503\)/],
++    [429, undefined, /HTTP 429.+registry availability/],
++  ]) {
++    const requests = [];
++    await assert.rejects(
++      verifyNpmTrust(name, {
++        env,
++        fetch: async (url, options) => {
++          requests.push({ url: String(url), options });
++          if (requests.length === 1) return Response.json({ value: 'oidc' });
++          return new Response('', { status: requests.length === 2 ? exchange : metadata });
++        },
++      }),
++      expected,
++    );
++    assert.equal(requests.length, metadata === undefined ? 2 : 3);
++    if (metadata !== undefined) {
++      assert.equal(requests[2].url, `https://registry.npmjs.org/${encodeURIComponent(name)}`);
++      assert.equal(requests[2].options.headers, undefined);
++    }
++  }
++});
+diff --git a/.github/scripts/verify-public-npm-package.sh b/.github/scripts/verify-public-npm-package.sh
+new file mode 100644
+index 00000000..020fff20
+--- /dev/null
++++ b/.github/scripts/verify-public-npm-package.sh
+@@ -0,0 +1,28 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++package_spec=$(node -p 'const {name, version} = require("./package.json"); name + "@" + version')
++scratch=$(mktemp -d)
++trap 'rm -rf -- "$scratch"' EXIT
++cd "$scratch"
++touch npmrc
++unset NODE_AUTH_TOKEN NPM_TOKEN
++
++# Use a clean cache and config so a consumer can obtain the exact tarball.
++# npm retries transient HTTP errors. Retry a new version's 404 briefly while
++# the public registry propagates it.
++for attempt in 1 2 3; do
++  if npm pack "$package_spec" --ignore-scripts --registry=https://registry.npmjs.org \
++    --userconfig=/dev/null --globalconfig="$scratch/npmrc" --cache="$scratch/cache" \
++    --prefer-online --fetch-timeout=15000 --fetch-retries=1 >pack.log 2>&1; then
++    cat pack.log
++    printf 'Downloaded %s anonymously from npm.\n' "$package_spec"
++    exit 0
++  fi
++  if [[ "$attempt" == 3 ]] || ! grep -q 'code E404' pack.log; then
++    cat pack.log >&2
++    printf 'Could not download %s anonymously from npm. Check public visibility and retry verification.\n' "$package_spec" >&2
++    exit 1
++  fi
++  sleep "$((attempt * 5))"
++done
+diff --git a/.github/scripts/workflow-policy.test.mjs b/.github/scripts/workflow-policy.test.mjs
+index ba2026de..ec6b6b0b 100644
+--- a/.github/scripts/workflow-policy.test.mjs
++++ b/.github/scripts/workflow-policy.test.mjs
+@@ -48,6 +48,20 @@ function isWriterJob(body) {
+ 
+ const trustedPublishingAuth = /^\s*uses:\s*rust-lang\/crates-io-auth-action@/m;
+ 
++const defaultJobTimeout = 30;
++const jobTimeoutExceptions = {
++  // Cold runners build native implementations before running cross-language suites.
++  'ipc.yml/interop': 45,
++  'js-client.yml/conformance': 40,
++  'js-server.yml/differential': 40,
++  'rust.yml/test': 45,
++  // Release jobs wait for registry confirmation after publishing signed artifacts.
++  'csharp.yml/release': 45,
++  'csharp.yml/instant-release': 45,
++  'rust.yml/auto-release': 60,
++  'rust.yml/manual-release': 60,
++};
++
+ /** Splits a workflow into `{ first, last, text }` entries, one per job step. */
+ function readSteps(text) {
+   const steps = [];
+@@ -153,12 +167,14 @@ for (const workflow of workflows) {
+   // burn the whole CI budget before anyone notices.
+   // A job that calls a reusable workflow (`uses:`) cannot set
+   // timeout-minutes; the called workflow's own jobs carry it.
+-  test(`${workflow.name}: every job declares timeout-minutes`, () => {
++  test(`${workflow.name}: every job declares a bounded timeout`, () => {
+     for (const job of readJobs(workflow.text).filter(({ body }) => !isCallerJob(body))) {
+-      assert.match(
+-        job.body,
+-        /^ {4}timeout-minutes: \d+$/m,
+-        `job "${job.name}" in ${workflow.name} has no timeout-minutes`,
++      const id = `${workflow.name}/${job.name}`;
++      const timeout = Number(/^ {4}timeout-minutes: (\d+)$/m.exec(job.body)?.[1]);
++      const ceiling = jobTimeoutExceptions[id] ?? defaultJobTimeout;
++      assert.ok(
++        timeout > 0 && timeout <= ceiling,
++        `${id} needs timeout-minutes between 1 and ${ceiling}`,
+       );
+     }
+   });
+@@ -199,8 +215,8 @@ for (const workflow of workflows) {
+     for (const job of writers) {
+       assert.match(
+         job.body,
+-        /^ {4}concurrency:\n {6}group: [^\n]+\n {6}cancel-in-progress: false$/m,
+-        `writer job "${job.name}" in ${workflow.name} needs its own concurrency group with cancel-in-progress: false`,
++        /^ {4}concurrency:\n {6}group: main-writer-\$\{\{ github\.repository \}\}\n {6}cancel-in-progress: false\n {6}queue: max$/m,
++        `writer job "${job.name}" in ${workflow.name} must serialize through the shared writer queue`,
+       );
+     }
+   });
+@@ -352,7 +368,10 @@ for (const workflow of workflows) {
+   test(`${workflow.name}: hosted runners use pinned OS labels`, () => {
+     const offenders = workflow.text
+       .split('\n')
+-      .map((line, index) => ({ line: line.replace(/#.*$/, ''), number: index + 1 }))
++      .map((line, index) => ({
++        line: line.replace(/#.*$/, ''),
++        number: index + 1,
++      }))
+       .filter(({ line }) => /\b(?:ubuntu|macos|windows)-latest\b/.test(line))
+       .map(({ number }) => number);
+     assert.deepEqual(
+diff --git a/.github/workflows/crash.yml b/.github/workflows/crash.yml
+index 01b497dd..4a760322 100644
+--- a/.github/workflows/crash.yml
++++ b/.github/workflows/crash.yml
+@@ -65,8 +65,8 @@ permissions:
+ 
+ # Superseded runs on a pull request are cancelled; no job here writes.
+ concurrency:
+-  group: crash-${{ github.workflow }}-${{ github.ref }}
+-  cancel-in-progress: true
++  group: crash-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+ 
+ # Provide Git config to actions/checkout itself; checkout runs git init before
+ # any workflow step can configure Git, which otherwise prints the
+diff --git a/.github/workflows/csharp.yml b/.github/workflows/csharp.yml
+index a0fe1bc2..eefa69d6 100644
+--- a/.github/workflows/csharp.yml
++++ b/.github/workflows/csharp.yml
+@@ -41,11 +41,8 @@ on:
+         required: false
+         type: string
+ 
+-# Concurrency is set per job (issue #134): superseded read-only checks are
+-# cancelled on every branch, main included (issue #172), while writer jobs
+-# share a never-cancelled group. A workflow-level group held the whole run,
+-# including the release and the registry wait, so a third push to main
+-# cancelled the queued run.
++# Read-only concurrency cancels superseded PR synchronizations. Each main
++# revision keeps its results. Release writers share the repository queue.
+ 
+ # Least privilege by default; the publishing jobs opt into more below.
+ permissions:
+@@ -85,8 +82,8 @@ jobs:
+       contents: read
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -120,8 +117,8 @@ jobs:
+     permissions:
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - name: Validate NuGet account
+         working-directory: .
+@@ -153,8 +150,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-detect-changes
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript]
+     if: github.event_name != 'workflow_dispatch'
+     outputs:
+@@ -206,8 +203,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-changeset-check
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.csharp-code-changed == 'true'
+     steps:
+@@ -247,8 +244,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 20
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-lint
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes]
+     if: |
+       !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+@@ -304,8 +301,8 @@ jobs:
+     runs-on: ${{ matrix.os }}
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-test-${{ matrix.os }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes, changeset-check, lint]
+     if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+     permissions:
+@@ -336,6 +333,7 @@ jobs:
+       - name: Run tests
+         env:
+           GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-csharp.json
++          LINK_CSHARP_RECOVERY_TRACE: ${{ vars.CI_VERBOSE == 'true' && '1' || '0' }}
+         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage;Format=json,cobertura"
+ 
+       - name: Verify every compiled causal branch
+@@ -422,8 +420,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-fresh-merge
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     if: github.event_name == 'pull_request'
+     needs: [javascript, detect-changes, lint]
+     steps:
+@@ -454,8 +452,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 20
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-build
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, lint, test]
+     if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}
+     steps:
+@@ -510,6 +508,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       contents: write
+       packages: write
+@@ -743,6 +742,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       contents: write
+       packages: write
+@@ -905,6 +905,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       contents: write
+       pull-requests: write
+@@ -976,8 +977,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/deep-client.yml b/.github/workflows/deep-client.yml
+index e8727644..7bd2a8c3 100644
+--- a/.github/workflows/deep-client.yml
++++ b/.github/workflows/deep-client.yml
+@@ -34,8 +34,8 @@ env:
+   GIT_CONFIG_VALUE_0: main
+ 
+ concurrency:
+-  group: ${{ github.workflow }}-${{ github.ref }}
+-  cancel-in-progress: true
++  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+ 
+ jobs:
+   # === STAGE GATE (issue #111) ===
+@@ -84,8 +84,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/dependencies.yml b/.github/workflows/dependencies.yml
+index cd3a5b44..88adfc0a 100644
+--- a/.github/workflows/dependencies.yml
++++ b/.github/workflows/dependencies.yml
+@@ -48,8 +48,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-latest
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-${{ github.event_name }}-latest
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -118,8 +118,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/docs.yml b/.github/workflows/docs.yml
+index e3e98ee0..fc1d2bf6 100644
+--- a/.github/workflows/docs.yml
++++ b/.github/workflows/docs.yml
+@@ -49,11 +49,8 @@ on:
+ permissions:
+   contents: read
+ 
+-# Concurrency is set per job (issue #134): superseded read-only checks are
+-# cancelled on every branch, main included (issue #172), while writer jobs
+-# share a never-cancelled group. A workflow-level group held the whole run,
+-# including the release and the registry wait, so a third push to main
+-# cancelled the queued run.
++# Read-only concurrency cancels superseded PR synchronizations. Each main
++# revision keeps its results. Release writers share the repository queue.
+ 
+ # The GIT_CONFIG_* entries provide Git config to actions/checkout itself;
+ # checkout runs git init before any workflow step can configure Git, which
+@@ -82,8 +79,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 20
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-build
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -220,6 +217,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+     needs: build
+     runs-on: ubuntu-24.04
+@@ -261,8 +259,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/ipc.yml b/.github/workflows/ipc.yml
+index a65a06ee..f081ba12 100644
+--- a/.github/workflows/ipc.yml
++++ b/.github/workflows/ipc.yml
+@@ -48,8 +48,8 @@ jobs:
+     runs-on: ${{ matrix.os }}
+     timeout-minutes: 45
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-interop-${{ matrix.os }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-interop-${{ matrix.os }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -90,8 +90,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/javascript-stage.yml b/.github/workflows/javascript-stage.yml
+index 198f1d63..b785f10f 100644
+--- a/.github/workflows/javascript-stage.yml
++++ b/.github/workflows/javascript-stage.yml
+@@ -36,8 +36,8 @@ jobs:
+     # In a called workflow, github.workflow is the caller's name, so each
+     # caller cancels only its own superseded stage.
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-javascript-stage
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-javascript-stage
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/javascript.yml b/.github/workflows/javascript.yml
+index 8b24e0e1..017fa11e 100644
+--- a/.github/workflows/javascript.yml
++++ b/.github/workflows/javascript.yml
+@@ -38,8 +38,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/js-client.yml b/.github/workflows/js-client.yml
+index ff23a20c..a4a5f2b0 100644
+--- a/.github/workflows/js-client.yml
++++ b/.github/workflows/js-client.yml
+@@ -13,8 +13,9 @@ on:
+     paths:
+       - '.github/workflows/js-client.yml'
+       - '.github/scripts/**'
+-      - '.github/scripts/verify-npm-trust*'
+-      - '.github/scripts/check-sqlite-optional.mjs'
++      - '.github/workflows/javascript-stage.yml'
++      - 'parity/**'
++      - 'js/package*.json'
+       - 'js/client/**'
+       - 'examples/composition/**'
+       - 'rust/**'
+@@ -31,30 +32,16 @@ on:
+       - 'examples/sorted-tables/**'
+       - 'examples/sorted-tables-csharp/**'
+       - 'examples/journal-checkpoints/**'
+-      - 'experiments/issue-138/generate-checkpoint-vectors.py'
+-      - 'experiments/issue-138/etcd-*.mjs'
+-      - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
+-      - 'experiments/issue-138/make-native-page-vectors.py'
+-      - 'experiments/issue-138/*sorted-table*'
+-      - 'experiments/issue-138/*lsm-wal*'
+-      - 'experiments/issue-138/*lsm-store*'
+-      - 'experiments/issue-138/run-lsm-readonly-inspection.sh'
+-      - 'experiments/issue-138/make-mirrored-page-vectors.py'
+-      - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+-      - 'experiments/issue-138/make-checkpoint-root-vectors.py'
+-      - 'experiments/issue-138/make-maintenance-vectors.py'
+-      - 'experiments/issue-138/verify-maintenance-lazy.mjs'
+-      - 'experiments/issue-138/*reclamation*'
+-      - 'experiments/issue-138/native-checkpoint-cut.mjs'
+-      - 'experiments/issue-138/*chunk*'
++      - 'experiments/issue-138/**'
+   pull_request:
+     branches:
+       - main
+     paths:
+       - '.github/workflows/js-client.yml'
+       - '.github/scripts/**'
+-      - '.github/scripts/verify-npm-trust*'
+-      - '.github/scripts/check-sqlite-optional.mjs'
++      - '.github/workflows/javascript-stage.yml'
++      - 'parity/**'
++      - 'js/package*.json'
+       - 'js/client/**'
+       - 'examples/composition/**'
+       - 'rust/**'
+@@ -71,34 +58,20 @@ on:
+       - 'examples/sorted-tables/**'
+       - 'examples/sorted-tables-csharp/**'
+       - 'examples/journal-checkpoints/**'
+-      - 'experiments/issue-138/generate-checkpoint-vectors.py'
+-      - 'experiments/issue-138/etcd-*.mjs'
+-      - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
+-      - 'experiments/issue-138/make-native-page-vectors.py'
+-      - 'experiments/issue-138/*sorted-table*'
+-      - 'experiments/issue-138/*lsm-wal*'
+-      - 'experiments/issue-138/*lsm-store*'
+-      - 'experiments/issue-138/run-lsm-readonly-inspection.sh'
+-      - 'experiments/issue-138/make-mirrored-page-vectors.py'
+-      - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+-      - 'experiments/issue-138/make-checkpoint-root-vectors.py'
+-      - 'experiments/issue-138/make-maintenance-vectors.py'
+-      - 'experiments/issue-138/verify-maintenance-lazy.mjs'
+-      - 'experiments/issue-138/*reclamation*'
+-      - 'experiments/issue-138/native-checkpoint-cut.mjs'
+-      - 'experiments/issue-138/*chunk*'
++      - 'experiments/issue-138/**'
+   workflow_dispatch:
+     inputs:
++      verbose_consensus:
++        description: 'Record etcd election status and member debug logs'
++        type: boolean
++        default: false
+       verify_trusted_publishing:
+         description: 'Verify npm OIDC authentication without publishing'
+         type: boolean
+         default: false
+ 
+-# Concurrency is set per job (issue #134): superseded read-only checks are
+-# cancelled on every branch, main included (issue #172), while writer jobs
+-# share a never-cancelled group. A workflow-level group held the whole run,
+-# including the release and the registry wait, so a third push to main
+-# cancelled the queued run.
++# Read-only concurrency cancels superseded PR synchronizations. Each main
++# revision keeps its results. Release writers share the repository queue.
+ 
+ # Least privilege by default; the release job opts into more below.
+ permissions:
+@@ -124,15 +97,15 @@ jobs:
+ 
+   release-preflight:
+     name: Release authentication preflight
+-    if: inputs.verify_trusted_publishing != true
++    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     permissions:
+       contents: read
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -155,8 +128,8 @@ jobs:
+       contents: read
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -175,8 +148,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-unit
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-unit
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     defaults:
+       run:
+         working-directory: js/client
+@@ -285,8 +258,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 40
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-conformance
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-conformance
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     env:
+       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+       CLINK_CSHARP: ${{ github.workspace }}/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
+@@ -414,6 +387,7 @@ jobs:
+ 
+       - name: Verify actual consensus and language interoperability
+         env:
++          ETCD_TEST_VERBOSE: ${{ inputs.verbose_consensus && '1' || '0' }}
+           ETCD_BIN: ${{ github.workspace }}/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd
+           MAINTENANCE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_maintenance
+           MAINTENANCE_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-maintenance-csharp/bin/Release/net10.0/JournalMaintenanceExample.dll
+@@ -597,15 +571,37 @@ jobs:
+             rust/wasm/target
+           key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+ 
++  package-check:
++    name: Validate npm tarball
++    if: inputs.verify_trusted_publishing != true
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-package-check
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Validate package contents without registry access
++        working-directory: js/client
++        shell: bash
++        run: npm pack --dry-run --json | node ../../.github/scripts/check-npm-tarball-size.mjs
++
+   release:
+     name: Release to npm
+-    needs: [release-preflight, unit, conformance]
++    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release-preflight.result == 'success'
++    needs: [release-preflight, package-check, unit, conformance]
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     # Writer group: never cancel a publish that may already be under way.
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       contents: read
+       # Trusted publishing and npm provenance use a GitHub OIDC token.
+@@ -645,24 +641,10 @@ jobs:
+           fi
+           echo "version=$version" >> "$GITHUB_OUTPUT"
+ 
+-      # Pull requests check what would be published, without a token.
+-      - name: Dry-run the release
+-        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+-        env:
+-          PUBLISHED: ${{ steps.check.outputs.published }}
+-        run: |
+-          # npm publish --dry-run still rejects an existing registry version.
+-          # Validate the tarball on those PRs without trying to republish it.
+-          if [ "$PUBLISHED" == 'true' ]; then
+-            npm pack --dry-run
+-          else
+-            npm publish --dry-run --access public
+-          fi
+-
+       # The package's OIDC policy is verified through the authentication-only
+       # dispatch above (issue #136). No long-lived publishing token is used.
+       - name: Publish to npm
+-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outputs.published == 'false'
++        if: steps.check.outputs.published == 'false'
+         env:
+           VERSION: ${{ steps.check.outputs.version }}
+         run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
+@@ -676,6 +658,28 @@ jobs:
+           echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-client $VERSION could not be published. Check the js-client.yml trusted publisher policy on npmjs.com (including permission to publish directly), then run the authentication-only verification dispatch and retry."
+           exit 1
+ 
++  verify-public-package:
++    name: Verify published npm tarball anonymously
++    needs: [release]
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-public-package
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Download the released version from npm
++        working-directory: js/client
++        shell: bash
++        run: bash ../../.github/scripts/verify-public-npm-package.sh
++
+   pipeline-status:
+     name: Pipeline Status (js-client)
+     needs:
+@@ -684,13 +688,15 @@ jobs:
+       - verify-trusted-publishing
+       - unit
+       - conformance
++      - package-check
+       - release
++      - verify-public-package
+     if: ${{ !cancelled() }}
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/js-server.yml b/.github/workflows/js-server.yml
+index 810884f1..e7005520 100644
+--- a/.github/workflows/js-server.yml
++++ b/.github/workflows/js-server.yml
+@@ -14,22 +14,30 @@ on:
+     paths:
+       - '.github/workflows/js-server.yml'
+       - '.github/scripts/**'
++      - '.github/workflows/javascript-stage.yml'
++      - 'parity/**'
++      - 'js/package*.json'
+       - 'js/server/**'
+       - 'js/client/**'
+       - 'rust/**'
+       - 'docs/protocol/**'
+       - 'examples/concurrent-writers/**'
++      - 'examples/embedded-store/**'
+   pull_request:
+     branches:
+       - main
+     paths:
+       - '.github/workflows/js-server.yml'
+       - '.github/scripts/**'
++      - '.github/workflows/javascript-stage.yml'
++      - 'parity/**'
++      - 'js/package*.json'
+       - 'js/server/**'
+       - 'js/client/**'
+       - 'rust/**'
+       - 'docs/protocol/**'
+       - 'examples/concurrent-writers/**'
++      - 'examples/embedded-store/**'
+   workflow_dispatch:
+     inputs:
+       verify_trusted_publishing:
+@@ -37,9 +45,8 @@ on:
+         type: boolean
+         default: false
+ 
+-# Concurrency is set per job (issue #134): superseded read-only checks are
+-# cancelled on every branch, main included (issue #172), while writer jobs
+-# share a never-cancelled group.
++# Read-only concurrency cancels superseded PR synchronizations. Each main
++# revision keeps its results. Release writers share the repository queue.
+ 
+ # Least privilege by default; the release job opts into more below.
+ permissions:
+@@ -65,15 +72,15 @@ jobs:
+ 
+   release-preflight:
+     name: Release authentication preflight
+-    if: inputs.verify_trusted_publishing != true
++    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     permissions:
+       contents: read
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -96,8 +103,8 @@ jobs:
+       contents: read
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -118,8 +125,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 15
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-unit
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-unit
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     defaults:
+       run:
+         working-directory: js/server
+@@ -188,8 +195,8 @@ jobs:
+     runs-on: ${{ matrix.os }}
+     timeout-minutes: 20
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-portability-${{ matrix.os }}-${{ matrix.node }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-portability-${{ matrix.os }}-${{ matrix.node }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     strategy:
+       fail-fast: false
+       matrix:
+@@ -228,8 +235,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 40
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-differential
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-differential
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     env:
+       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+       # The Rust `DoubletsStorage` driver test/differential/doublets-storage
+@@ -310,15 +317,37 @@ jobs:
+             rust/target
+           key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
+ 
++  package-check:
++    name: Validate npm tarball
++    if: inputs.verify_trusted_publishing != true
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-package-check
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Validate package contents without registry access
++        working-directory: js/server
++        shell: bash
++        run: npm pack --dry-run --json | node ../../.github/scripts/check-npm-tarball-size.mjs
++
+   release:
+     name: Release to npm
+-    needs: [release-preflight, unit, portability, differential]
++    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release-preflight.result == 'success'
++    needs: [release-preflight, package-check, unit, portability, differential]
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     # Writer group: never cancel a publish that may already be under way.
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       contents: read
+       # Trusted publishing and npm provenance use a GitHub OIDC token.
+@@ -358,24 +387,10 @@ jobs:
+           fi
+           echo "version=$version" >> "$GITHUB_OUTPUT"
+ 
+-      # Pull requests check what would be published, without a token.
+-      - name: Dry-run the release
+-        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+-        env:
+-          PUBLISHED: ${{ steps.check.outputs.published }}
+-        run: |
+-          # npm publish --dry-run still rejects an existing registry version.
+-          # Validate the tarball on those PRs without trying to republish it.
+-          if [ "$PUBLISHED" == 'true' ]; then
+-            npm pack --dry-run
+-          else
+-            npm publish --dry-run --access public
+-          fi
+-
+       # The package's OIDC policy is verified through the authentication-only
+       # dispatch above (issue #136). No long-lived publishing token is used.
+       - name: Publish to npm
+-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outputs.published == 'false'
++        if: steps.check.outputs.published == 'false'
+         env:
+           VERSION: ${{ steps.check.outputs.version }}
+         run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
+@@ -389,6 +404,28 @@ jobs:
+           echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-server $VERSION could not be published. Add this repository and js-server.yml as a trusted publisher of @link-foundation/link-cli-server on npmjs.com (a maintainer publishes the first version by hand if the package does not exist yet), run the authentication-only verification dispatch, then retry."
+           exit 1
+ 
++  verify-public-package:
++    name: Verify published npm tarball anonymously
++    needs: [release]
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-public-package
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Download the released version from npm
++        working-directory: js/server
++        shell: bash
++        run: bash ../../.github/scripts/verify-public-npm-package.sh
++
+   pipeline-status:
+     name: Pipeline Status (js-server)
+     needs:
+@@ -398,13 +435,15 @@ jobs:
+       - unit
+       - portability
+       - differential
++      - package-check
+       - release
++      - verify-public-package
+     if: ${{ !cancelled() }}
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/links.yml b/.github/workflows/links.yml
+index 3155689c..45c64b58 100644
+--- a/.github/workflows/links.yml
++++ b/.github/workflows/links.yml
+@@ -47,8 +47,8 @@ jobs:
+     # external hosts or Wayback Machine probes from hanging the workflow.
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-link-checker
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-link-checker
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     permissions:
+       contents: read
+     steps:
+@@ -141,8 +141,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/rerun-infrastructure-failures.yml b/.github/workflows/rerun-infrastructure-failures.yml
+index 39c693b4..2cc1b131 100644
+--- a/.github/workflows/rerun-infrastructure-failures.yml
++++ b/.github/workflows/rerun-infrastructure-failures.yml
+@@ -85,8 +85,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/rust.yml b/.github/workflows/rust.yml
+index 2a51e977..d583b411 100644
+--- a/.github/workflows/rust.yml
++++ b/.github/workflows/rust.yml
+@@ -36,11 +36,8 @@ on:
+         required: false
+         type: string
+ 
+-# Concurrency is set per job (issue #134): superseded read-only checks are
+-# cancelled on every branch, main included (issue #172), while writer jobs
+-# share a never-cancelled group. A workflow-level group held the whole run,
+-# including the release and the registry wait, so a third push to main
+-# cancelled the queued run.
++# Read-only concurrency cancels superseded PR synchronizations. Each main
++# revision keeps its results. Release writers share the repository queue.
+ 
+ # Least privilege by default; the publishing jobs opt into more below.
+ permissions:
+@@ -75,8 +72,8 @@ jobs:
+       contents: read
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -105,8 +102,8 @@ jobs:
+     permissions:
+       id-token: write
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - name: Authenticate with crates.io (trusted publishing)
+         id: auth
+@@ -125,8 +122,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 15
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-detect-changes
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript]
+     if: github.event_name != 'workflow_dispatch'
+     outputs:
+@@ -183,8 +180,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 15
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-changelog
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-changelog
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.rust-code-changed == 'true'
+     steps:
+@@ -214,8 +211,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-lint
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes]
+     if: |
+       !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+@@ -316,8 +313,8 @@ jobs:
+     runs-on: ${{ matrix.os }}
+     timeout-minutes: 45
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-test-${{ matrix.os }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes, changelog, lint]
+     if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+     strategy:
+@@ -414,8 +411,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-coverage
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-coverage
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true'
+     steps:
+@@ -467,8 +464,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-fresh-merge
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     if: github.event_name == 'pull_request'
+     needs: [javascript, detect-changes, lint]
+     steps:
+@@ -522,8 +519,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-build
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     needs: [javascript, lint, test]
+     if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}
+     steps:
+@@ -584,6 +581,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       id-token: write
+       contents: write
+@@ -705,6 +703,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       id-token: write
+       contents: write
+@@ -801,6 +800,7 @@ jobs:
+     concurrency:
+       group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
++      queue: max
+     permissions:
+       contents: write
+       pull-requests: write
+@@ -872,8 +872,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index f82495ab..172ff8ba 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -48,8 +48,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-codeql-${{ matrix.language }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     permissions:
+       actions: read
+       contents: read
+@@ -126,8 +126,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-dependency-review
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-dependency-review
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     permissions:
+       contents: read
+       pull-requests: write
+@@ -148,8 +148,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-cargo-audit-${{ matrix.manifest }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-cargo-audit-${{ matrix.manifest }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     strategy:
+       fail-fast: false
+       matrix:
+@@ -182,8 +182,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit-${{ matrix.directory }}
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-npm-audit-${{ matrix.directory }}
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -203,8 +203,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 15
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-nuget-audit
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-nuget-audit
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -230,8 +230,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-python-audit
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-python-audit
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -254,8 +254,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-secrets-scan
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-secrets-scan
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -287,8 +287,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/wasm.yml b/.github/workflows/wasm.yml
+index 3cef24c1..37710f83 100644
+--- a/.github/workflows/wasm.yml
++++ b/.github/workflows/wasm.yml
+@@ -36,11 +36,8 @@ on:
+       - 'docs/protocol/causal-*'
+   workflow_dispatch:
+ 
+-# Concurrency is set per job (issue #134): superseded read-only checks are
+-# cancelled on every branch, main included (issue #172), while writer jobs
+-# share a never-cancelled group. A workflow-level group held the whole run,
+-# including the release and the registry wait, so a third push to main
+-# cancelled the queued run.
++# Read-only concurrency cancels superseded PR synchronizations. Each main
++# revision keeps its results. Release writers share the repository queue.
+ 
+ permissions:
+   contents: read
+@@ -67,8 +64,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-test
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-test
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+ 
+     steps:
+       - uses: actions/checkout@v7
+@@ -148,8 +145,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-coverage
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-coverage
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -203,8 +200,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/.github/workflows/workflows.yml b/.github/workflows/workflows.yml
+index 7e8fdd5a..eb7225ba 100644
+--- a/.github/workflows/workflows.yml
++++ b/.github/workflows/workflows.yml
+@@ -45,8 +45,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-actionlint
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-actionlint
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -62,18 +62,21 @@ jobs:
+       # .github/zizmor.yml). Re-resolve when bumping:
+       #   docker pull rhysd/actionlint:<tag> &&
+       #   docker inspect --format='{{index .RepoDigests 0}}' rhysd/actionlint:<tag>
++      # GitHub supports the writer queue. v1.7.12 rejects this key
++      # (rhysd/actionlint#657); workflow policy tests validate it separately.
+       - name: Lint workflow files
+         uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 # v1.7.12
+         with:
+-          args: -color
++          args: >-
++            -color -ignore "unexpected key .queue. for .concurrency. section"
+ 
+   zizmor:
+     name: zizmor
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-zizmor
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-zizmor
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -117,8 +120,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-policy
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-policy
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -137,8 +140,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-languages
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-languages
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -171,8 +174,8 @@ jobs:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 5
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+-      cancel-in-progress: true
++      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status
++      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
+     steps:
+       - uses: actions/checkout@v7
+         with:
+diff --git a/csharp/.changeset/README.md b/csharp/.changeset/README.md
+index c3c0173b..a4a3f8f7 100644
+--- a/csharp/.changeset/README.md
++++ b/csharp/.changeset/README.md
+@@ -29,6 +29,6 @@ The first line after `---` should be the package name followed by the bump type:
+ 
+ The content after the second `---` is the changelog description.
+ 
+-## Multiple changesets
++## Changesets per pull request
+ 
+-If your PR has multiple logical changes, you can create multiple changeset files. They will be merged automatically during release.
++The C# CI workflow requires exactly one new changeset per pull request that changes C# code. Describe all C# changes and select the highest required version bump in that file. A release can combine changesets from multiple pull requests.
+diff --git a/csharp/.changeset/ci-reliability.md b/csharp/.changeset/ci-reliability.md
+new file mode 100644
+index 00000000..804f696e
+--- /dev/null
++++ b/csharp/.changeset/ci-reliability.md
+@@ -0,0 +1,7 @@
++---
++'Foundation.Data.Doublets.Cli': patch
++---
++
++Keep C# checks for each main revision and group import and export options with the CLI I/O helpers.
++
++Retry transient Windows sharing failures while releasing PID store locks.
+diff --git a/csharp/Foundation.Data.Doublets.Cli.Library/StorePidLock.cs b/csharp/Foundation.Data.Doublets.Cli.Library/StorePidLock.cs
+index 31f5660e..c3b56906 100644
+--- a/csharp/Foundation.Data.Doublets.Cli.Library/StorePidLock.cs
++++ b/csharp/Foundation.Data.Doublets.Cli.Library/StorePidLock.cs
+@@ -26,11 +26,13 @@ public sealed class StorePidLock : IDisposable
+     private const string OwnerFile = "owner";
+ 
+     private readonly string _token;
++    private readonly bool _trace;
+ 
+-    private StorePidLock(string directory, string token)
++    private StorePidLock(string directory, string token, bool trace)
+     {
+         Path = directory;
+         _token = token;
++        _trace = trace;
+     }
+ 
+     /// <summary>The lock directory.</summary>
+@@ -48,7 +50,10 @@ public sealed class StorePidLock : IDisposable
+     {
+         try
+         {
+-            return StoreLockOwner.Parse(File.ReadAllText(System.IO.Path.Combine(directory, OwnerFile)));
++            using var file = new FileStream(System.IO.Path.Combine(directory, OwnerFile),
++              FileMode.Open, FileAccess.Read, Fil…ite | FileShare.Delete);
++            using var reader = new StreamReader(file);
++            return StoreLockOwner.Parse(reader.ReadToEnd());
+         }
+         catch (IOException)
+         {
+@@ -96,7 +101,7 @@ public sealed class StorePidLock : IDisposable
+                 WriteOwner(staging, owner);
+                 Directory.Move(staging, directory);
+                 holder = null;
+-                return new StorePidLock(directory, token);
++                return new StorePidLock(directory, token, trace);
+             }
+             catch (IOException error)
+             {
+@@ -106,7 +111,7 @@ public sealed class StorePidLock : IDisposable
+             {
+                 lastError = error;
+             }
+-            TryDelete(staging);
++            TryCleanup(() => Directory.Delete(staging, recursive: true), trace);
+             if (!Exists(directory))
+             {
+                 // Released between the rename and this check, or a real error.
+@@ -117,7 +122,7 @@ public sealed class StorePidLock : IDisposable
+             var reason = StaleReason(directory, holder);
+             if (reason is null) return null;
+             if (trace) Console.Error.WriteLine($"[TRACE] Breaking stale lock {directory}: {reason}");
+-            BreakStale(directory, holder);
++            BreakStale(directory, holder, trace);
+         }
+         if (lastError is not null) throw new IOException($"Cannot create the lock {directory}: {lastError.Message}", lastError);
+         holder = ReadOwner(directory);
+@@ -130,21 +135,24 @@ public sealed class StorePidLock : IDisposable
+     /// that cannot be moved (another waiter moved it first, or the directory
+     /// is not writable) is left alone: the next attempt sees what became of it.
+     /// </summary>
+-    public static void BreakStale(string directory, StoreLockOwner? expected)
++    public static void BreakStale(string directory, StoreLockOwner? expected) => BreakStale(directory, expected, false);
++
++    private static void BreakStale(string directory, StoreLockOwner? expected, bool trace)
+     {
+         ArgumentNullException.ThrowIfNull(directory);
+         var tombstone = $"{directory}.{Environment.ProcessId}.{StoreLockOwner.UniqueToken()}.stale";
+-        if (!TryMove(directory, tombstone)) return;
++        // Let the next acquisition reread the owner before another attempt.
++        if (!TryCleanup(() => Directory.Move(directory, tombstone), trace, retry: false)) return;
+         var moved = ReadOwner(tombstone);
+         if (moved?.Token =[REDACTED] expected?.Token)
+         {
+-            TryDelete(tombstone);
++            TryCleanup(() => Directory.Delete(tombstone, recursive: true), trace);
+         }
+         else
+         {
+             // A third process may have published meanwhile; then the moved
+             // owner has lost its lock and its directory stays for inspection.
+-            _ = TryMove(tombstone, directory);
++            TryCleanup(() => Directory.Move(tombstone, directory), trace, retry: false);
+         }
+     }
+ 
+@@ -153,7 +161,8 @@ public sealed class StorePidLock : IDisposable
+     {
+         if (ReadOwner(Path)?.Token != _token) return;
+         var tombstone = $"{Path}.{_token}.released";
+-        if (TryMove(Path, tombstone)) TryDelete(tombstone);
++        if (TryCleanup(() => Directory.Move(Path, tombstone), _trace))
++            TryCleanup(() => Directory.Delete(tombstone, recursive: true), _trace);
+     }
+ 
+     private static void WriteOwner(string directory, StoreLockOwner owner)
+@@ -167,34 +176,28 @@ public sealed class StorePidLock : IDisposable
+     /// <summary>Whether anything, even a dangling link, is at <paramref name="path"/>.</summary>
+     internal static bool Exists(string path) => Directory.Exists(path) || File.Exists(path) || new FileInfo(path).LinkTarget is not null;
+ 
+-    private static bool TryMove(string from, string to)
++    internal static bool TryCleanup(Action cleanup, bool trace, bool retry = true)
+     {
+-        try
+-        {
+-            Directory.Move(from, to);
+-            return true;
+-        }
+-        catch (IOException)
+-        {
+-            return false;
+-        }
+-        catch (UnauthorizedAccessException)
+-        {
+-            return false;
+-        }
+-    }
+-
+-    private static void TryDelete(string directory)
+-    {
+-        try
+-        {
+-            Directory.Delete(directory, recursive: true);
+-        }
+-        catch (IOException)
+-        {
+-        }
+-        catch (UnauthorizedAccessException)
++        // On Windows a waiter can still have the owner record open when the
++        // holder renames the containing directory. Retry for at most 75 ms.
++        for (var delay = 5; ; delay *= 2)
+         {
++            try
++            {
++                cleanup();
++                return true;
++            }
++            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
++            {
++                const int accessDenied = unchecked((int)0x80070005);
++                const int sharingViolation = unchecked((int)0x80070020);
++                const int lockViolation = unchecked((int)0x80070021);
++                if (trace) Console.Error.WriteLine($"[TRACE] PID-lock cleanup: 0x{error.HResult:X8} {error.Message}");
++                if (!retry || !OperatingSystem.IsWindows() || delay > 40 ||
++                    error.HResult is not (accessDenied or sharingViolation or lockViolation))
++                    return false;
++                Thread.Sleep(delay);
++            }
+         }
+     }
+ }
+diff --git a/csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs b/csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs
+index ecf52b41..90687d93 100644
+--- a/csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs
++++ b/csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs
+@@ -39,7 +39,7 @@ public sealed class CliStoreLockTests : IDisposable
+             Assert.Contains($"(w{index}: w{index} w{index})", exported, StringComparison.Ordinal);
+         }
+         Assert.DoesNotContain(
+-          Directory.GetFileSystemEntries(_directory),
++          Directory.GetFileSystemEntries(_directory).Select(Path.GetFileName).OfType<string>(),
+           entry => entry.EndsWith(".owner", StringComparison.Ordinal) || entry.Contains(".lock.d", StringComparison.Ordinal));
+     }
+ 
+diff --git a/csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs b/csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs
+index 45f5cae6..cd59f386 100644
+--- a/csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs
++++ b/csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs
+@@ -193,6 +193,55 @@ public sealed class StoreLockTests : IDisposable
+         Assert.Empty(Directory.GetFileSystemEntries(_directory));
+     }
+ 
++    [Fact]
++    public void PidCleanupRetriesWindowsSharingErrorsButLeavesPermanentErrorsAlone()
++    {
++        const int sharingViolation = unchecked((int)0x80070020);
++        var attempts = 0;
++        var cleaned = StorePidLock.TryCleanup(() =>
++        {
++            if (++attempts == 1) throw new IOException("held by a reader", sharingViolation);
++        }, trace: false);
++        Assert.Equal(OperatingSystem.IsWindows(), cleaned);
++        Assert.Equal(OperatingSystem.IsWindows() ? 2 : 1, attempts);
++
++        attempts = 0;
++        Assert.False(StorePidLock.TryCleanup(() =>
++        {
++            attempts++;
++            throw new DirectoryNotFoundException();
++        }, trace: false));
++        Assert.Equal(1, attempts);
++    }
++
++    [Fact]
++    public void WindowsPidCleanupCanMoveTheDirectoryAfterItsReaderCloses()
++    {
++        if (!OperatingSystem.IsWindows()) return;
++
++        var directory = PlantPidLock(Store(), StoreLockOwner.Current("held"));
++        var released = directory + ".released";
++        using var reader = new FileStream(Path.Combine(directory, "owner"),
++          FileMode.Open, FileAccess.Read, FileShare.Read);
++        var attempts = 0;
++        Assert.True(StorePidLock.TryCleanup(() =>
++        {
++            attempts++;
++            try
++            {
++                Directory.Move(directory, released);
++            }
++            catch (IOException) when (attempts == 1)
++            {
++                reader.Dispose();
++                throw;
++            }
++        }, trace: true));
++        Assert.Equal(2, attempts);
++        Assert.Equal("held", StorePidLock.ReadOwner(released)?.Token);
++        Assert.False(Directory.Exists(directory));
++    }
++
+     [Fact]
+     public void BreaksTheLockOfAnOwnerThatIsGone()
+     {
+diff --git a/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs b/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs
+index 53c1100f..90868356 100644
+--- a/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs
++++ b/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs
+@@ -1,11 +1,38 @@
++using System.Diagnostics;
+ using Platform.Data;
+ using Platform.Data.Doublets;
++using Xunit.Abstractions;
+ using static Foundation.Data.Doublets.Cli.Tests.VersionPublicationIntentFailureTests;
+ 
+ namespace Foundation.Data.Doublets.Cli.Tests;
+ 
+-public class VersionMovementRestartFailureTests
++public class VersionMovementRestartFailureTests(
++  VersionMovementRestartFailureTests.InterruptedMovement fixture, ITestOutputHelper output)
++  : IClassFixture<VersionMovementRestartFailureTests.InterruptedMovement>
+ {
++    public sealed class InterruptedMovement : IAsyncLifetime
++    {
++        private readonly string _directory = Directory.CreateTempSubdirectory("movement-restart-image-").FullName;
++        internal (uint Id, long Original, long Attempted) Position { get; private set; }
++
++        // All cases start at the same persisted cut. Each recovery runs on
++        // its own copy, so no case can change the fixture or another case.
++        public async Task InitializeAsync() =>
++            Position = await VersionProcessExitTests.ExitChild(_directory, "intent-flush-after", true, "movement-exit");
++
++        internal void CopyTo(string directory)
++        {
++            foreach (var file in Directory.EnumerateFiles(_directory))
++                File.Copy(file, Path.Combine(directory, Path.GetFileName(file)));
++        }
++
++        public Task DisposeAsync()
++        {
++            Directory.Delete(_directory, recursive: true);
++            return Task.CompletedTask;
++        }
++    }
++
+     public static TheoryData<string> Cases
+     {
+         get
+@@ -21,25 +48,40 @@ public class VersionMovementRestartFailureTests
+     [MemberData(nameof(Cases))]
+     public async Task FailedConstructorKeepsRecoveryOwnerReachable(string point)
+     {
+-        await FiniteExitChild.WithDirectory("movement-restart-failure-", async directory =>
++        await FiniteExitChild.WithDirectory("movement-restart-failure-", directory =>
+         {
+-            var (id, original, attempted) = await VersionProcessExitTests.ExitChild(directory, "intent-flush-after", true, "movement-exit");
++            var elapsed = Stopwatch.StartNew();
++            var verbose = Environment.GetEnvironmentVariable("LINK_CSHARP_RECOVERY_TRACE") == "1";
++            void Phase(string phase)
++            {
++                if (verbose)
++                    output.WriteLine($"{point}: {phase} at {elapsed.ElapsedMilliseconds} ms (queued work: {ThreadPool.PendingWorkItemCount})");
++            }
++
++            fixture.CopyTo(directory);
++            var (id, original, attempted) = fixture.Position;
++            Phase("copied interrupted movement");
+             using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
+             using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
+             var fault = new Fault { Point = point, Flushes = 1 };
++            if (verbose) fault.OnCheck = Phase;
+             using var branches = new Metadata(Path.Combine(directory, "branches.links"), fault);
+             using var tx = new TransactionsDecorator(data, log);
++            Phase("opened stores");
+             try
+             {
+                 var error = Assert.Throws<IOException>(() => new VersionControlDecorator(tx, branches));
++                Phase("first recovery attempt returned");
+                 Assert.Contains(point, error.Message);
+                 Assert.Throws<InvalidOperationException>(() => tx.CreateAndUpdate(71u, 72u));
+                 Assert.Throws<InvalidOperationException>(() => tx.BeginTransaction());
+                 Assert.Throws<InvalidOperationException>(() => tx.Shutdown());
+                 fault.Point = "flush-before";
+                 Assert.Throws<IOException>(() => new VersionControlDecorator(tx, branches));
++                Phase("second recovery attempt returned");
+                 Assert.Throws<InvalidOperationException>(() => tx.CreateAndUpdate(71u, 72u));
+                 using var recovered = new VersionControlDecorator(tx, branches);
++                Phase("recovered version");
+                 Assert.Equal(VersionMovementExitTests.Topic, recovered.CurrentBranch);
+                 Assert.Equal(original, recovered.CurrentSequence);
+                 Assert.Equal(11u, recovered.GetSource(id));
+@@ -47,13 +89,16 @@ public class VersionMovementRestartFailureTests
+                 recovered.Update(new[] { id }, new[] { id, 31u, 32u }, null);
+                 Assert.Equal(attempted + 1, recovered.CurrentSequence);
+                 data.Flush(); log.Flush(); branches.Flush();
++                Phase("flushed recovered stores");
+             }
+             finally
+             {
+                 // Release fixture resources even when the pre-fix orphaned
+                 // lease makes the assertions fail. No following writes occur.
+                 tx.FinishVersionReplay();
++                Phase("released recovery owner");
+             }
++            return Task.CompletedTask;
+         });
+     }
+ }
+diff --git a/csharp/Foundation.Data.Doublets.Cli/CliIo.cs b/csharp/Foundation.Data.Doublets.Cli/CliIo.cs
+index 2a87ad61..70a155f5 100644
+--- a/csharp/Foundation.Data.Doublets.Cli/CliIo.cs
++++ b/csharp/Foundation.Data.Doublets.Cli/CliIo.cs
+@@ -1,3 +1,5 @@
++using System.CommandLine;
++using System.Globalization;
+ using Foundation.Data.Doublets.Cli.Protocol;
+ using Link.Foundation.Links.Notation;
+ using Link.Foundation.Links.Notation.Binary;
+@@ -13,6 +15,44 @@ namespace Foundation.Data.Doublets.Cli;
+ /// </summary>
+ internal static class CliIo
+ {
++    internal static (Option<string?>, Option<int>, Option<string?>, Option<string?>) ImportOptions()
++    {
++        var inputOption = new Option<string?>("--in", "--lino-input", "--import")
++        {
++            Description = "Path to read and import a LiNo file into the database"
++        };
++
++        var inputMaxDepthOption = new Option<int>("--in-max-depth")
++        {
++            Description = $"LiNo import nesting limit (1 to {LinoDatabaseInput.MaxImportDepth}; default: {LinoDatabaseInput.DefaultImportDepth})",
++            DefaultValueFactory = _ => LinoDatabaseInput.DefaultImportDepth,
++            CustomParser = result =>
++            {
++                if (result.Tokens.Count == 1
++                    && int.TryParse(result.Tokens[0].Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var depth)
++                    && depth is >= 1 and <= LinoDatabaseInput.MaxImportDepth)
++                {
++                    return depth;
++                }
++
++                result.AddError($"Invalid value for '--in-max-depth': expected an integer from 1 to {LinoDatabaseInput.MaxImportDepth}");
++                return LinoDatabaseInput.DefaultImportDepth;
++            }
++        };
++
++        var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
++        {
++            Description = "Path to read and import a store archive in binary links notation"
++        };
++
++        var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output", "--binary-out")
++        {
++            Description = "Path to write the complete database, names included, as a store archive in binary links notation"
++        };
++
++        return (inputOption, inputMaxDepthOption, binaryInputOption, binaryOutputOption);
++    }
++
+     internal static int RunTransactionBatch(FileTransitionLog journal, TransactionsDecorator transactions,
+         VersionControlDecorator? versionControl, Func<int> run)
+     {
+diff --git a/csharp/Foundation.Data.Doublets.Cli/Program.cs b/csharp/Foundation.Data.Doublets.Cli/Program.cs
+index afb198db..ee44aae5 100644
+--- a/csharp/Foundation.Data.Doublets.Cli/Program.cs
++++ b/csharp/Foundation.Data.Doublets.Cli/Program.cs
+@@ -1,5 +1,4 @@
+ using System.CommandLine;
+-using System.Globalization;
+ using Foundation.Data.Doublets.Cli;
+ using Foundation.Data.Doublets.Cli.Graphql;
+ using Foundation.Data.Doublets.Cli.Ipc;
+@@ -108,38 +107,7 @@ var embedTriggersOption = new Option<bool>("--embed-triggers")
+     DefaultValueFactory = _ => false
+ };
+ 
+-var inputOption = new Option<string?>("--in", "--lino-input", "--import")
+-{
+-    Description = "Path to read and import a LiNo file into the database"
+-};
+-
+-var inputMaxDepthOption = new Option<int>("--in-max-depth")
+-{
+-    Description = $"LiNo import nesting limit (1 to {LinoDatabaseInput.MaxImportDepth}; default: {LinoDatabaseInput.DefaultImportDepth})",
+-    DefaultValueFactory = _ => LinoDatabaseInput.DefaultImportDepth,
+-    CustomParser = result =>
+-    {
+-        if (result.Tokens.Count == 1
+-            && int.TryParse(result.Tokens[0].Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var depth)
+-            && depth is >= 1 and <= LinoDatabaseInput.MaxImportDepth)
+-        {
+-            return depth;
+-        }
+-
+-        result.AddError($"Invalid value for '--in-max-depth': expected an integer from 1 to {LinoDatabaseInput.MaxImportDepth}");
+-        return LinoDatabaseInput.DefaultImportDepth;
+-    }
+-};
+-
+-var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
+-{
+-    Description = "Path to read and import a store archive in binary links notation"
+-};
+-
+-var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output", "--binary-out")
+-{
+-    Description = "Path to write the complete database, names included, as a store archive in binary links notation"
+-};
++var (inputOption, inputMaxDepthOption, binaryInputOption, binaryOutputOption) = ImportOptions();
+ 
+ var transactionsOption = new Option<bool>("--transactions")
+ {
+diff --git a/experiments/issue-138/etcd-cluster.mjs b/experiments/issue-138/etcd-cluster.mjs
+index cef49774..f5e8e639 100644
+--- a/experiments/issue-138/etcd-cluster.mjs
++++ b/experiments/issue-138/etcd-cluster.mjs
+@@ -8,7 +8,7 @@ import net from 'node:net';
+ import { resolve, join } from 'node:path';
+ import { pathToFileURL } from 'node:url';
+ import { ClusterEngine, EtcdJournalStore } from '../../js/client/src/cluster.js';
+-import { waitForMembers } from './etcd-harness.mjs';
++import { electedMember, memberStatus, waitForMembers } from './etcd-harness.mjs';
+ import { verifyAuthorFence } from '../../examples/native-lsm-js/author-fence-consensus.mjs';
+ import { verifyAddressAllocation } from '../../examples/native-lsm-js/allocation-consensus.mjs';
+ import { PartitionedJournalStore } from '../../js/client/src/partitioned.js';
+@@ -20,6 +20,7 @@ const binary =
+   process.env.ETCD_BIN ?? resolve('experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd');
+ const directory = mkdtempSync(resolve('experiments/issue-138/etcd/run-'));
+ const checkpoint = process.env.CLUSTER_JOURNAL_CHECKPOINT_INTERVAL === '1';
++const verbose = process.env.ETCD_TEST_VERBOSE === '1';
+ const checkpointFlags = checkpoint ? ['--checkpoint'] : [];
+ const checkpointOptions = checkpoint ? { journalCheckpointInterval: 1 } : {};
+ const ports = [];
+@@ -104,7 +105,7 @@ try {
+         '--snapshot-count',
+         '1000',
+         '--log-level',
+-        'warn',
++        verbose ? 'debug' : 'warn',
+       ],
+       { env: { ...process.env, GOMEMLIMIT: '100MiB' }, stdio: ['ignore', 'pipe', 'pipe'] },
+     );
+@@ -225,7 +226,7 @@ try {
+         '--quota-backend-bytes',
+         '16777216',
+         '--log-level',
+-        'warn',
++        verbose ? 'debug' : 'warn',
+       ],
+       { env: { ...process.env, GOMEMLIMIT: '100MiB' }, stdio: ['ignore', 'pipe', 'pipe'] },
+     );
+@@ -367,45 +368,37 @@ try {
+     'PASS independent consensus groups: unavailable west publishes nothing; east still commits',
+   );
+ 
+-  // The member each reachable endpoint names as leader, as an index.
++  // Return the member the sampled endpoints agree is leading this group.
+   async function leaderOf(indices) {
+-    const status = await Promise.all(
+-      indices.map(async (i) =>
+-        (
+-          await fetch(`${endpoints[i]}/v3/maintenance/status`, {
+-            method: 'POST',
+-            body: '{}',
+-            signal: AbortSignal.timeout(2000),
+-          })
+-        ).json(),
+-      ),
+-    );
+-    const leaders = new Set(status.map((item) => item.leader));
+-    assert.equal(leaders.size, 1, 'reachable members agree on one leader');
+-    const index = status.findIndex((item) => item.header.member_id === item.leader);
+-    return index >= 0 ? indices[index] : null;
++    const statuses = await Promise.all(indices.map((index) => memberStatus(endpoints[index])));
++    if (verbose) {
++      console.error(
++        'etcd election status',
++        statuses.map(({ header, leader, raftTerm }) => ({
++          member: header.member_id,
++          leader,
++          raftTerm,
++        })),
++      );
++    }
++    return indices[electedMember(statuses)];
+   }
+ 
+   // A paused leader. SIGSTOP freezes it, so its peers stop hearing from it as
+   // if a partition cut it off, and on SIGCONT it comes back still believing it
+   // leads, as after a healed partition (Jepsen's "pause" fault). A transaction
+   // staged before the pause must not commit after it: the majority moved on.
+-  const paused = await leaderOf([0, 1, 2]);
+-  assert.ok(paused !== null);
++  const members = [0, 1, 2];
++  const paused = await ready(() => leaderOf(members));
+   const beforePause = await engine.begin(['a', 'b']);
+   await beforePause.shard('a').setName(1, 'staged before the pause');
+-  nodes[paused].child.kill('SIGSTOP');
++  assert.ok(nodes[paused].child.kill('SIGSTOP'), `could not pause etcd member n${paused}`);
++  let elected;
+   try {
++    elected = await ready(() => leaderOf(members.filter((index) => index !== paused)));
+     const majority = await ready(() => engine.begin(['a', 'b']));
+     await majority.shard('b').setName(1, 'majority while the leader is paused');
+     await majority.commit();
+-    const others = [0, 1, 2].filter((i) => i !== paused);
+-    const elected = await ready(async () => {
+-      const leader = await leaderOf(others);
+-      if (leader === null) throw new Error('no leader among the majority yet');
+-      return leader;
+-    });
+-    assert.notEqual(elected, paused);
+   } finally {
+     nodes[paused].child.kill('SIGCONT');
+   }
+@@ -425,13 +418,13 @@ try {
+   assert.equal(await healed.shard('b').getName(1), 'majority while the leader is paused');
+   assert.notEqual(await healed.shard('a').getName(1), 'staged before the pause');
+   await healed.close();
+-  assert.notEqual(await ready(() => leaderOf([0, 1, 2])), paused);
++  // The healed member can legitimately campaign in another term. The test
++  // requires the paused-phase election and the committed history above.
++  const leader = await ready(() => leaderOf(members));
+   console.log(
+-    `PASS real etcd: paused leader n${paused}; the majority elected another and committed, the stale transaction was refused, and the resumed member serves the new history`,
++    `PASS real etcd: paused leader n${paused}; the majority elected n${elected} and committed, the stale transaction was refused, and the resumed member serves the new history (healed leader n${leader})`,
+   );
+ 
+-  const leader = await leaderOf([0, 1, 2]);
+-  assert.ok(leader !== null);
+   await stop(nodes[leader]);
+   const after = await ready(() => engine.begin(['a', 'b']));
+   assert.equal(await after.shard('a').count(), 1n);
+diff --git a/experiments/issue-138/etcd-harness.mjs b/experiments/issue-138/etcd-harness.mjs
+index 645921f0..73e646af 100644
+--- a/experiments/issue-138/etcd-harness.mjs
++++ b/experiments/issue-138/etcd-harness.mjs
+@@ -1,3 +1,31 @@
++export async function memberStatus(endpoint, fetch = globalThis.fetch) {
++  const response = await fetch(`${endpoint}/v3/maintenance/status`, {
++    method: 'POST',
++    body: '{}',
++    signal: AbortSignal.timeout(2000),
++  });
++  if (!response.ok) throw Error(`member status HTTP ${response.status}`);
++  const status = await response.json();
++  if (!status.header?.member_id || !status.leader || status.leader === '0') {
++    throw Error('member has no leader');
++  }
++  return status;
++}
++
++// Require agreement and a leader in the sampled group. A majority that still
++// reports the paused member has not elected its replacement yet.
++export function electedMember(statuses) {
++  const leader = statuses[0]?.leader;
++  if (!leader || statuses.some((status) => status.leader !== leader)) {
++    throw Error(
++      `members disagree on leader: ${statuses.map((status) => status.leader).join(', ')}`,
++    );
++  }
++  const index = statuses.findIndex((status) => status.header.member_id === leader);
++  if (index < 0) throw Error(`reported leader ${leader} is outside the sampled group`);
++  return index;
++}
++
+ // Each intended member must be ready before injecting failures. A majority's
+ // readiness alone says nothing about a slower member's listening socket.
+ export async function waitForMembers(
+@@ -13,16 +41,7 @@ export async function waitForMembers(
+       let failure;
+       for (let attempt = 0; attempt < attempts; attempt++) {
+         try {
+-          const response = await fetch(`${endpoint}/v3/maintenance/status`, {
+-            method: 'POST',
+-            body: '{}',
+-            signal: AbortSignal.timeout(2000),
+-          });
+-          if (!response.ok) throw Error(`member status HTTP ${response.status}`);
+-          const status = await response.json();
+-          if (!status.header?.member_id || !status.leader || status.leader === '0')
+-            throw Error('member has no leader');
+-          return status;
++          return await memberStatus(endpoint, fetch);
+         } catch (error) {
+           failure = error;
+           await pause(100);
+diff --git a/experiments/issue-138/etcd-harness.test.mjs b/experiments/issue-138/etcd-harness.test.mjs
+index 894154c2..651da34b 100644
+--- a/experiments/issue-138/etcd-harness.test.mjs
++++ b/experiments/issue-138/etcd-harness.test.mjs
+@@ -1,6 +1,19 @@
+ import assert from 'node:assert/strict';
+ import test from 'node:test';
+-import { waitForMembers } from './etcd-harness.mjs';
++import { electedMember, waitForMembers } from './etcd-harness.mjs';
++
++test('a replacement is required while the leader is paused, and any member may lead after healing', () => {
++  const statuses = (members, leader) =>
++    members.map((member_id) => ({ header: { member_id }, leader }));
++  const majority = ['n0', 'n2'];
++  assert.throws(() => electedMember(statuses(majority, 'n1')), /outside the sampled group/);
++  assert.throws(
++    () => electedMember([...statuses(['n0'], 'n0'), ...statuses(['n2'], 'n2')]),
++    /disagree on leader/,
++  );
++  assert.equal(electedMember(statuses(majority, 'n2')), 1);
++  assert.equal(electedMember(statuses(['n0', 'n1', 'n2'], 'n1')), 1);
++});
+ 
+ test('a ready majority cannot hide a slow third member', async () => {
+   const calls = new Map();
+diff --git a/experiments/issue-207/compare-ci-files.py b/experiments/issue-207/compare-ci-files.py
+new file mode 100644
+index 00000000..3254abeb
+--- /dev/null
++++ b/experiments/issue-207/compare-ci-files.py
+@@ -0,0 +1,116 @@
++"""Inventory CI inputs from link-cli and downloaded recursive template trees."""
++
++import json
++import re
++import subprocess
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++TEMPLATES = ("rust", "js", "csharp", "python", "java", "cpp")
++
++
++def ci_input(path: str) -> bool:
++    """Include workflow-owned files, CI helpers, hooks, and root CI policies."""
++    filename = Path(path).name
++    return (
++        path.startswith(
++            (
++                ".github/",
++                ".githooks/",
++                ".husky/",
++                ".ci/",
++                ".config/",
++                "ci/",
++                "scripts/",
++                "parity/",
++            )
++        )
++        or re.match(r"^(csharp|js|rust)/scripts/", path) is not None
++        or re.search(
++            r"^\.(pre-commit|lychee|secretlint|actionlint|zizmor|codecov|package-registry-manager"
++            r"|prettier|editorconfig|clang-format|shellcheck)",
++            filename,
++        )
++        is not None
++        or filename.startswith(("eslint.config.", "rustfmt."))
++    )
++
++
++def stem(path: str) -> str:
++    return Path(path).stem.replace("_", "-")
++
++
++def purpose(path: str) -> str:
++    matched = (
++        (
++            "change detection and stage gate",
++            r"detect|fresh-merge|javascript-first|javascript-stage|parity",
++        ),
++        (
++            "registry and release",
++            r"version|changelog|changeset|release|publish|registry|npm|pypi|nuget|crates|vcpkg|maven|package",
++        ),
++        (
++            "workflow validation and status",
++            r"workflow|status|gate|policy|concurrency|zizmor|actionlint",
++        ),
++        (
++            "security and dependencies",
++            r"security|secrets|codeql|audit|depend|sarif|credential|preflight",
++        ),
++        ("documentation and links", r"docs|lychee|links|web-archive|pages"),
++        (
++            "runner and artifact handling",
++            r"runner|unacquired|rerun|artifact|archive|budget|buildx",
++        ),
++        (
++            "source and test quality",
++            r"lint|format|file-size|line-limit|coverage|warnings|test",
++        ),
++    )
++    for description, pattern in matched:
++        if re.search(pattern, path):
++            return description
++    return "repository or language-specific infrastructure"
++
++
++def main() -> None:
++    directory = Path(sys.argv[1])
++    base = sys.argv[2]
++    local_tree = subprocess.check_output(
++        ["git", "ls-tree", "-rz", base], cwd=ROOT, text=True
++    )
++    local = {}
++    for entry in local_tree.rstrip("\0").split("\0"):
++        metadata, path = entry.split("\t", 1)
++        if ci_input(path):
++            local[path] = metadata.split()[2]
++    snapshots = {"link-cli": local}
++    template_paths = {}
++    for name in TEMPLATES:
++        tree = json.loads((directory / f"{name}-tree.json").read_text())["tree"]
++        snapshot = {
++            file["path"]: file["sha"]
++            for file in tree
++            if file["type"] == "blob" and ci_input(file["path"])
++        }
++        template_paths.update(
++            {f"{name}/{path}": digest for path, digest in snapshot.items()}
++        )
++        snapshots[name] = snapshot
++
++    print("repository\tpath\tblob\tpurpose\tother repository matches")
++    for name, snapshot in snapshots.items():
++        other = template_paths if name == "link-cli" else local
++        for path, blob in sorted(snapshot.items()):
++            peers = [
++                f"{item} ({'identical' if digest == blob else 'same stem'})"
++                for item, digest in other.items()
++                if digest == blob or stem(item) == stem(path)
++            ]
++            print(name, path, blob, purpose(path), ", ".join(peers) or "-", sep="\t")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/js/client/package-lock.json b/js/client/package-lock.json
+index b89f82bb..d3d1c8cf 100644
+--- a/js/client/package-lock.json
++++ b/js/client/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "@link-foundation/link-cli-client",
+-  "version": "0.5.0",
++  "version": "0.5.1",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "@link-foundation/link-cli-client",
+-      "version": "0.5.0",
++      "version": "0.5.1",
+       "license": "Unlicense",
+       "devDependencies": {
+         "typescript": "^7.0.2"
+diff --git a/js/client/package.json b/js/client/package.json
+index 6108b982..c361eb0d 100644
+--- a/js/client/package.json
++++ b/js/client/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@link-foundation/link-cli-client",
+-  "version": "0.5.0",
++  "version": "0.5.1",
+   "description": "Minimal universal JS/TS client for link-cli stores: the clink --serve protocol over TCP (Node.js, Bun, Deno) and every IPC endpoint (Unix sockets, named pipes, FIFOs, UDP, shared memory, message queues, ...), a subprocess adapter and the in-process WebAssembly backend, behind one contract with explicit capabilities",
+   "type": "module",
+   "license": "Unlicense",
+diff --git a/js/client/src/ipc-ring.js b/js/client/src/ipc-ring.js
+index 44e9082a..d5a43b78 100644
+--- a/js/client/src/ipc-ring.js
++++ b/js/client/src/ipc-ring.js
+@@ -32,6 +32,17 @@ export const ringBase = (ring, capacity) => HEADER + ring * (RING_HEADER + capac
+ const immediate = () => new Promise((resolve) => setImmediate(resolve));
+ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+ 
++function removeRingFile(file, windows) {
++  try {
++    fs.rmSync(file, { force: true });
++  } catch (error) {
++    if (!windows || (error.code !== 'EPERM' && error.code !== 'EBUSY')) throw error;
++    // Windows holds mapped files until the peer unmaps its view. The last
++    // endpoint to release the region also tries to delete it.
++    trace(`ring file cleanup left to the peer (${error.code})`);
++  }
++}
++
+ /** A region of bytes both processes see: any object with `read` and `write` at offsets. */
+ export class FileRegion {
+   constructor(fd, length) {
+@@ -401,7 +412,7 @@ export class RingStream extends Duplex {
+       } catch {
+         // Already closed.
+       }
+-      for (const file of this.#cleanup) fs.rmSync(file, { force: true });
++      for (const file of this.#cleanup) removeRingFile(file, true);
+     }
+     callback(error);
+   }
+@@ -431,10 +442,11 @@ export async function connectRing(endpoint, { signal } = {}, platform = process.
+   const rendezvous = Rendezvous.begin(endpoint, kind);
+   const capacity = endpoint.number('capacity', 65536, 64, 1 << 30);
+   const size = regionSize(capacity);
++  const windows = platform === 'win32';
+   // `shm` is the POSIX object `/lcID`, which Linux keeps in /dev/shm.
+   const file = kind === 'shm' ? `/dev/shm/lc${rendezvous.id}` : rendezvous.path(SUFFIX[kind]);
+   const region = new FileRegion(createFile(file, size), size);
+-  const forget = () => fs.rmSync(file, { force: true });
++  const forget = () => removeRingFile(file, windows);
+   try {
+     initialize(region, capacity);
+     const poll = endpoint.millis('poll', 5);
+@@ -449,7 +461,6 @@ export async function connectRing(endpoint, { signal } = {}, platform = process.
+     const notifier =
+       kind === 'signal' ? new SignalNotifier(peer, peerSignal(ack)) : new PollNotifier(poll);
+     // Both sides hold the region open now; nothing should outlive a crash.
+-    const windows = platform === 'win32';
+     const cleanup = windows ? [file] : [];
+     if (!windows) forget();
+     const stream = new RingStream({ kind, region, notifier, peerPid: peer, cleanup });
+diff --git a/js/client/test/ipc-ring.test.mjs b/js/client/test/ipc-ring.test.mjs
+index 7a9069a9..6255bfcf 100644
+--- a/js/client/test/ipc-ring.test.mjs
++++ b/js/client/test/ipc-ring.test.mjs
+@@ -2,6 +2,7 @@
+ // listener of the rendezvous directory (test/support/ipc-listener.mjs), and of
+ // the ring stream's failure paths on in-memory regions. They need no `clink`.
+ import assert from 'node:assert/strict';
++import { once } from 'node:events';
+ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+@@ -99,6 +100,70 @@ test('a ring keeps its file until it hangs up on Windows', async (t) => {
+   assert.deepEqual(fs.readdirSync(dir), ['listener.json']);
+ });
+ 
++for (const code of ['EPERM', 'EBUSY']) {
++  test(`Windows ring cleanup leaves the mapped file for the peer on ${code}`, async (t) => {
++    const dir = tempDir(t);
++    const listener = new Listener(dir, 'mmap', { answer: () => ({ pid: process.pid }) });
++    t.after(() => listener.close());
++    const stream = await connectRing(parseEndpoint(`mmap:${dir}`), {}, 'win32');
++    const file = path.join(
++      dir,
++      fs.readdirSync(dir).find((name) => name.endsWith('.mmap')),
++    );
++    const remove = fs.rmSync;
++    const attempt = t.mock.method(fs, 'rmSync', (name, options) => {
++      if (name === file) throw Object.assign(new Error('peer still maps the file'), { code });
++      return remove(name, options);
++    });
++    const closed = once(stream, 'close');
++    stream.destroy();
++    await closed;
++    assert.ok(attempt.mock.calls.some(({ arguments: [name] }) => name === file));
++    assert.ok(fs.existsSync(file));
++    // The peer closes its mapping after the JS stream and removes the file.
++    remove(file);
++    assert.deepEqual(fs.readdirSync(dir), ['listener.json']);
++  });
++}
++
++test('Windows ring cleanup delivers other deletion errors through the stream', async (t) => {
++  const failure = Object.assign(new Error('I/O error removing file'), { code: 'EIO' });
++  const remove = fs.rmSync;
++  t.mock.method(fs, 'rmSync', (file, options) => {
++    if (file.endsWith('.mmap')) throw failure;
++    return remove(file, options);
++  });
++
++  const region = fresh();
++  const stream = new RingStream({
++    kind: 'mmap',
++    region,
++    notifier: new PollNotifier(1),
++    peerPid: process.pid,
++    cleanup: ['unused.mmap'],
++  });
++  const error = once(stream, 'error');
++  stream.destroy();
++  assert.deepEqual(await error, [failure]);
++});
++
++test('Windows ring cleanup preserves a rejected handshake while the peer still maps the file', async (t) => {
++  const dir = tempDir(t);
++  const listener = new Listener(dir, 'mmap', { answer: () => ({ error: 'no room' }) });
++  t.after(() => listener.close());
++  const remove = fs.rmSync;
++  t.mock.method(fs, 'rmSync', (file, options) => {
++    if (file.endsWith('.mmap')) {
++      throw Object.assign(new Error('peer still maps the file'), { code: 'EPERM' });
++    }
++    return remove(file, options);
++  });
++  await assert.rejects(
++    connectRing(parseEndpoint(`mmap:${dir}`), {}, 'win32'),
++    rejectsWith('ECONNREFUSED', /no room/),
++  );
++});
++
+ test('a refused ring connection removes its region', async (t) => {
+   const dir = tempDir(t);
+   let answer = () => ({ error: 'no room' });
+diff --git a/js/server/package-lock.json b/js/server/package-lock.json
+index 65fe6fba..94f0767f 100644
+--- a/js/server/package-lock.json
++++ b/js/server/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "@link-foundation/link-cli-server",
+-  "version": "0.1.1",
++  "version": "0.1.2",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "@link-foundation/link-cli-server",
+-      "version": "0.1.1",
++      "version": "0.1.2",
+       "license": "Unlicense",
+       "dependencies": {
+         "links-notation": "0.32.0"
+diff --git a/js/server/package.json b/js/server/package.json
+index 4c3d552c..9f5fb463 100644
+--- a/js/server/package.json
++++ b/js/server/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@link-foundation/link-cli-server",
+-  "version": "0.1.1",
++  "version": "0.1.2",
+   "description": "Pure JavaScript link-cli server and embedded store: the clink query language, named types and unicode strings, LiNo and binary import/export, persistent transformations, transactions, version control, triplets, permissions, the clink --serve protocol server and the GraphQL endpoint, with the same command line and on-disk formats as the Rust clink",
+   "type": "module",
+   "license": "Unlicense",
+diff --git a/js/server/src/store-lock.js b/js/server/src/store-lock.js
+index a57d9837..bc5d4b32 100644
+--- a/js/server/src/store-lock.js
++++ b/js/server/src/store-lock.js
+@@ -342,6 +342,7 @@ export class LockOwner {
+  */
+ const UNOWNED_GRACE_MS = 10000;
+ const OWNER_FILE = 'owner';
++const windowsCleanupWait = new Int32Array(new SharedArrayBuffer(4));
+ 
+ /** `<db>.lock.d`. */
+ export const lockDirPath = (store) => `${store}.lock.d`;
+@@ -398,7 +399,7 @@ const exists = (path) => {
+  * left alone: the next attempt sees what became of it. `rename` stands in for
+  * `renameSync`.
+  */
+-export function breakStale(dir, expected, rename = renameSync) {
++export function breakStale(dir, expected, rename = renameSync, trace) {
+   const tombstone = `${dir}.${process.pid}.${uniqueToken()}.stale`;
+   try {
+     rename(dir, tombstone);
+@@ -406,7 +407,7 @@ export function breakStale(dir, expected, rename = renameSync) {
+     return;
+   }
+   if (readOwner(tombstone)?.token =[REDACTED] expected?.token) {
+-    rmSync(tombstone, { recursive: true, force: true });
++    removePidDirectory(tombstone, trace);
+     return;
+   }
+   try {
+@@ -419,9 +420,10 @@ export function breakStale(dir, expected, rename = renameSync) {
+ 
+ /** A held `--lock pid` lock; `release()` removes the directory. */
+ export class PidLock {
+-  constructor(dir, token) {
++  constructor(dir, token, trace) {
+     this.dir = dir;
+     this.token = [REDACTED];
++    this.trace = trace;
+   }
+ 
+   path() {
+@@ -433,11 +435,37 @@ export class PidLock {
+     if (readOwner(this.dir)?.token !== this.token) return;
+     const tombstone = `${this.dir}.${this.token}.released`;
+     try {
+-      renameSync(this.dir, tombstone);
++      retryPidCleanup(() => renameSync(this.dir, tombstone), this.trace);
+     } catch {
+       return;
+     }
+-    rmSync(tombstone, { recursive: true, force: true });
++    removePidDirectory(tombstone, this.trace);
++  }
++}
++
++function removePidDirectory(dir, trace) {
++  retryPidCleanup(() => rmSync(dir, { recursive: true, force: true }), trace);
++}
++
++// A short synchronous wait preserves the release()/Symbol.dispose contract.
++// Other processes can close their owner handles while the holder waits.
++export function retryPidCleanup(cleanup, trace, platform = process.platform) {
++  let delay = 5;
++  for (;;) {
++    try {
++      return cleanup();
++    } catch (error) {
++      trace?.write(`[TRACE] PID-lock cleanup: ${error.code} ${error.message}\n`);
++      if (
++        platform !== 'win32' ||
++        delay > 40 ||
++        !['EACCES', 'EBUSY', 'EPERM'].includes(error.code)
++      ) {
++        throw error;
++      }
++      Atomics.wait(windowsCleanupWait, 0, 0, delay);
++      delay *= 2;
++    }
+   }
+ }
+ 
+@@ -451,6 +479,7 @@ export function tryAcquirePid(dir, trace = false, stderr = process.stderr, renam
+   if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
+   const token = uni…n();
+   const owner = LockOwner.current(token);
++  const cleanupTrace = trace ? stderr : undefined;
+   let lastError = null;
+   for (let attempt = 0; attempt < 4; attempt++) {
+     const staging = `${dir}.${owner.pid}.${uniqueToken()}.tmp`;
+@@ -458,9 +487,9 @@ export function tryAcquirePid(dir, trace = false, stderr = process.stderr, renam
+     try {
+       writeOwner(staging, owner);
+       rename(staging, dir);
+-      return { acquired: new PidLock(dir, token) };
++      return { acquired: new PidLock(dir, token, cleanupTrace) };
+     } catch (error) {
+-      rmSync(staging, { recursive: true, force: true });
++      removePidDirectory(staging, cleanupTrace);
+       if (!exists(dir)) {
+         // Released between the rename and this check, or a real error.
+         lastError = error;
+@@ -471,7 +500,7 @@ export function tryAcquirePid(dir, trace = false, stderr = process.stderr, renam
+     const reason = staleReason(dir, holder);
+     if (reason === null) return { held: holder };
+     if (trace) stderr.write(`[TRACE] Breaking stale lock ${dir}: ${reason}\n`);
+-    breakStale(dir, holder, rename);
++    breakStale(dir, holder, rename, cleanupTrace);
+   }
+   if (lastError !== null) throw lastError;
+   return { held: readOwner(dir) };
+diff --git a/js/server/test/store-lock.test.mjs b/js/server/test/store-lock.test.mjs
+index ac9fb6da..f0d7fe08 100644
+--- a/js/server/test/store-lock.test.mjs
++++ b/js/server/test/store-lock.test.mjs
+@@ -37,6 +37,7 @@ import {
+   processStartTime,
+   quietFfiWarning,
+   readOwner,
++  retryPidCleanup,
+   staleReason,
+   StoreLock,
+   StoreLockKind,
+@@ -47,6 +48,57 @@ import { capture, literally, scratchDirectory } from './helpers/storage.mjs';
+ 
+ afterEach(() => setLockBackend(null));
+ 
++it('retries bounded Windows PID cleanup sharing errors', () => {
++  const shared = Object.assign(new Error('owner record still open'), { code: 'EPERM' });
++  const diagnostics = [];
++  let attempts = 0;
++  retryPidCleanup(
++    () => {
++      if (++attempts === 1) throw shared;
++    },
++    { write: (line) => diagnostics.push(line) },
++    'win32',
++  );
++  assert.equal(attempts, 2);
++  assert.match(diagnostics.join(''), /PID-lock cleanup: EPERM/);
++
++  attempts = 0;
++  assert.throws(
++    () =>
++      retryPidCleanup(
++        () => {
++          attempts++;
++          throw shared;
++        },
++        undefined,
++        'win32',
++      ),
++    (error) => error === shared,
++  );
++  assert.equal(attempts, 5);
++
++  for (const [platform, code] of [
++    ['linux', 'EPERM'],
++    ['win32', 'ENOENT'],
++  ]) {
++    attempts = 0;
++    const error = Object.assign(new Error('cannot clean up'), { code });
++    assert.throws(
++      () =>
++        retryPidCleanup(
++          () => {
++            attempts++;
++            throw error;
++          },
++          undefined,
++          platform,
++        ),
++      (failure) => failure === error,
++    );
++    assert.equal(attempts, 1);
++  }
++});
++
+ /** A process id no system hands out: `processAlive` calls it gone. */
+ const GONE_PID = 0xffffffff;
+ 
+diff --git a/parity/features.json b/parity/features.json
+index fe8c7421..adc74c84 100644
+--- a/parity/features.json
++++ b/parity/features.json
+@@ -422,7 +422,7 @@
+           "rust/tests/transaction_*_tests.rs",
+           "rust/tests/undoable_links_edges_tests.rs"
+         ],
+-        "fingerprint": "ef37a5e868f1f4dd"
++        "fingerprint": "997ca9e3e4df4ac9"
+       },
+       "javascript": {
+         "status": "implemented",
+@@ -436,7 +436,16 @@
+           "js/server/test/differential/transactions.test.mjs"
+         ],
+         "fingerprint": "73bf66999f669e5a"
+-      }
++      },
++      "parityExceptions": [
++        {
++          "fingerprints": {
++            "rust": "997ca9e3e4df4ac9"
++          },
++          "reason": "Rust transaction serialization tests moved to a sibling module to resolve the source line warning. The same tests exercise the same transaction code.",
++          "ref": "https://github.com/link-foundation/link-cli/pull/208"
++        }
++      ]
+     },
+     {
+       "id": "version-control",
+@@ -860,8 +869,17 @@
+           "js/client/test/ipc*.test.mjs",
+           "js/server/test/ipc*.test.mjs"
+         ],
+-        "fingerprint": "aa781fc0b7abcd75"
+-      }
++        "fingerprint": "ca0d3298082f4332"
++      },
++      "parityExceptions": [
++        {
++          "fingerprints": {
++            "javascript": "ca0d3298082f4332"
++          },
++          "reason": "JavaScript now follows the existing Windows last-close ring cleanup contract used by Rust and C# when a peer still owns the mapped view.",
++          "ref": "https://github.com/link-foundation/link-cli/pull/208"
++        }
++      ]
+     },
+     {
+       "id": "graphql",
+@@ -914,7 +932,7 @@
+           "csharp/Foundation.Data.Doublets.Cli.Tests/Cli*.cs",
+           "csharp/Foundation.Data.Doublets.Cli.Tests/Diagnostic*.cs"
+         ],
+-        "fingerprint": "66de5f03b415ffd9"
++        "fingerprint": "0b820926931a6841"
+       },
+       "rust": {
+         "status": "implemented",
+@@ -952,7 +970,16 @@
+           "js/server/test/differential/cli.test.mjs"
+         ],
+         "fingerprint": "cfdcd5b102bf7cb9"
+-      }
++      },
++      "parityExceptions": [
++        {
++          "fingerprints": {
++            "csharp": "0b820926931a6841"
++          },
++          "reason": "C# import option parsing moved to the existing CLI I/O helper. The flags, defaults, parsing, and execution behavior are identical.",
++          "ref": "https://github.com/link-foundation/link-cli/pull/208"
++        }
++      ]
+     },
+     {
+       "id": "cli-store-locking",
+@@ -970,7 +997,7 @@
+           "csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs",
+           "csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs"
+         ],
+-        "fingerprint": "c812003e553ba382"
++        "fingerprint": "f6978dbbc6b1efd7"
+       },
+       "rust": {
+         "status": "implemented",
+@@ -980,7 +1007,7 @@
+         "tests": [
+           "rust/tests/cli_store_lock_tests.rs"
+         ],
+-        "fingerprint": "d041702ee5bb5c5b"
++        "fingerprint": "b24379482f5bb30d"
+       },
+       "javascript": {
+         "status": "implemented",
+@@ -992,7 +1019,7 @@
+           "js/server/test/store-lock.test.mjs",
+           "js/server/test/main-store-lock.test.mjs"
+         ],
+-        "fingerprint": "5a1bed84443ac276"
++        "fingerprint": "fe937e5bfc9389fa"
+       }
+     },
+     {
+diff --git a/rust/changelog.d/20261127_210000_ci_reliability.md b/rust/changelog.d/20261127_210000_ci_reliability.md
+new file mode 100644
+index 00000000..939ce7f6
+--- /dev/null
++++ b/rust/changelog.d/20261127_210000_ci_reliability.md
+@@ -0,0 +1,5 @@
++---
++bump: patch
++---
++
++Keep Rust checks for each main revision and move transaction serialization tests below the source-size warning threshold.
+diff --git a/rust/changelog.d/20261127_232400_windows_pid_lock_cleanup.md b/rust/changelog.d/20261127_232400_windows_pid_lock_cleanup.md
+new file mode 100644
+index 00000000..8d348ca8
+--- /dev/null
++++ b/rust/changelog.d/20261127_232400_windows_pid_lock_cleanup.md
+@@ -0,0 +1,5 @@
++---
++bump: patch
++---
++
++Retry transient Windows sharing failures while releasing PID store locks.
+diff --git a/rust/src/store_lock/pid_lock.rs b/rust/src/store_lock/pid_lock.rs
+index 4dbf7e0f..c2f79399 100644
+--- a/rust/src/store_lock/pid_lock.rs
++++ b/rust/src/store_lock/pid_lock.rs
+@@ -22,6 +22,9 @@ use crate::storage::lock::unique_token;
+ /// made it).
+ const UNOWNED_GRACE: Duration = Duration::from_secs(10);
+ const OWNER_FILE: &str = "owner";
++const ERROR_ACCESS_DENIED: i32 = 5;
++const ERROR_SHARING_VIOLATION: i32 = 32;
++const ERROR_LOCK_VIOLATION: i32 = 33;
+ 
+ /// `<db>.lock.d`.
+ pub fn lock_dir_path(store: &Path) -> PathBuf {
+@@ -33,6 +36,7 @@ pub fn lock_dir_path(store: &Path) -> PathBuf {
+ pub struct PidLock {
+     dir: PathBuf,
+     token: [REDACTED]
++    trace: bool,
+ }
+ 
+ /// The outcome of one attempt.
+@@ -82,11 +86,12 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
+                 return Ok(Attempt::Acquired(PidLock {
+                     dir: dir.to_path_buf(),
+                     token,
++                    trace,
+                 }))
+             }
+             Err(error) => error,
+         };
+-        let _ = fs::remove_dir_all(&staging);
++        let _ = retry_cleanup(|| fs::remove_dir_all(&staging), trace);
+         if fs::symlink_metadata(dir).is_err() {
+             // Released between the rename and this check, or a real error.
+             last_error = Some(error);
+@@ -98,7 +103,7 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
+                 if trace {
+                     diagnostics::stderr!("[TRACE] Breaking stale lock {}: {reason}", dir.display());
+                 }
+-                break_stale(dir, holder.as_ref());
++                break_stale(dir, holder.as_ref(), trace);
+             }
+             None => return Ok(Attempt::Held(holder)),
+         }
+@@ -113,7 +118,7 @@ pub fn try_acquire(dir: &Path, trace: bool) -> std::io::Result<Attempt> {
+ /// published a new lock in between, its directory is moved back. A lock
+ /// that cannot be moved (another waiter moved it first, or the directory is
+ /// not writable) is left alone: the next attempt sees what became of it.
+-fn break_stale(dir: &Path, expected: Option<&LockOwner>) {
++fn break_stale(dir: &Path, expected: Option<&LockOwner>, trace: bool) {
+     let tombstone = sibling(
+         dir,
+         &format!(".{}.{}.stale", std::process::id(), unique_token()),
+@@ -123,7 +128,7 @@ fn break_stale(dir: &Path, expected: Option<&LockOwner>) {
+     }
+     let moved = read_owner(&tombstone);
+     if moved.as_ref().map(|owner| &owner.token) == expected.map(|owner| &owner.token) {
+-        let _ = fs::remove_dir_all(&tombstone);
++        let _ = retry_cleanup(|| fs::remove_dir_all(&tombstone), trace);
+     } else if fs::rename(&tombstone, dir).is_err() {
+         // A third process published meanwhile; the moved owner has lost its
+         // lock. Keep its directory for inspection.
+@@ -147,15 +152,79 @@ impl Drop for PidLock {
+         // Only remove the lock while it is still ours.
+         if read_owner(&self.dir).is_some_and(|owner| owner.token =[REDACTED] self.token) {
+             let tombstone = sibling(&self.dir, &format!(".{}.released", self.token));
+-            if fs::rename(&self.dir, &tombstone).is_ok() {
+-                let _ = fs::remove_dir_all(&tombstone);
++            if retry_cleanup(|| fs::rename(&self.dir, &tombstone), self.trace).is_ok() {
++                let _ = retry_cleanup(|| fs::remove_dir_all(&tombstone), self.trace);
+             }
+         }
+     }
+ }
+ 
++fn retry_cleanup(
++    mut cleanup: impl FnMut() -> std::io::Result<()>,
++    trace: bool,
++) -> std::io::Result<()> {
++    let mut delay_ms = 5;
++    loop {
++        let error = match cleanup() {
++            Ok(()) => return Ok(()),
++            Err(error) => error,
++        };
++        if trace {
++            diagnostics::stderr!("[TRACE] PID-lock cleanup: {error}");
++        }
++        // Windows may block renaming a directory while a waiter reads its
++        // owner record. The four delays add at most 75 ms per operation.
++        if !cfg!(windows)
++            || delay_ms > 40
++            || !matches!(
++                error.raw_os_error(),
++                Some(ERROR_ACCESS_DENIED | ERROR_SHARING_VIOLATION | ERROR_LOCK_VIOLATION)
++            )
++        {
++            return Err(error);
++        }
++        std::thread::sleep(Duration::from_millis(delay_ms));
++        delay_ms *= 2;
++    }
++}
++
+ fn sibling(path: &Path, suffix: &str) -> PathBuf {
+     let mut name = path.as_os_str().to_owned();
+     name.push(suffix);
+     PathBuf::from(name)
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::retry_cleanup;
++    use std::io::Error;
++
++    #[test]
++    fn pid_cleanup_retries_windows_sharing_errors_only() {
++        let mut attempts = 0;
++        let result = retry_cleanup(
++            || {
++                attempts += 1;
++                if attempts == 1 {
++                    return Err(Error::from_raw_os_error(32));
++                }
++                Ok(())
++            },
++            false,
++        );
++        assert_eq!(result.is_ok(), cfg!(windows));
++        assert_eq!(attempts, if cfg!(windows) { 2 } else { 1 });
++
++        attempts = 0;
++        let error = retry_cleanup(
++            || {
++                attempts += 1;
++                Err(Error::from_raw_os_error(2))
++            },
++            false,
++        )
++        .unwrap_err();
++        assert_eq!(error.raw_os_error(), Some(2));
++        assert_eq!(attempts, 1);
++    }
++}
+diff --git a/rust/src/transactions/mod.rs b/rust/src/transactions/mod.rs
+index 5083ed01..9f08591d 100644
+--- a/rust/src/transactions/mod.rs
++++ b/rust/src/transactions/mod.rs
+@@ -867,57 +867,4 @@ fn now_unix_ms() -> i64 {
+ #[cfg(test)]
+ mod contract_tests;
+ #[cfg(test)]
+-mod tests {
+-    use super::*;
+-
+-    #[test]
+-    fn retention_policy_parses_specs() {
+-        assert!(matches!(
+-            LogRetentionPolicy::parse("infinite").unwrap(),
+-            LogRetentionPolicy::Infinite
+-        ));
+-        assert!(matches!(
+-            LogRetentionPolicy::parse("sized:1000").unwrap(),
+-            LogRetentionPolicy::Sized {
+-                max_transitions: 1000
+-            }
+-        ));
+-        assert!(matches!(
+-            LogRetentionPolicy::parse("chunked:500:/tmp/x").unwrap(),
+-            LogRetentionPolicy::Chunked { chunk_size: 500, archive_directory }
+-                if archive_directory == Path::new("/tmp/x")
+-        ));
+-        assert!(LogRetentionPolicy::parse("garbage").is_err());
+-    }
+-
+-    #[test]
+-    fn transition_round_trips_through_serialize() {
+-        let t = Transition {
+-            transaction_id: 0xabcdef1234567890u128,
+-            sequence: 42,
+-            timestamp_ms: 1234567890,
+-            kind: TransitionKind::Update,
+-            before: DoubletLink::new(1, 2, 3),
+-            after: DoubletLink::new(1, 4, 5),
+-        };
+-        let parsed = Transition::try_parse(&t.serialize()).unwrap();
+-        assert_eq!(t, parsed);
+-    }
+-
+-    #[test]
+-    fn wide_transition_is_rejected_by_a_narrow_address_type() {
+-        let wide = GenericTransition::<u64> {
+-            transaction_id: 7,
+-            sequence: 1,
+-            timestamp_ms: 0,
+-            kind: TransitionKind::Create,
+-            before: GenericDoubletLink::empty(),
+-            after: GenericDoubletLink::new(u32::MAX as u64 + 1, 0, 0),
+-        };
+-        assert!(matches!(
+-            GenericTransition::<u32>::parse(&wide.serialize()),
+-            Err(LinkError::AddressOutOfRange(_))
+-        ));
+-        assert!(GenericTransition::<u64>::parse(&wide.serialize()).is_ok());
+-    }
+-}
++mod tests;
+diff --git a/rust/src/transactions/tests.rs b/rust/src/transactions/tests.rs
+new file mode 100644
+index 00000000..cc03f418
+--- /dev/null
++++ b/rust/src/transactions/tests.rs
+@@ -0,0 +1,52 @@
++use super::*;
++
++#[test]
++fn retention_policy_parses_specs() {
++    assert!(matches!(
++        LogRetentionPolicy::parse("infinite").unwrap(),
++        LogRetentionPolicy::Infinite
++    ));
++    assert!(matches!(
++        LogRetentionPolicy::parse("sized:1000").unwrap(),
++        LogRetentionPolicy::Sized {
++            max_transitions: 1000
++        }
++    ));
++    assert!(matches!(
++        LogRetentionPolicy::parse("chunked:500:/tmp/x").unwrap(),
++        LogRetentionPolicy::Chunked { chunk_size: 500, archive_directory }
++            if archive_directory == Path::new("/tmp/x")
++    ));
++    assert!(LogRetentionPolicy::parse("garbage").is_err());
++}
++
++#[test]
++fn transition_round_trips_through_serialize() {
++    let t = Transition {
++        transaction_id: 0xabcdef1234567890u128,
++        sequence: 42,
++        timestamp_ms: 1234567890,
++        kind: TransitionKind::Update,
++        before: DoubletLink::new(1, 2, 3),
++        after: DoubletLink::new(1, 4, 5),
++    };
++    let parsed = Transition::try_parse(&t.serialize()).unwrap();
++    assert_eq!(t, parsed);
++}
++
++#[test]
++fn wide_transition_is_rejected_by_a_narrow_address_type() {
++    let wide = GenericTransition::<u64> {
++        transaction_id: 7,
++        sequence: 1,
++        timestamp_ms: 0,
++        kind: TransitionKind::Create,
++        before: GenericDoubletLink::empty(),
++        after: GenericDoubletLink::new(u32::MAX as u64 + 1, 0, 0),
++    };
++    assert!(matches!(
++        GenericTransition::<u32>::parse(&wide.serialize()),
++        Err(LinkError::AddressOutOfRange(_))
++    ));
++    assert!(GenericTransition::<u64>::parse(&wide.serialize()).is_ok());
++}

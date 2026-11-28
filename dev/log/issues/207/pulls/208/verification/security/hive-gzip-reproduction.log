@@ -1,0 +1,19 @@
+Original header: 1f8b0810
+Header after verification: 1fefbfbd
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+
+Error: incorrect header check
+    at genericNodeError (node:internal/errors:999:15)
+    at wrappedFn (node:internal/errors:544:14)
+    at Zlib.zlibOnError [as onerror] (node:zlib:210:13)
+    at processChunkSync (node:zlib:458:12)
+    at zlibBufferSync (node:zlib:195:12)
+    at syncBufferWrapper (node:zlib:833:14)
+    at file:///tmp/gh-issue-solver-1795813073025/experiments/issue-207/hive-log-gzip.mjs:32:16 {
+  errno: -3,
+  code: 'Z_DATA_ERROR'
+}
+
+Node.js v26.13.1
