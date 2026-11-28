@@ -1,0 +1,12 @@
+Validating changesets added by this PR...
+Comparing d8a26c917114deecca49e1e11eb3680755e1ec61...9089b24754bdf869218bab9f61de2809418999a9
+Found 2 changeset file(s) added by this PR
+Added changesets:
+  - ci-reliability.md
+  - windows-pid-lock-cleanup.md
+::error::Multiple changesets found in this PR (2). Each PR should add exactly ONE changeset.
+::error::Found changeset files added by this PR:
+  ci-reliability.md
+  windows-pid-lock-cleanup.md
+
+::error::Please combine these into a single changeset or remove the extras.

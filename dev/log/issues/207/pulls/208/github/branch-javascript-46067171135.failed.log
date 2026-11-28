@@ -2,7 +2,7 @@ javascript / JavaScript stage	UNKNOWN STEP	﻿2026-11-27T20:58:25.5758786Z Curre
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5783728Z ##[group]Runner Image Provisioner
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5784647Z Hosted Compute Agent
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5785201Z Version: 20261111.635
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5785785Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5785785Z Commit: b8a…2ed
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5786553Z Build Date: 2026-11-11T01:49:01Z
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5787198Z Worker ID: {d8adbdf4-003e-4f3a-81da-439062f2a451}
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:25.5788227Z Region: eastus2
@@ -50,7 +50,7 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3108688Z   set-sa
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3109256Z   allow-unsafe-pr-checkout: false
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3110059Z env:
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3110577Z   GIT_CONFIG_COUNT: 1
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3111134Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3111134Z   GIT_CONFIG_KEY_0: ini…nch
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3111846Z   GIT_CONFIG_VALUE_0: main
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.3112372Z ##[endgroup]
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:26.5745975Z Syncing repository: link-foundation/link-cli
@@ -297,7 +297,7 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829754Z   git sw
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5829921Z 
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5830268Z Turn off this advice by setting config variable advice.detachedHead to false
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5830661Z 
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5831053Z HEAD is now at b341940f Merge 26852bd276b6cdeef98316fae6d2526e2de80483 into d8a26c917114deecca49e1e11eb3680755e1ec61
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5831053Z HEAD is now at b341940f Merge 268…483 into d8a…c61
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5850218Z ##[endgroup]
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5895973Z [command]/usr/bin/git log -1 --format=%H
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.5923482Z b341940f817317b89947f0e71d367b0829c768a2
@@ -339,7 +339,7 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7176896Z   token:
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7177249Z   package-manager-cache: true
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7177576Z env:
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178165Z   GIT_CONFIG_COUNT: 1
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178494Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178494Z   GIT_CONFIG_KEY_0: ini…nch
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7178835Z   GIT_CONFIG_VALUE_0: main
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.7179207Z ##[endgroup]
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:28.8464215Z Found in cache @ /opt/hostedtoolcache/node/26.13.1/x64
@@ -355,13 +355,13 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.1962215Z Received
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.1963101Z Cache Size: ~25 MB (26388320 B)
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.1985549Z [command]/usr/bin/tar -xf /home/runner/work/_temp/2a754c3a-ab73-4fff-a01a-790a9ce39d62/cache.tzst -P -C /home/runner/work/link-cli/link-cli --use-compress-program unzstd
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2483478Z Cache restored successfully
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2496967Z Cache restored from key: node-cache-Linux-x64-npm-9673cdef7102f2af4314029aedf43a37efdf4306f13cb1a55d52d77f4a0635c0
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2496967Z Cache restored from key: nod…5c0
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2674335Z ##[group]Run npm ci
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2674770Z ^[[36;1mnpm ci^[[0m
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2709777Z shell: /usr/bin/bash -e {0}
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710153Z env:
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710505Z   GIT_CONFIG_COUNT: 1
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710925Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2710925Z   GIT_CONFIG_KEY_0: ini…nch
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2711291Z   GIT_CONFIG_VALUE_0: main
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:32.2711626Z ##[endgroup]
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1466946Z 
@@ -376,7 +376,7 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1823055Z ^[[36;1m
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1856488Z shell: /usr/bin/bash -e {0}
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1856991Z env:
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1857317Z   GIT_CONFIG_COUNT: 1
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1857895Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1857895Z   GIT_CONFIG_KEY_0: ini…nch
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1858260Z   GIT_CONFIG_VALUE_0: main
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.1858616Z ##[endgroup]
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:36.2860781Z 
@@ -389,7 +389,7 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7529404Z ^[[36;1m
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7557426Z shell: /usr/bin/bash -e {0}
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558011Z env:
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558373Z   GIT_CONFIG_COUNT: 1
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558728Z   GIT_CONFIG_KEY_0: init.defaultBranch
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7558728Z   GIT_CONFIG_KEY_0: ini…nch
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7559087Z   GIT_CONFIG_VALUE_0: main
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7559505Z   GOLDEN_FIXTURES_RECEIPT: /home/runner/work/_temp/golden-javascript.json
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:46.7560040Z ##[endgroup]
@@ -881,7 +881,7 @@ javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5232679Z ##[error
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.5421687Z Post job cleanup.
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6299500Z [command]/usr/bin/git version
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6340931Z git version 2.56.1
-javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6373413Z Temporarily overriding HOME='/home/runner/work/_temp/8ecc47be-9811-4a31-b21d-0d5ca1cc950f' before making global git config changes
+javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6373413Z Temporarily overriding HOME='/ho…50f' before making global git config changes
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6374916Z Adding repository directory to the temporary git global config as a safe directory
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6377589Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
 javascript / JavaScript stage	UNKNOWN STEP	2026-11-27T20:58:50.6413479Z Removing SSH command configuration
@@ -899,7 +899,7 @@ Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.816299
 Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8206710Z shell: /usr/bin/bash -e {0}
 Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8206953Z env:
 Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207125Z   GIT_CONFIG_COUNT: 1
-Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207329Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207329Z   GIT_CONFIG_KEY_0: ini…nch
 Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207553Z   GIT_CONFIG_VALUE_0: main
 Pipeline Status (javascript)	Check every prerequisite	2026-11-27T20:59:03.8207846Z   NEEDS_JSON: {
 Pipeline Status (javascript)	Check every prerequisite	  "javascript": {

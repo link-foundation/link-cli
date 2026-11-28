@@ -509,7 +509,7 @@ release-preflight:
   runs-on: ubuntu-24.04
   permissions:
     contents: read
-    id-token: write # so the probe can confirm OIDC works before `npm publish` needs it
+    id-token: wri… it
   steps:
     - uses: actions/checkout@v7
     - env:
@@ -524,7 +524,7 @@ release:
 - **Probe with a write, not with a login.** ghcr.io's token endpoint returns 200 for any scope and verifies nothing — the push then fails 403. docker.io answers an anonymous push-scope request with 200 and a pull-only `access` claim. Open a blob upload session (`POST /v2/<repo>/blobs/uploads/`) and cancel it with `DELETE <Location>`: one round trip, nothing stored, and the only form of the check that is not a guess.
 - **Report every failure, not the first.** The preflight's value is one report naming all missing credentials. A login step that aborts the job hides the rest, so make it `continue-on-error: true` and let the preflight script decide.
 - **Check reachability, not just writability.** A GHCR package is private on first push and stays private until someone clicks; publishing more versions of a package nobody can pull is exactly the compute this job exists to skip. GitHub exposes no API for package visibility (the packages REST API is GET/DELETE/restore only), so this is a manual step that the pipeline can only detect and name.
-- **Prefer trusted publishing.** A credential that expires is a release outage waiting for a calendar date. npm (`id-token: write` + `--provenance`) and Docker Hub (`DOCKERHUB_OIDC_CONNECTIONID`, no `password:`) both support OIDC. Check `ACTIONS_ID_TOKEN_REQUEST_URL` before trying — the runner injects it only when `id-token: write` is granted, so a half-wired setup fails with a message about the permission rather than about the token request.
+- **Prefer trusted publishing.** A credential that expires is a release outage waiting for a calendar date. npm (`id-token: write` + `--provenance`) and Docker Hub (`DOCKERHUB_OIDC_CONNECTIONID`, no `password:`[REDACTED] `ACTIONS_ID_TOKEN_REQUEST_URL` before trying — the runner injects it only when `id-token: write` is granted, so a half-wired setup fails with a message about the permission rather than about the token request.
 - **Verify the published result anonymously, and separately.** Never gate the release on the push (a failed mirror must not delete a good release), but do check afterwards, with no credentials, that what you published can be pulled. A check that authenticates measures the publisher's view; a reader gets neither the login nor the benefit of the doubt.
 - **Report `unknown`, never a guess.** A registry that times out or answers HTTP 429 has not said the credential is broken, and a run in which nothing could be verified is not a pass. Say which of the two happened: "0 verified, 3 unknown" is actionable, "no failures" is not.
 - **Measure the tarball before you upload it.** npm refused `@link-assistant/hive-mind` 2.40.0 and 2.40.1 with `E413 Payload Too Large` after every build had passed (2.40.1's tarball was 249,862,346 bytes); the largest tarball it is known to have accepted here is 165,142,849 bytes. Gate the actual archive below that (`npm pack --dry-run --json | node scripts/check-npm-tarball-size.mjs --stdin`) and name its largest files. An E413 is deterministic, so fail on the first one instead of retrying. Ship platform-specific binaries as per-platform packages pinned by `optionalDependencies`, as `@openai/codex` does (#4050, `src/native-codex/PACKAGES.md`).

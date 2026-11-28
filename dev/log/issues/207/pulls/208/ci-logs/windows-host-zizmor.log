@@ -1,0 +1,1458 @@
+ INFO zizmor: 🌈 zizmor v1.33.1
+DEBUG zizmor::config: loading config from `.github/zizmor.yml`
+DEBUG collect_inputs: zizmor::registry::input: collecting all eligible inputs under '.github'
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: performing generic directory collection because '.github' is not a Git root
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::config: config discovery: using global config: Config { raw: RawConfig { rules: {"unpinned-uses": AuditRuleConfig { disable: false, ignore: [], config: Some(Mapping {"policies": Mapping {"actions/*": String("ref-pin"), "github/*": String("ref-pin"), "docker/*": String("ref-pin"), "oven-sh/*": String("ref-pin"), "codecov/*": String("ref-pin"), "lycheeverse/*": String("ref-pin"), "peter-evans/*": String("ref-pin"), "zizmorcore/*": String("ref-pin"), "*": String("hash-pin")}}), remap: None }, "dependabot-cooldown": AuditRuleConfig { disable: true, ignore: [], config: None, remap: None }, "self-repository": AuditRuleConfig { disable: true, ignore: [], config: None, remap: None }} }, dependabot_cooldown_config: DependabotCooldownConfig { days: 7 }, forbidden_uses_config: None, secrets_outside_env_policy: Sec…icy { allow: {"github_token"} }, unpinned_uses_policies: UnpinnedUsesPolicies { policy_tree: {"lycheeverse": [(InOwner("lycheeverse"), RefPin)], "github": [(InOwner("github"), RefPin)], "peter-evans": [(InOwner("peter-evans"), RefPin)], "oven-sh": [(InOwner("oven-sh"), RefPin)], "actions": [(InOwner("actions"), RefPin)], "zizmorcore": [(InOwner("zizmorcore"), RefPin)], "codecov": [(InOwner("codecov"), RefPin)], "docker": [(InOwner("docker"), RefPin)]}, default_policy: HashPin }, known_vulnerable_actions_config: KnownVulnerableActionsConfig { allow: {} }, self_hosted_runner_config: SelfHostedRunnerConfig { deny_runners: {}, allow_groups: {} } }
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: ignore::gitignore: opened gitignore file: /tmp/gh-issue-solver-1795813073025/.gitignore
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/mono_crash.*")` converted to regex: `"(?-u)^(?:/?|.*/)mono_crash\\.[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Dd]ebug")` converted to regex: `"(?-u)^(?:/?|.*/)[Dd]ebug$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Dd]ebugPublic")` converted to regex: `"(?-u)^(?:/?|.*/)[Dd]ebugPublic$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Rr]elease")` converted to regex: `"(?-u)^(?:/?|.*/)[Rr]elease$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Rr]eleases")` converted to regex: `"(?-u)^(?:/?|.*/)[Rr]eleases$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Ww][Ii][Nn]32")` converted to regex: `"(?-u)^(?:/?|.*/)[Ww][Ii][Nn]32$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Aa][Rr][Mm]")` converted to regex: `"(?-u)^(?:/?|.*/)[Aa][Rr][Mm]$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Aa][Rr][Mm]64")` converted to regex: `"(?-u)^(?:/?|.*/)[Aa][Rr][Mm]64$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Bb]in")` converted to regex: `"(?-u)^(?:/?|.*/)[Bb]in$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Oo]bj")` converted to regex: `"(?-u)^(?:/?|.*/)[Oo]bj$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Ll]og")` converted to regex: `"(?-u)^(?:/?|.*/)[Ll]og$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Ll]ogs")` converted to regex: `"(?-u)^(?:/?|.*/)[Ll]ogs$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Tt]est[Rr]esult*")` converted to regex: `"(?-u)^(?:/?|.*/)[Tt]est[Rr]esult[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Bb]uild[Ll]og.*")` converted to regex: `"(?-u)^(?:/?|.*/)[Bb]uild[Ll]og\\.[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Dd]ebugPS")` converted to regex: `"(?-u)^(?:/?|.*/)[Dd]ebugPS$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Rr]eleasePS")` converted to regex: `"(?-u)^(?:/?|.*/)[Rr]eleasePS$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/_Chutzpah*")` converted to regex: `"(?-u)^(?:/?|.*/)_Chutzpah[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/_ReSharper*")` converted to regex: `"(?-u)^(?:/?|.*/)_ReSharper[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*.[Rr]e[Ss]harper")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\.[Rr]e[Ss]harper$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/_TeamCity*")` converted to regex: `"(?-u)^(?:/?|.*/)_TeamCity[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob(".axoCover/*")` converted to regex: `"(?-u)^\\.axoCover/[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/_NCrunch_*")` converted to regex: `"(?-u)^(?:/?|.*/)_NCrunch_[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/nCrunchTemp_*")` converted to regex: `"(?-u)^(?:/?|.*/)nCrunchTemp_[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*.mm.*")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\.mm\\.[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Ee]xpress")` converted to regex: `"(?-u)^(?:/?|.*/)[Ee]xpress$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Pp]ackages/*")` converted to regex: `"(?-u)^(?:/?|.*/)[Pp]ackages/[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/[Pp]ackages/build")` converted to regex: `"(?-u)^(?:/?|.*/)[Pp]ackages/build$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*.[Cc]ache")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\.[Cc]ache$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/?*.[Cc]ache")` converted to regex: `"(?-u)^(?:/?|.*/)[^/][^/]*\\.[Cc]ache$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/~$*")` converted to regex: `"(?-u)^(?:/?|.*/)\\~\\$[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*~")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\~$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/Backup*")` converted to regex: `"(?-u)^(?:/?|.*/)Backup[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*.HTMLClient/GeneratedArtifacts")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\.HTMLClient/GeneratedArtifacts$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*.DesktopClient/GeneratedArtifacts")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\.DesktopClient/GeneratedArtifacts$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob("**/*.Server/GeneratedArtifacts")` converted to regex: `"(?-u)^(?:/?|.*/)[^/]*\\.Server/GeneratedArtifacts$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: glob `Glob(".vscode/*")` converted to regex: `"(?-u)^\\.vscode/[^/]*$"`
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: built glob set; 15 literals, 62 basenames, 76 extensions, 0 prefixes, 0 suffixes, 31 required extensions, 36 regexes
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: ignore::gitignore: opened gitignore file: /tmp/gh-issue-solver-1795813073025/.git/info/exclude
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: globset: built glob set; 1 literals, 2 basenames, 0 extensions, 0 prefixes, 0 suffixes, 0 required extensions, 0 regexes
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/security.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/javascript-stage.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/rust.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/csharp.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/wasm.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/crash.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/dependencies.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/links.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/ipc.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/docs.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/workflows.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/deep-client.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/javascript.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/js-client.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering workflow input with key file://.github/workflows/js-server.yml
+DEBUG collect_inputs:collect_from_dir{path=".github"}:collect_from_generic_dir{path=".github" root=Some(Root { request_is_root: false, path: "/tmp/gh-issue-solver-1795813073025" })}: zizmor::registry::input: registering dependabot config input with key file://.github/dependabot.yml
+DEBUG collect_inputs: zizmor::registry::input: collected a group with 17 inputs (actions lockfile=false)
+DEBUG zizmor::registry: skipping impostor-commit: can't run without a GitHub API token
+DEBUG zizmor::registry: skipping ref-confusion: can't run without a GitHub API token
+DEBUG zizmor::registry: skipping known-vulnerable-actions: can't run without a GitHub API token
+DEBUG zizmor::registry: skipping stale-action-refs: can't run without a GitHub API token
+DEBUG zizmor::registry: skipping ref-version-mismatch: can't run without a GitHub API token
+DEBUG audit: zizmor: scheduling artipacked on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/dependabot.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/dependabot.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Dependabot(file://.github/dependabot.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Dependabot(file://.github/dependabot.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/dependabot.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/crash.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/crash.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/crash.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/crash.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/csharp.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="secrets-outside-env" input=Workflow(file://.github/workflows/csharp.yml)}: subfeature: attempting to locate Subfeature { after: 3814, fragment: Raw("secrets.NUGET_API_KEY") } within "name: C# CI/CD Pipeline\n\non:\n  push:\n    branches:\n      - main\n  # No path filter (issue #111): the JavaScript stage and the parity check\n  # must run for every pull request, and \"Pipeline Status (csharp)\" is a\n  # required check that a filtered-out run would never report. The\n  # detect-changes job skips the C# jobs when no C# input changed\n  # (.github/scripts/stack-paths.mjs).\n  pull_request:\n    types: [opened, synchronize, reopened]\n  workflow_dispatch:\n    inputs:\n      release_mode:\n        description: 'Release mode'\n        required: true\n        type: choice\n        default: 'instant'\n        options:\n          - instant\n          - publish-current\n          - changeset-pr\n          - verify-trusted-publishing\n      nuget_user:\n        description: 'NuGet account for authentication-only verification (defaults to NUGET_USER)'\n        required: false\n        type: string\n      bump_type:\n        description: 'Version bump type'\n        required: true\n        type: choice\n        default: 'patch'\n        options:\n          - patch\n          - minor\n          - major\n      description:\n        description: 'Release description (optional)'\n        required: false\n        type: string\n\n# Read-only concurrency cancels superseded PR synchronizations. Each main\n# revision keeps its results. Release writers share the repository queue.\n\n# Least privilege by default; the publishing jobs opt into more below.\npermissions:\n  contents: read\n\n# The GIT_CONFIG_* entries provide Git config to actions/checkout itself;\n# checkout runs git init before any workflow step can configure Git, which\n# otherwise prints the default-branch hint into every log.\nenv:\n  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true\n  DOTNET_CLI_TELEMETRY_OPTOUT: true\n  DOTNET_NOLOGO: true\n  GIT_CONFIG_COUNT: '1'\n  GIT_CONFIG_KEY_0: ini…nch\n  GIT_CONFIG_VALUE_0: main\n\ndefaults:\n  run:\n    working-directory: csharp\n\njobs:\n  # === STAGE GATE (issue #111) ===\n  # Lint, JavaScript unit tests and the parity check. Every job that installs\n  # .NET lists `javascript` in its needs, so nothing C# starts unless this\n  # stage succeeded for the same commit.\n  javascript:\n    name: javascript\n    if: inputs.release_mode != 'verify-trusted-publishing'\n    uses: ./.github/workflows/javascript-stage.yml\n\n  release-preflight:\n    name: Release authentication preflight\n    if: inputs.release_mode != 'verify-trusted-publishing'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    permissions:\n      contents: read\n      id-token: write\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n      - uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n      - name: Authenticate preflight with NuGet\n        if: vars.NUGET_USER != '' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'\n        id: preflight_nuget\n        continue-on-error: true\n        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0\n        with:\n          user: ${{ vars.NUGET_USER }}\n      - name: Prove authentication before version writes or publishing\n        working-directory: .\n        env:\n          RELEASE_MODE: ${{ inputs.release_mode }}\n          NUGET_OIDC_OUTCOME: ${{ steps.preflight_nuget.outcome }}\n          NUGET_OIDC_KEY: ${{ steps.preflight_nuget.outputs.NUGET_API_KEY }}\n          NUGET_API_KEY: ${{… }}\n        run: node .github/scripts/release-preflight.mjs nuget\n\n  # Authenticate without a version commit, tag, or package upload. The input\n  # allows verification before setting NUGET_USER (which enables OIDC releases).\n  verify-trusted-publishing:\n    name: Verify NuGet trusted publishing\n    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'verify-trusted-publishing'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    permissions:\n      id-token: write\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    steps:\n      - name: Validate NuGet account\n        working-directory: .\n        env:\n          NUGET_USER: ${{ vars.NUGET_USER || inputs.nuget_user }}\n        run: |\n          if [ -z \"$NUGET_USER\" ]; then\n            echo '::error::Supply nuget_user or set NUGET_USER to the account owning the trusted publishing policy on nuget.org.'\n            exit 1\n          fi\n\n      - name: NuGet login (OIDC)\n        id: auth\n        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0\n        with:\n          user: ${{ vars.NUGET_USER || inputs.nuget_user }}\n\n      - name: Confirm short-lived credential\n        working-directory: .\n        env:\n          NUGET_API_KEY: ${{… }}\n        run: |\n          test -n \"$NUGET_API_KEY\"\n          echo 'NuGet OIDC authentication succeeded; the temporary push key expires in one hour.' >> \"$GITHUB_STEP_SUMMARY\"\n\n  # === DETECT CHANGES - determines which jobs should run ===\n  detect-changes:\n    name: Detect Changes\n    runs-on: ubuntu-24.04\n    timeout-minutes: 10\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-detect-changes\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript]\n    if: github.event_name != 'workflow_dispatch'\n    outputs:\n      stack-changed: ${{ steps.stack.outputs.stack-changed }}\n      cs-changed: ${{ steps.changes.outputs.cs-changed }}\n      csproj-changed: ${{ steps.changes.outputs.csproj-changed }}\n      sln-changed: ${{ steps.changes.outputs.sln-changed }}\n      props-changed: ${{ steps.changes.outputs.props-changed }}\n      mjs-changed: ${{ steps.changes.outputs.mjs-changed }}\n      docs-changed: ${{ steps.changes.outputs.docs-changed }}\n      workflow-changed: ${{ steps.changes.outputs.workflow-changed }}\n      any-code-changed: ${{ steps.changes.outputs.any-code-changed }}\n      csharp-code-changed: ${{ steps.changes.outputs.csharp-code-changed }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n          fetch-depth: 0\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      - name: Detect changes\n        id: changes\n        working-directory: .\n        env:\n          GITHUB_EVENT_NAME: ${{ github.event_name }}\n          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}\n          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n        run: node csharp/scripts/detect-code-changes.mjs\n\n      # Replaces the removed pull_request path filter: on a pull request\n      # that changes no C# input, lint (and with it test, build and\n      # fresh-merge) and the changeset check are skipped.\n      - name: Detect whether the C# stack changed\n        id: stack\n        working-directory: .\n        env:\n          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}\n          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n          STACK_PATHS_DEBUG: ${{ runner.debug }}\n        run: node .github/scripts/stack-paths.mjs csharp\n\n  # === CHANGESET CHECK - only runs on PRs with code changes ===\n  changeset-check:\n    name: Changeset Validation\n    runs-on: ubuntu-24.04\n    timeout-minutes: 10\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-changeset-check\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes]\n    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.csharp-code-changed == 'true'\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n          fetch-depth: 0\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      - name: Validate changeset\n        working-directory: .\n        env:\n          GITHUB_BASE_REF: ${{ github.base_ref }}\n          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}\n          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n          # Read head_ref through env, never interpolate it into the script: on\n          # a fork PR the branch name is attacker-controlled (issue #134).\n          GITHUB_HEAD_REF: ${{ github.head_ref }}\n        run: |\n          # Skip changeset check for automated release PRs\n          if [[ \"$GITHUB_HEAD_REF\" == \"changeset-release/\"* ]] || [[ \"$GITHUB_HEAD_REF\" == \"changeset-manual-release-\"* ]]; then\n            echo \"Skipping changeset check for automated release PR\"\n            exit 0\n          fi\n\n          # A C# code change without exactly one valid changeset never reaches\n          # a release, so this fails instead of warning (issue #134).\n          node csharp/scripts/validate-changeset.mjs\n\n  # === LINT AND FORMAT CHECK ===\n  lint:\n    name: Lint and Format Check\n    runs-on: ubuntu-24.04\n    timeout-minutes: 20\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-lint\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes]\n    if: |\n      !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (\n        github.event_name != 'pull_request' || needs.detect-changes.outputs.stack-changed == 'true'\n      ) && (\n        github.event_name == 'push' ||\n        github.event_name == 'workflow_dispatch' ||\n        needs.detect-changes.outputs.cs-changed == 'true' ||\n        needs.detect-changes.outputs.csproj-changed == 'true' ||\n        needs.detect-changes.outputs.sln-changed == 'true' ||\n        needs.detect-changes.outputs.props-changed == 'true' ||\n        needs.detect-changes.outputs.mjs-changed == 'true' ||\n        needs.detect-changes.outputs.docs-changed == 'true' ||\n        needs.detect-changes.outputs.workflow-changed == 'true'\n      )\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      # The release script and workflow policy tests moved to the JavaScript\n      # stage, which runs them through `npm run test:js` before this job.\n\n      - name: Restore dependencies\n        run: dotnet restore\n\n      - name: Verify core library has no SQLite provider\n        run: node ../.github/scripts/check-sqlite-optional.mjs csharp\n\n      - name: Verify formatting\n        run: dotnet format --verify-no-changes --verbosity diagnostic\n\n      - name: Build\n        run: dotnet build --no-restore --configuration Release\n\n      - name: Check file sizes\n        working-directory: .\n        run: node csharp/scripts/check-file-size.mjs --lang csharp\n\n  # === TEST ON MULTIPLE OS ===\n  test:\n    name: Test (${{ matrix.os }})\n    runs-on: ${{ matrix.os }}\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-test-${{ matrix.os }}\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes, changeset-check, lint]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}\n    permissions:\n      contents: read\n      id-token: write\n    strategy:\n      fail-fast: false\n      matrix:\n        os: [ubuntu-24.04, macos-26-intel, windows-2025]\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.\n\n      - name: Restore dependencies\n        run: dotnet restore\n\n      - name: Build\n        run: dotnet build --no-restore --configuration Release\n\n      # GoldenFixturesTests writes the receipt that a later step checks, so\n      # a filtered or skipped golden fixture test fails CI (issue #111).\n      - name: Run tests\n        env:\n          GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-csharp.json\n          LINK_CSHARP_RECOVERY_TRACE: ${{ vars.CI_VERBOSE == 'true' && '1' || '0' }}\n        run: dotnet test --no-build --configuration Release --verbosity normal --collect:\"XPlat Code Coverage;Format=json,cobertura\"\n\n      - name: Verify every compiled causal branch\n        working-directory: .\n        shell: bash\n        run: |\n          reports=(csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/*/coverage.json)\n          test \"${#reports[@]}\" -eq 1\n          test -f \"${reports[0]}\"\n          python3 experiments/issue-138/check-causal-raw-coverage.py \"${reports[0]}\" --require-session\n          python3 experiments/issue-138/check-author-fence-coverage.py \"${reports[0]}\"\n\n      - name: Build remaining examples\n        working-directory: .\n        run: |\n          dotnet build examples/engine-csharp --configuration Release\n          dotnet build examples/group-commit-csharp --configuration Release\n          dotnet build examples/transaction-names-csharp --configuration Release\n\n      - name: Native file LSM cluster consumers\n        working-directory: .\n        run: |\n          dotnet build examples/cluster-csharp --configuration Release\n          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm direct\n          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm partitioned\n          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm chunks\n          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming\n          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming-chunks\n\n      - name: Setup Node.js for coverage\n        if: ${{ !cancelled() }}\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      - name: Check that the C# suite loaded every golden fixture\n        working-directory: .\n        shell: bash\n        env:\n          RECEIPT: ${{ runner.temp }}/golden-csharp.json\n        run: node parity/check-parity.mjs --receipt csharp \"$RECEIPT\"\n\n      - name: Write coverage summary\n        if: ${{ !cancelled() }}\n        working-directory: .\n        run: node .github/scripts/coverage.mjs summary csharp/Foundation.Data.Doublets.Cli.Tests/TestResults\n\n      - name: Retain raw and Cobertura reports\n        if: ${{ !cancelled() }}\n        uses: actions/upload-artifact@v7\n        with:\n          name: ${{ matrix.os == 'ubuntu-24.04' && 'csharp-coverage' || format('csharp-coverage-{0}', matrix.os) }}\n          path: |\n            csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml\n            csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.json\n          if-no-files-found: error\n\n      # Only an explicitly inactive/missing Codecov repository relaxes upload\n      # errors. The preflight prints the reason as a warning; once activated,\n      # failed uploads fail CI. Coverage is retained independently above.\n      - name: Check Codecov activation\n        id: codecov\n        if: matrix.os == 'ubuntu-24.04'\n        working-directory: .\n        run: node .github/scripts/coverage.mjs codecov\n\n      - name: Upload coverage to Codecov (OIDC)\n        if: matrix.os == 'ubuntu-24.04'\n        timeout-minutes: 5\n        uses: codecov/codecov-action@v7\n        with:\n          use_oidc: true\n          directory: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults\n          plugins: noop\n          fail_ci_if_error: ${{ steps.codecov.outputs.required }}\n\n  # === SEMANTIC MERGE CONFLICT CHECK ===\n  # The jobs above test the pull request head. Two pull requests that each pass\n  # can still break `main` once merged, because a clean textual merge does not\n  # imply a compiling one (issue #96). This job merges the head into the current\n  # tip of the base branch and rebuilds and retests that tree.\n  fresh-merge:\n    name: Simulate Fresh Merge\n    runs-on: ubuntu-24.04\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-fresh-merge\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    if: github.event_name == 'pull_request'\n    needs: [javascript, detect-changes, lint]\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n          fetch-depth: 0\n\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.\n\n      # The script rewrites the working tree (detached checkout + merge), so it\n      # has to run from the repository root, not from the csharp/ default.\n      - name: Simulate fresh merge with base branch\n        working-directory: .\n        env:\n          GITHUB_BASE_REF: ${{ github.base_ref }}\n          FRESH_MERGE_CHECKS: |\n            dotnet build csharp --configuration Release\n            dotnet test csharp --no-build --configuration Release --verbosity normal\n        run: bash .github/scripts/simulate-fresh-merge.sh\n\n  # === BUILD PACKAGE ===\n  build:\n    name: Build Package\n    runs-on: ubuntu-24.04\n    timeout-minutes: 20\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-build\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, lint, test]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.\n\n      - name: Restore dependencies\n        run: dotnet restore\n\n      - name: Build Release\n        run: dotnet build --no-restore --configuration Release\n\n      # Write N+100 of `clink --transactions` must not be much slower than\n      # write N on a constant-size store (issue #195).\n      - name: Benchmark transactional writes\n        run: node ../.github/scripts/transactions-benchmark.mjs -- dotnet Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll\n\n      - name: Pack NuGet package\n        run: |\n          dotnet pack --no-build --configuration Release --output ./artifacts\n          node scripts/verify-packages.mjs\n\n      - name: Verify examples and experiments cannot produce packages\n        run: node scripts/verify-packages.mjs --pack-excluded\n\n      - name: Upload artifacts\n        uses: actions/upload-artifact@v7\n        with:\n          name: nuget-package\n          path: csharp/artifacts/*.nupkg\n          if-no-files-found: error\n\n  # === AUTOMATIC RELEASE ===\n  release:\n    name: Release\n    needs: [release-preflight, javascript, lint, test, build]\n    if: >-\n      ${{ !cancelled() && github.ref == 'refs/heads/main' &&\n      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release_mode == 'publish-current')) &&\n      needs.release-preflight.result == 'success' && needs.javascript.result == 'success' &&\n      needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}\n    runs-on: ubuntu-24.04\n    timeout-minutes: 45\n    # Writer group: never cancel a release that may already have pushed a\n    # package or a version commit.\n    concurrency:\n      group: main-writer-${{ github.repository }}\n      cancel-in-progress: false\n      queue: max\n    permissions:\n      contents: write\n      packages: write\n      # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.\n      id-token: write\n    environment: release\n    steps:\n      - uses: actions/checkout@v7\n        # Rules on main admit pushes only from the release deploy key (issue\n        # #111). The key is a secret of the `release` environment, which only\n        # main can use. Without it the version push is declined; see\n        # docs/ci-cd/troubleshooting.md#a-release-push-was-declined.\n        with:\n          persist-credentials: true\n          fetch-depth: 0\n          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}\n\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      - name: Check for changesets\n        if: inputs.release_mode != 'publish-current'\n        id: check_changesets\n        working-directory: .\n        run: |\n          # Count changeset files (excluding README.md and config.json)\n          CHANGESET_COUNT=$(find csharp/.changeset -name \"*.md\" ! -name \"README.md\" 2>/dev/null | wc -l)\n          echo \"Found $CHANGESET_COUNT changeset file(s)\"\n          echo \"has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')\" >> \"$GITHUB_OUTPUT\"\n          echo \"changeset_count=$CHANGESET_COUNT\" >> \"$GITHUB_OUTPUT\"\n\n      - name: Check if release is needed\n        # Self-healing gate: even when a changeset is absent, resume publishing\n        # if the csproj <Version> is missing on NuGet or its GitHub release does\n        # not exist. See docs/case-studies/issue-84/README.md and the JS\n        # template's check-release-needed.mjs for the same pattern.\n        id: check_release\n        working-directory: .\n        env:\n          HAS_CHANGESETS: ${{ steps.check_changesets.outputs.has_changesets }}\n          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          GITHUB_REPOSITORY: ${{ github.repository }}\n        run: node csharp/scripts/check-release-needed.mjs --library-csproj csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj\n\n      - name: Merge multiple changesets\n        if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_release.outputs.skip_bump != 'true' && steps.check_changesets.outputs.changeset_count > 1\n        working-directory: .\n        run: |\n          echo \"Multiple changesets detected, merging...\"\n          node csharp/scripts/merge-changesets.mjs \\\n            --dir csharp/.changeset \\\n            --package-name Foundation.Data.Doublets.Cli\n\n      - name: Version and commit\n        if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_release.outputs.skip_bump != 'true'\n        id: version\n        working-directory: .\n        run: node csharp/scripts/version-and-commit.mjs --mode changeset\n\n      - name: Resolve release version\n        # Picks the version that downstream steps should publish. Prefers the\n        # one just committed; falls back to the csproj <Version> reported by\n        # check-release-needed for self-healing re-runs.\n        id: release_version\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')\n        env:\n          NEW_VERSION: ${{ steps.version.outputs.new_version }}\n          CURRENT_VERSION: ${{ steps.check_release.outputs.current_version }}\n        run: |\n          if [ -n \"$NEW_VERSION\" ]; then\n            VERSION=\"$NEW_VERSION\"\n          else\n            VERSION=\"$CURRENT_VERSION\"\n          fi\n          echo \"version=$VERSION\" >> \"$GITHUB_OUTPUT\"\n          echo \"Releasing version: $VERSION\"\n\n      - name: Build release package\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')\n        run: |\n          dotnet restore\n          dotnet build --configuration Release\n          dotnet pack --no-build --configuration Release --output ./artifacts\n          node scripts/verify-packages.mjs\n\n      - name: Resolve NuGet package ids\n        id: package\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')\n        run: |\n          CLI_ID=$(sed -n 's:.*<PackageId>\\(.*\\)</PackageId>.*:\\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)\n          if [ -z \"$CLI_ID\" ]; then\n            CLI_ID=clink\n          fi\n          LIB_ID=$(sed -n 's:.*<PackageId>\\(.*\\)</PackageId>.*:\\1:p' Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | head -n 1)\n          if [ -z \"$LIB_ID\" ]; then\n            LIB_ID=Foundation.Data.Doublets.Cli\n          fi\n          echo \"id=$CLI_ID\" >> \"$GITHUB_OUTPUT\"\n          echo \"library_id=$LIB_ID\" >> \"$GITHUB_OUTPUT\"\n\n      - name: Validate NuGet API key\n        # Upfront validation surfaces an expired/invalid NUGET_API_KEY before\n        # we attempt a push that would otherwise return HTTP 403 mid-flight.\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')\n        env:\n          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}\n          NUGET_USER: ${{ vars.NUGET_USER }}\n        run: |\n          if [ -n \"$NUGET_USER\" ]; then\n            echo \"Publishing with NuGet trusted publishing as $NUGET_USER\"\n            exit 0\n          fi\n          if [ -z \"$NUGET_API_KEY\" ]; then\n            echo \"::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job.\"\n            exit 1\n          fi\n          echo \"NUGET_API_KEY length: ${#NUGET_API_KEY}\"\n\n      - name: NuGet login (OIDC)\n        id: nuget-login\n        # Trusted publishing: a one-hour key requested right before the push.\n        if: >-\n          vars.NUGET_USER != '' && (\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))\n        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0\n        with:\n          user: ${{ vars.NUGET_USER }}\n\n      - name: Publish to NuGet\n        id: nuget_publish\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')\n        env:\n          # The long-lived secret is only the fallback while trusted\n          # publishing is not configured (vars.NUGET_USER unset).\n          NUGET_API_KEY: ${{… }}\n        run: |\n          # A missing key used to skip the push while the release stayed green\n          # (issue #134); a versioned but unpublished release must fail.\n          if [ -z \"$NUGET_API_KEY\" ]; then\n            echo \"::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job.\"\n            exit 1\n          fi\n          # zizmor flags every --api-key [REDACTED]; the key is the short-lived\n          # trusted-publishing key whenever vars.NUGET_USER is set.\n          dotnet nuget push ./artifacts/*.nupkg --api-key \"$NUGET_API_KEY\" --source https://api.nuget.org/v3/index.json --skip-duplicate # zizmor: ignore[use-trusted-publishing]\n          echo \"published=true\" >> \"$GITHUB_OUTPUT\"\n\n      - name: Verify CLI package on NuGet\n        if: >-\n          steps.nuget_publish.outputs.published == 'true' && (\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))\n        env:\n          PACKAGE_ID: ${{ steps.package.outputs.id }}\n          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}\n        run: |\n          node scripts/wait-for-nuget.mjs \\\n            --package-id \"$PACKAGE_ID\" \\\n            --release-version \"$RELEASE_VERSION\"\n\n      - name: Verify library package on NuGet\n        if: >-\n          steps.nuget_publish.outputs.published == 'true' && (\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))\n        env:\n          PACKAGE_ID: ${{ steps.package.outputs.library_id }}\n          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}\n        run: |\n          node scripts/wait-for-nuget.mjs \\\n            --package-id \"$PACKAGE_ID\" \\\n            --release-version \"$RELEASE_VERSION\"\n\n      - name: Create GitHub Release\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true' ||\n          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')\n        env:\n          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}\n          CLI_PACKAGE_ID: ${{ steps.package.outputs.id }}\n          LIBRARY_PACKAGE_ID: ${{ steps.package.outputs.library_id }}\n        working-directory: .\n        run: |\n          node csharp/scripts/create-github-release.mjs \\\n            --release-version \"$RELEASE_VERSION\" \\\n            --repository \"$GITHUB_REPOSITORY\" \\\n            --tag-prefix \"csharp-v\" \\\n            --language \"C#\" \\\n            --package-id \"$CLI_PACKAGE_ID\" \\\n            --package-id \"$LIBRARY_PACKAGE_ID\" \\\n            --changelog-path \"csharp/CHANGELOG.md\" \\\n            --assets-glob \"csharp/artifacts/*.nupkg\"\n\n  # === MANUAL INSTANT RELEASE ===\n  instant-release:\n    name: Instant Release\n    needs: [release-preflight, javascript, lint, test, build]\n    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}\n    runs-on: ubuntu-24.04\n    timeout-minutes: 45\n    # Writer group: never cancel a release that may already have pushed a\n    # package or a version commit.\n    concurrency:\n      group: main-writer-${{ github.repository }}\n      cancel-in-progress: false\n      queue: max\n    permissions:\n      contents: write\n      packages: write\n      # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.\n      id-token: write\n    environment: release\n    steps:\n      - uses: actions/checkout@v7\n        # Rules on main admit pushes only from the release deploy key (issue\n        # #111). The key is a secret of the `release` environment, which only\n        # main can use. Without it the version push is declined; see\n        # docs/ci-cd/troubleshooting.md#a-release-push-was-declined.\n        with:\n          persist-credentials: true\n          fetch-depth: 0\n          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}\n\n      - name: Setup .NET\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      - name: Version and commit\n        id: version\n        working-directory: .\n        env:\n          BUMP_TYPE: ${{ github.event.inputs.bump_type }}\n          DESCRIPTION: ${{ github.event.inputs.description }}\n        run: |\n          node csharp/scripts/version-and-commit.mjs \\\n            --mode instant \\\n            --bump-type \"$BUMP_TYPE\" \\\n            --description \"$DESCRIPTION\"\n\n      - name: Build package\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true'\n        run: |\n          dotnet restore\n          dotnet build --configuration Release\n          dotnet pack --no-build --configuration Release --output ./artifacts\n          node scripts/verify-packages.mjs\n\n      - name: Resolve NuGet package ids\n        id: package\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true'\n        run: |\n          CLI_ID=$(sed -n 's:.*<PackageId>\\(.*\\)</PackageId>.*:\\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)\n          if [ -z \"$CLI_ID\" ]; then\n            CLI_ID=clink\n          fi\n          LIB_ID=$(sed -n 's:.*<PackageId>\\(.*\\)</PackageId>.*:\\1:p' Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | head -n 1)\n          if [ -z \"$LIB_ID\" ]; then\n            LIB_ID=Foundation.Data.Doublets.Cli\n          fi\n          echo \"id=$CLI_ID\" >> \"$GITHUB_OUTPUT\"\n          echo \"library_id=$LIB_ID\" >> \"$GITHUB_OUTPUT\"\n\n      - name: NuGet login (OIDC)\n        id: nuget-login\n        # Trusted publishing: a one-hour key requested right before the push.\n        if: >-\n          vars.NUGET_USER != '' && (\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true')\n        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0\n        with:\n          user: ${{ vars.NUGET_USER }}\n\n      - name: Publish to NuGet\n        id: nuget_publish\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true'\n        env:\n          # The long-lived secret is only the fallback while trusted\n          # publishing is not configured (vars.NUGET_USER unset).\n          NUGET_API_KEY: ${{… }}\n        run: |\n          # A missing key used to skip the push while the release stayed green\n          # (issue #134); a versioned but unpublished release must fail.\n          if [ -z \"$NUGET_API_KEY\" ]; then\n            echo \"::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job.\"\n            exit 1\n          fi\n          # zizmor flags every --api-key [REDACTED]; the key is the short-lived\n          # trusted-publishing key whenever vars.NUGET_USER is set.\n          dotnet nuget push ./artifacts/*.nupkg --api-key \"$NUGET_API_KEY\" --source https://api.nuget.org/v3/index.json --skip-duplicate # zizmor: ignore[use-trusted-publishing]\n          echo \"published=true\" >> \"$GITHUB_OUTPUT\"\n\n      - name: Verify CLI package on NuGet\n        if: >-\n          steps.nuget_publish.outputs.published == 'true' && (\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true')\n        env:\n          PACKAGE_ID: ${{ steps.package.outputs.id }}\n          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}\n        run: |\n          node scripts/wait-for-nuget.mjs \\\n            --package-id \"$PACKAGE_ID\" \\\n            --release-version \"$RELEASE_VERSION\"\n\n      - name: Verify library package on NuGet\n        if: >-\n          steps.nuget_publish.outputs.published == 'true' && (\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true')\n        env:\n          PACKAGE_ID: ${{ steps.package.outputs.library_id }}\n          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}\n        run: |\n          node scripts/wait-for-nuget.mjs \\\n            --package-id \"$PACKAGE_ID\" \\\n            --release-version \"$RELEASE_VERSION\"\n\n      - name: Create GitHub Release\n        if: >-\n          steps.version.outputs.version_committed == 'true' ||\n          steps.version.outputs.already_released == 'true'\n        env:\n          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}\n          CLI_PACKAGE_ID: ${{ steps.package.outputs.id }}\n          LIBRARY_PACKAGE_ID: ${{ steps.package.outputs.library_id }}\n        working-directory: .\n        run: |\n          node csharp/scripts/create-github-release.mjs \\\n            --release-version \"$RELEASE_VERSION\" \\\n            --repository \"$GITHUB_REPOSITORY\" \\\n            --tag-prefix \"csharp-v\" \\\n            --language \"C#\" \\\n            --package-id \"$CLI_PACKAGE_ID\" \\\n            --package-id \"$LIBRARY_PACKAGE_ID\" \\\n            --changelog-path \"csharp/CHANGELOG.md\" \\\n            --assets-glob \"csharp/artifacts/*.nupkg\"\n\n  # === MANUAL CHANGESET PR ===\n  # The workflow_dispatch input above advertises a 'changeset-pr' release mode,\n  # but no job used to handle it: selecting it silently did nothing while the\n  # run still reported success (issue #96). This job implements the advertised\n  # mode - it opens a pull request carrying the changeset instead of releasing\n  # straight away. The branch name matches the 'changeset-manual-release-*'\n  # prefix that changeset-check already skips.\n  changeset-pr:\n    name: Create Changeset PR\n    needs: [javascript]\n    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changeset-pr'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 10\n    # Writer group: never cancel a run that may already have pushed a branch.\n    concurrency:\n      group: main-writer-${{ github.repository }}\n      cancel-in-progress: false\n      queue: max\n    permissions:\n      contents: write\n      pull-requests: write\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: true\n          fetch-depth: 0\n\n      - name: Create changeset file\n        working-directory: .\n        env:\n          BUMP_TYPE: ${{ github.event.inputs.bump_type }}\n          DESCRIPTION: ${{ github.event.inputs.description }}\n          RUN_ID: ${{ github.run_id }}\n        run: |\n          set -euo pipefail\n          CHANGESET_FILE=\"csharp/.changeset/manual-release-${RUN_ID}.md\"\n          DESCRIPTION_TEXT=\"${DESCRIPTION:-Manual ${BUMP_TYPE} release}\"\n          {\n            echo '---'\n            echo \"'Foundation.Data.Doublets.Cli': ${BUMP_TYPE}\"\n            echo '---'\n            echo\n            echo \"${DESCRIPTION_TEXT}\"\n          } > \"$CHANGESET_FILE\"\n          echo \"Created changeset: $CHANGESET_FILE\"\n          cat \"$CHANGESET_FILE\"\n\n      - name: Create Pull Request\n        uses: peter-evans/create-pull-request@v8\n        with:\n          token: ${{ secrets.GITHUB_TOKEN }}\n          commit-message: 'chore: add changeset for manual ${{ github.event.inputs.bump_type }} release'\n          branch: changeset-manual-release-${{ github.run_id }}\n          delete-branch: true\n          title: 'chore: manual ${{ github.event.inputs.bump_type }} release'\n          body: |\n            ## Manual Release Request\n\n            This PR was created by a manual workflow trigger to prepare a **${{ github.event.inputs.bump_type }}** release.\n\n            ### Release Details\n            - **Type:** ${{ github.event.inputs.bump_type }}\n            - **Description:** ${{ github.event.inputs.description || 'Manual release' }}\n            - **Triggered by:** @${{ github.actor }}\n\n            ### Next Steps\n            1. Review the changeset in this PR\n            2. Merge this PR to main\n            3. The automated release workflow will version, publish, and create a GitHub release\n\n  pipeline-status:\n    name: Pipeline Status (csharp)\n    needs:\n      - javascript\n      - release-preflight\n      - verify-trusted-publishing\n      - detect-changes\n      - changeset-check\n      - lint\n      - test\n      - fresh-merge\n      - build\n      - release\n      - instant-release\n      - changeset-pr\n    if: ${{ !cancelled() }}\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n      - uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n      - name: Check every prerequisite\n        working-directory: .\n        env:\n          NEEDS_JSON: ${{ toJSON(needs) }}\n        run: node .github/scripts/pipeline-status.mjs\n"
+DEBUG audit:audit{ident="superfluous-actions" input=Workflow(file://.github/workflows/csharp.yml)}: subfeature: attempting to locate Subfeature { after: 0, fragment: Raw("peter-evans/create-pull-request@v8") } within "peter-evans/create-pull-request@v8"
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                2,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                3,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                4,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                6,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                7,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                10,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/csharp.yml",
+            native_path: ".github/workflows/csharp.yml",
+            root_relative_path: Some(
+                ".github/workflows/csharp.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                12,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/csharp.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/csharp.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/deep-client.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/deep-client.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/deep-client.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/deep-client.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/dependencies.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/dependencies.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/dependencies.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/dependencies.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/docs.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/docs.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/docs.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/docs.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/ipc.yml
+DEBUG audit:audit{ident="use-trusted-publishing" input=Workflow(file://.github/workflows/ipc.yml)}: zizmor::audit::use_trusted_publishing: use-trusted-publishing: couldn't determine shell type for ipc.yml step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/ipc.yml",
+            native_path: ".github/workflows/ipc.yml",
+            root_relative_path: Some(
+                ".github/workflows/ipc.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "interop",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                3,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}
+DEBUG audit:audit{ident="use-trusted-publishing" input=Workflow(file://.github/workflows/ipc.yml)}: zizmor::audit::use_trusted_publishing: use-trusted-publishing: couldn't determine shell type for ipc.yml step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/ipc.yml",
+            native_path: ".github/workflows/ipc.yml",
+            root_relative_path: Some(
+                ".github/workflows/ipc.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "interop",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                5,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/ipc.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/ipc.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/ipc.yml",
+            native_path: ".github/workflows/ipc.yml",
+            root_relative_path: Some(
+                ".github/workflows/ipc.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "interop",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                3,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/ipc.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/ipc.yml",
+            native_path: ".github/workflows/ipc.yml",
+            root_relative_path: Some(
+                ".github/workflows/ipc.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "interop",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                5,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/ipc.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/ipc.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/javascript-stage.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/javascript-stage.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/javascript-stage.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/javascript-stage.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/javascript.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/javascript.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/javascript.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/javascript.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/js-client.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/js-client.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/js-client.yml)}: subfeature: attempting to locate Subfeature { after: 205, fragment: Regex(Regex("npm\\s+install\\s+\\-\\-global\\s+npm@11\\.21\\.1")) } within "| # zizmor: ignore[adhoc-packages] -- exact pinned release, see below\n          # Trusted publishing needs npm 11.5.1+. Pinned to an exact release\n          # of the 11 line (Node.js ^20.17.0 || >=22.9.0, so 26.x included),\n          # so the npm that publishes does not change with the runner's Node.js.\n          npm install --global npm@11.21.1\n          if npm publish --access public --provenance --loglevel verbose; then\n            exit 0\n          fi\n          echo \"::error title=npm trusted publishing failed::@link-foundation/link-cli-client $VERSION could not be published. Check the js-client.yml trusted publisher policy on npmjs.com (including permission to publish directly), then run the authentication-only verification dispatch and retry.\"\n          exit 1"
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/js-client.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/js-client.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/js-server.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/js-server.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/js-server.yml)}: subfeature: attempting to locate Subfeature { after: 205, fragment: Regex(Regex("npm\\s+install\\s+\\-\\-global\\s+npm@11\\.21\\.1")) } within "| # zizmor: ignore[adhoc-packages] -- exact pinned release, see below\n          # Trusted publishing needs npm 11.5.1+. Pinned to an exact release\n          # of the 11 line (Node.js ^20.17.0 || >=22.9.0, so 26.x included),\n          # so the npm that publishes does not change with the runner's Node.js.\n          npm install --global npm@11.21.1\n          if npm publish --access public --provenance --loglevel verbose; then\n            exit 0\n          fi\n          echo \"::error title=npm trusted publishing failed::@link-foundation/link-cli-server $VERSION could not be published. Add this repository and js-server.yml as a trusted publisher of @link-foundation/link-cli-server on npmjs.com (a maintainer publishes the first version by hand if the package does not exist yet), run the authentication-only verification dispatch, then retry.\"\n          exit 1"
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/js-server.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/js-server.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/links.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/links.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/links.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/links.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/links.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/rerun-infrastructure-failures.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/rerun-infrastructure-failures.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/rerun-infrastructure-failures.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/rust.yml
+DEBUG audit:audit{ident="use-trusted-publishing" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::use_trusted_publishing: use-trusted-publishing: couldn't determine shell type for rust.yml step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                4,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}
+DEBUG audit:audit{ident="use-trusted-publishing" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::use_trusted_publishing: use-trusted-publishing: couldn't determine shell type for rust.yml step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                7,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}
+DEBUG audit:audit{ident="use-trusted-publishing" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::use_trusted_publishing: use-trusted-publishing: couldn't determine shell type for rust.yml step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                8,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}
+DEBUG audit:audit{ident="use-trusted-publishing" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::use_trusted_publishing: use-trusted-publishing: couldn't determine shell type for rust.yml step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                10,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="secrets-outside-env" input=Workflow(file://.github/workflows/rust.yml)}: subfeature: attempting to locate Subfeature { after: 3395, fragment: Raw("secrets.CARGO_TOKEN") } within "name: Rust CI/CD Pipeline\n\non:\n  push:\n    branches:\n      - main\n  # No path filter (issue #111): the JavaScript stage and the parity check\n  # must run for every pull request, and \"Pipeline Status (rust)\" is a\n  # required check that a filtered-out run would never report. The\n  # detect-changes job skips the Rust jobs when no Rust input changed\n  # (.github/scripts/stack-paths.mjs).\n  pull_request:\n    types: [opened, synchronize, reopened]\n  workflow_dispatch:\n    inputs:\n      release_mode:\n        description: 'Release mode'\n        required: true\n        type: choice\n        default: 'instant'\n        options:\n          - instant\n          - changelog-pr\n          - verify-trusted-publishing\n      bump_type:\n        description: 'Version bump type'\n        required: true\n        type: choice\n        default: 'patch'\n        options:\n          - patch\n          - minor\n          - major\n      description:\n        description: 'Release description (optional)'\n        required: false\n        type: string\n\n# Read-only concurrency cancels superseded PR synchronizations. Each main\n# revision keeps its results. Release writers share the repository queue.\n\n# Least privilege by default; the publishing jobs opt into more below.\npermissions:\n  contents: read\n\n# The GIT_CONFIG_* entries provide Git config to actions/checkout itself;\n# checkout runs git init before any workflow step can configure Git, which\n# otherwise prints the default-branch hint into every log.\nenv:\n  CARGO_TERM_COLOR: always\n  RUSTFLAGS: -Dwarnings\n  GIT_CONFIG_COUNT: '1'\n  GIT_CONFIG_KEY_0: ini…nch\n  GIT_CONFIG_VALUE_0: main\n\njobs:\n  # === STAGE GATE (issue #111) ===\n  # Lint, JavaScript unit tests and the parity check. Every job that installs\n  # Rust lists `javascript` in its needs, so nothing Rust starts unless this\n  # stage succeeded for the same commit.\n  javascript:\n    name: javascript\n    if: inputs.release_mode != 'verify-trusted-publishing'\n    uses: ./.github/workflows/javascript-stage.yml\n\n  release-preflight:\n    name: Release authentication preflight\n    if: inputs.release_mode != 'verify-trusted-publishing'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    permissions:\n      contents: read\n      id-token: write\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-release-preflight\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n      - uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n      - name: Authenticate preflight with crates.io\n        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'\n        id: preflight_auth\n        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6\n      - name: Prove authentication before version writes or publishing\n        working-directory: .\n        env:\n          RELEASE_MODE: ${{ inputs.release_mode }}\n          CARGO_REGISTRY_TOKEN: ${{… }}\n        run: node .github/scripts/release-preflight.mjs crates\n\n  # Authenticate without a version commit, tag, or package upload. This lets\n  # maintainers verify the registry policy before retiring the token fallback.\n  verify-trusted-publishing:\n    name: Verify crates.io trusted publishing\n    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'verify-trusted-publishing'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    permissions:\n      id-token: write\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-verify-trusted-publishing\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    steps:\n      - name: Authenticate with crates.io (trusted publishing)\n        id: auth\n        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6\n\n      - name: Confirm short-lived credential\n        env:\n          CARGO_REGISTRY_TOKEN: ${{… }}\n        run: |\n          test -n \"$CARGO_REGISTRY_TOKEN\"\n          echo 'crates.io OIDC authentication succeeded; the action revokes its temporary token when this job ends.' >> \"$GITHUB_STEP_SUMMARY\"\n\n  # === DETECT CHANGES - determines which jobs should run ===\n  detect-changes:\n    name: Detect Changes\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-detect-changes\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript]\n    if: github.event_name != 'workflow_dispatch'\n    outputs:\n      stack-changed: ${{ steps.stack.outputs.stack-changed }}\n      rs-changed: ${{ steps.changes.outputs.rs-changed }}\n      toml-changed: ${{ steps.changes.outputs.toml-changed }}\n      mjs-changed: ${{ steps.changes.outputs.mjs-changed }}\n      docs-changed: ${{ steps.changes.outputs.docs-changed }}\n      workflow-changed: ${{ steps.changes.outputs.workflow-changed }}\n      any-code-changed: ${{ steps.changes.outputs.any-code-changed }}\n      rust-code-changed: ${{ steps.changes.outputs.rust-code-changed }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n          fetch-depth: 0\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Install rust-script\n        run: bash rust/scripts/install-rust-script.sh\n\n      - name: Detect changes\n        id: changes\n        env:\n          GITHUB_EVENT_NAME: ${{ github.event_name }}\n          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}\n          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n        run: rust-script rust/scripts/detect-code-changes.rs\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      # Replaces the removed pull_request path filter: on a pull request\n      # that changes no Rust input, lint (and with it test, build and\n      # fresh-merge), coverage and the changelog check are skipped.\n      - name: Detect whether the Rust stack changed\n        id: stack\n        env:\n          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}\n          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n          STACK_PATHS_DEBUG: ${{ runner.debug }}\n        run: node .github/scripts/stack-paths.mjs rust\n\n  # === CHANGELOG CHECK - only runs on PRs with code changes ===\n  changelog:\n    name: Changelog Fragment Check\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-changelog\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes]\n    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true' && needs.detect-changes.outputs.rust-code-changed == 'true'\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n          fetch-depth: 0\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Install rust-script\n        run: bash rust/scripts/install-rust-script.sh\n\n      - name: Check for changelog fragments\n        env:\n          GITHUB_BASE_REF: ${{ github.base_ref }}\n          RUST_ROOT: rust\n        run: rust-script rust/scripts/check-changelog-fragment.rs\n\n  # === LINT AND FORMAT CHECK ===\n  lint:\n    name: Lint and Format Check\n    runs-on: ubuntu-24.04\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-lint\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes]\n    if: |\n      !cancelled() && needs.javascript.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (\n        github.event_name != 'pull_request' || needs.detect-changes.outputs.stack-changed == 'true'\n      ) && (\n        github.event_name == 'push' ||\n        github.event_name == 'workflow_dispatch' ||\n        needs.detect-changes.outputs.rs-changed == 'true' ||\n        needs.detect-changes.outputs.toml-changed == 'true' ||\n        needs.detect-changes.outputs.mjs-changed == 'true' ||\n        needs.detect-changes.outputs.docs-changed == 'true' ||\n        needs.detect-changes.outputs.workflow-changed == 'true'\n      )\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update --component rustfmt,clippy\n          rustup default stable\n\n      - name: Install rust-script\n        run: bash rust/scripts/install-rust-script.sh\n\n      - name: Restore cargo cache\n        id: cargo-cache\n        uses: actions/cache/restore@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ runner.os }}-cargo-${{ hashFiles('rust/Cargo.lock') }}\n          restore-keys: |\n            ${{ runner.os }}-cargo-\n\n      - name: Check formatting\n        run: |\n          cargo fmt --manifest-path rust/Cargo.toml --all -- --check\n          cargo fmt --manifest-path rust/wasm/Cargo.toml --all -- --check\n\n      # `-D warnings` is what makes this a gate: without it clippy prints its\n      # findings and still exits 0, so lint warnings accumulated invisibly\n      # (issue #96). The wasm crate is a separate workspace and was not linted\n      # at all until now.\n      - name: Run Clippy\n        run: |\n          cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings\n          cargo clippy --manifest-path rust/wasm/Cargo.toml --all-targets --all-features -- -D warnings\n\n      - name: Check file size limit\n        run: rust-script rust/scripts/check-file-size.rs\n\n      # The release scripts commit and push straight to main, where no\n      # workflow re-checks their output; their own test suites are the gate\n      # (issue #134: a silently failing `git add` released 1.0.6-1.0.8\n      # without ever committing the version bump).\n      - name: Compile release scripts (non-test, warnings denied)\n        run: bash rust/scripts/check-scripts.sh\n\n      - name: Test release scripts\n        run: bash rust/scripts/test-scripts.sh\n\n      # A dependency bump in Cargo.toml without the matching Cargo.lock update\n      # otherwise passes CI while every job silently re-resolves the graph\n      # (issue #96). --locked turns that drift into a failure.\n      - name: Deny Cargo manifest warnings\n        run: |\n          bash .github/scripts/check-cargo-warnings.sh --manifest-path rust/Cargo.toml\n          bash .github/scripts/check-cargo-warnings.sh --manifest-path rust/wasm/Cargo.toml\n\n      - name: Verify Cargo.lock is up to date\n        run: |\n          cargo metadata --locked --format-version 1 --manifest-path rust/Cargo.toml > /dev/null\n          cargo metadata --locked --format-version 1 --manifest-path rust/wasm/Cargo.toml > /dev/null\n\n      # The workflow policy tests (issue #96) moved to the JavaScript stage,\n      # which runs them through `npm run test:js` before this job starts.\n\n      # Pull request caches are scoped to their merge ref, so only main\n      # saves; every branch restores main's cache (issue #172).\n      - name: Save cargo cache\n        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}\n        uses: actions/cache/save@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}\n\n  # === TEST ===\n  test:\n    name: Test (${{ matrix.os }})\n    runs-on: ${{ matrix.os }}\n    timeout-minutes: 45\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-test-${{ matrix.os }}\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes, changelog, lint]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}\n    strategy:\n      fail-fast: false\n      matrix:\n        os: [ubuntu-24.04, macos-26, windows-2025]\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Restore cargo cache\n        id: cargo-cache\n        uses: actions/cache/restore@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          # Its own key: sharing the lint job's key let lint's clippy-only\n          # cache win the save race, so tests restored almost nothing.\n          key: ${{ runner.os }}-cargo-test-${{ hashFiles('rust/Cargo.lock') }}\n          restore-keys: |\n            ${{ runner.os }}-cargo-test-\n\n      - name: Setup Node.js for dependency boundary checks\n        uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n\n      - name: Verify SQLite is optional\n        run: node .github/scripts/check-sqlite-optional.mjs rust\n\n      # Compile everything first and save the cache before the long test\n      # run, so saving (3-5 minutes for ~3 GB on Windows) can never be what\n      # pushes a job whose tests passed past timeout-minutes (issue #172).\n      - name: Build test binaries\n        shell: bash\n        run: |\n          cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests --no-run\n          cargo test --manifest-path rust/Cargo.toml --all-features --no-run\n          cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm\n\n      # Pull request caches are scoped to their merge ref, so only main\n      # saves; every branch restores main's cache (issue #172).\n      - name: Save cargo cache\n        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}\n        uses: actions/cache/save@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}\n\n      - name: Test native stores without optional providers\n        run: cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests\n\n      # golden_fixtures_tests writes the receipt that the next step checks,\n      # so a filtered or skipped golden fixture test fails CI (issue #111).\n      - name: Run tests\n        env:\n          GOLDEN_FIXTURES_RECEIPT: ${{ runner.temp }}/golden-rust.json\n        run: cargo test --manifest-path rust/Cargo.toml --all-features --verbose\n\n      - name: Check that the Rust suite loaded every golden fixture\n        shell: bash\n        env:\n          RECEIPT: ${{ runner.temp }}/golden-rust.json\n        run: node parity/check-parity.mjs --receipt rust \"$RECEIPT\"\n\n      - name: Run doc tests\n        run: cargo test --manifest-path rust/Cargo.toml --doc --verbose\n\n      - name: Native LSM cluster consumers without SQL or a coordinator\n        shell: bash\n        run: |\n          cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm\n          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster direct\n          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster partitioned\n          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster chunks\n          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming\n          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming-chunks\n\n  # === COVERAGE MEASUREMENT ===\n  coverage:\n    name: Rust coverage\n    runs-on: ubuntu-24.04\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-coverage\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, detect-changes]\n    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.stack-changed == 'true'\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup Rust coverage tools\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update --component llvm-tools-preview\n          rustup default stable\n          cargo install cargo-llvm-cov --version 0.9.2 --locked\n\n      - name: Measure Rust test coverage\n        # Branch instrumentation is experimental. Limit the unstable compiler\n        # option to this measurement; normal builds still use stable Rust.\n        env:\n          RUSTC_BOOTSTRAP: '1'\n          # Crash tests kill child processes on purpose. A kill during the\n          # child's exit leaves a truncated profile, which only loses that\n          # child's counters, so it must not discard every other profile.\n          LLVM_PROFDATA_FLAGS: --failure-mode=all\n        run: |\n          cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --branch --lcov --output-path rust/coverage.lcov\n          cargo llvm-cov report --manifest-path rust/Cargo.toml --branch --json --summary-only --output-path rust/coverage-summary.json\n\n      - name: Check author guard coverage\n        run: python3 experiments/issue-138/check-author-fence-rust-coverage.py rust/coverage-summary.json\n\n      - name: Preserve coverage report\n        if: always()\n        uses: actions/upload-artifact@v7\n        with:\n          name: rust-coverage\n          path: |\n            rust/coverage.lcov\n            rust/coverage-summary.json\n          if-no-files-found: error\n\n  # === SEMANTIC MERGE CONFLICT CHECK ===\n  # Every other job tests the pull request head. A pull request can be green in\n  # isolation and still break `main`: two changes that merge without a textual\n  # conflict can still contradict each other semantically, and the breakage only\n  # appears after the merge lands (issue #96). This job merges the head into the\n  # current tip of the base branch and re-runs the fast checks on that tree.\n  # Ported from the Rust pipeline template's \"Simulate fresh merge\" step.\n  fresh-merge:\n    name: Simulate Fresh Merge\n    runs-on: ubuntu-24.04\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-fresh-merge\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    if: github.event_name == 'pull_request'\n    needs: [javascript, detect-changes, lint]\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n          fetch-depth: 0\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update --component rustfmt,clippy\n          rustup default stable\n\n      - name: Restore cargo cache\n        id: cargo-cache\n        uses: actions/cache/restore@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ runner.os }}-cargo-fresh-merge-${{ hashFiles('rust/Cargo.lock') }}\n          restore-keys: |\n            ${{ runner.os }}-cargo-fresh-merge-\n\n      - name: Simulate fresh merge with base branch\n        env:\n          GITHUB_BASE_REF: ${{ github.base_ref }}\n          FRESH_MERGE_CHECKS: |\n            cargo fmt --manifest-path rust/Cargo.toml --all -- --check\n            cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings\n            cargo test --manifest-path rust/Cargo.toml --all-features\n        run: bash .github/scripts/simulate-fresh-merge.sh\n\n      # Pull request caches are scoped to their merge ref, so only main\n      # saves; every branch restores main's cache (issue #172).\n      - name: Save cargo cache\n        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}\n        uses: actions/cache/save@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}\n\n  # === BUILD ===\n  build:\n    name: Build Package\n    runs-on: ubuntu-24.04\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-build\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    needs: [javascript, lint, test]\n    if: ${{ !cancelled() && needs.javascript.result == 'success' && needs.lint.result == 'success' && needs.test.result == 'success' }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Restore cargo cache\n        id: cargo-cache\n        uses: actions/cache/restore@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ runner.os }}-cargo-build-${{ hashFiles('rust/Cargo.lock') }}\n          restore-keys: |\n            ${{ runner.os }}-cargo-build-\n\n      - name: Build release\n        run: cargo build --manifest-path rust/Cargo.toml --release --verbose\n\n      # Write N+100 of `clink --transactions` must not be much slower than\n      # write N on a constant-size store (issue #195).\n      - name: Benchmark transactional writes\n        run: node .github/scripts/transactions-benchmark.mjs -- rust/target/release/clink\n\n      - name: Check package\n        run: cargo package --manifest-path rust/Cargo.toml --list --allow-dirty\n\n      # Pull request caches are scoped to their merge ref, so only main\n      # saves; every branch restores main's cache (issue #172).\n      - name: Save cargo cache\n        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true' }}\n        uses: actions/cache/save@v6\n        with:\n          path: |\n            ~/.cargo/registry\n            ~/.cargo/git\n            rust/target\n          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}\n\n  # === AUTO RELEASE ===\n  auto-release:\n    name: Auto Release\n    needs: [release-preflight, javascript, lint, test, build]\n    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}\n    runs-on: ubuntu-24.04\n    timeout-minutes: 60\n    # Writer group: never cancel a release that may already have published a\n    # crate or pushed a version commit.\n    concurrency:\n      group: main-writer-${{ github.repository }}\n      cancel-in-progress: false\n      queue: max\n    permissions:\n      id-token: write\n      contents: write\n    environment: release\n    steps:\n      - uses: actions/checkout@v7\n        # Rules on main admit pushes only from the release deploy key (issue\n        # #111). The key is a secret of the `release` environment, which only\n        # main can use. Without it the version push is declined; see\n        # docs/ci-cd/troubleshooting.md#a-release-push-was-declined.\n        with:\n          persist-credentials: true\n          fetch-depth: 0\n          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Install rust-script\n        run: bash rust/scripts/install-rust-script.sh\n\n      - name: Configure git\n        run: rust-script rust/scripts/git-config.rs\n\n      - name: Determine bump type from changelog fragments\n        id: bump_type\n        env:\n          RUST_ROOT: rust\n        run: rust-script rust/scripts/get-bump-type.rs\n\n      - name: Check if version already released or no fragments\n        id: check\n        env:\n          HAS_FRAGMENTS: ${{ steps.bump_type.outputs.has_fragments }}\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          RUST_ROOT: rust\n        run: |\n          rust-script rust/scripts/check-release-needed.rs \\\n            --tag-prefix rust-v \\\n            --repository \"$GITHUB_REPOSITORY\"\n\n      - name: Collect changelog and bump version\n        id: version\n        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.skip_bump != 'true'\n        working-directory: .\n        env:\n          BUMP_TYPE: ${{ steps.bump_type.outputs.bump_type }}\n        run: |\n          rust-script rust/scripts/version-and-commit.rs \\\n            --rust-root rust \\\n            --tag-prefix rust-v \\\n            --bump-type \"$BUMP_TYPE\"\n\n      - name: Get current version\n        id: current_version\n        if: steps.check.outputs.should_release == 'true'\n        env:\n          RUST_ROOT: rust\n        run: rust-script rust/scripts/get-version.rs\n\n      - name: Build release\n        if: steps.check.outputs.should_release == 'true'\n        run: cargo build --manifest-path rust/Cargo.toml --release\n\n      # Trusted publishing runs only once it is configured on crates.io and\n      # the CRATES_IO_TRUSTED_PUBLISHING repository variable is 'true'.\n      # Attempting it unconditionally with continue-on-error left a red\n      # \"No Trusted Publishing config found\" annotation on every green\n      # release (issue #134). Without the variable the publish step uses the\n      # CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret and fails when it is missing.\n      - name: Authenticate with crates.io (trusted publishing)\n        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6\n        id: prm_auth\n        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && (steps.check.outputs.should_release == 'true' && steps.check.outputs.crate_published != 'true')\n\n      - name: Publish to Crates.io\n        id: publish_crate\n        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.crate_published != 'true'\n        env:\n          CARGO_REGISTRY_TOKEN: ${{… }}\n          RUST_ROOT: rust\n        run: rust-script rust/scripts/publish-crate.rs\n\n      - name: Wait for Crate availability on Crates.io\n        if: steps.check.outputs.should_release == 'true'\n        env:\n          RUST_ROOT: rust\n          RELEASE_VERSION: ${{ steps.current_version.outputs.version }}\n        run: rust-script rust/scripts/wait-for-crate.rs --release-version \"$RELEASE_VERSION\"\n\n      - name: Create GitHub Release\n        if: steps.check.outputs.should_release == 'true'\n        env:\n          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          NEW_VERSION: ${{ steps.version.outputs.new_version }}\n          CURRENT_VERSION: ${{ steps.current_version.outputs.version }}\n        run: |\n          RELEASE_VERSION=\"${NEW_VERSION:-$CURRENT_VERSION}\"\n\n          rust-script rust/scripts/create-github-release.rs \\\n            --rust-root rust \\\n            --release-version \"$RELEASE_VERSION\" \\\n            --repository \"$GITHUB_REPOSITORY\" \\\n            --tag-prefix \"rust-v\" \\\n            --language \"Rust\"\n\n  # === MANUAL RELEASE ===\n  manual-release:\n    name: Manual Release\n    needs: [release-preflight, javascript, lint, test, build]\n    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && needs.javascript.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}\n    runs-on: ubuntu-24.04\n    timeout-minutes: 60\n    # Writer group: never cancel a release that may already have published a\n    # crate or pushed a version commit.\n    concurrency:\n      group: main-writer-${{ github.repository }}\n      cancel-in-progress: false\n      queue: max\n    permissions:\n      id-token: write\n      contents: write\n    environment: release\n    steps:\n      - uses: actions/checkout@v7\n        # Rules on main admit pushes only from the release deploy key (issue\n        # #111). The key is a secret of the `release` environment, which only\n        # main can use. Without it the version push is declined; see\n        # docs/ci-cd/troubleshooting.md#a-release-push-was-declined.\n        with:\n          persist-credentials: true\n          fetch-depth: 0\n          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Install rust-script\n        run: bash rust/scripts/install-rust-script.sh\n\n      - name: Configure git\n        run: rust-script rust/scripts/git-config.rs\n\n      - name: Version and commit\n        id: version\n        env:\n          BUMP_TYPE: ${{ github.event.inputs.bump_type }}\n          DESCRIPTION: ${{ github.event.inputs.description }}\n        run: |\n          rust-script rust/scripts/version-and-commit.rs \\\n            --rust-root rust \\\n            --tag-prefix rust-v \\\n            --bump-type \"$BUMP_TYPE\" \\\n            --description \"$DESCRIPTION\"\n\n      - name: Build release\n        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'\n        run: cargo build --manifest-path rust/Cargo.toml --release\n\n      # Trusted publishing runs only once it is configured on crates.io and\n      # the CRATES_IO_TRUSTED_PUBLISHING repository variable is 'true'.\n      # Attempting it unconditionally with continue-on-error left a red\n      # \"No Trusted Publishing config found\" annotation on every green\n      # release (issue #134). Without the variable the publish step uses the\n      # CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret and fails when it is missing.\n      - name: Authenticate with crates.io (trusted publishing)\n        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6\n        id: prm_auth\n        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && (steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true')\n\n      - name: Publish to Crates.io\n        id: publish_crate\n        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'\n        env:\n          CARGO_REGISTRY_TOKEN: ${{… }}\n          RUST_ROOT: rust\n        run: rust-script rust/scripts/publish-crate.rs\n\n      - name: Wait for Crate availability on Crates.io\n        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'\n        env:\n          RUST_ROOT: rust\n          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}\n        run: rust-script rust/scripts/wait-for-crate.rs --release-version \"$RELEASE_VERSION\"\n\n      - name: Create GitHub Release\n        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'\n        env:\n          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}\n        run: |\n          rust-script rust/scripts/create-github-release.rs \\\n            --rust-root rust \\\n            --release-version \"$RELEASE_VERSION\" \\\n            --repository \"$GITHUB_REPOSITORY\" \\\n            --tag-prefix \"rust-v\" \\\n            --language \"Rust\"\n\n  # === MANUAL CHANGELOG PR ===\n  # Mirrors the C# 'changeset-pr' mode and the Rust pipeline template: instead of\n  # releasing straight away, open a pull request carrying the changelog fragment\n  # so the release goes through the normal review path (issue #96).\n  changelog-pr:\n    name: Create Changelog PR\n    needs: [javascript]\n    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changelog-pr'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    # Writer group: never cancel a run that may already have pushed a branch.\n    concurrency:\n      group: main-writer-${{ github.repository }}\n      cancel-in-progress: false\n      queue: max\n    permissions:\n      contents: write\n      pull-requests: write\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: true\n          fetch-depth: 0\n\n      - name: Setup Rust\n        shell: bash\n        run: |\n          rustup toolchain install stable --profile minimal --no-self-update\n          rustup default stable\n\n      - name: Install rust-script\n        run: bash rust/scripts/install-rust-script.sh\n\n      - name: Create changelog fragment\n        env:\n          BUMP_TYPE: ${{ github.event.inputs.bump_type }}\n          DESCRIPTION: ${{ github.event.inputs.description }}\n        run: |\n          rust-script rust/scripts/create-changelog-fragment.rs \\\n            --rust-root rust \\\n            --bump-type \"$BUMP_TYPE\" \\\n            --description \"$DESCRIPTION\"\n\n      - name: Create Pull Request\n        uses: peter-evans/create-pull-request@v8\n        with:\n          token: ${{ secrets.GITHUB_TOKEN }}\n          commit-message: 'chore: add changelog for manual ${{ github.event.inputs.bump_type }} release'\n          branch: changelog-manual-release-${{ github.run_id }}\n          delete-branch: true\n          title: 'chore: manual ${{ github.event.inputs.bump_type }} release'\n          body: |\n            ## Manual Release Request\n\n            This PR was created by a manual workflow trigger to prepare a **${{ github.event.inputs.bump_type }}** release.\n\n            ### Release Details\n            - **Type:** ${{ github.event.inputs.bump_type }}\n            - **Description:** ${{ github.event.inputs.description || 'Manual release' }}\n            - **Triggered by:** @${{ github.actor }}\n\n            ### Next Steps\n            1. Review the changelog fragment in this PR\n            2. Merge this PR to main\n            3. The automated release workflow will publish to crates.io and create a GitHub release\n\n  pipeline-status:\n    name: Pipeline Status (rust)\n    needs:\n      - javascript\n      - release-preflight\n      - verify-trusted-publishing\n      - detect-changes\n      - changelog\n      - lint\n      - coverage\n      - test\n      - fresh-merge\n      - build\n      - auto-release\n      - manual-release\n      - changelog-pr\n    if: ${{ !cancelled() }}\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.ref || github.event_name == 'push' && github.sha || github.run_id }}-pipeline-status\n      cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n      - uses: actions/setup-node@v7\n        with:\n          node-version: '26.x'\n      - name: Check every prerequisite\n        working-directory: .\n        env:\n          NEEDS_JSON: ${{ toJSON(needs) }}\n        run: node .github/scripts/pipeline-status.mjs\n"
+DEBUG audit:audit{ident="superfluous-actions" input=Workflow(file://.github/workflows/rust.yml)}: subfeature: attempting to locate Subfeature { after: 0, fragment: Raw("peter-evans/create-pull-request@v8") } within "peter-evans/create-pull-request@v8"
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                4,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                7,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                8,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="adhoc-packages" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit::adhoc_packages: adhoc-packages: couldn't determine shell for step SymbolicLocation {
+    key: Local(
+        LocalKey {
+            group: GroupID(
+                ".github",
+            ),
+            prefix: Some(
+                ".github",
+            ),
+            verbatim_path: ".github/workflows/rust.yml",
+            native_path: ".github/workflows/rust.yml",
+            root_relative_path: Some(
+                ".github/workflows/rust.yml",
+            ),
+        },
+    ),
+    annotation: "this step",
+    link: None,
+    route: Route {
+        route: [
+            Key(
+                "jobs",
+            ),
+            Key(
+                "test",
+            ),
+            Key(
+                "steps",
+            ),
+            Index(
+                10,
+            ),
+        ],
+    },
+    feature_kind: Normal,
+    kind: Related,
+}; assuming bash
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/rust.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/rust.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/security.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/security.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/security.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/security.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/security.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/wasm.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/wasm.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/wasm.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/wasm.yml
+DEBUG audit: zizmor: scheduling artipacked on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unsound-contains on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unsound-ternary on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling excessive-permissions on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling dangerous-triggers on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling use-trusted-publishing on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling template-injection on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling hardcoded-container-credentials on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling self-hosted-runner on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unpinned-uses on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling undocumented-permissions on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling insecure-commands on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling github-env on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling cache-poisoning on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling secrets-inherit on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling bot-conditions on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling overprovisioned-secrets on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unredacted-secrets on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling forbidden-uses on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling obfuscation on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unpinned-images on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling anonymous-definition on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unsound-condition on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling dependabot-execution on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling dependabot-cooldown on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling concurrency-limits on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling archived-uses on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling typosquat-uses on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling misfeature on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling secrets-outside-env on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling superfluous-actions on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling github-app on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unpinned-tools on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling adhoc-packages on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling insecure-url-scheme on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling self-repository on file://.github/workflows/workflows.yml
+DEBUG audit: zizmor: scheduling unsafe-checkout on file://.github/workflows/workflows.yml
+DEBUG audit:audit{ident="dependabot-cooldown" input=Workflow(file://.github/workflows/workflows.yml)}: zizmor::audit: skipping: dependabot-cooldown is disabled in config for group GroupID(".github")
+DEBUG audit:audit{ident="self-repository" input=Workflow(file://.github/workflows/workflows.yml)}: zizmor::audit: skipping: self-repository is disabled in config for group GroupID(".github")
+ INFO audit: zizmor: 🌈 completed .github/workflows/workflows.yml
+No findings to report. Good job! (3 ignored, 33 suppressed)

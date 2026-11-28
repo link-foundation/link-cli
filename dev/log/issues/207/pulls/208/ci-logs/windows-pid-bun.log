@@ -1,0 +1,56 @@
+bun test v1.4.5 (a7733435c)
+
+test/store-lock.test.mjs:
+(pass) retries bounded Windows PID cleanup sharing errors [117.95ms]
+(pass) parseStoreLockOptions > defaults to a flock waited for 30 s [1.26ms]
+(pass) parseStoreLockOptions > reads kinds in any case and timeouts as u64 milliseconds [3.84ms]
+(pass) parseStoreLockOptions > rejects other values with the messages of the Rust clink [0.71ms]
+(pass) lockOrder > sorts by absolute path and locks a store spelled twice once [3.35ms]
+(pass) lockOrder > puts a directory before what it holds, and keeps missing parents [1.20ms]
+(pass) owner probes > names the host [0.51ms]
+(pass) owner probes > reads the PID namespace on Linux only [0.14ms]
+(pass) owner probes > reads the start time past a command name with spaces and parentheses [1.75ms]
+(pass) owner probes > tells running, gone and unknown processes apart [0.41ms]
+(pass) LockOwner > describes this process and reads its own record back [2.69ms]
+(pass) LockOwner > leaves what a platform cannot report empty [0.45ms]
+(pass) LockOwner > parses records leniently but needs a process id [2.61ms]
+(pass) LockOwner > judges only owners on this host and in this PID namespace [0.77ms]
+(pass) --lock pid > publishes, reports and releases a lock directory [156.25ms]
+(pass) --lock pid > leaves a lock alone once it is no longer its own [5.82ms]
+(pass) --lock pid > keeps a lock it cannot move aside on release [5.42ms]
+(pass) --lock pid > breaks the lock of a gone owner, tracing it when asked [36.00ms]
+(pass) --lock pid > breaks a directory without a record only once it is old [43.19ms]
+(pass) --lock pid > moves back a lock that changed hands while being broken [3.17ms]
+(pass) --lock pid > gives up after four attempts [37.26ms]
+(pass) StoreLock with --lock flock > holds a store exclusively, naming its owner to waiters [12.87ms]
+(pass) StoreLock with --lock flock > shares a store among readers, who clear a crashed writer record [27.44ms]
+(pass) StoreLock with --lock flock > waits for the holder to finish [36.84ms]
+(pass) StoreLock with --lock flock > names the record when probing for readers fails [4.60ms]
+(pass) StoreLock with --lock flock > releases the stores it took when a later one is held [3.20ms]
+(pass) StoreLock with --lock flock > reports stores that were never locked without creating anything [1.14ms]
+(pass) StoreLock with --lock flock > keeps a record it cannot write to itself [1.14ms]
+(pass) StoreLock with --lock pid and none > takes no lock with --lock none [0.89ms]
+(pass) StoreLock with --lock pid and none > falls back to the pid lock where this runtime has no flock [9.43ms]
+(pass) StoreLock with --lock pid and none > waits for a live owner and names it [35.42ms]
+(pass) StoreLock with --lock pid and none > reports what keeps it from making the lock directory [3.55ms]
+(pass) quietFfiWarning > drops only the node:ffi experimental warning [1.16ms]
+
+test/main-store-lock.test.mjs:
+(pass) locks the database and every side store it was given, once [1.36ms]
+(pass) shares the lock among read-only runs of an existing store only [6.60ms]
+(pass) --lock-status reports every store without creating any [13.88ms]
+(pass) checks the lock options before any store opens [4.17ms]
+(pass) fails naming the owner of a held pid lock, and --no-lock passes it by [90.86ms]
+(skip) concurrent --in imports under the default lock all keep their writes (#194)
+(skip) concurrent --in imports under --lock pid all keep their writes (#194)
+(skip) concurrent --in imports under --lock flock all keep their writes (#194)
+
+3 tests skipped:
+(skip) concurrent --in imports under the default lock all keep their writes (#194)
+(skip) concurrent --in imports under --lock pid all keep their writes (#194)
+(skip) concurrent --in imports under --lock flock all keep their writes (#194)
+
+ 38 pass
+ 3 skip
+ 0 fail
+Ran 41 tests across 2 files. [1182.00ms]

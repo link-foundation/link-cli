@@ -1,7 +1,7 @@
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	﻿2026-11-27T20:29:38.2106091Z ##[group]Run mkdir -p experiments/issue-138/etcd
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2106403Z ^[[36;1mmkdir -p experiments/issue-138/etcd^[[0m
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2107039Z ^[[36;1mcurl --fail --location --retry 3 --output experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.7.3/etcd-v3.7.3-linux-amd64.tar.gz^[[0m
-Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2107913Z ^[[36;1mprintf '%s  %s\n' '5dfa9cc3b3ce3b4b491fbcc2057d3daa166bcc6676f743fcd20f8e5760cb9775' 'experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz' | sha256sum --check^[[0m
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2107913Z ^[[36;1mprintf '%s  %s\n' '5df…775' 'experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz' | sha256sum --check^[[0m
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2108568Z ^[[36;1mtar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd^[[0m
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2109020Z ^[[36;1mnode --test --test-timeout=10000 experiments/issue-138/etcd-harness.test.mjs^[[0m
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2109366Z ^[[36;1mnode experiments/issue-138/etcd-maintenance.mjs^[[0m
@@ -14,7 +14,7 @@ Conformance on Node.js, Bun and Deno	Verify actual consensus and language intero
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135235Z shell: /usr/bin/bash -e {0}
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135438Z env:
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135587Z   GIT_CONFIG_COUNT: 1
-Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135765Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135765Z   GIT_CONFIG_KEY_0: ini…nch
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2135973Z   GIT_CONFIG_VALUE_0: main
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2136232Z   CLINK_RUST: /home/runner/work/link-cli/link-cli/rust/target/release/clink
 Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-11-27T20:29:38.2136705Z   CLINK_CSHARP: /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
@@ -140,7 +140,7 @@ Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.0933818
 Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4007724Z shell: /usr/bin/bash -e {0}
 Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4008461Z env:
 Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4008874Z   GIT_CONFIG_COUNT: 1
-Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4009282Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4009282Z   GIT_CONFIG_KEY_0: ini…nch
 Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4009676Z   GIT_CONFIG_VALUE_0: main
 Pipeline Status (js-client)	Check every prerequisite	2026-11-27T20:30:13.4011090Z   NEEDS_JSON: {
 Pipeline Status (js-client)	Check every prerequisite	  "javascript": {

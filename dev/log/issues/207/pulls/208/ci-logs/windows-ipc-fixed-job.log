@@ -1,0 +1,716 @@
+IPC interop (windows-2025)	Set up job	﻿2026-11-27T23:02:58.4580241Z Current runner version: '2.338.2'
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4619523Z ##[group]Runner Image Provisioner
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4620175Z Hosted Compute Agent
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4620651Z Version: 20261111.635
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4621118Z Commit: b8a…2ed
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4621656Z Build Date: 2026-11-11T01:49:01Z
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4622170Z Worker ID: {ed59b4ec-838d-4d7e-a29e-31b32bbc1483}
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4622707Z Region: westus3
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4623116Z Cloud: Azure
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4623500Z ##[endgroup]
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4624501Z ##[group]Operating System
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4624979Z Microsoft Windows Server 2025
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4625423Z 10.0.26100
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4625841Z Datacenter
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4626219Z ##[endgroup]
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4626610Z ##[group]Runner Image
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4627206Z Image: windows-2025-vs2026
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4627773Z Version: 20261123.321.1
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4628764Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261123.321/images/windows/Windows2025-VS2026-Readme.md
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4630317Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261123.321
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4631409Z ##[endgroup]
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4632226Z ##[group]GITHUB_TOKEN Permissions
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4633938Z Contents: read
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4634380Z Metadata: read
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4634798Z ##[endgroup]
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4636493Z Secret source: Actions
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4637187Z Cache mode: write
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.4637726Z Prepare workflow directory
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.5009828Z Prepare all required actions
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.5049443Z Getting action download info
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.7867659Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:58.8804806Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:59.0591591Z Download action repository 'actions/setup-dotnet@v6' (SHA:0f4a354dd5547a28c70b7853dbd95d5b67886e73)
+IPC interop (windows-2025)	Set up job	2026-11-27T23:02:59.7825368Z Complete job name: IPC interop (windows-2025)
+IPC interop (windows-2025)	Run actions/checkout@v7	﻿2026-11-27T23:02:59.9110546Z ##[group]Run actions/checkout@v7
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9111539Z with:
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9111901Z   persist-credentials: false
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9112347Z   repository: link-foundation/link-cli
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9115786Z   token: ***
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9116125Z   ssh-strict: true
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9116471Z   ssh-user: git
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9116797Z   clean: true
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9117138Z   sparse-checkout-cone-mode: true
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9117545Z   fetch-depth: 1
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9117877Z   fetch-tags: false
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9118223Z   show-progress: true
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9118564Z   lfs: false
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9118882Z   submodules: false
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9119259Z   set-safe-directory: true
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9119663Z   allow-unsafe-pr-checkout: false
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9120276Z env:
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9120597Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9120970Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9121403Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:02:59.9121808Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.0378659Z Syncing repository: link-foundation/link-cli
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.0380239Z ##[group]Getting Git version info
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.0380738Z Working directory is 'D:\a\link-cli\link-cli'
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.1141257Z [command]"C:\Program Files\Git\bin\git.exe" version
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.4686348Z git version 2.56.1.windows.1
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.4721834Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.4734859Z Temporarily overriding HOME='D:\a\_temp\30ae20a0-1ac4-41e5-86b0-ccf5a67828c1' before making global git config changes
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.4736378Z Adding repository directory to the temporary git global config as a safe directory
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.4743180Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\link-cli\link-cli
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.5353271Z Deleting the contents of 'D:\a\link-cli\link-cli'
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.5358187Z ##[group]Determining repository object format
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.5360984Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.5362992Z ##[group]Initializing the repository
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.5368759Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\link-cli\link-cli
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.6051856Z Initialized empty Git repository in D:/a/link-cli/link-cli/.git/
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.6092168Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/link-foundation/link-cli
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.6712474Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.6714055Z ##[group]Disabling automatic garbage collection
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.6715533Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.7012557Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.7014009Z ##[group]Setting up auth
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.7015076Z Removing SSH command configuration
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.7020500Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:00.7318962Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:02.1671278Z Removing HTTP extra header
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:02.1678201Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:02.1978485Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:02.6553120Z Removing includeIf entries pointing to credentials config files
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:02.6562183Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:02.6865572Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.1811690Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.2127576Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/link-cli/link-cli/.git.path D:\a\_temp\git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.2429017Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/link-cli/link-cli/.git/worktrees/*.path D:\a\_temp\git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.2977717Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.3276550Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.3586683Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.3587243Z ##[group]Fetching the repository
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:03.3597557Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +be8…d62:refs/remotes/pull/208/merge
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6218665Z From https://github.com/link-foundation/link-cli
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6219913Z  * [new ref]         be8…d62 -> pull/208/merge
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6262117Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6262581Z ##[group]Determining the checkout info
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6263591Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6271717Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.6756672Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.7077176Z ##[group]Checking out the ref
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:06.7078027Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/208/merge
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.7604322Z Updating files:  81% (4078/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.7705317Z Updating files:  82% (4120/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.7797670Z Updating files:  83% (4170/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.7912799Z Updating files:  84% (4221/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8013141Z Updating files:  85% (4271/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8117749Z Updating files:  86% (4321/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8231282Z Updating files:  87% (4371/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8342258Z Updating files:  88% (4422/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8444283Z Updating files:  89% (4472/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8542411Z Updating files:  90% (4522/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8651298Z Updating files:  91% (4572/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8765270Z Updating files:  92% (4623/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8863359Z Updating files:  93% (4673/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.8967440Z Updating files:  94% (4723/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9065688Z Updating files:  95% (4773/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9173080Z Updating files:  96% (4824/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9271188Z Updating files:  97% (4874/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9371635Z Updating files:  98% (4924/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9476216Z Updating files:  99% (4974/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9476515Z Updating files: 100% (5024/5024)
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9476783Z Updating files: 100% (5024/5024), done.
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9594783Z Note: switching to 'refs/remotes/pull/208/merge'.
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9595033Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9595270Z You are in 'detached HEAD' state. You can look around, make experimental
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9597299Z changes and commit them, and you can discard any commits you make in this
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9597830Z state without impacting any branches by switching back to a branch.
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9598283Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9598510Z If you want to create a new branch to retain commits you create, you may
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9599971Z do so (now or later) by using -c with the switch command. Example:
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9600276Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9600475Z   git switch -c <new-branch-name>
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9600671Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9600784Z Or undo this operation with:
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9600968Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9601072Z   git switch -
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9601180Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9601336Z Turn off this advice by setting config variable advice.detachedHead to false
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9601572Z 
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9601843Z HEAD is now at be8721d Merge 48f…061 into d8a…c61
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:07.9736179Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.0147079Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.0433271Z be8…d62
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.0468735Z ##[group]Removing auth
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.0469076Z Removing SSH command configuration
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.0476179Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.0787469Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.6976155Z Removing HTTP extra header
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.6988488Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:08.7368133Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2062608Z Removing includeIf entries pointing to credentials config files
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2070842Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2353170Z includeif.gitdir:D:/a/link-cli/link-cli/.git.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2353835Z includeif.gitdir:D:/a/link-cli/link-cli/.git/worktrees/*.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2354268Z includeif.gitdir:/github/workspace/.git.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2354657Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2389552Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/link-cli/link-cli/.git.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2659423Z D:\a\_temp\git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.2695310Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/link-cli/link-cli/.git.path D\:\\a\\_temp\\git\-credentials\-b56176b9\-bc39\-4855\-9bdb\-5f7c2733bd69\.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.3002555Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/link-cli/link-cli/.git/worktrees/*.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.3274682Z D:\a\_temp\git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.3311028Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/link-cli/link-cli/.git/worktrees/*.path D\:\\a\\_temp\\git\-credentials\-b56176b9\-bc39\-4855\-9bdb\-5f7c2733bd69\.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.3619842Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.3890372Z /github/runner_temp/git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.3932577Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-b56176b9\-bc39\-4855\-9bdb\-5f7c2733bd69\.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.4255038Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.4523630Z /github/runner_temp/git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.4557096Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-b56176b9\-bc39\-4855\-9bdb\-5f7c2733bd69\.config
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.4859297Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.9533342Z Removing credentials config 'D:\a\_temp\git-credentials-b56176b9-bc39-4855-9bdb-5f7c2733bd69.config'
+IPC interop (windows-2025)	Run actions/checkout@v7	2026-11-27T23:03:09.9543157Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/setup-node@v7	﻿2026-11-27T23:03:09.9877411Z ##[group]Run actions/setup-node@v7
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9877689Z with:
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9877847Z   node-version: 26.x
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9878051Z   check-latest: false
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9879980Z   token: ***
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9880147Z   package-manager-cache: true
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9880324Z env:
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9880454Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9880619Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9880835Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:09.9881003Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:10.1141133Z Attempting to download 26.x...
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:11.1105482Z Acquiring 26.13.1 - x64 from https://github.com/actions/node-versions/releases/download/26.13.1-43134154182/node-26.13.1-win32-x64.7z
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:11.6050107Z Extracting ...
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:13.5048011Z Adding to the cache ...
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:15.9093076Z ##[group]Environment details
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:16.4809987Z node: v26.13.1
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:16.4810553Z npm: 11.20.0
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:16.4810852Z yarn: 1.22.22
+IPC interop (windows-2025)	Run actions/setup-node@v7	2026-11-27T23:03:16.4812066Z ##[endgroup]
+IPC interop (windows-2025)	Setup Rust	﻿2026-11-27T23:03:16.5070426Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5071486Z ^[[36;1mrustup toolchain install stable --profile minimal --no-self-update^[[0m
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5089582Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5089892Z env:
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5090340Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5090537Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5090753Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:16.5090923Z ##[endgroup]
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:20.8481016Z info: syncing channel updates for stable-x86_64-pc-windows-msvc
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.4040858Z info: latest update on 2026-11-27 for version 1.100.1 (20ddd0171 2026-11-25)
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.4390978Z info: removing previous version of component rustfmt
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.4523803Z info: removing previous version of component clippy
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.4640008Z info: removing previous version of component rust-std for target x86_64-pc-windows-gnu
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.5618440Z info: removing previous version of component rust-std for target i686-pc-windows-msvc
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.6360082Z info: removing previous version of component cargo
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.6827003Z info: removing previous version of component rust-std
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.7432594Z info: removing previous version of component rustc
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:21.7971898Z info: downloading 7 components
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:32.0354768Z 
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:33.6104875Z   stable-x86_64-pc-windows-msvc updated - rustc 1.100.1 (20ddd0171 2026-11-25) (from rustc 1.100.0 (0ef1bc386 2026-11-09))
+IPC interop (windows-2025)	Setup Rust	2026-11-27T23:03:33.6105485Z 
+IPC interop (windows-2025)	Build Rust CLI	﻿2026-11-27T23:03:33.6301935Z ##[group]Run cargo build --manifest-path rust/Cargo.toml --locked --bin clink -j 2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6302464Z ^[[36;1mcargo build --manifest-path rust/Cargo.toml --locked --bin clink -j 2^[[0m
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6562237Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6562535Z env:
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6562685Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6562870Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6563063Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:33.6563229Z ##[endgroup]
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:34.6747633Z     Updating crates.io index
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.2923025Z  Downloading crates ...
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.4434599Z   Downloaded ctrlc v3.5.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.4575383Z   Downloaded allocator-api2 v0.4.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.4748368Z   Downloaded doublets v0.21.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5465892Z   Downloaded anstyle-query v1.1.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5550736Z   Downloaded cfg-if v1.0.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5635322Z   Downloaded clap_lex v1.1.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5696213Z   Downloaded block-buffer v0.12.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5774770Z   Downloaded is_terminal_polyfill v1.70.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5833081Z   Downloaded anstyle-parse v1.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5919782Z   Downloaded once_cell_polyfill v1.70.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.5982231Z   Downloaded anstyle v1.0.14
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6064394Z   Downloaded anstyle-wincon v3.0.11
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6140651Z   Downloaded anstream v1.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6261063Z   Downloaded heck v0.5.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6356913Z   Downloaded leak_slice v0.2.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6408150Z   Downloaded linktime-proc-macro v0.2.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6495960Z   Downloaded utf8parse v0.2.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6570629Z   Downloaded once_cell v1.21.4
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6739189Z   Downloaded beef v0.5.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6873025Z   Downloaded colorchoice v1.0.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6929710Z   Downloaded crypto-common v0.2.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.6994639Z   Downloaded cpufeatures v0.3.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7084261Z   Downloaded tempfile v3.27.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7227457Z   Downloaded anyhow v1.0.105
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7509417Z   Downloaded archery v1.2.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7617158Z   Downloaded memmap2 v0.9.12
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7715610Z   Downloaded autocfg v1.5.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7921474Z   Downloaded platform-num v0.8.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.7981872Z   Downloaded clap_derive v4.6.9
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.8111136Z   Downloaded fastrand v2.5.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.8191389Z   Downloaded thiserror v2.0.21
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.9505631Z   Downloaded serde_core v1.0.229
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.9747643Z   Downloaded smallvec v1.16.6
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.9848556Z   Downloaded windows-link v0.2.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:35.9914034Z   Downloaded ctor v1.0.14
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.0100529Z   Downloaded lino-env v0.1.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.0206616Z   Downloaded dotenvy v0.15.7
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.0401096Z   Downloaded clap v4.6.10
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.1242699Z   Downloaded quote v1.0.47
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.1438426Z   Downloaded thiserror-impl v2.0.21
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.1538960Z   Downloaded web-time v1.1.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.1629950Z   Downloaded getrandom v0.4.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.1953580Z   Downloaded link-section v0.19.4
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.2360943Z   Downloaded serde_derive v1.0.229
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.2617704Z   Downloaded sha2 v0.11.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.2883332Z   Downloaded proc-macro2 v1.0.107
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.3088426Z   Downloaded triomphe v0.1.17
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.3248191Z   Downloaded links-notation-macro v0.1.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:36.3298106Z   Downloaded memchr v2.8.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.3469581Z   Downloaded rpds v1.2.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.3718927Z   Downloaded strsim v0.11.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.3796010Z   Downloaded tap v1.0.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.3853208Z   Downloaded digest v0.11.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.4000858Z   Downloaded unicode-ident v1.0.27
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.4172207Z   Downloaded hybrid-array v0.4.15
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.4316009Z   Downloaded lino-arguments v0.5.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.4428437Z   Downloaded lru v0.19.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.4493699Z   Downloaded links-notation v0.32.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.4841370Z   Downloaded platform-data v2.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.5127344Z   Downloaded num-traits v0.2.19
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.5286953Z   Downloaded platform-mem v0.4.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.5624231Z   Downloaded serde v1.0.229
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.5808666Z   Downloaded regex-lite v0.1.9
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.5933807Z   Downloaded clap_builder v4.6.10
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.6997327Z   Downloaded typenum v1.20.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.7579808Z   Downloaded platform-trees v0.3.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.8047171Z   Downloaded nom v8.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.8378178Z   Downloaded syn v3.0.10
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:38.9008515Z   Downloaded windows-sys v0.61.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:39.2490151Z    Compiling proc-macro2 v1.0.107
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:39.2490726Z    Compiling quote v1.0.47
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:40.9645101Z    Compiling unicode-ident v1.0.27
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:41.0930444Z    Compiling windows-link v0.2.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:41.1297705Z    Compiling windows-sys v0.61.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:41.9044882Z    Compiling syn v3.0.10
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:43.5042933Z    Compiling autocfg v1.5.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:43.8112225Z    Compiling num-traits v0.2.19
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:43.9435582Z    Compiling thiserror v2.0.21
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:44.3374065Z    Compiling getrandom v0.4.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:44.5019094Z    Compiling once_cell_polyfill v1.70.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:44.5544833Z    Compiling anstyle v1.0.14
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:44.7142234Z    Compiling typenum v1.20.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:45.5532906Z    Compiling cfg-if v1.0.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:45.5876740Z    Compiling utf8parse v0.2.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:45.6430714Z    Compiling anstyle-parse v1.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:45.7583725Z    Compiling hybrid-array v0.4.15
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:45.9043688Z    Compiling thiserror-impl v2.0.21
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:46.1619911Z    Compiling anstyle-wincon v3.0.11
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.0375801Z    Compiling anstyle-query v1.1.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.0423922Z    Compiling serde_core v1.0.229
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.1356215Z    Compiling is_terminal_polyfill v1.70.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.1853697Z    Compiling colorchoice v1.0.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.2513423Z    Compiling anstream v1.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.2827649Z    Compiling platform-num v0.8.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.4410981Z    Compiling fastrand v2.5.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.5466329Z    Compiling serde v1.0.229
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.6263628Z    Compiling once_cell v1.21.4
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.7633986Z    Compiling strsim v0.11.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.7892791Z    Compiling heck v0.5.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:47.9356916Z    Compiling clap_lex v1.1.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:48.1416847Z    Compiling clap_builder v4.6.10
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:48.1548433Z    Compiling clap_derive v4.6.9
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:49.6554003Z    Compiling tempfile v3.27.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:51.9472527Z    Compiling block-buffer v0.12.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:52.0464636Z    Compiling crypto-common v0.2.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:52.4804098Z    Compiling serde_derive v1.0.229
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:53.0540189Z    Compiling link-section v0.19.4
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:53.3874146Z    Compiling beef v0.5.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:53.4762162Z    Compiling triomphe v0.1.17
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:53.6964442Z    Compiling memmap2 v0.9.12
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:53.8529255Z    Compiling allocator-api2 v0.4.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:54.1803373Z    Compiling memchr v2.8.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:54.8695804Z    Compiling anyhow v1.0.105
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:55.0338930Z    Compiling linktime-proc-macro v0.2.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:55.6094537Z    Compiling ctor v1.0.14
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:55.6283746Z    Compiling nom v8.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:55.7038676Z    Compiling platform-mem v0.4.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:55.8553573Z    Compiling archery v1.2.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:55.9404742Z    Compiling platform-data v2.0.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.0751130Z    Compiling digest v0.11.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.1747213Z    Compiling clap v4.6.10
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.2210199Z    Compiling platform-trees v0.3.5
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.3119186Z    Compiling links-notation-macro v0.1.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.7003682Z    Compiling smallvec v1.16.6
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.8412631Z    Compiling cpufeatures v0.3.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:56.8774997Z    Compiling dotenvy v0.15.7
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:57.2703408Z    Compiling lino-env v0.1.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:57.6409353Z    Compiling tap v1.0.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:57.7054992Z    Compiling leak_slice v0.2.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:57.7500187Z    Compiling doublets v0.21.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:57.9295034Z    Compiling links-notation v0.32.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:58.8088952Z    Compiling lino-arguments v0.5.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:59.2017801Z    Compiling sha2 v0.11.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:03:59.8385990Z    Compiling rpds v1.2.1
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:04:00.3616062Z    Compiling ctrlc v3.5.3
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:04:00.4560891Z    Compiling regex-lite v0.1.9
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:04:00.5496879Z    Compiling lru v0.19.2
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:04:00.6729996Z    Compiling web-time v1.1.0
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:04:00.8233332Z    Compiling link-cli v3.3.1 (D:\a\link-cli\link-cli\rust)
+IPC interop (windows-2025)	Build Rust CLI	2026-11-27T23:04:21.2953511Z     Finished `dev` profile [unoptimized + debuginfo] target(s) in 46.67s
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	﻿2026-11-27T23:04:21.4455778Z ##[group]Run actions/setup-dotnet@v6
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4456067Z with:
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4456227Z   dotnet-version: 10.0.403
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4456422Z   skip-lts-prepass: false
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4456593Z   cache: false
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4456732Z env:
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4456865Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4457056Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4457269Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.4457455Z ##[endgroup]
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:21.6313429Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v6\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Runtime dotnet -Channel LTS
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:22.9304573Z dotnet-install: .NET Core Runtime with version '10.0.15' is already installed.
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:23.0329849Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command & 'D:\a\_actions\actions\setup-dotnet\v6\externals\install-dotnet.ps1' -SkipNonVersionedFiles -Version 10.0.403
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:30.2881446Z dotnet-install: Downloaded file https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.403/dotnet-sdk-10.0.403-win-x64.zip size is 300745255 bytes.
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:30.2885784Z dotnet-install: Either downloaded or local package size can not be measured. One of them may be corrupted.
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:30.2907873Z dotnet-install: Extracting the archive.
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:42.9714125Z dotnet-install: Note that the script does not ensure your Windows version is supported during the installation.
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:42.9716091Z dotnet-install: To check the list of supported versions, go to https://learn.microsoft.com/dotnet/core/install/windows#supported-versions
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:42.9720109Z dotnet-install: Installed version is 10.0.403
+IPC interop (windows-2025)	Run actions/setup-dotnet@v6	2026-11-27T23:04:42.9724380Z dotnet-install: Installation finished
+IPC interop (windows-2025)	Build C# CLI	﻿2026-11-27T23:04:43.0302175Z ##[group]Run dotnet build csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj -c Release
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0302879Z ^[[36;1mdotnet build csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj -c Release^[[0m
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0359886Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0360201Z env:
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0360347Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0360526Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0360737Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0360927Z   DOTNET_ROOT: C:\Program Files\dotnet
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:43.0361118Z ##[endgroup]
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:53.7976381Z   Determining projects to restore...
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:58.1666686Z   Restored D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli\Foundation.Data.Doublets.Cli.csproj (in 3.65 sec).
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:04:58.1668095Z   Restored D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Library\Foundation.Data.Doublets.Cli.Library.csproj (in 3.65 sec).
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:12.2226631Z   Foundation.Data.Doublets.Cli.Library -> D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Library\bin\Release\net10.0\Foundation.Data.Doublets.Cli.dll
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0725186Z   Foundation.Data.Doublets.Cli -> D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli\bin\Release\net10.0\clink.dll
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0725930Z 
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0726054Z Build succeeded.
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0726299Z     0 Warning(s)
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0726525Z     0 Error(s)
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0726668Z 
+IPC interop (windows-2025)	Build C# CLI	2026-11-27T23:05:16.0726833Z Time Elapsed 00:00:24.44
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	﻿2026-11-27T23:05:16.3564851Z ##[group]Run export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3565637Z ^[[36;1mexport CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3566140Z ^[[36;1mnode examples/ipc/interop.mjs --js \^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3566529Z ^[[36;1m  rust=rust/target/debug/clink \^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3567114Z ^[[36;1m  'csharp=["dotnet","csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll"]'^[[0m
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3586686Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3587209Z env:
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3587432Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3587707Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3588051Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3588337Z   DOTNET_ROOT: C:\Program Files\dotnet
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.3588650Z ##[endgroup]
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.5074411Z ok    tcp: rust server listens (12 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.5201482Z ok    tcp: rust server <- js client, text (12 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.5393636Z ok    tcp: rust server <- rust client, text (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:16.5583322Z ok    tcp: rust server <- rust client, binary (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:19.5533201Z ok    tcp: rust server <- csharp client, text (2994 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:19.8021750Z ok    tcp: rust server <- csharp client, binary (248 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:19.8179644Z ok    tcp: rust server keeps every write (16 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.2129601Z ok    tcp: csharp server listens (391 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.3404964Z ok    tcp: csharp server <- js client, text (128 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.4206635Z ok    tcp: csharp server <- rust client, text (80 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.4789984Z ok    tcp: csharp server <- rust client, binary (58 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.6883789Z ok    tcp: csharp server <- csharp client, text (210 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.9195791Z ok    tcp: csharp server <- csharp client, binary (231 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:20.9372582Z ok    tcp: csharp server keeps every write (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.2574423Z ok    tcp: js client -> rust relay -> csharp server (tcp) (124 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.3522945Z ok    tcp: rust client -> rust relay -> csharp server (tcp) (94 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.5923085Z ok    tcp: csharp client -> rust relay -> csharp server (tcp) (239 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.7401085Z ok    tcp: js client -> csharp relay -> rust server (tcp) (18 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.7566700Z ok    tcp: rust client -> csharp relay -> rust server (tcp) (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.9511724Z ok    tcp: csharp client -> csharp relay -> rust server (tcp) (194 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.9672768Z ok    udp: rust server listens (8 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.9779254Z ok    udp: rust server <- js client, text (10 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:21.9945805Z ok    udp: rust server <- rust client, text (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.0096784Z ok    udp: rust server <- rust client, binary (15 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.2198109Z ok    udp: rust server <- csharp client, text (210 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.4535828Z ok    udp: rust server <- csharp client, binary (234 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.4692175Z ok    udp: rust server keeps every write (15 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.6483220Z ok    udp: csharp server listens (174 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.7878875Z ok    udp: csharp server <- js client, text (139 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.8497651Z ok    udp: csharp server <- rust client, text (62 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:22.9164026Z ok    udp: csharp server <- rust client, binary (67 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:23.1225002Z ok    udp: csharp server <- csharp client, text (206 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:23.3809573Z ok    udp: csharp server <- csharp client, binary (258 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:23.3975329Z ok    udp: csharp server keeps every write (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:23.7024161Z ok    udp: js client -> rust relay -> csharp server (tcp) (120 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:23.7945591Z ok    udp: rust client -> rust relay -> csharp server (tcp) (92 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.0321136Z ok    udp: csharp client -> rust relay -> csharp server (tcp) (237 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.1823556Z ok    udp: js client -> csharp relay -> rust server (tcp) (22 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.2025630Z ok    udp: rust client -> csharp relay -> rust server (tcp) (20 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.4106449Z ok    udp: csharp client -> csharp relay -> rust server (tcp) (208 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.4258405Z ok    pipe: rust server listens (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.4325436Z ok    pipe: rust server <- js client, text (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.4455720Z ok    pipe: rust server <- rust client, text (13 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.4592086Z ok    pipe: rust server <- rust client, binary (14 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:24.8307413Z ok    pipe: rust server <- csharp client, text (371 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.0520603Z ok    pipe: rust server <- csharp client, binary (221 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.0668678Z ok    pipe: rust server keeps every write (15 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.2753504Z ok    pipe: csharp server listens (205 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.3977822Z ok    pipe: csharp server <- js client, text (122 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.4611229Z ok    pipe: csharp server <- rust client, text (63 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.5268771Z ok    pipe: csharp server <- rust client, binary (65 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.7342372Z ok    pipe: csharp server <- csharp client, text (208 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.9537868Z ok    pipe: csharp server <- csharp client, binary (219 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:25.9683177Z ok    pipe: csharp server keeps every write (15 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.2922842Z ok    pipe: js client -> rust relay -> csharp server (tcp) (128 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.3864334Z ok    pipe: rust client -> rust relay -> csharp server (tcp) (94 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.5903963Z ok    pipe: csharp client -> rust relay -> csharp server (tcp) (203 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.7385033Z ok    pipe: js client -> csharp relay -> rust server (tcp) (29 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.7549245Z ok    pipe: rust client -> csharp relay -> rust server (tcp) (16 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.9529319Z ok    pipe: csharp client -> csharp relay -> rust server (tcp) (198 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:26.9703256Z clink server listening on stdio
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:27.0082477Z ok    stdio: rust server (exec) <- js client (47 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:27.1062069Z ok    stdio: rust server (exec) <- rust client (98 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:27.7136483Z ok    stdio: rust server (exec) <- csharp client (607 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:27.8821199Z clink server listening on stdio
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:28.2282163Z ok    stdio: csharp server (exec) <- js client (515 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:29.1808351Z ok    stdio: csharp server (exec) <- rust client (952 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:30.4426738Z ok    stdio: csharp server (exec) <- csharp client (1262 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:30.4515857Z ok    shm: rust server listens (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:30.4801488Z ok    shm: rust server <- js client, text (29 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:30.5144865Z ok    shm: rust server <- rust client, text (34 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:30.5484792Z ok    shm: rust server <- rust client, binary (34 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:30.7861244Z ok    shm: rust server <- csharp client, text (238 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.0293565Z ok    shm: rust server <- csharp client, binary (243 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.0580609Z ok    shm: rust server keeps every write (29 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.2201438Z ok    shm: csharp server listens (159 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.3961961Z ok    shm: csharp server <- js client, text (176 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.4716794Z ok    shm: csharp server <- rust client, text (75 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.5462604Z ok    shm: csharp server <- rust client, binary (75 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:31.7784359Z ok    shm: csharp server <- csharp client, text (232 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:32.0704262Z ok    shm: csharp server <- csharp client, binary (292 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:32.1253525Z ok    shm: csharp server keeps every write (55 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:32.4550463Z ok    shm: js client -> rust relay -> csharp server (tcp) (150 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:32.5670799Z ok    shm: rust client -> rust relay -> csharp server (tcp) (112 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:32.8073838Z ok    shm: csharp client -> rust relay -> csharp server (tcp) (240 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.0351952Z ok    shm: js client -> csharp relay -> rust server (tcp) (115 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.0692749Z ok    shm: rust client -> csharp relay -> rust server (tcp) (34 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.3210914Z ok    shm: csharp client -> csharp relay -> rust server (tcp) (252 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.3361672Z ok    mmap: rust server listens (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.3504096Z ok    mmap: rust server <- js client, text (14 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.3691734Z ok    mmap: rust server <- rust client, text (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.3888747Z ok    mmap: rust server <- rust client, binary (19 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.6249060Z ok    mmap: rust server <- csharp client, text (236 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.8841101Z ok    mmap: rust server <- csharp client, binary (260 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:33.9241420Z ok    mmap: rust server keeps every write (40 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:34.0908311Z ok    mmap: csharp server listens (159 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:34.2726231Z ok    mmap: csharp server <- js client, text (182 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:34.3587516Z ok    mmap: csharp server <- rust client, text (86 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:34.4451037Z ok    mmap: csharp server <- rust client, binary (87 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:34.7778159Z ok    mmap: csharp server <- csharp client, text (332 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:35.0538034Z ok    mmap: csharp server <- csharp client, binary (276 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:35.1021376Z ok    mmap: csharp server keeps every write (49 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:35.4534019Z ok    mmap: js client -> rust relay -> csharp server (tcp) (166 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:35.5608142Z ok    mmap: rust client -> rust relay -> csharp server (tcp) (107 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:35.7954026Z ok    mmap: csharp client -> rust relay -> csharp server (tcp) (235 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.1571879Z ok    mmap: js client -> csharp relay -> rust server (tcp) (247 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.1976866Z ok    mmap: rust client -> csharp relay -> rust server (tcp) (40 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.6148969Z ok    mmap: csharp client -> csharp relay -> rust server (tcp) (417 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.6296156Z ok    file: rust server listens (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.7306060Z ok    file: rust server <- js client, text (101 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.7610288Z ok    file: rust server <- rust client, text (31 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:36.7941894Z ok    file: rust server <- rust client, binary (33 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.0072539Z ok    file: rust server <- csharp client, text (213 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.2486220Z ok    file: rust server <- csharp client, binary (241 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.2832866Z ok    file: rust server keeps every write (35 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.4434960Z ok    file: csharp server listens (157 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.8151688Z ok    file: csharp server <- js client, text (372 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.9148063Z ok    file: csharp server <- rust client, text (99 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:37.9777795Z ok    file: csharp server <- rust client, binary (63 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:38.2019177Z ok    file: csharp server <- csharp client, text (225 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:38.4532013Z ok    file: csharp server <- csharp client, binary (251 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:38.5019316Z ok    file: csharp server keeps every write (49 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:38.8565353Z ok    file: js client -> rust relay -> csharp server (tcp) (173 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:38.9531975Z ok    file: rust client -> rust relay -> csharp server (tcp) (97 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.1939979Z ok    file: csharp client -> rust relay -> csharp server (tcp) (241 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.4690740Z ok    file: js client -> csharp relay -> rust server (tcp) (161 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.5082964Z ok    file: rust client -> csharp relay -> rust server (tcp) (39 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.7457184Z ok    file: csharp client -> csharp relay -> rust server (tcp) (237 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.7622678Z ok    signal: rust server listens (8 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.8240268Z ok    signal: rust server <- js client, text (62 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.8630691Z ok    signal: rust server <- rust client, text (39 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:39.8954010Z ok    signal: rust server <- rust client, binary (32 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.1174733Z ok    signal: rust server <- csharp client, text (222 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.3752184Z ok    signal: rust server <- csharp client, binary (258 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.4073574Z ok    signal: rust server keeps every write (32 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.5943214Z ok    signal: csharp server listens (158 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.7453864Z ok    signal: csharp server <- js client, text (151 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.8581454Z ok    signal: csharp server <- rust client, text (113 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:40.9373388Z ok    signal: csharp server <- rust client, binary (79 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:41.1927899Z ok    signal: csharp server <- csharp client, text (255 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:41.4528039Z ok    signal: csharp server <- csharp client, binary (259 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:41.4981134Z ok    signal: csharp server keeps every write (45 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:41.8354024Z ok    signal: js client -> rust relay -> csharp server (tcp) (156 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:41.9416953Z ok    signal: rust client -> rust relay -> csharp server (tcp) (106 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.1679120Z ok    signal: csharp client -> rust relay -> csharp server (tcp) (227 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.3479134Z ok    signal: js client -> csharp relay -> rust server (tcp) (67 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.3822915Z ok    signal: rust client -> csharp relay -> rust server (tcp) (34 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.6156535Z ok    signal: csharp client -> csharp relay -> rust server (tcp) (233 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.6306187Z ok    mailslot: rust server listens (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.6556887Z ok    mailslot: rust server <- js client, text (25 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.6720781Z ok    mailslot: rust server <- rust client, text (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.6933143Z ok    mailslot: rust server <- rust client, binary (21 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:42.8946807Z ok    mailslot: rust server <- csharp client, text (201 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.1427340Z ok    mailslot: rust server <- csharp client, binary (248 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.1608966Z ok    mailslot: rust server keeps every write (18 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.3212600Z ok    mailslot: csharp server listens (157 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.4729478Z ok    mailslot: csharp server <- js client, text (152 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.5415348Z ok    mailslot: csharp server <- rust client, text (68 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.6135520Z ok    mailslot: csharp server <- rust client, binary (72 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:43.8328119Z ok    mailslot: csharp server <- csharp client, text (220 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.0995554Z ok    mailslot: csharp server <- csharp client, binary (266 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.1231969Z ok    mailslot: csharp server keeps every write (24 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.4416463Z ok    mailslot: js client -> rust relay -> csharp server (tcp) (135 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.5434793Z ok    mailslot: rust client -> rust relay -> csharp server (tcp) (102 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.7697899Z ok    mailslot: csharp client -> rust relay -> csharp server (tcp) (226 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.9402524Z ok    mailslot: js client -> csharp relay -> rust server (tcp) (58 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:44.9611110Z ok    mailslot: rust client -> csharp relay -> rust server (tcp) (21 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.1852129Z ok    mailslot: csharp client -> csharp relay -> rust server (tcp) (224 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.2002388Z ok    copydata: rust server listens (7 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.2282308Z ok    copydata: rust server <- js client, text (28 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.2633104Z ok    copydata: rust server <- rust client, text (35 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.2984846Z ok    copydata: rust server <- rust client, binary (35 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.5180329Z ok    copydata: rust server <- csharp client, text (220 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.7691585Z ok    copydata: rust server <- csharp client, binary (251 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.8155879Z ok    copydata: rust server keeps every write (46 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:45.9771128Z ok    copydata: csharp server listens (158 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:46.1429623Z ok    copydata: csharp server <- js client, text (166 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:46.2224685Z ok    copydata: csharp server <- rust client, text (79 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:46.3063637Z ok    copydata: csharp server <- rust client, binary (84 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:46.5377412Z ok    copydata: csharp server <- csharp client, text (232 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:46.8028506Z ok    copydata: csharp server <- csharp client, binary (265 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:46.8338781Z ok    copydata: csharp server keeps every write (31 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.1726476Z ok    copydata: js client -> rust relay -> csharp server (tcp) (155 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.2726357Z ok    copydata: rust client -> rust relay -> csharp server (tcp) (99 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.5035431Z ok    copydata: csharp client -> rust relay -> csharp server (tcp) (230 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.6797295Z ok    copydata: js client -> csharp relay -> rust server (tcp) (64 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.7129060Z ok    copydata: rust client -> csharp relay -> rust server (tcp) (33 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.9206838Z ok    copydata: csharp client -> csharp relay -> rust server (tcp) (208 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.9358952Z ok    alpc: rust server listens (8 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.9609591Z ok    alpc: rust server <- js client, text (25 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.9783064Z ok    alpc: rust server <- rust client, text (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:47.9966519Z ok    alpc: rust server <- rust client, binary (18 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.1971884Z ok    alpc: rust server <- csharp client, text (200 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.4508887Z ok    alpc: rust server <- csharp client, binary (254 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.4684190Z ok    alpc: rust server keeps every write (17 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.6384590Z ok    alpc: csharp server listens (167 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.7837878Z ok    alpc: csharp server <- js client, text (146 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.8782961Z ok    alpc: csharp server <- rust client, text (94 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:48.9695293Z ok    alpc: csharp server <- rust client, binary (91 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:49.2025547Z ok    alpc: csharp server <- csharp client, text (233 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:49.4421980Z ok    alpc: csharp server <- csharp client, binary (240 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:49.4808257Z ok    alpc: csharp server keeps every write (39 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:49.8038786Z ok    alpc: js client -> rust relay -> csharp server (tcp) (135 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:49.9041311Z ok    alpc: rust client -> rust relay -> csharp server (tcp) (100 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:50.1360500Z ok    alpc: csharp client -> rust relay -> csharp server (tcp) (232 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:50.3092937Z ok    alpc: js client -> csharp relay -> rust server (tcp) (53 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:50.3308231Z ok    alpc: rust client -> csharp relay -> rust server (tcp) (22 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:50.5536742Z ok    alpc: csharp client -> csharp relay -> rust server (tcp) (223 ms)
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:50.6094290Z 
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T23:05:50.6095077Z 206 of 206 conversations passed
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	﻿2026-11-27T23:05:50.6335757Z ##[group]Run export CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6336269Z ^[[36;1mexport CLINK_BIN="$GITHUB_WORKSPACE/rust/target/debug/clink"^[[0m
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6336657Z ^[[36;1mnode --test --test-concurrency=1 --test-timeout=120000 test/ipc.test.mjs^[[0m
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6348194Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6348861Z env:
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6349005Z   GIT_CONFIG_COUNT: 1
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6349180Z   GIT_CONFIG_KEY_0: ini…nch
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6349390Z   GIT_CONFIG_VALUE_0: main
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6349572Z   DOTNET_ROOT: C:\Program Files\dotnet
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.6349755Z ##[endgroup]
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.8078799Z ▶ ipc tcp
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:50.8079523Z   ✔ text CRUD and a subscription push (16.1094ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:51.4568551Z   ✔ large messages cross in both directions (648.8291ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:51.4583151Z   ✔ a raw stream half-closes and the server answers first (2.5071ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:51.4644565Z ✔ ipc tcp (685.0806ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:51.4901742Z ▶ ipc udp
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:51.4902336Z   ✔ text CRUD and a subscription push (17.2862ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.1871125Z   ✔ large messages cross in both directions (696.9195ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.1892117Z   ✔ a raw stream half-closes and the server answers first (1.8882ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.1947350Z ✔ ipc udp (730.1632ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.2834321Z ▶ ipc unix
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.2834751Z   ✔ text CRUD and a subscription push (44.2474ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.9506776Z   ✔ large messages cross in both directions (666.6626ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.9677906Z   ✔ a raw stream half-closes and the server answers first (19.7902ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.9770987Z ✔ ipc unix (782.3673ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.9771903Z ﹣ ipc unix (abstract) (0.1118ms) # abstract sockets exist only on Linux
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.9930826Z ▶ ipc pipe
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:52.9931256Z   ✔ text CRUD and a subscription push (9.3217ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:53.6365687Z   ✔ large messages cross in both directions (643.0639ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:53.6369145Z   ✔ a raw stream half-closes and the server answers first (0.8776ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:53.6424473Z ✔ ipc pipe (665.1204ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:53.6425960Z ﹣ ipc fifo (0.1689ms) # fifo: is not supported on this platform
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:53.7303471Z ▶ ipc file
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:53.7304058Z   ✔ text CRUD and a subscription push (78.8814ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:54.5186958Z   ✔ large messages cross in both directions (788.2643ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:54.5616708Z   ✔ a raw stream half-closes and the server answers first (44.3277ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:54.5866481Z ✔ ipc file (943.7369ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:54.7377135Z ▶ ipc mmap
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:54.7377676Z   ✔ text CRUD and a subscription push (142.2304ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:55.4728874Z   ✔ large messages cross in both directions (734.9835ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:55.4897945Z   ✔ a raw stream half-closes and the server answers first (18.3192ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:55.5242552Z ✔ ipc mmap (937.6175ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:55.6494468Z ▶ ipc signal
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:55.6494904Z   ✔ text CRUD and a subscription push (114.5952ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:56.3317835Z   ✔ large messages cross in both directions (682.6757ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:56.3630145Z   ✔ a raw stream half-closes and the server answers first (33.8344ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:56.4103359Z ✔ ipc signal (886.0902ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:56.4890588Z ▶ ipc shm
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:56.4891197Z   ✔ text CRUD and a subscription push (68.5607ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.1666004Z   ✔ large messages cross in both directions (677.2552ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.1982470Z   ✔ a raw stream half-closes and the server answers first (34.3983ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.2257687Z ✔ ipc shm (815.0484ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.2258739Z ﹣ ipc mq (0.1413ms) # mq: is not supported on this platform
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.2259933Z ﹣ ipc sysvmq (0.0281ms) # sysvmq: is not supported on this platform
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.2263122Z ▶ the binary protocol through a JS relay
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.2265717Z   ﹣ fifo (0.0803ms) # fifo: is not supported on this platform
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.3989891Z   ✔ udp (173.0535ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6253053Z   ✔ shm (228.0984ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6253851Z ✔ the binary protocol through a JS relay (401.5279ms)
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6255013Z ﹣ the clink bridge reports a listener that is missing (0.2079ms) # mq: is not supported on this platform
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6363984Z ℹ tests 28
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6364322Z ℹ suites 13
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6364504Z ℹ pass 26
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6364665Z ℹ fail 0
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6364839Z ℹ cancelled 0
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6365016Z ℹ skipped 2
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6365169Z ℹ todo 0
+IPC interop (windows-2025)	The JS client against the Rust server over every kind	2026-11-27T23:05:57.6365383Z ℹ duration_ms 6928.5189
+IPC interop (windows-2025)	Post Run actions/setup-dotnet@v6	﻿2026-11-27T23:05:57.6638715Z Post job cleanup.
+IPC interop (windows-2025)	Post Run actions/setup-node@v7	﻿2026-11-27T23:05:57.8032059Z Post job cleanup.
+IPC interop (windows-2025)	Post Run actions/checkout@v7	﻿2026-11-27T23:05:57.9592229Z Post job cleanup.
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.0959352Z [command]"C:\Program Files\Git\bin\git.exe" version
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.1245907Z git version 2.56.1.windows.1
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.1299811Z Temporarily overriding HOME='D:\a\_temp\763355b1-abf8-42a2-950e-9b73a0943126' before making global git config changes
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.1300603Z Adding repository directory to the temporary git global config as a safe directory
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.1308324Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\link-cli\link-cli
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.1619967Z Removing SSH command configuration
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.1630075Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.2001630Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.6780004Z Removing HTTP extra header
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.6788656Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:58.7094837Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:59.1851077Z Removing includeIf entries pointing to credentials config files
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:59.1860559Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+IPC interop (windows-2025)	Post Run actions/checkout@v7	2026-11-27T23:05:59.2167501Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+IPC interop (windows-2025)	Complete job	﻿2026-11-27T23:05:59.7231545Z Cleaning up orphan processes
+IPC interop (windows-2025)	Complete job	2026-11-27T23:05:59.7385348Z Terminate orphan process: pid (3088) (vctip)
+IPC interop (windows-2025)	Complete job	2026-11-27T23:05:59.7500325Z Terminate orphan process: pid (9692) (MSBuild)
+IPC interop (windows-2025)	Complete job	2026-11-27T23:05:59.7557526Z Terminate orphan process: pid (3536) (conhost)
+IPC interop (windows-2025)	Complete job	2026-11-27T23:05:59.7756361Z Terminate orphan process: pid (1960) (VBCSCompiler)
+IPC interop (windows-2025)	Complete job	2026-11-27T23:05:59.7815561Z Terminate orphan process: pid (1252) (conhost)

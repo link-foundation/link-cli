@@ -1,0 +1,110 @@
+Changeset Validation	Validate changeset	﻿2026-11-27T23:50:37.8765476Z ##[group]Run # Skip changeset check for automated release PRs
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8766008Z ^[[36;1m# Skip changeset check for automated release PRs^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8766752Z ^[[36;1mif [[ "$GITHUB_HEAD_REF" == "changeset-release/"* ]] || [[ "$GITHUB_HEAD_REF" == "changeset-manual-release-"* ]]; then^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8767326Z ^[[36;1m  echo "Skipping changeset check for automated release PR"^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8767640Z ^[[36;1m  exit 0^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8767849Z ^[[36;1mfi^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8768066Z ^[[36;1m^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8768416Z ^[[36;1m# A C# code change without exactly one valid changeset never reaches^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8768800Z ^[[36;1m# a release, so this fails instead of warning (issue #134).^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:37.8769162Z ^[[36;1mnode csharp/scripts/validate-changeset.mjs^[[0m
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0659808Z shell: /usr/bin/bash -e {0}
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0660127Z env:
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0660403Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0660808Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0661066Z   DOTNET_NOLOGO: true
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0661303Z   GIT_CONFIG_COUNT: 1
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0661538Z   GIT_CONFIG_KEY_0: ini…nch
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0661854Z   GIT_CONFIG_VALUE_0: main
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0662097Z   GITHUB_BASE_REF: main
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0662373Z   GITHUB_BASE_SHA: d8a…c61
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0662721Z   GITHUB_HEAD_SHA: 908…9a9
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0663020Z   GITHUB_HEAD_REF: issue-207-ac4b1e2ba1ef
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0663278Z ##[endgroup]
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0951410Z Validating changesets added by this PR...
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.0952623Z Comparing d8a…c61...908…9a9
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1023858Z Found 2 changeset file(s) added by this PR
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1024311Z Added changesets:
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1024775Z   - ci-reliability.md
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1038400Z ##[error]Multiple changesets found in this PR (2). Each PR should add exactly ONE changeset.
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1043866Z ##[error]Found changeset files added by this PR:
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1044737Z   ci-reliability.md
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1045043Z   windows-pid-lock-cleanup.md
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1045203Z 
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1045830Z ##[error]Please combine these into a single changeset or remove the extras.
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1046868Z   - windows-pid-lock-cleanup.md
+Changeset Validation	Validate changeset	2026-11-27T23:50:38.1058173Z ##[error]Process completed with exit code 1.
+Pipeline Status (csharp)	Check every prerequisite	﻿2026-11-27T23:54:12.9376651Z ##[group]Run node .github/scripts/pipeline-status.mjs
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:12.9377110Z ^[[36;1mnode .github/scripts/pipeline-status.mjs^[[0m
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0923009Z shell: /usr/bin/bash -e {0}
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0923355Z env:
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0923605Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0923946Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0924231Z   DOTNET_NOLOGO: true
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0924490Z   GIT_CONFIG_COUNT: 1
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0924719Z   GIT_CONFIG_KEY_0: ini…nch
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0924968Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0927416Z   NEEDS_JSON: {
+Pipeline Status (csharp)	Check every prerequisite	  "javascript": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "success",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "release-preflight": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "success",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "verify-trusted-publishing": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "detect-changes": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "success",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {
+Pipeline Status (csharp)	Check every prerequisite	      "csproj-changed": "false",
+Pipeline Status (csharp)	Check every prerequisite	      "sln-changed": "false",
+Pipeline Status (csharp)	Check every prerequisite	      "props-changed": "false",
+Pipeline Status (csharp)	Check every prerequisite	      "docs-changed": "true",
+Pipeline Status (csharp)	Check every prerequisite	      "workflow-changed": "true",
+Pipeline Status (csharp)	Check every prerequisite	      "any-code-changed": "true",
+Pipeline Status (csharp)	Check every prerequisite	      "stack-changed": "true",
+Pipeline Status (csharp)	Check every prerequisite	      "cs-changed": "true",
+Pipeline Status (csharp)	Check every prerequisite	      "mjs-changed": "true",
+Pipeline Status (csharp)	Check every prerequisite	      "csharp-code-changed": "true"
+Pipeline Status (csharp)	Check every prerequisite	    }
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "changeset-check": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "failure",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "lint": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "success",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "test": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "fresh-merge": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "success",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "build": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "release": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "instant-release": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  },
+Pipeline Status (csharp)	Check every prerequisite	  "changeset-pr": {
+Pipeline Status (csharp)	Check every prerequisite	    "result": "skipped",
+Pipeline Status (csharp)	Check every prerequisite	    "outputs": {}
+Pipeline Status (csharp)	Check every prerequisite	  }
+Pipeline Status (csharp)	Check every prerequisite	}
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.0929867Z ##[endgroup]
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.1216191Z Pipeline jobs did not succeed: changeset-check (failure)
+Pipeline Status (csharp)	Check every prerequisite	2026-11-27T23:54:13.1273340Z ##[error]Process completed with exit code 1.

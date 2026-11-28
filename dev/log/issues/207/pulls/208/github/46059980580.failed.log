@@ -2,7 +2,7 @@ Release authentication preflight	UNKNOWN STEP	﻿2026-11-27T19:54:50.6397432Z Cu
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6426715Z ##[group]Runner Image Provisioner
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6427745Z Hosted Compute Agent
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6428569Z Version: 20261111.635
-Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6429346Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6429346Z Commit: b8a…2ed
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6430399Z Build Date: 2026-11-11T01:49:01Z
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6431240Z Worker ID: {13cb706a-c7a3-4c52-bb9b-d3b8b1ef12bc}
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:50.6432264Z Region: eastus2
@@ -49,7 +49,7 @@ Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2233017Z   set
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2233646Z   allow-unsafe-pr-checkout: false
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2234558Z env:
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2235073Z   GIT_CONFIG_COUNT: 1
-Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2235666Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2235666Z   GIT_CONFIG_KEY_0: ini…nch
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2236374Z   GIT_CONFIG_VALUE_0: main
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.2236966Z ##[endgroup]
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5272432Z Syncing repository: link-foundation/link-cli
@@ -58,7 +58,7 @@ Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5275171Z Worki
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5276782Z [command]/usr/bin/git version
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5385219Z git version 2.56.1
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5401167Z ##[endgroup]
-Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5410810Z Temporarily overriding HOME='/home/runner/work/_temp/3f8007c6-91f5-4e5a-9c2c-0ec7442137c2' before making global git config changes
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5410810Z Temporarily overriding HOME='/ho…7c2' before making global git config changes
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5412969Z Adding repository directory to the temporary git global config as a safe directory
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5416725Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:51.5466795Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
@@ -144,7 +144,7 @@ Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8058536Z   tok
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8058730Z   package-manager-cache: true
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8058932Z env:
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059089Z   GIT_CONFIG_COUNT: 1
-Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059283Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059283Z   GIT_CONFIG_KEY_0: ini…nch
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059497Z   GIT_CONFIG_VALUE_0: main
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.8059680Z ##[endgroup]
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:53.9196915Z Found in cache @ /opt/hostedtoolcache/node/26.13.1/x64
@@ -158,7 +158,7 @@ Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5693305Z ^[[36
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5736763Z shell: /usr/bin/bash -e {0}
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737009Z env:
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737177Z   GIT_CONFIG_COUNT: 1
-Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737377Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737377Z   GIT_CONFIG_KEY_0: ini…nch
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737602Z   GIT_CONFIG_VALUE_0: main
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5737825Z   NPM_PACKAGE: @link-foundation/link-cli-server
 Release authentication preflight	UNKNOWN STEP	2026-11-27T19:54:56.5738052Z ##[endgroup]
@@ -185,7 +185,7 @@ Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4357619
 Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4406346Z shell: /usr/bin/bash -e {0}
 Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4406637Z env:
 Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4406827Z   GIT_CONFIG_COUNT: 1
-Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4407061Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4407061Z   GIT_CONFIG_KEY_0: ini…nch
 Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4407328Z   GIT_CONFIG_VALUE_0: main
 Pipeline Status (js-server)	Check every prerequisite	2026-11-27T20:00:24.4408675Z   NEEDS_JSON: {
 Pipeline Status (js-server)	Check every prerequisite	  "javascript": {

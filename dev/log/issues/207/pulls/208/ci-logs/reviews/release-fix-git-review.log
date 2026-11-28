@@ -1,0 +1,56 @@
+## issue-207-ac4b1e2ba1ef...origin/issue-207-ac4b1e2ba1ef
+27d93ed1 fix(csharp): combine CI fixes in one patch changeset
+27d…e74
+27d…e74
+d8a…c61
+d8a26c91 chore: release rust-v3.3.1
+Changed source and CI paths reviewed
+.github/scripts/check-npm-tarball-size.mjs
+.github/scripts/ci-governance.test.mjs
+.github/scripts/npm-release.test.mjs
+.github/scripts/verify-npm-trust.mjs
+.github/scripts/verify-npm-trust.test.mjs
+.github/scripts/verify-public-npm-package.sh
+.github/scripts/workflow-policy.test.mjs
+.github/workflows/crash.yml
+.github/workflows/csharp.yml
+.github/workflows/deep-client.yml
+.github/workflows/dependencies.yml
+.github/workflows/docs.yml
+.github/workflows/ipc.yml
+.github/workflows/javascript-stage.yml
+.github/workflows/javascript.yml
+.github/workflows/js-client.yml
+.github/workflows/js-server.yml
+.github/workflows/links.yml
+.github/workflows/rerun-infrastructure-failures.yml
+.github/workflows/rust.yml
+.github/workflows/security.yml
+.github/workflows/wasm.yml
+.github/workflows/workflows.yml
+csharp/.changeset/README.md
+csharp/.changeset/ci-reliability.md
+csharp/Foundation.Data.Doublets.Cli.Library/StorePidLock.cs
+csharp/Foundation.Data.Doublets.Cli.Tests/CliStoreLockTests.cs
+csharp/Foundation.Data.Doublets.Cli.Tests/StoreLockTests.cs
+csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs
+csharp/Foundation.Data.Doublets.Cli/CliIo.cs
+csharp/Foundation.Data.Doublets.Cli/Program.cs
+experiments/issue-138/etcd-cluster.mjs
+experiments/issue-138/etcd-harness.mjs
+experiments/issue-138/etcd-harness.test.mjs
+experiments/issue-207/compare-ci-files.py
+js/client/package-lock.json
+js/client/package.json
+js/client/src/ipc-ring.js
+js/client/test/ipc-ring.test.mjs
+js/server/package-lock.json
+js/server/package.json
+js/server/src/store-lock.js
+js/server/test/store-lock.test.mjs
+parity/features.json
+rust/changelog.d/20261127_210000_ci_reliability.md
+rust/changelog.d/20261127_232400_windows_pid_lock_cleanup.md
+rust/src/store_lock/pid_lock.rs
+rust/src/transactions/mod.rs
+rust/src/transactions/tests.rs

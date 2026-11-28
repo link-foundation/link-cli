@@ -6,7 +6,7 @@ IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays
 IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8863868Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
 IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864273Z env:
 IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864442Z   GIT_CONFIG_COUNT: 1
-IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864656Z   GIT_CONFIG_KEY_0: init.defaultBranch
+IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864656Z   GIT_CONFIG_KEY_0: ini…nch
 IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8864912Z   GIT_CONFIG_VALUE_0: main
 IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8865150Z   DOTNET_ROOT: C:\Program Files\dotnet
 IPC interop (windows-2025)	Every kind between the Rust and C# servers and relays and the Rust, C# and JS clients	2026-11-27T22:20:02.8865405Z ##[endgroup]
@@ -141,7 +141,7 @@ Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9458353Z ^[[3
 Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9492622Z shell: /usr/bin/bash -e {0}
 Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493098Z env:
 Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493405Z   GIT_CONFIG_COUNT: 1
-Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493756Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9493756Z   GIT_CONFIG_KEY_0: ini…nch
 Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9494170Z   GIT_CONFIG_VALUE_0: main
 Pipeline Status (ipc)	Check every prerequisite	2026-11-27T22:20:37.9494729Z   NEEDS_JSON: {
 Pipeline Status (ipc)	Check every prerequisite	  "javascript": {
